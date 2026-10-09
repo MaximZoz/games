@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Σταυρός / μοχλός — μενού και δρομέας στη σκακιέρα';
+  String get settingsGamepadGenericName => 'Χειριστήριο';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Σταυρός — επιβεβαίωση ή κίνηση';
+  String get settingsGamepadHelpNavigate => 'Πλοήγηση';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Κύκλος — πίσω ή αποεπιλογή';
+  String get settingsGamepadHelpConfirm => 'Επιλογή';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — καρτέλες μενού';
+  String get settingsGamepadHelpBack => 'Πίσω';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Καρτέλες';
 
   @override
   String get settingsGamepadHelpPlay => 'Δρομέας σε ταμπλό και χέρι: ντάμα, τρίλιζα, ναυμαχία, ντουράκ, ούνο, πόκερ και τάβλι';
 
   @override
-  String get settingsGamepadHelpCards => 'Στα χαρτιά: σταυρός μετακινεί το χέρι, A παίζει, X επιλέγει / Uno, Y παίρνει ή τραβάει';
+  String get settingsGamepadHelpCards => 'Χαρτιά';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει';
+  String get settingsGamepadHelpKeyboard => 'Πληκτρολόγιο';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Υπόλοιπο';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Έξοδος';
+
+  @override
+  String get settingsGamepadHelpPage => 'Σελίδα';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Διάταξη Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Διάταξη PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Διάταξη Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Πληκτρολόγιο';
@@ -776,6 +799,51 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Γωνίες';
 
   @override
+  String get gamesChess => 'Σκάκι';
+
+  @override
+  String get gamesChessModeClassic => 'Κλασικό';
+
+  @override
+  String get gamesChessModeRapid => 'Ράπιντ';
+
+  @override
+  String get gamesChessModeBlitz => 'Μπλιτς';
+
+  @override
+  String get gamesChessModeBullet => 'Σφαίρα';
+
+  @override
+  String get chessPieceQueen => 'Βασίλισσα';
+
+  @override
+  String get chessPieceRook => 'Πύργος';
+
+  @override
+  String get chessPieceBishop => 'Αξιωματικός';
+
+  @override
+  String get chessPieceKnight => 'Ίππος';
+
+  @override
+  String get chessPromotionTitle => 'Προαγωγή πιονιού';
+
+  @override
+  String get chessDrawStalemate => 'Ισοπαλία: πατ';
+
+  @override
+  String get chessDrawInsufficient => 'Ισοπαλία: ανεπαρκές υλικό';
+
+  @override
+  String get chessDrawRepetition => 'Ισοπαλία: τριπλή επανάληψη θέσης';
+
+  @override
+  String get chessDrawFiftyMove => 'Ισοπαλία: κανόνας 50 κινήσεων';
+
+  @override
+  String get chessCheck => 'Σαχ';
+
+  @override
   String get rulesCheckersPlayers => 'Παίκτες: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Τα πούλια που είναι ακόμα στο σπίτι πρέπει να φύγουν μέσα στις πρώτες 25 κινήσεις του παίκτη.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή 15 κινήσεις κάθε πλευράς δεν δώσουν πρόοδο: χωρίς πίσιμα, κίνηση απλού ή προαγωγή.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές, αν 40 κινήσεις κάθε πλευράς περάσουν χωρίς πίσιμα και κίνηση απλού, ή μείνει μία ντάμα ανά πλευρά.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή 15 κινήσεις κάθε πλευράς στο giveaway δεν δώσουν πρόοδο: χωρίς πίσιμα, κίνηση απλού ή προαγωγή.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή 25 κινήσεις κάθε πλευράς δεν προσθέσουν πιόνι στη γωνία-στόχο.';
+
+  @override
+  String get rulesChessPlayers => 'Παίκτες: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Λειτουργία: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Σκακιέρα 8×8. Κάθε πλευρά έχει βασιλιά, βασίλισσα, δύο πύργους, δύο αξιωματικούς, δύο ίππους και οκτώ πιόνια. Παίζουν τα λευκά. Συνήθεις κινήσεις, πάρσιμο εν διελεύσει, προαγωγή και ροκέ. Νίκη με ματ ή εγκατάλειψη.';
+
+  @override
+  String get rulesChessDrawClassic => 'Ισοπαλία σε πατ, τριπλή επανάληψη, κανόνα 50 κινήσεων, έλλειψη υλικού ή συμφωνία.';
+
+  @override
+  String get rulesChessClockClassic => 'Ρολόι: 60+0 — 60 λεπτά για όλη την παρτίδα, χωρίς προσαύξηση.';
+
+  @override
+  String get rulesChessClockRapid => 'Ρολόι: 10+0 — 10 λεπτά για όλη την παρτίδα, χωρίς προσαύξηση.';
+
+  @override
+  String get rulesChessClockBlitz => 'Ρολόι: 5+0 — 5 λεπτά για όλη την παρτίδα, χωρίς προσαύξηση.';
+
+  @override
+  String get rulesChessClockBullet => 'Ρολόι: 3+2 — 3 λεπτά συν 2 δευτερόλεπτα ανά κίνηση.';
+
+  @override
+  String get checkersDrawRepetition => 'Ισοπαλία — η θέση επαναλήφθηκε τρεις φορές';
+
+  @override
+  String get checkersDrawNoProgress => 'Ισοπαλία — οι κινήσεις δεν οδηγούν σε νίκη';
+
+  @override
+  String get checkersDrawInsufficient => 'Ισοπαλία — ανεπαρκές υλικό για νίκη';
 
   @override
   String get rulesNardyTitle => 'Τάβλι — κανόνες';
@@ -861,6 +976,9 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα';
+
+  @override
+  String get nardyLayoutToggle => 'Αλλαγή διάταξης';
 
   @override
   String get nardyNoMoves => 'Καμία κίνηση';
@@ -1344,7 +1462,13 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gameOpponent => 'Αντίπαλος';
 
   @override
+  String get gameYou => 'Εσείς';
+
+  @override
   String get gameYouWon => 'Κερδίσατε!';
+
+  @override
+  String get gameYouWonShort => 'Κερδίσατε';
 
   @override
   String get gameYouLost => 'Χάσατε';
@@ -1381,6 +1505,21 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Προσφορά ισοπαλίας';
+
+  @override
+  String get gameFlipBoard => 'Αναστροφή σκακιέρας';
+
+  @override
+  String get gameReviewStart => 'Στην αρχή της παρτίδας';
+
+  @override
+  String get gameReviewPrev => 'Κίνηση πίσω';
+
+  @override
+  String get gameReviewNext => 'Κίνηση μπροστά';
+
+  @override
+  String get gameReviewEnd => 'Στην τρέχουσα θέση';
 
   @override
   String get gameOfferDrawTitle => 'Προσφορά ισοπαλίας;';
@@ -1636,6 +1775,15 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Ξεκλείδωμα υψηλότερων πονταρισμάτων';
+
+  @override
+  String get shopEmojisHelp => 'Κινούμενα emoji για τη συνομιλία. Αγοράστε ένα σετ και στείλτε τα σε φίλους.';
+
+  @override
+  String get shopCollectionsHelp => 'Μπορείς να πουλήσεις μόνο καινούργια ή vintage συλλογή: 80% της αξίας αν είναι καινούργια και 300% της αξίας αν είναι vintage. Φθαρμένη, κουρασμένη και ερειπωμένη δεν πουλιούνται.\n\nΣυλλέξτε ένα σετ αντικειμένων: εμφανίζονται στη βιτρίνα προφίλ και μπορούν να χαριστούν. Κάθε αντικείμενο δίνει νομίσματα κάθε μέρα, και ένα πλήρες σετ δίνει και ξεχωριστό μπόνους.\n\nΤο ημερήσιο εισόδημα ενός αντικειμένου εξαρτάται από την κατάσταση και είναι μερίδιο του συνηθισμένου ποσού. Η καινούργια δίνει 100%. Η φθαρμένη 60%. Η κουρασμένη 40%. Η ερειπωμένη 100%. Ένα vintage αντικείμενο δίνει 200%, δηλαδή διπλάσιο από το συνηθισμένο ημερήσιο εισόδημα.\n\nΤο μπόνους του πλήρους σετ μένει το ίδιο ώσπου το σετ να γίνει vintage. Το σετ είναι vintage όταν κάθε αντικείμενό του είναι vintage: το μπόνους γίνεται τότε 300%, τριπλάσιο από το συνηθισμένο.\n\nΗ κατάσταση εξαρτάται από το πόσο καιρό έχεις το αντικείμενο. Καινούργια — τις πρώτες 7 ημέρες. Φθαρμένη — από την 8η ημέρα έως 2 μήνες. Κουρασμένη — από 2 έως 6 μήνες. Ερειπωμένη — από 6 μήνες έως 1 έτος. Vintage — από 1 έτος.';
+
+  @override
+  String get shopStakesHelp => 'Ξεκλειδώστε υψηλότερα πονταρίσματα. Όσο υψηλότερο το ποντάρισμα, τόσο μεγαλύτερο το pot και το κέρδος.';
 
   @override
   String get inventoryTitle => 'Αντικείμενα';
@@ -1947,6 +2095,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopOwned => 'Αγορασμένο';
 
   @override
+  String get shopHave => 'Το έχεις';
+
+  @override
   String get shopEmpty => 'Ακόμα άδειο';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopBuyOnce => 'Εφάπαξ αγορά';
 
   @override
-  String get shopSellRefund => 'Η πώληση επιστρέφει το 80% του κόστους';
+  String get shopSellRefund => 'Η πώληση εξαρτάται από την κατάσταση της συλλογής';
+
+  @override
+  String get collectionConditionNew => 'Καινούργια';
+
+  @override
+  String get collectionConditionWorn => 'Φθαρμένη';
+
+  @override
+  String get collectionConditionTired => 'Κουρασμένη';
+
+  @override
+  String get collectionConditionShabby => 'Ερειπωμένη';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Θα λάβετε $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Μπορείς να πουλήσεις μόνο καινούργια ή vintage συλλογή.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Δεν πωλείται';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Μπορείς να πουλήσεις μόνο καινούργιο ή vintage αντικείμενο. Χρησιμοποίησε ένα ελιξίριο για να αλλάξεις την κατάσταση.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 παίκτες: πίνακας 4×4, τέσσερις παίκτες (X, O, △, □). Κερδίζετε με γραμμή από τα σύμβολά σας.';
+
+  @override
+  String get adminUsersTab => 'Χρήστες';
+
+  @override
+  String get adminSupportTab => 'Υποστήριξη';
+
+  @override
+  String get adminSearchHint => 'Αναζήτηση με email ή όνομα';
+
+  @override
+  String get adminRoleAdmins => 'Διαχειριστές';
+
+  @override
+  String get adminRoleUsers => 'Χρήστες';
+
+  @override
+  String get adminRoleAll => 'Όλοι οι ρόλοι';
+
+  @override
+  String get adminStatusFrozen => 'Παγωμένοι';
+
+  @override
+  String get adminStatusActive => 'Ενεργοί';
+
+  @override
+  String get adminStatusAny => 'Κάθε κατάσταση';
+
+  @override
+  String get adminOrderDesc => 'Φθίνουσα';
+
+  @override
+  String get adminOrderAsc => 'Αύξουσα';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Αποτυχία φόρτωσης: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Δεν βρέθηκαν χρήστες';
+
+  @override
+  String get adminSortLastSeen => 'Κατά τελευταία επίσκεψη';
+
+  @override
+  String get adminSortEmail => 'Κατά email';
+
+  @override
+  String get adminSortCreated => 'Κατά ημερομηνία εγγραφής';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount χαλκός';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Αφαίρεση διαχειριστή';
+
+  @override
+  String get adminGrantAdmin => 'Ορισμός διαχειριστή';
+
+  @override
+  String get adminAdminRevoked => 'Τα δικαιώματα διαχειριστή αφαιρέθηκαν';
+
+  @override
+  String get adminAdminGranted => 'Τα δικαιώματα διαχειριστή δόθηκαν';
+
+  @override
+  String get adminGrantCoins => 'Πίστωση νομισμάτων';
+
+  @override
+  String get adminWriteSupport => 'Γράψτε ως υποστήριξη';
+
+  @override
+  String get adminUnfreeze => 'Ξεπάγωμα';
+
+  @override
+  String get adminFreeze => 'Πάγωμα';
+
+  @override
+  String get adminUnfrozen => 'Ξεπαγώθηκε';
+
+  @override
+  String get adminFrozenDone => 'Παγώθηκε';
+
+  @override
+  String get adminResetPassword => 'Επαναφορά κωδικού';
+
+  @override
+  String get adminCoinsAmountHint => 'Ποσό (αρνητικό = αφαίρεση)';
+
+  @override
+  String get adminReasonOptional => 'Λόγος (προαιρετικό)';
+
+  @override
+  String get adminGrantSent => 'Η κάρτα στάλθηκε στη συνομιλία υποστήριξης';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Αφαιρέθηκαν $amount χαλκός';
+  }
+
+  @override
+  String get adminGrantVerb => 'Πίστωση';
+
+  @override
+  String get adminNewPasswordHint => 'Νέος κωδικός (ελάχ. 6)';
+
+  @override
+  String get adminPasswordReset => 'Ο κωδικός επαναφέρθηκε';
+
+  @override
+  String get adminResetVerb => 'Επαναφορά';
+
+  @override
+  String adminShortError(String error) {
+    return 'Σφάλμα: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Δεν υπάρχουν αιτήματα υποστήριξης';
+
+  @override
+  String get adminUserFallback => 'Χρήστης';
+
+  @override
+  String get apiErrTooManyRequests => 'Πάρα πολλά αιτήματα. Δοκιμάστε αργότερα.';
+
+  @override
+  String get apiErrMoveConflict => 'Σύγκρουση κίνησης. Δοκιμάστε ξανά.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Αναζωογόνηση';
+
+  @override
+  String get elixirGroupAge => 'Γήρανση';
+
+  @override
+  String get elixirGroupAccelerate => 'Επιτάχυνση';
+
+  @override
+  String get elixirEffectRejuvenate => 'αναζωογόνησης';
+
+  @override
+  String get elixirEffectAge => 'γήρανσης';
+
+  @override
+  String get elixirEffectAccelerate => 'επιτάχυνσης';
+
+  @override
+  String get elixirAdjCelebration => 'γιορτινό';
+
+  @override
+  String get elixirAdjNature => 'φυσικό';
+
+  @override
+  String get elixirAdjLegends => 'θρυλικό';
+
+  @override
+  String get elixirAdjCosmic => 'κοσμικό';
+
+  @override
+  String get elixirAdjAdventure => 'περιπέτειας';
+
+  @override
+  String get elixirAdjJewels => 'πολύτιμο';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective ελιξίριο $effect';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Αναζωογόνηση';
+
+  @override
+  String get elixirUseAge => 'Γήρανση';
+
+  @override
+  String get elixirUseAccelerate => 'Επιτάχυνση';
+
+  @override
+  String get elixirUse => 'Χρήση';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ημέρες',
+      one: '$count ημέρα',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ώρες',
+      one: '$count ώρα',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count λεπτά',
+      one: '$count λεπτό',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

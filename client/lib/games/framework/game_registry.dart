@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/games/framework/battleship_game.dart';
 import 'package:multigames_client/games/framework/checkers_game.dart';
+import 'package:multigames_client/games/framework/chess_game.dart';
 import 'package:multigames_client/games/framework/game_descriptor.dart';
 import 'package:multigames_client/games/framework/durak_game.dart';
 import 'package:multigames_client/games/framework/nardy_game.dart';
@@ -104,6 +105,7 @@ List<GameDescriptor> _builtinGames() => [
       PokerGame(),
       NardyGame(),
       CheckersGame(),
+      ChessGame(),
     ];
 
 /// Глобальный реестр (без зависимостей Riverpod — удобно в навигации).

@@ -7,15 +7,21 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_condition.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
@@ -42,6 +48,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
         setState(() => _items = cached);
       }
       unawaited(_reloadSilent());
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     });
   }
 
@@ -59,6 +66,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       }
       if (!mounted) return;
       setState(() => _items = items);
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     } catch (_) {}
   }
 
@@ -76,7 +84,8 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = (cached != null && cached.isNotEmpty) ? cached : _items;
     final collections = items
-        .where((e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
+        .where(
+            (e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
         .toList();
 
     final bySet = <String, List<ShopItem>>{};
@@ -97,7 +106,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       ..sort((a, b) => compareCollectionSetsByDaily(
             a,
             b,
-            (set) => bySet[set]!.fold<int>(0, (s, e) => s + e.dailyBronze),
+            collectionSetBonusBronze,
           ));
 
     return SwipeBackScope(
@@ -107,8 +116,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -119,6 +127,12 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
           ),
+          actions: [
+            ShopSectionHelpButton(
+              title: context.l10n.shopCollections,
+              body: context.l10n.shopCollectionsHelp,
+            ),
+          ],
         ),
         body: SafeArea(
           child: orderedSets.isEmpty
@@ -151,8 +165,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: orderedSets.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) =>
                             _buildCollectionSetTile(
                           context,
@@ -175,97 +188,115 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
   ) {
     final groupItems = bySet[set]!;
     final preview = groupItems.first;
-    final setDaily = groupItems.fold<int>(
-      0,
-      (sum, e) => sum + e.dailyBronze,
-    );
+    final setDaily = shopSetDaily(set, groupItems);
     final ownedCount = groupItems.where((e) => e.owned).length;
-    return Material(
-      color: AppColors.surfaceCard,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
+    Future<void> openSet() async {
+      await context.push('/shop/collections/$set');
+      if (!mounted) return;
+      ref.invalidate(shopCatalogProvider);
+      await _reloadSilent();
+    }
+
+    return GamepadFocusBlock(
+      radius: 16,
+      onActivate: () => unawaited(openSet()),
+      child: Material(
+        color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(16),
-        onTap: () async {
-          await context.push('/shop/collections/$set');
-          if (!mounted) return;
-          ref.invalidate(shopCatalogProvider);
-          await _reloadSilent();
-        },
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.black.withValues(alpha: 0.06),
-            ),
-          ),
-          child: Row(
-            children: [
-              ShopAnimatedEmoji(
-                animatedName: preview.animatedName ?? 'sparkles',
-                size: 40,
-                fallback: preview.emoji,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      collectionSetTitle(set),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
+        child: InkWell(
+          canRequestFocus: false,
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => unawaited(openSet()),
+          child: Builder(
+            builder: (inner) {
+              return Container(
+                padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: GamepadFocusBlock.frameColor(
+                      inner,
+                      Colors.black.withValues(alpha: 0.06),
                     ),
-                    const SizedBox(height: 2),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 4,
-                      children: [
-                        Text(
-                          context.l10n.shopSetProgress(
-                            ownedCount,
-                            groupItems.length,
-                          ),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        if (setDaily > 0) ...[
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    ShopAnimatedEmoji(
+                      animatedName: preview.animatedName ?? 'sparkles',
+                      size: 40,
+                      fallback: preview.emoji,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            '·',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary
-                                  .withValues(alpha: 0.8),
+                            collectionSetTitle(set),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              color: AppColors.textPrimary,
                             ),
                           ),
-                          BalanceDisplay(
-                            bronze: setDaily,
-                            prefix: ownedCount >= groupItems.length ? '+' : null,
-                            perDay: true,
-                            coinSize: 14,
-                            fontSize: 12,
+                          const SizedBox(height: 2),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             spacing: 4,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                            opacity:
-                                ownedCount >= groupItems.length ? 1 : 0.35,
+                            children: [
+                              Text(
+                                context.l10n.shopSetProgress(
+                                  ownedCount,
+                                  groupItems.length,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              if (setDaily > 0) ...[
+                                Text(
+                                  '·',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary
+                                        .withValues(alpha: 0.8),
+                                  ),
+                                ),
+                                BalanceDisplay(
+                                  bronze: setDaily,
+                                  prefix: ownedCount >= groupItems.length
+                                      ? '+'
+                                      : null,
+                                  perDay: true,
+                                  coinSize: 14,
+                                  fontSize: 12,
+                                  spacing: 4,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                  opacity: ownedCount >= groupItems.length
+                                      ? 1
+                                      : 0.35,
+                                ),
+                              ],
+                            ],
                           ),
                         ],
-                      ],
+                      ),
+                    ),
+                    ShopSectionHelpButton(
+                      title: collectionSetTitle(set),
+                      body: context.l10n.shopCollectionsHelp,
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textSecondary,
                     ),
                   ],
                 ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -299,6 +330,7 @@ class _ShopCollectionGroupScreenState
         setState(() => _items = cached);
       }
       unawaited(_reloadSilent());
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     });
   }
 
@@ -316,36 +348,30 @@ class _ShopCollectionGroupScreenState
       }
       if (!mounted) return;
       setState(() => _items = items);
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     } catch (_) {}
   }
 
-  Future<void> _buy(ShopItem item) async {
-    if (_buyInFlight.contains(item.code) || item.owned) return;
+  Future<bool> _buy(
+    ShopItem item, {
+    bool confirm = true,
+    bool announceOwned = true,
+  }) async {
+    if (_buyInFlight.contains(item.code) || item.owned) return false;
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.shopBuyCollectionTitle),
-        content: Text(
-          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
-          '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
-          '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
-          '${l10n.shopBuyOnce}\n'
-          '${l10n.shopSellRefund}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.shopBuy),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !mounted) return;
+    if (confirm) {
+      final ok = await showGamepadConfirmDialog(
+        context: context,
+        title: l10n.shopBuyCollectionTitle,
+        message:
+            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
+            '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
+            '${l10n.shopBuyOnce}',
+        confirmLabel: l10n.shopBuy,
+      );
+      if (!ok || !mounted) return false;
+    }
 
     _buyInFlight.add(item.code);
     setState(() {
@@ -366,18 +392,23 @@ class _ShopCollectionGroupScreenState
           if (mounted) setState(() => _items = fresh);
         } catch (_) {}
       }
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: wasOffline
-            ? context.l10n.shopPurchaseQueued
-            : context.l10n.shopCollectionAdded(
-                catalogTitle(item.code,
-                    fallback: item.title, l10n: context.l10n)),
-        kind: AppSnackKind.success,
-      );
+      if (!mounted) return false;
+      if (wasOffline) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.shopPurchaseQueued,
+          kind: AppSnackKind.success,
+        );
+      } else if (announceOwned) {
+        await showGamepadOwnedDialog(
+          context: context,
+          message:
+              catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
+        );
+      }
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _items = [
           for (final it in _items)
@@ -389,6 +420,7 @@ class _ShopCollectionGroupScreenState
         message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
         kind: AppSnackKind.error,
       );
+      return false;
     } finally {
       _buyInFlight.remove(item.code);
       if (mounted) setState(() {});
@@ -402,7 +434,8 @@ class _ShopCollectionGroupScreenState
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
     final groupItems = items
         .where((e) =>
-            e.kind == 'collection' && (e.collectionSet ?? 'other') == widget.set)
+            e.kind == 'collection' &&
+            (e.collectionSet ?? 'other') == widget.set)
         .toList()
       ..sort((a, b) => compareCollectionItemsByDaily(
             a.dailyBronze,
@@ -411,11 +444,9 @@ class _ShopCollectionGroupScreenState
             b.sortOrder,
           ));
 
-    final setDaily =
-        groupItems.fold<int>(0, (sum, e) => sum + e.dailyBronze);
+    final setDaily = shopSetDaily(widget.set, groupItems);
     final ownedCount = groupItems.where((e) => e.owned).length;
-    final complete =
-        ownedCount == groupItems.length && groupItems.isNotEmpty;
+    final complete = ownedCount == groupItems.length && groupItems.isNotEmpty;
 
     return SwipeBackScope(
       onBack: goBack,
@@ -424,8 +455,7 @@ class _ShopCollectionGroupScreenState
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -436,6 +466,12 @@ class _ShopCollectionGroupScreenState
                   fontWeight: FontWeight.w600,
                 ),
           ),
+          actions: [
+            ShopSectionHelpButton(
+              title: collectionSetTitle(widget.set),
+              body: context.l10n.shopCollectionsHelp,
+            ),
+          ],
         ),
         body: SafeArea(
           child: groupItems.isEmpty
@@ -501,21 +537,31 @@ class _ShopCollectionGroupScreenState
       onBuy: () => _buy(item),
       onPreview: () => showCollectionFullscreen(
         context,
-        title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
+        title:
+            catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
         animatedName: item.animatedName ?? 'sparkles',
         fallback: item.emoji,
-        subtitle: collectionItemSubtitle(item.dailyBronze),
-        bottomAction: item.owned
+        subtitle: collectionItemSubtitle(shopCollectionDaily(item)),
+        condition: item.owned ? null : CollectionCondition.fresh,
+        acquiredAt:
+            item.owned ? parseCollectionAcquiredAt(item.acquiredAt) : null,
+        conditionShift: item.conditionShift,
+        vintageAt: parseCollectionAcquiredAt(item.vintageAt),
+        onBuy: item.owned
             ? null
-            : Builder(
-                builder: (dialogContext) => FilledButton(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                    unawaited(_buy(item));
-                  },
-                  child: Text(context.l10n.shopBuy),
-                ),
-              ),
+            : () async {
+                final bought =
+                    await _buy(item, confirm: true, announceOwned: false);
+                if (!bought || !mounted) return;
+                Navigator.of(context).pop();
+                if (!mounted) return;
+                await showGamepadOwnedDialog(
+                  context: context,
+                  message: catalogTitle(item.code,
+                      fallback: item.title, l10n: context.l10n),
+                );
+              },
+        buyLabel: context.l10n.shopBuy,
       ),
     );
   }
@@ -585,68 +631,86 @@ class _CollectionShopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: onPreview,
-            borderRadius: BorderRadius.circular(12),
-            child: ShopAnimatedEmoji(
-              animatedName: item.animatedName ?? 'sparkles',
-              size: 52,
-              fallback: item.emoji,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+    return GamepadFocusBlock(
+      radius: 18,
+      onActivate: onPreview,
+      child: Builder(
+        builder: (inner) {
+          return Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: GamepadFocusBlock.frameColor(
+                  inner,
+                  Colors.black.withValues(alpha: 0.06),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  collectionItemSubtitle(item.dailyBronze),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                BalanceDisplay(
-                  bronze: item.priceBronze,
-                  coinSize: 14,
-                  fontSize: 13,
-                  spacing: 6,
-                ),
-              ],
-            ),
-          ),
-          if (item.owned)
-            Text(
-              context.l10n.shopOwned,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2E7D32),
               ),
-            )
-          else
-            FilledButton(
-              onPressed: busy ? null : onBuy,
-              child: Text(busy ? '…' : context.l10n.shopBuy),
             ),
-        ],
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                canRequestFocus: false,
+                onTap: onPreview,
+                borderRadius: BorderRadius.circular(18),
+                child: Row(
+                  children: [
+                    ShopAnimatedEmoji(
+                      animatedName: item.animatedName ?? 'sparkles',
+                      size: 52,
+                      fallback: item.emoji,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            catalogTitle(item.code,
+                                fallback: item.title, l10n: context.l10n),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            collectionItemSubtitle(shopCollectionDaily(item)),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          BalanceDisplay(
+                            bronze: item.priceBronze,
+                            coinSize: 14,
+                            fontSize: 13,
+                            spacing: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (item.owned)
+                      Text(
+                        context.l10n.shopHave,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      )
+                    else
+                      FilledButton(
+                        onPressed: busy ? null : onBuy,
+                        child: Text(busy ? '…' : context.l10n.shopBuy),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -33,6 +33,15 @@ void main() {
     });
   });
 
+  group('authRefreshIsDeadSession', () {
+    test('401 и 403 — мёртвая сессия, 503 — временный сбой', () {
+      expect(authRefreshIsDeadSession(401), isTrue);
+      expect(authRefreshIsDeadSession(403), isTrue);
+      expect(authRefreshIsDeadSession(503), isFalse);
+      expect(authRefreshIsDeadSession(200), isFalse);
+    });
+  });
+
   group('AuthException', () {
     test('toString returns message', () {
       final e = AuthException(401, 'invalid credentials');

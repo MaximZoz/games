@@ -27,6 +27,14 @@ void main() {
       expect([1, 10], contains(cell));
     });
 
+    test('hunt не открывает угол', () {
+      final ships = defaultBattleshipShips();
+      for (var seed = 1; seed <= 8; seed++) {
+        final cell = battleshipBotPickShot(ships, const [], Random(seed));
+        expect([0, 9, 90, 99], isNot(contains(cell)));
+      }
+    });
+
     test('bot pick continues a hit line', () {
       final ships = defaultBattleshipShips();
       final cell = battleshipBotPickShot(ships, [0, 1], Random(1));

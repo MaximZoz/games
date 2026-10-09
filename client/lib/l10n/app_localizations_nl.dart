@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geen gamepad. Sluit een controller aan en druk op een knop.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kruis / stick — menu\'s en bordcursor';
+  String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kruis — bevestigen of zetten';
+  String get settingsGamepadHelpNavigate => 'Navigeren';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cirkel — terug of deselecteren';
+  String get settingsGamepadHelpConfirm => 'Kiezen';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menutabbladen';
+  String get settingsGamepadHelpBack => 'Terug';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tabbladen';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursor op bord en hand: dammen, boter-kaas-eieren, zeeslag, durak, uno, poker en backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Bij kaarten: kruis beweegt de hand, A speelt, X selecteert / Uno, Y pakt, past of trekt';
+  String get settingsGamepadHelpCards => 'Kaarten';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit';
+  String get settingsGamepadHelpKeyboard => 'Toetsenbord';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Uitloggen';
+
+  @override
+  String get settingsGamepadHelpPage => 'Pagina';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-indeling';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-indeling';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-indeling';
 
   @override
   String get gamepadKeyboardTitle => 'Toetsenbord';
@@ -776,6 +799,51 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Hoeken';
 
   @override
+  String get gamesChess => 'Schaken';
+
+  @override
+  String get gamesChessModeClassic => 'Klassiek';
+
+  @override
+  String get gamesChessModeRapid => 'Rapid';
+
+  @override
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Kogel';
+
+  @override
+  String get chessPieceQueen => 'Dame';
+
+  @override
+  String get chessPieceRook => 'Toren';
+
+  @override
+  String get chessPieceBishop => 'Loper';
+
+  @override
+  String get chessPieceKnight => 'Paard';
+
+  @override
+  String get chessPromotionTitle => 'Pionpromotie';
+
+  @override
+  String get chessDrawStalemate => 'Remise: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Remise: onvoldoende materiaal';
+
+  @override
+  String get chessDrawRepetition => 'Remise: driemaal dezelfde stelling';
+
+  @override
+  String get chessDrawFiftyMove => 'Remise: 50-zettenregel';
+
+  @override
+  String get chessCheck => 'Schaak';
+
+  @override
   String get rulesCheckersPlayers => 'Spelers: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Schijven die nog in huis staan, moeten het binnen de eerste 25 zetten van de speler verlaten.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Remise als de stelling driemaal terugkomt, of als 15 zetten per kant geen voortgang geven: geen slaan, geen schijfzet en geen promotie.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remise als de stelling driemaal terugkomt, als 40 zetten per kant zonder slaan en schijfzet verstrijken, of als elke kant één dam overhoudt.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remise als de stelling driemaal terugkomt, of als 15 zetten per kant bij weggeven geen voortgang geven: geen slaan, geen schijfzet en geen promotie.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remise als de stelling driemaal terugkomt, of als 25 zetten per kant geen schijf in de doelhoek leggen.';
+
+  @override
+  String get rulesChessPlayers => 'Spelers: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Bord 8×8. Elke kant heeft koning, dame, twee torens, twee lopers, twee paarden en acht pionnen. Wit begint. Gewone zetten, en passant, promotie en rokade. Winst door mat of opgave.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remise bij pat, drievoudige herhaling, 50-zettenregel, onvoldoende materiaal of afspraak.';
+
+  @override
+  String get rulesChessClockClassic => 'Klok: 60+0 — 60 minuten voor de hele partij, zonder increment.';
+
+  @override
+  String get rulesChessClockRapid => 'Klok: 10+0 — 10 minuten voor de hele partij, zonder increment.';
+
+  @override
+  String get rulesChessClockBlitz => 'Klok: 5+0 — 5 minuten voor de hele partij, zonder increment.';
+
+  @override
+  String get rulesChessClockBullet => 'Klok: 3+2 — 3 minuten plus 2 seconden per zet.';
+
+  @override
+  String get checkersDrawRepetition => 'Remise — stelling driemaal herhaald';
+
+  @override
+  String get checkersDrawNoProgress => 'Remise — zetten leiden niet tot winst';
+
+  @override
+  String get checkersDrawInsufficient => 'Remise — onvoldoende materiaal voor winst';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regels';
@@ -861,6 +976,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Geef de beurt automatisch door na alle zetten';
+
+  @override
+  String get nardyLayoutToggle => 'Opstelling wisselen';
 
   @override
   String get nardyNoMoves => 'Geen zetten';
@@ -1344,7 +1462,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gameOpponent => 'Tegenstander';
 
   @override
+  String get gameYou => 'Jij';
+
+  @override
   String get gameYouWon => 'Je hebt gewonnen!';
+
+  @override
+  String get gameYouWonShort => 'Je hebt gewonnen';
 
   @override
   String get gameYouLost => 'Je hebt verloren';
@@ -1381,6 +1505,21 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Remise aanbieden';
+
+  @override
+  String get gameFlipBoard => 'Bord omdraaien';
+
+  @override
+  String get gameReviewStart => 'Naar begin van de partij';
+
+  @override
+  String get gameReviewPrev => 'Zet terug';
+
+  @override
+  String get gameReviewNext => 'Zet vooruit';
+
+  @override
+  String get gameReviewEnd => 'Naar huidige stelling';
 
   @override
   String get gameOfferDrawTitle => 'Remise aanbieden?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Hogere inzetten ontgrendelen';
+
+  @override
+  String get shopEmojisHelp => 'Geanimeerde emoji’s voor de chat. Koop een set en stuur ze naar vrienden.';
+
+  @override
+  String get shopCollectionsHelp => 'Je kunt alleen een nieuwe of vintage collectie verkopen: 80% van de prijs als ze nieuw is en 300% van de prijs als ze vintage is. Versleten, vermoeid en vervallen kun je niet verkopen.\n\nVerzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen. Elk item levert elke dag munten op, en een complete set geeft ook een aparte bonus.\n\nHet dagelijkse inkomen van een item hangt af van de staat en is een deel van het gebruikelijke bedrag. Nieuw levert 100% op. Versleten levert 60% op. Vermoeid levert 40% op. Verval levert 100% op. Een vintage item levert 200% op, twee keer het gebruikelijke daginkomen.\n\nDe bonus van een complete set blijft gelijk tot de set zelf vintage is. Een set is vintage als elk item erin vintage is: de bonus is dan 300%, drie keer het gebruikelijke bedrag.\n\nDe staat hangt af van hoe lang het item al van jou is. Nieuw — de eerste 7 dagen. Versleten — van dag 8 tot 2 maanden. Vermoeid — van 2 tot 6 maanden. Verval — van 6 maanden tot 1 jaar. Vintage — vanaf 1 jaar.';
+
+  @override
+  String get shopStakesHelp => 'Ontgrendel hogere inzetten. Hoe hoger de inzet, hoe groter de pot en de winst.';
 
   @override
   String get inventoryTitle => 'Items';
@@ -1947,6 +2095,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopOwned => 'Gekocht';
 
   @override
+  String get shopHave => 'In bezit';
+
+  @override
   String get shopEmpty => 'Nog leeg';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopBuyOnce => 'Eenmalige aankoop';
 
   @override
-  String get shopSellRefund => 'Verkopen geeft 80% van de prijs terug';
+  String get shopSellRefund => 'Verkoop hangt af van de staat van de collectie';
+
+  @override
+  String get collectionConditionNew => 'Nieuw';
+
+  @override
+  String get collectionConditionWorn => 'Versleten';
+
+  @override
+  String get collectionConditionTired => 'Vermoeid';
+
+  @override
+  String get collectionConditionShabby => 'Verval';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Je ontvangt $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Je kunt alleen een nieuwe of vintage collectie verkopen.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Kan niet verkopen';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Je kunt alleen een nieuw of vintage voorwerp verkopen. Gebruik een elixer om de staat te veranderen.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 spelers: 4×4-bord, vier spelers (X, O, △, □). Maak een lijn met je eigen tekens om te winnen.';
+
+  @override
+  String get adminUsersTab => 'Gebruikers';
+
+  @override
+  String get adminSupportTab => 'Support';
+
+  @override
+  String get adminSearchHint => 'Zoek op e-mail of naam';
+
+  @override
+  String get adminRoleAdmins => 'Admins';
+
+  @override
+  String get adminRoleUsers => 'Gebruikers';
+
+  @override
+  String get adminRoleAll => 'Alle rollen';
+
+  @override
+  String get adminStatusFrozen => 'Bevroren';
+
+  @override
+  String get adminStatusActive => 'Actief';
+
+  @override
+  String get adminStatusAny => 'Elke status';
+
+  @override
+  String get adminOrderDesc => 'Aflopend';
+
+  @override
+  String get adminOrderAsc => 'Oplopend';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Laden mislukt: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Geen gebruikers';
+
+  @override
+  String get adminSortLastSeen => 'Op laatste bezoek';
+
+  @override
+  String get adminSortEmail => 'Op e-mail';
+
+  @override
+  String get adminSortCreated => 'Op registratiedatum';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Admin intrekken';
+
+  @override
+  String get adminGrantAdmin => 'Admin maken';
+
+  @override
+  String get adminAdminRevoked => 'Adminrechten ingetrokken';
+
+  @override
+  String get adminAdminGranted => 'Adminrechten gegeven';
+
+  @override
+  String get adminGrantCoins => 'Munten toekennen';
+
+  @override
+  String get adminWriteSupport => 'Schrijven als support';
+
+  @override
+  String get adminUnfreeze => 'Ontdooien';
+
+  @override
+  String get adminFreeze => 'Bevriezen';
+
+  @override
+  String get adminUnfrozen => 'Ontdooid';
+
+  @override
+  String get adminFrozenDone => 'Bevroren';
+
+  @override
+  String get adminResetPassword => 'Wachtwoord resetten';
+
+  @override
+  String get adminCoinsAmountHint => 'Aantal (negatief = afschrijven)';
+
+  @override
+  String get adminReasonOptional => 'Reden (optioneel)';
+
+  @override
+  String get adminGrantSent => 'Kaart naar supportchat gestuurd';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount brons afgeschreven';
+  }
+
+  @override
+  String get adminGrantVerb => 'Toekennen';
+
+  @override
+  String get adminNewPasswordHint => 'Nieuw wachtwoord (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Wachtwoord gereset';
+
+  @override
+  String get adminResetVerb => 'Resetten';
+
+  @override
+  String adminShortError(String error) {
+    return 'Fout: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Geen supportverzoeken';
+
+  @override
+  String get adminUserFallback => 'Gebruiker';
+
+  @override
+  String get apiErrTooManyRequests => 'Te veel verzoeken. Probeer later opnieuw.';
+
+  @override
+  String get apiErrMoveConflict => 'Zetconflict. Probeer opnieuw.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Verjonging';
+
+  @override
+  String get elixirGroupAge => 'Veroudering';
+
+  @override
+  String get elixirGroupAccelerate => 'Versnelling';
+
+  @override
+  String get elixirEffectRejuvenate => 'verjongings';
+
+  @override
+  String get elixirEffectAge => 'verouderings';
+
+  @override
+  String get elixirEffectAccelerate => 'versnellings';
+
+  @override
+  String get elixirAdjCelebration => 'Feestelijk';
+
+  @override
+  String get elixirAdjNature => 'Natuurlijk';
+
+  @override
+  String get elixirAdjLegends => 'Legendarisch';
+
+  @override
+  String get elixirAdjCosmic => 'Kosmisch';
+
+  @override
+  String get elixirAdjAdventure => 'Avontuur';
+
+  @override
+  String get elixirAdjJewels => 'Kostbaar';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective ${effect}elixer';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Verjongen';
+
+  @override
+  String get elixirUseAge => 'Verouderen';
+
+  @override
+  String get elixirUseAccelerate => 'Versnellen';
+
+  @override
+  String get elixirUse => 'Gebruiken';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dagen',
+      one: '$count dag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uur',
+      one: '$count uur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minuten',
+      one: '$count minuut',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

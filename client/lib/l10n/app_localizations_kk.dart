@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Крест / стик — мәзір және тақтадағы курсор';
+  String get settingsGamepadGenericName => 'Контроллер';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Крест — таңдау немесе жүру';
+  String get settingsGamepadHelpNavigate => 'Навигация';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Шеңбер — артқа немесе таңдауды алу';
+  String get settingsGamepadHelpConfirm => 'Таңдау';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — мәзір қойындылары';
+  String get settingsGamepadHelpBack => 'Артқа';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Қойындылар';
 
   @override
   String get settingsGamepadHelpPlay => 'Өріс пен қол курсоры: дойбы, крестик-нолик, теңіз шайқасы, дурак, уно, покер және нарды';
 
   @override
-  String get settingsGamepadHelpCards => 'Карталарда: крест — қол, A — жүріс, X — таңдау / Уно, Y — алу, бито немесе алу';
+  String get settingsGamepadHelpCards => 'Карталар';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Енгізу өрісінде A геймпад пернетақтасын ашады; X — пернелер, B — өшіру немесе жабу';
+  String get settingsGamepadHelpKeyboard => 'Пернетақта';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Баланс';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Шығу';
+
+  @override
+  String get settingsGamepadHelpPage => 'Бет';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox орналасуы';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation орналасуы';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo орналасуы';
 
   @override
   String get gamepadKeyboardTitle => 'Пернетақта';
@@ -776,6 +799,51 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Бұрыштар';
 
   @override
+  String get gamesChess => 'Шахмат';
+
+  @override
+  String get gamesChessModeClassic => 'Классика';
+
+  @override
+  String get gamesChessModeRapid => 'Рапид';
+
+  @override
+  String get gamesChessModeBlitz => 'Блиц';
+
+  @override
+  String get gamesChessModeBullet => 'Оқ';
+
+  @override
+  String get chessPieceQueen => 'Ферзь';
+
+  @override
+  String get chessPieceRook => 'Ладья';
+
+  @override
+  String get chessPieceBishop => 'Піл';
+
+  @override
+  String get chessPieceKnight => 'Ат';
+
+  @override
+  String get chessPromotionTitle => 'Пешканы түрлендіру';
+
+  @override
+  String get chessDrawStalemate => 'Тең ойын: пат';
+
+  @override
+  String get chessDrawInsufficient => 'Тең ойын: мат үшін материал жеткіліксіз';
+
+  @override
+  String get chessDrawRepetition => 'Тең ойын: позицияның үш рет қайталануы';
+
+  @override
+  String get chessDrawFiftyMove => 'Тең ойын: 50 жүріс ережесі';
+
+  @override
+  String get chessCheck => 'Шах';
+
+  @override
   String get rulesCheckersPlayers => 'Ойыншылар: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Үйде қалған тастар ойыншының алғашқы 25 жүрісінде шығуы тиіс.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Ничья: позиция үш рет қайталанса немесе әр жақтың 15 жүрісі ілгерілеусіз өтсе: алу, қарапайым жүріс және дамкаға айналу жоқ.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Ничья: позиция үш рет қайталанса, әр жақтың 40 жүрісінде алу мен қарапайым жүріс болмаса, немесе әр жақта бір дамка қалса.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Ничья: позиция үш рет қайталанса немесе поддавкиде әр жақтың 15 жүрісі ілгерілеусіз өтсе: алу, қарапайым жүріс және дамкаға айналу жоқ.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Ничья: позиция үш рет қайталанса немесе әр жақтың 25 жүрісі мақсат бұрышына шашка қоспаса.';
+
+  @override
+  String get rulesChessPlayers => 'Ойыншылар: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Тақта 8×8. Әр жақта патша, уәзір, екі тура, екі піл, екі ат және сегіз пешка. Ақтар бастайды. Қалыпты жүрістер, өтуде алу, айналдыру және рокировка бар. Мат немесе берілу — жеңіс.';
+
+  @override
+  String get rulesChessDrawClassic => 'Ничья: пат, үш рет қайталау, 50 жүріс, матқа фигура жетпесе немесе келісім.';
+
+  @override
+  String get rulesChessClockClassic => 'Партия контролі: 60+0 — бүкіл партияға 60 минут, қосымша жоқ.';
+
+  @override
+  String get rulesChessClockRapid => 'Партия контролі: 10+0 — бүкіл партияға 10 минут, қосымша жоқ.';
+
+  @override
+  String get rulesChessClockBlitz => 'Партия контролі: 5+0 — бүкіл партияға 5 минут, қосымша жоқ.';
+
+  @override
+  String get rulesChessClockBullet => 'Партия контролі: 3+2 — партияға 3 минут плюс әр жүріске 2 секунд.';
+
+  @override
+  String get checkersDrawRepetition => 'Ничья — позиция үш рет қайталанды';
+
+  @override
+  String get checkersDrawNoProgress => 'Ничья — жүрістер жеңіске апармайды';
+
+  @override
+  String get checkersDrawInsufficient => 'Ничья — жеңіске күш жетпейді';
 
   @override
   String get rulesNardyTitle => 'Нарды — ережелер';
@@ -861,6 +976,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Барлық жүрістен кейін жүріс бірден қарсыласқа өтеді';
+
+  @override
+  String get nardyLayoutToggle => 'Орналастыруды ауыстыру';
 
   @override
   String get nardyNoMoves => 'Жүріс жоқ';
@@ -1344,7 +1462,13 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gameOpponent => 'Қарсылас';
 
   @override
+  String get gameYou => 'Сіз';
+
+  @override
   String get gameYouWon => 'Сіз жеңдіңіз!';
+
+  @override
+  String get gameYouWonShort => 'Сіз жеңдіңіз';
 
   @override
   String get gameYouLost => 'Сіз жеңілдіңіз';
@@ -1381,6 +1505,21 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Тең ойын ұсыну';
+
+  @override
+  String get gameFlipBoard => 'Тақтаны аудару';
+
+  @override
+  String get gameReviewStart => 'Ойын басына';
+
+  @override
+  String get gameReviewPrev => 'Бір жүріс артқа';
+
+  @override
+  String get gameReviewNext => 'Бір жүріс алға';
+
+  @override
+  String get gameReviewEnd => 'Ағымдағы жағдайға';
 
   @override
   String get gameOfferDrawTitle => 'Тең ойын ұсыну керек пе?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Жоғары ставкаларды ашу';
+
+  @override
+  String get shopEmojisHelp => 'Чатқа арналған анимациялық смайликтер. Жиынтықты сатып алып, достарыңызға жіберіңіз.';
+
+  @override
+  String get shopCollectionsHelp => 'Тек жаңа немесе винтаж коллекцияны сатуға болады: жаңа құнның 80%-ы, винтаж құнның 300%-ы. Тозған, шаршаған және ескі сатылмайды.\n\nЗаттар жиынтығын жинаңыз: олар профиль сөресінде көрінеді, сыйлауға болады. Әр зат күн сайын тиын әкеледі, ал толық жиынтық тағы бөлек бонус береді.\n\nЗаттың күнделікті табысы күйіне байланысты және әдеттегі сомадан есептеледі. Жаңа 100% әкеледі. Тозған — 60%. Шаршаған — 40%. Ескі — 100%. Винтаждық зат 200% әкеледі, яғни әдеттегі табыстан екі есе көп.\n\nТолық жиынтық бонусы жиынтықтың өзі винтаж болғанша өзгермейді. Жиынтық винтаж, егер ондағы әр зат винтаж болса: сонда бонус 300%, әдеттегіден үш есе көп.\n\nКүй зат сізде қанша уақыт болғанына байланысты. Жаңа — алғашқы 7 күн. Тозған — 8-күннен 2 айға дейін. Шаршаған — 2 айдан 6 айға дейін. Ескі — 6 айдан бір жылға дейін. Винтаж — бір жылдан кейін.';
+
+  @override
+  String get shopStakesHelp => 'Ойындарда жоғары ставкаларды ашыңыз. Ставка неғұрлым жоғары болса, банк пен ұтыс соғұрлым үлкен.';
 
   @override
   String get inventoryTitle => 'Заттар';
@@ -1947,6 +2095,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get shopOwned => 'Сатып алынған';
 
   @override
+  String get shopHave => 'Бар';
+
+  @override
   String get shopEmpty => 'Әзірге бос';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsKk extends AppLocalizations {
   String get shopBuyOnce => 'Бір рет сатып алу';
 
   @override
-  String get shopSellRefund => 'Сату құнының 80%-ін қайтарады';
+  String get shopSellRefund => 'Сату коллекция күйіне байланысты';
+
+  @override
+  String get collectionConditionNew => 'Жаңа';
+
+  @override
+  String get collectionConditionWorn => 'Тозған';
+
+  @override
+  String get collectionConditionTired => 'Шаршаған';
+
+  @override
+  String get collectionConditionShabby => 'Ескі';
+
+  @override
+  String get collectionConditionVintage => 'Винтаж';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsKk extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Сіз $amount аласыз';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Тек жаңа немесе винтаж коллекцияны сатуға болады.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Сатуға болмайды';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Тек жаңа немесе винтаж затты сатуға болады. Күйін өзгерту үшін эликсирді пайдаланыңыз.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 ойыншы: 4×4 тақта, төрт ойыншы (X, O, △, □). Өз белгілеріңізбен сызық жинасаңыз — жеңесіз.';
+
+  @override
+  String get adminUsersTab => 'Пайдаланушылар';
+
+  @override
+  String get adminSupportTab => 'Қолдау';
+
+  @override
+  String get adminSearchHint => 'Email немесе лақап ат бойынша іздеу';
+
+  @override
+  String get adminRoleAdmins => 'Әкімшілер';
+
+  @override
+  String get adminRoleUsers => 'Пайдаланушылар';
+
+  @override
+  String get adminRoleAll => 'Барлық рөлдер';
+
+  @override
+  String get adminStatusFrozen => 'Мұздатылған';
+
+  @override
+  String get adminStatusActive => 'Белсенді';
+
+  @override
+  String get adminStatusAny => 'Кез келген күй';
+
+  @override
+  String get adminOrderDesc => 'Кемуі бойынша';
+
+  @override
+  String get adminOrderAsc => 'Өсуі бойынша';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Жүктеу қатесі: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Пайдаланушылар табылмады';
+
+  @override
+  String get adminSortLastSeen => 'Соңғы кіру бойынша';
+
+  @override
+  String get adminSortEmail => 'Email бойынша';
+
+  @override
+  String get adminSortCreated => 'Тіркелген күні бойынша';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount бр.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Әкімшіні алу';
+
+  @override
+  String get adminGrantAdmin => 'Әкімші ету';
+
+  @override
+  String get adminAdminRevoked => 'Әкімші құқығы алынды';
+
+  @override
+  String get adminAdminGranted => 'Әкімші құқығы берілді';
+
+  @override
+  String get adminGrantCoins => 'Монета есептеу';
+
+  @override
+  String get adminWriteSupport => 'Қолдау атынан жазу';
+
+  @override
+  String get adminUnfreeze => 'Еріту';
+
+  @override
+  String get adminFreeze => 'Мұздату';
+
+  @override
+  String get adminUnfrozen => 'Ерітілді';
+
+  @override
+  String get adminFrozenDone => 'Мұздатылды';
+
+  @override
+  String get adminResetPassword => 'Құпиясөзді қалпына келтіру';
+
+  @override
+  String get adminCoinsAmountHint => 'Саны (теріс = шегеру)';
+
+  @override
+  String get adminReasonOptional => 'Себебі (міндетті емес)';
+
+  @override
+  String get adminGrantSent => 'Карточка қолдау чатына жіберілді';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount қола шегерілді';
+  }
+
+  @override
+  String get adminGrantVerb => 'Есептеу';
+
+  @override
+  String get adminNewPasswordHint => 'Жаңа құпиясөз (кемі 6)';
+
+  @override
+  String get adminPasswordReset => 'Құпиясөз қалпына келтірілді';
+
+  @override
+  String get adminResetVerb => 'Қалпына келтіру';
+
+  @override
+  String adminShortError(String error) {
+    return 'Қате: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Қолдау өтініштері жоқ';
+
+  @override
+  String get adminUserFallback => 'Пайдаланушы';
+
+  @override
+  String get apiErrTooManyRequests => 'Сұраулар тым көп. Кейінірек көріңіз.';
+
+  @override
+  String get apiErrMoveConflict => 'Жүріс қақтығысты. Қайталаңыз.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Жасарту';
+
+  @override
+  String get elixirGroupAge => 'Қартаю';
+
+  @override
+  String get elixirGroupAccelerate => 'Жеделдету';
+
+  @override
+  String get elixirEffectRejuvenate => 'жасарту';
+
+  @override
+  String get elixirEffectAge => 'қартаю';
+
+  @override
+  String get elixirEffectAccelerate => 'жеделдету';
+
+  @override
+  String get elixirAdjCelebration => 'Мерекелік';
+
+  @override
+  String get elixirAdjNature => 'Табиғи';
+
+  @override
+  String get elixirAdjLegends => 'Аңыздық';
+
+  @override
+  String get elixirAdjCosmic => 'Ғарыштық';
+
+  @override
+  String get elixirAdjAdventure => 'Шытырман';
+
+  @override
+  String get elixirAdjJewels => 'Асыл';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect эликсирі';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Жасарту';
+
+  @override
+  String get elixirUseAge => 'Қартаю';
+
+  @override
+  String get elixirUseAccelerate => 'Жеделдету';
+
+  @override
+  String get elixirUse => 'Қолдану';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count күн',
+      one: '$count күн',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count сағат',
+      one: '$count сағат',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count минут',
+      one: '$count минут',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

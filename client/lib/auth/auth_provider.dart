@@ -89,6 +89,8 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   AuthStateNotifier(this._ref) : super(const AsyncValue.loading()) {
     _resumeObserver = _AuthResumeObserver(ensureSessionFresh);
     WidgetsBinding.instance.addObserver(_resumeObserver);
+    _ref.read(authRepositoryProvider).onSessionInvalidated =
+        _onSessionInvalidated;
     _loadUser();
   }
 
@@ -243,8 +245,17 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     }
   }
 
+  void _onSessionInvalidated() {
+    if (!mounted) return;
+    state = const AsyncValue.data(null);
+    clearUserScopedCaches(_ref);
+  }
+
   @override
   void dispose() {
+    try {
+      _ref.read(authRepositoryProvider).onSessionInvalidated = null;
+    } catch (_) {}
     WidgetsBinding.instance.removeObserver(_resumeObserver);
     super.dispose();
   }

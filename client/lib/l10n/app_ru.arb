@@ -28,13 +28,20 @@
     }
   },
   "settingsGamepadDisconnected": "Геймпад не найден. Подключите контроллер и нажмите любую кнопку.",
-  "settingsGamepadHelpNavigate": "Крест / стик — меню и курсор на поле",
-  "settingsGamepadHelpConfirm": "A / Крест — выбрать или сходить",
-  "settingsGamepadHelpBack": "B / Круг — назад или снять выбор",
-  "settingsGamepadHelpTabs": "L1 / R1 — вкладки меню",
+  "settingsGamepadGenericName": "Контроллер",
+  "settingsGamepadHelpNavigate": "Навигация",
+  "settingsGamepadHelpConfirm": "Выбрать",
+  "settingsGamepadHelpBack": "Назад",
+  "settingsGamepadHelpTabs": "Вкладки",
   "settingsGamepadHelpPlay": "Курсор на поле и в руке: шашки, крестики-нолики, морской бой, дурак, уно, покер и нарды",
-  "settingsGamepadHelpCards": "В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать",
-  "settingsGamepadHelpKeyboard": "В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть",
+  "settingsGamepadHelpCards": "Карты",
+  "settingsGamepadHelpKeyboard": "Клавиатура",
+  "settingsGamepadHelpBalance": "Баланс",
+  "settingsGamepadHelpLogout": "Выход",
+  "settingsGamepadHelpPage": "Страница",
+  "settingsGamepadLayoutXbox": "Раскладка Xbox",
+  "settingsGamepadLayoutPlayStation": "Раскладка PlayStation",
+  "settingsGamepadLayoutNintendo": "Раскладка Nintendo",
   "gamepadKeyboardTitle": "Клавиатура",
   "gamepadKeyboardSpace": "Пробел",
   "gamepadLegendConfirm": "Выбрать",
@@ -348,6 +355,21 @@
   "gamesCheckersModeEnglish": "Английские",
   "gamesCheckersModeGiveaway": "Поддавки",
   "gamesCheckersModeCorners": "Уголки",
+  "gamesChess": "Шахматы",
+  "gamesChessModeClassic": "Классика",
+  "gamesChessModeRapid": "Рапид",
+  "gamesChessModeBlitz": "Блиц",
+  "gamesChessModeBullet": "Пуля",
+  "chessPieceQueen": "Ферзь",
+  "chessPieceRook": "Ладья",
+  "chessPieceBishop": "Слон",
+  "chessPieceKnight": "Конь",
+  "chessPromotionTitle": "Превращение пешки",
+  "chessDrawStalemate": "Ничья: пат",
+  "chessDrawInsufficient": "Ничья: недостаточно материала для мата",
+  "chessDrawRepetition": "Ничья: троекратное повторение позиции",
+  "chessDrawFiftyMove": "Ничья: правило 50 ходов",
+  "chessCheck": "Шах",
   "rulesCheckersPlayers": "Игроки: 2.",
   "rulesCheckersMode": "Режим: {mode}.",
   "@rulesCheckersMode": {
@@ -375,6 +397,29 @@
   "rulesCheckersPlayCorners": "Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.",
   "rulesCheckersPlayCornersNoReturn": "Фишка, которая уже покинула свой стартовый угол, не может вернуться в него.",
   "rulesCheckersPlayCornersLeaveHome": "Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.",
+  "rulesCheckersDrawRussian": "Ничья, если позиция повторилась трижды или 15 ходов каждой стороны прошли без взятия, хода простой и превращения в дамку.",
+  "rulesCheckersDrawEnglish": "Ничья, если позиция повторилась трижды, если 40 ходов каждой стороны не было взятия и хода простой, или если осталось по одной дамке.",
+  "rulesCheckersDrawGiveaway": "Ничья, если позиция повторилась трижды или 15 ходов каждой стороны в поддавках прошли без взятия, хода простой и превращения в дамку.",
+  "rulesCheckersDrawCorners": "Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашку в целевой угол.",
+  "rulesChessPlayers": "Игроки: 2.",
+  "rulesChessMode": "Режим: {mode}.",
+
+  "@rulesChessMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesChessPlayClassic": "Доска 8×8. У каждого король, ферзь, две ладьи, два слона, два коня и восемь пешек. Белые ходят первыми. Король — на одну клетку, ферзь — по вертикали, горизонтали и диагонали, ладья — по прямым, слон — по диагонали, конь — буквой «Г». Пешка идёт вперёд на одну клетку (с начальной — на две), бьёт по диагонали; есть взятие на проходе и превращение на последней линии. Рокировка — если король и ладья не ходили и путь свободен. Побеждает тот, кто поставил мат или соперник сдался.",
+  "rulesChessDrawClassic": "Ничья при пате, троекратном повторении позиции, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.",
+  "rulesChessClockClassic": "Контроль партии: 60+0 — 60 минут на всю партию, без добавления.",
+  "rulesChessClockRapid": "Контроль партии: 10+0 — 10 минут на всю партию, без добавления.",
+  "rulesChessClockBlitz": "Контроль партии: 5+0 — 5 минут на всю партию, без добавления.",
+  "rulesChessClockBullet": "Контроль партии: 3+2 — 3 минуты на партию плюс 2 секунды за каждый ход.",
+  "checkersDrawRepetition": "Ничья — позиция повторилась трижды",
+  "checkersDrawNoProgress": "Ничья — ходы не ведут к победе",
+  "checkersDrawInsufficient": "Ничья — недостаточно сил для победы",
   "rulesNardyTitle": "Нарды — правила",
   "rulesNardyPlayers": "Игроки: 2.",
   "rulesNardyMode": "Режим: {mode}.",
@@ -396,6 +441,7 @@
   "nardyDoneTurn": "Готово",
   "nardyAutoConfirm": "Автоподтверждение",
   "nardyAutoConfirmHint": "После всех ходов сразу передать ход сопернику",
+  "nardyLayoutToggle": "Поменять раскладку",
   "nardyNoMoves": "Ходов нет",
   "nardyYourRoll": "Ваш бросок",
   "nardyPipsShort": "Осталось:",
@@ -714,7 +760,9 @@
   "lobbyNoFriendsOnline": "Нет друзей онлайн. Отправьте ссылку на игру выше или дождитесь, пока друзья появятся в сети.",
   "gameBot": "Бот",
   "gameOpponent": "Соперник",
+  "gameYou": "Вы",
   "gameYouWon": "Вы победили!",
+  "gameYouWonShort": "Вы выиграли",
   "gameYouLost": "Вы проиграли",
   "gameYouWonOpponentLeft": "Вы победили, соперник вышел",
   "gameYouWonOpponentTimeout": "Вы победили, время соперника вышло",
@@ -727,6 +775,11 @@
   "gameSurrenderTitle": "Сдаться?",
   "gameSurrenderConfirm": "Если вы сдадитесь, вы проиграете. Сдаться?",
   "gameOfferDraw": "Предложить ничью",
+  "gameFlipBoard": "Перевернуть доску",
+  "gameReviewStart": "К началу партии",
+  "gameReviewPrev": "Ход назад",
+  "gameReviewNext": "Ход вперёд",
+  "gameReviewEnd": "К текущей позиции",
   "gameOfferDrawTitle": "Предложить ничью?",
   "gameOfferDrawConfirm": "Отправить сопернику предложение ничьей?",
   "gameAcceptDrawTitle": "Принять ничью?",
@@ -812,6 +865,9 @@
   "shopCollectionsSubtitle": "Витрина профиля, подарки и доход",
   "shopStakes": "Ставки",
   "shopStakesSubtitle": "Разблокировка повышенных ставок",
+  "shopEmojisHelp": "Анимированные смайлики для чата. Купите набор — и отправляйте его в сообщениях друзьям.",
+  "shopCollectionsHelp": "Продать можно только новую или винтажную коллекцию: продажа 80% от стоимости у нового и продажа 300% от стоимости у винтажа. Потрепанное, уставшее и ветхое продать нельзя.\n\nСоберите набор предметов: они появляются в витрине профиля, их можно дарить. Каждый предмет каждый день приносит монеты, а полный набор — ещё и отдельный бонус.\n\nДневной доход предмета зависит от состояния и считается от обычной суммы. Новое приносит 100%. Потрепанное — 60%. Уставшее — 40%. Ветхое — 100%. Винтажный предмет приносит 200%, то есть вдвое больше обычного дохода.\n\nБонус полного набора не меняется, пока набор не станет винтажным. Набор винтажный, когда винтажный каждый его предмет: тогда бонус составляет 300%, втрое больше обычного.\n\nСостояние зависит от того, как давно предмет у вас. Новое — первые 7 дней. Потрепанное — с 8-го дня до 2 месяцев. Уставшее — с 2 до 6 месяцев. Ветхое — с 6 месяцев до года. Винтаж — от года.",
+  "shopStakesHelp": "Разблокируйте более высокие ставки в играх. Чем выше ставка, тем больше банк и выигрыш.",
   "inventoryTitle": "Предметы",
   "inventoryEmpty": "Пока ничего нет — загляните в магазин",
   "inventoryFrames": "Рамки",
@@ -1041,6 +1097,7 @@
     }
   },
   "shopOwned": "Куплено",
+  "shopHave": "Есть",
   "shopEmpty": "Пока пусто",
   "shopPurchased": "{title} куплен",
   "@shopPurchased": {
@@ -1077,7 +1134,12 @@
     }
   },
   "shopBuyOnce": "Покупка один раз",
-  "shopSellRefund": "Продажа вернет 80% стоимости",
+  "shopSellRefund": "Продажа зависит от состояния коллекции",
+  "collectionConditionNew": "Новое",
+  "collectionConditionWorn": "Потрепанное",
+  "collectionConditionTired": "Уставшее",
+  "collectionConditionShabby": "Ветхое",
+  "collectionConditionVintage": "Винтаж",
   "shopCollectionAdded": "{title} добавлен в профиль",
   "@shopCollectionAdded": {
     "placeholders": {
@@ -1108,6 +1170,9 @@
   },
   "inventorySellTitle": "Продать?",
   "inventorySellDesc": "Вы получите {amount}",
+  "inventoryCollectionNotSellable": "Продать можно только новую или винтажную коллекцию.",
+  "inventoryCollectionNotSellableTitle": "Нельзя продать",
+  "inventoryCollectionNotSellableHint": "Продать можно только новый предмет или винтажный. Воспользуйтесь эликсиром, чтобы изменить состояние.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {
@@ -1643,5 +1708,124 @@
   "chatTitleDurak4": "Дурак на четверых",
   "rulesTttUltimate": "Ультимейт: 9 мини-полей 3×3. Ход в клетку отправляет соперника в соответствующее мини-поле. Выигрывает тот, кто собрал линию на мета-поле.",
   "rulesTttMulti3": "На троих: поле 3×3, трое игроков (X, O, △). Кто собрал линию из своих знаков — побеждает.",
-  "rulesTttMulti4": "На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает."
+  "rulesTttMulti4": "На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает.",
+  "adminUsersTab": "Пользователи",
+  "adminSupportTab": "Поддержка",
+  "adminSearchHint": "Поиск по email или нику",
+  "adminRoleAdmins": "Админы",
+  "adminRoleUsers": "Пользователи",
+  "adminRoleAll": "Все роли",
+  "adminStatusFrozen": "Замороженные",
+  "adminStatusActive": "Активные",
+  "adminStatusAny": "Любой статус",
+  "adminOrderDesc": "По убыванию",
+  "adminOrderAsc": "По возрастанию",
+  "adminLoadFailed": "Ошибка загрузки: {error}",
+  "@adminLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminUsersEmpty": "Пользователи не найдены",
+  "adminSortLastSeen": "По последнему визиту",
+  "adminSortEmail": "По email",
+  "adminSortCreated": "По дате рег.",
+  "adminBronzeBalance": "{amount} бр.",
+  "@adminBronzeBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "adminRevokeAdmin": "Убрать админа",
+  "adminGrantAdmin": "Сделать админом",
+  "adminAdminRevoked": "Права админа сняты",
+  "adminAdminGranted": "Права админа выданы",
+  "adminGrantCoins": "Начислить монеты",
+  "adminWriteSupport": "Написать от поддержки",
+  "adminUnfreeze": "Разморозить",
+  "adminFreeze": "Заморозить",
+  "adminUnfrozen": "Разморожен",
+  "adminFrozenDone": "Заморожен",
+  "adminResetPassword": "Сбросить пароль",
+  "adminCoinsAmountHint": "Количество (отрицательное = списание)",
+  "adminReasonOptional": "Причина (необязательно)",
+  "adminGrantSent": "Карточка отправлена в чат поддержки",
+  "adminCoinsDebited": "Списано {amount} бронзовых",
+  "@adminCoinsDebited": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "adminGrantVerb": "Начислить",
+  "adminNewPasswordHint": "Новый пароль (мин. 6)",
+  "adminPasswordReset": "Пароль сброшен",
+  "adminResetVerb": "Сбросить",
+  "adminShortError": "Ошибка: {error}",
+  "@adminShortError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSupportEmpty": "Нет обращений в поддержку",
+  "adminUserFallback": "Пользователь",
+  "apiErrTooManyRequests": "Слишком много запросов. Попробуйте позже.",
+  "apiErrMoveConflict": "Ход конфликтует. Повторите.",
+  "shopElixirs": "Эликсиры",
+  "shopElixirsSubtitle": "Омоложение, старение и ускорение коллекций",
+  "shopElixirsHelp": "Три полки: омоложение, старение и ускорение. На каждой шесть эликсиров — по одному на набор коллекций. Эликсир действует только на свой набор.\n\nОмоложение делает коллекцию на шаг новее и не новее, чем новое. Старение делает на шаг старше и не старше, чем ветхое. Ускорение только для ветхой: до винтажа остаётся 3 месяца, один раз. Винтаж эликсиром не наступает.\n\nКупленный эликсир лежит в предметах. Его применяют с карточки коллекции или с карточки эликсира. Каждый раз тратится одна штука.",
+  "elixirGroupRejuvenate": "Омоложение",
+  "elixirGroupAge": "Старение",
+  "elixirGroupAccelerate": "Ускорение",
+  "elixirEffectRejuvenate": "омоложения",
+  "elixirEffectAge": "старения",
+  "elixirEffectAccelerate": "ускорения",
+  "elixirAdjCelebration": "Праздничный",
+  "elixirAdjNature": "Природный",
+  "elixirAdjLegends": "Легендарный",
+  "elixirAdjCosmic": "Космический",
+  "elixirAdjAdventure": "Приключенческий",
+  "elixirAdjJewels": "Драгоценный",
+  "elixirName": "{adjective} эликсир {effect}",
+  "@elixirName": {"placeholders": {"adjective": {"type": "String"}, "effect": {"type": "String"}}},
+  "elixirHelpRejuvenate": "Делает коллекцию на шаг новее. Не новее, чем новое.",
+  "elixirHelpAge": "Делает коллекцию на шаг старше. Не старше, чем ветхое.",
+  "elixirHelpAccelerate": "Только для ветхой. До винтажа остаётся 3 месяца, один раз.",
+  "elixirUseRejuvenate": "Омолодить",
+  "elixirUseAge": "Состарить",
+  "elixirUseAccelerate": "Ускорить",
+  "elixirUse": "Использовать",
+  "collectionLeftDays": "{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дней}}",
+  "@collectionLeftDays": {"placeholders": {"count": {"type": "int"}}},
+  "collectionLeftHours": "{count, plural, one{{count} час} few{{count} часа} many{{count} часов} other{{count} часов}}",
+  "@collectionLeftHours": {"placeholders": {"count": {"type": "int"}}},
+  "collectionLeftMinutes": "{count, plural, one{{count} минута} few{{count} минуты} many{{count} минут} other{{count} минут}}",
+  "@collectionLeftMinutes": {"placeholders": {"count": {"type": "int"}}},
+  "elixirSetOnly": "Только набор «{set}».",
+  "@elixirSetOnly": {"placeholders": {"set": {"type": "String"}}},
+  "elixirPickCollection": "Выберите коллекцию",
+  "elixirNoTarget": "Нет коллекции этого набора, на которую эликсир подействует",
+  "elixirApplied": "Эликсир применён",
+  "elixirConfirmTitle": "Применить эликсир?",
+  "elixirConfirmBody": "{elixir}\n{collection}",
+  "@elixirConfirmBody": {"placeholders": {"elixir": {"type": "String"}, "collection": {"type": "String"}}},
+  "inventoryNoElixirs": "Нет эликсиров — купите в магазине",
+  "elixirNotApplicable": "Сейчас этот эликсир на коллекцию не подействует",
+  "elixirWrongSet": "Эликсир от другого набора",
+  "elixirNotOwned": "Эликсира нет",
+  "collectionUntil": "До {state} {left}",
+  "@collectionUntil": {"placeholders": {"state": {"type": "String"}, "left": {"type": "String"}}},
+  "collectionLeftSoon": "меньше минуты",
+  "collectionCondGenNew": "нового",
+  "collectionCondGenWorn": "потрепанного",
+  "collectionCondGenTired": "уставшего",
+  "collectionCondGenShabby": "ветхого",
+  "collectionCondGenVintage": "винтажа"
 }

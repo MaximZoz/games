@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้';
 
   @override
-  String get settingsGamepadHelpNavigate => 'ปุ่มทิศทาง / สติ๊ก — เมนูและเคอร์เซอร์บนกระดาน';
+  String get settingsGamepadGenericName => 'คอนโทรลเลอร์';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / กากบาท — ยืนยันหรือเดิน';
+  String get settingsGamepadHelpNavigate => 'นำทาง';
 
   @override
-  String get settingsGamepadHelpBack => 'B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก';
+  String get settingsGamepadHelpConfirm => 'เลือก';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — แท็บเมนู';
+  String get settingsGamepadHelpBack => 'กลับ';
+
+  @override
+  String get settingsGamepadHelpTabs => 'แท็บ';
 
   @override
   String get settingsGamepadHelpPlay => 'เคอร์เซอร์บนกระดานและไพ่ในมือ: หมากฮอส โอเอกซ์ เรือรบ ดูรัก อุโน โป๊กเกอร์ และแบ็กแกมมอน';
 
   @override
-  String get settingsGamepadHelpCards => 'ในไพ่: ปุ่มทิศทางเลื่อนมือ A ลงไพ่ X เลือก / อูโน Y หยิบ ผ่าน หรือจั่ว';
+  String get settingsGamepadHelpCards => 'ไพ่';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด';
+  String get settingsGamepadHelpKeyboard => 'คีย์บอร์ด';
+
+  @override
+  String get settingsGamepadHelpBalance => 'ยอดเงิน';
+
+  @override
+  String get settingsGamepadHelpLogout => 'ออก';
+
+  @override
+  String get settingsGamepadHelpPage => 'หน้า';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'ปุ่ม Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'ปุ่ม PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'ปุ่ม Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'คีย์บอร์ด';
@@ -776,6 +799,51 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesCheckersModeCorners => 'มุม';
 
   @override
+  String get gamesChess => 'หมากรุก';
+
+  @override
+  String get gamesChessModeClassic => 'คลาสสิก';
+
+  @override
+  String get gamesChessModeRapid => 'ราปิด';
+
+  @override
+  String get gamesChessModeBlitz => 'บลิทซ์';
+
+  @override
+  String get gamesChessModeBullet => 'กระสุน';
+
+  @override
+  String get chessPieceQueen => 'ควีน';
+
+  @override
+  String get chessPieceRook => 'เรือ';
+
+  @override
+  String get chessPieceBishop => 'บิชอป';
+
+  @override
+  String get chessPieceKnight => 'อัศวิน';
+
+  @override
+  String get chessPromotionTitle => 'การเลื่อนขั้นเบี้ย';
+
+  @override
+  String get chessDrawStalemate => 'เสมอ: อับ';
+
+  @override
+  String get chessDrawInsufficient => 'เสมอ: หมากไม่พอรุกจน';
+
+  @override
+  String get chessDrawRepetition => 'เสมอ: ตำแหน่งซ้ำสามครั้ง';
+
+  @override
+  String get chessDrawFiftyMove => 'เสมอ: กฎ 50 ตา';
+
+  @override
+  String get chessCheck => 'รุก';
+
+  @override
   String get rulesCheckersPlayers => 'ผู้เล่น: 2';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'หมากที่ยังอยู่ในบ้านต้องออกภายใน 25 ตาแรกของผู้เล่น';
+
+  @override
+  String get rulesCheckersDrawRussian => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายไม่มีความคืบหน้า: ไม่กิน ไม่เดินหมากธรรมดา และไม่เลื่อนเป็นคิง';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'เสมอหากตำแหน่งซ้ำสามครั้ง หาก 40 ตาต่อฝ่ายผ่านไปโดยไม่กินและไม่เดินหมากธรรมดา หรือเหลือคิงฝ่ายละตัว';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายในโหมดยกให้ไม่มีความคืบหน้า: ไม่กิน ไม่เดินหมากธรรมดา และไม่เลื่อนเป็นคิง';
+
+  @override
+  String get rulesCheckersDrawCorners => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 25 ตาต่อฝ่ายไม่ได้เพิ่มหมากในมุมเป้าหมาย';
+
+  @override
+  String get rulesChessPlayers => 'ผู้เล่น: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'โหมด: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'กระดาน 8×8 แต่ละฝ่ายมีคิง ควีน เรือ 2 บิชอป 2 ม้า 2 และเบี้ย 8 ขาวเดินก่อน เดินตามปกติ มีการกินผ่าน โปรโมต และเข้าปราสาท ชนะด้วยรุกฆาตหรือคู่ต่อสู้ยอมแพ้';
+
+  @override
+  String get rulesChessDrawClassic => 'เสมอเมื่อแพต ซ้ำสามครั้ง กติกา 50 ตา หมากไม่พอรุกฆาต หรือตกลงกัน';
+
+  @override
+  String get rulesChessClockClassic => 'นาฬิกา: 60+0 — 60 นาทีทั้งเกม ไม่มีบวกเวลา';
+
+  @override
+  String get rulesChessClockRapid => 'นาฬิกา: 10+0 — 10 นาทีทั้งเกม ไม่มีบวกเวลา';
+
+  @override
+  String get rulesChessClockBlitz => 'นาฬิกา: 5+0 — 5 นาทีทั้งเกม ไม่มีบวกเวลา';
+
+  @override
+  String get rulesChessClockBullet => 'นาฬิกา: 3+2 — 3 นาที บวก 2 วินาทีต่อตา';
+
+  @override
+  String get checkersDrawRepetition => 'เสมอ — ตำแหน่งซ้ำสามครั้ง';
+
+  @override
+  String get checkersDrawNoProgress => 'เสมอ — หมากไม่นำไปสู่ชัยชนะ';
+
+  @override
+  String get checkersDrawInsufficient => 'เสมอ — หมากไม่พอสำหรับชนะ';
 
   @override
   String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';
@@ -861,6 +976,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที';
+
+  @override
+  String get nardyLayoutToggle => 'เปลี่ยนการจัดเรียง';
 
   @override
   String get nardyNoMoves => 'ไม่มีตาเดิน';
@@ -1344,7 +1462,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gameOpponent => 'คู่แข่ง';
 
   @override
+  String get gameYou => 'คุณ';
+
+  @override
   String get gameYouWon => 'คุณชนะ!';
+
+  @override
+  String get gameYouWonShort => 'คุณชนะ';
 
   @override
   String get gameYouLost => 'คุณแพ้';
@@ -1381,6 +1505,21 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'เสนอเสมอ';
+
+  @override
+  String get gameFlipBoard => 'พลิกกระดาน';
+
+  @override
+  String get gameReviewStart => 'ไปที่จุดเริ่มเกม';
+
+  @override
+  String get gameReviewPrev => 'ย้อนกลับหนึ่งตา';
+
+  @override
+  String get gameReviewNext => 'เดินหน้าหนึ่งตา';
+
+  @override
+  String get gameReviewEnd => 'ไปที่ตำแหน่งปัจจุบัน';
 
   @override
   String get gameOfferDrawTitle => 'เสนอเสมอ?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'ปลดล็อกเดิมพันที่สูงขึ้น';
+
+  @override
+  String get shopEmojisHelp => 'อิโมจิเคลื่อนไหวสำหรับแชท ซื้อชุดแล้วส่งให้เพื่อนได้';
+
+  @override
+  String get shopCollectionsHelp => 'ขายได้เฉพาะคอลเลกชันใหม่หรือวินเทจ: ใหม่ขาย 80% ของราคา และวินเทจขาย 300% ของราคา ของเก่า ของเหนื่อย และของชำรุดขายไม่ได้\n\nสะสมชุดไอเท็ม: แสดงในตู้โปรไฟล์ ให้เป็นของขวัญได้ แต่ละชิ้นให้เหรียญทุกวัน และชุดที่ครบยังให้โบนัสแยกต่างหาก\n\nรายได้รายวันของไอเท็มขึ้นกับสภาพ และคิดจากจำนวนปกติ ใหม่ให้ 100% เก่าให้ 60% เหนื่อยให้ 40% ชำรุดให้ 100% ไอเท็มวินเทจให้ 200% คือสองเท่าของรายได้ปกติ\n\nโบนัสของชุดที่ครบไม่เปลี่ยน จนกว่าชุดนั้นจะเป็นวินเทจ ชุดเป็นวินเทจเมื่อทุกชิ้นในชุดเป็นวินเทจ: โบนัสจะเป็น 300% คือสามเท่าของปกติ\n\nสภาพขึ้นกับว่าคุณมีไอเท็มมานานแค่ไหน ใหม่ — 7 วันแรก เก่า — ตั้งแต่วันที่ 8 ถึง 2 เดือน เหนื่อย — 2 ถึง 6 เดือน ชำรุด — 6 เดือนถึง 1 ปี วินเทจ — ตั้งแต่ 1 ปี';
+
+  @override
+  String get shopStakesHelp => 'ปลดล็อกเดิมพันที่สูงขึ้น เดิมพันยิ่งสูง เงินกองกลางและรางวัลยิ่งใหญ่';
 
   @override
   String get inventoryTitle => 'ไอเท็ม';
@@ -1947,6 +2095,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopOwned => 'ซื้อแล้ว';
 
   @override
+  String get shopHave => 'มีแล้ว';
+
+  @override
   String get shopEmpty => 'ยังว่างอยู่';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopBuyOnce => 'ซื้อครั้งเดียว';
 
   @override
-  String get shopSellRefund => 'การขายคืน 80% ของราคา';
+  String get shopSellRefund => 'การขายขึ้นกับสภาพคอลเลกชัน';
+
+  @override
+  String get collectionConditionNew => 'ใหม่';
+
+  @override
+  String get collectionConditionWorn => 'เก่า';
+
+  @override
+  String get collectionConditionTired => 'เหนื่อย';
+
+  @override
+  String get collectionConditionShabby => 'ชำรุด';
+
+  @override
+  String get collectionConditionVintage => 'วินเทจ';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'คุณจะได้รับ $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'ขายได้เฉพาะคอลเลกชันใหม่หรือวินเทจ';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'ขายไม่ได้';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'ขายได้เฉพาะของใหม่หรือวินเทจ ใช้ elixir เพื่อเปลี่ยนสภาพ';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 คน: กระดาน 4×4 ผู้เล่นสี่คน (X, O, △, □) ชนะด้วยเส้นจากสัญลักษณ์ของคุณ';
+
+  @override
+  String get adminUsersTab => 'ผู้ใช้';
+
+  @override
+  String get adminSupportTab => 'ซัพพอร์ต';
+
+  @override
+  String get adminSearchHint => 'ค้นหาด้วยอีเมลหรือชื่อ';
+
+  @override
+  String get adminRoleAdmins => 'แอดมิน';
+
+  @override
+  String get adminRoleUsers => 'ผู้ใช้';
+
+  @override
+  String get adminRoleAll => 'ทุกบทบาท';
+
+  @override
+  String get adminStatusFrozen => 'ถูกระงับ';
+
+  @override
+  String get adminStatusActive => 'ใช้งานอยู่';
+
+  @override
+  String get adminStatusAny => 'ทุกสถานะ';
+
+  @override
+  String get adminOrderDesc => 'มากไปน้อย';
+
+  @override
+  String get adminOrderAsc => 'น้อยไปมาก';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'โหลดไม่สำเร็จ: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'ไม่พบผู้ใช้';
+
+  @override
+  String get adminSortLastSeen => 'ตามการเข้าล่าสุด';
+
+  @override
+  String get adminSortEmail => 'ตามอีเมล';
+
+  @override
+  String get adminSortCreated => 'ตามวันสมัคร';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount ทองแดง';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'ถอดแอดมิน';
+
+  @override
+  String get adminGrantAdmin => 'ตั้งเป็นแอดมิน';
+
+  @override
+  String get adminAdminRevoked => 'ถอดสิทธิ์แอดมินแล้ว';
+
+  @override
+  String get adminAdminGranted => 'ให้สิทธิ์แอดมินแล้ว';
+
+  @override
+  String get adminGrantCoins => 'ให้เหรียญ';
+
+  @override
+  String get adminWriteSupport => 'เขียนในฐานะซัพพอร์ต';
+
+  @override
+  String get adminUnfreeze => 'ปลดระงับ';
+
+  @override
+  String get adminFreeze => 'ระงับ';
+
+  @override
+  String get adminUnfrozen => 'ปลดระงับแล้ว';
+
+  @override
+  String get adminFrozenDone => 'ระงับแล้ว';
+
+  @override
+  String get adminResetPassword => 'รีเซ็ตรหัสผ่าน';
+
+  @override
+  String get adminCoinsAmountHint => 'จำนวน (ค่าลบ = หัก)';
+
+  @override
+  String get adminReasonOptional => 'เหตุผล (ไม่บังคับ)';
+
+  @override
+  String get adminGrantSent => 'ส่งการ์ดไปแชทซัพพอร์ตแล้ว';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'หักทองแดง $amount';
+  }
+
+  @override
+  String get adminGrantVerb => 'ให้';
+
+  @override
+  String get adminNewPasswordHint => 'รหัสผ่านใหม่ (อย่างน้อย 6)';
+
+  @override
+  String get adminPasswordReset => 'รีเซ็ตรหัสผ่านแล้ว';
+
+  @override
+  String get adminResetVerb => 'รีเซ็ต';
+
+  @override
+  String adminShortError(String error) {
+    return 'ข้อผิดพลาด: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'ไม่มีคำขอซัพพอร์ต';
+
+  @override
+  String get adminUserFallback => 'ผู้ใช้';
+
+  @override
+  String get apiErrTooManyRequests => 'มีคำขอมากเกินไป ลองใหม่ภายหลัง';
+
+  @override
+  String get apiErrMoveConflict => 'การเดินชนกัน ลองอีกครั้ง';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'ฟื้นวัย';
+
+  @override
+  String get elixirGroupAge => 'ชรา';
+
+  @override
+  String get elixirGroupAccelerate => 'เร่ง';
+
+  @override
+  String get elixirEffectRejuvenate => 'ฟื้นวัย';
+
+  @override
+  String get elixirEffectAge => 'ชรา';
+
+  @override
+  String get elixirEffectAccelerate => 'เร่ง';
+
+  @override
+  String get elixirAdjCelebration => 'เทศกาล';
+
+  @override
+  String get elixirAdjNature => 'ธรรมชาติ';
+
+  @override
+  String get elixirAdjLegends => 'ตำนาน';
+
+  @override
+  String get elixirAdjCosmic => 'อวกาศ';
+
+  @override
+  String get elixirAdjAdventure => 'ผจญภัย';
+
+  @override
+  String get elixirAdjJewels => 'อัญมณี';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return 'ยา$effect$adjective';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'ฟื้นวัย';
+
+  @override
+  String get elixirUseAge => 'ทำให้ชรา';
+
+  @override
+  String get elixirUseAccelerate => 'เร่ง';
+
+  @override
+  String get elixirUse => 'ใช้';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count วัน',
+      one: '$count วัน',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ชม.',
+      one: '$count ชม.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count นาที',
+      one: '$count นาที',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

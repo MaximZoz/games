@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu dan kursor papan';
+  String get settingsGamepadGenericName => 'Kontroler';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Silang — konfirmasi atau jalan';
+  String get settingsGamepadHelpNavigate => 'Navigasi';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Lingkaran — kembali atau batal pilih';
+  String get settingsGamepadHelpConfirm => 'Pilih';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+  String get settingsGamepadHelpBack => 'Kembali';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tab';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursor papan dan kartu di tangan: dam, tic-tac-toe, kapal perang, durak, uno, poker, dan backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Di kartu: D-pad menggeser tangan, A main, X pilih / Uno, Y ambil, lewat, atau undi';
+  String get settingsGamepadHelpCards => 'Kartu';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup';
+  String get settingsGamepadHelpKeyboard => 'Papan ketik';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Keluar';
+
+  @override
+  String get settingsGamepadHelpPage => 'Halaman';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Tata letak Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Tata letak PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Tata letak Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Papan ketik';
@@ -776,6 +799,51 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Sudut';
 
   @override
+  String get gamesChess => 'Catur';
+
+  @override
+  String get gamesChessModeClassic => 'Klasik';
+
+  @override
+  String get gamesChessModeRapid => 'Cepat';
+
+  @override
+  String get gamesChessModeBlitz => 'Kilat';
+
+  @override
+  String get gamesChessModeBullet => 'Peluru';
+
+  @override
+  String get chessPieceQueen => 'Menteri';
+
+  @override
+  String get chessPieceRook => 'Benteng';
+
+  @override
+  String get chessPieceBishop => 'Gajah';
+
+  @override
+  String get chessPieceKnight => 'Kuda';
+
+  @override
+  String get chessPromotionTitle => 'Promosi pion';
+
+  @override
+  String get chessDrawStalemate => 'Seri: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Seri: materi tidak cukup';
+
+  @override
+  String get chessDrawRepetition => 'Seri: pengulangan tiga kali';
+
+  @override
+  String get chessDrawFiftyMove => 'Seri: aturan 50 langkah';
+
+  @override
+  String get chessCheck => 'Sekak';
+
+  @override
   String get rulesCheckersPlayers => 'Pemain: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Buah yang masih di rumah harus keluar dalam 25 langkah pertama pemain.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Seri jika posisi berulang tiga kali, atau 15 langkah tiap pihak tanpa kemajuan: tanpa makan, langkah pion, atau promosi.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Seri jika posisi berulang tiga kali, jika 40 langkah tiap pihak tanpa makan dan langkah pion, atau tersisa satu ratu tiap pihak.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Seri jika posisi berulang tiga kali, atau 15 langkah tiap pihak di giveaway tanpa kemajuan: tanpa makan, langkah pion, atau promosi.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Seri jika posisi berulang tiga kali, atau 25 langkah tiap pihak tidak menambah bidak di sudut target.';
+
+  @override
+  String get rulesChessPlayers => 'Pemain: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Papan 8×8. Setiap sisi punya raja, menteri, dua benteng, dua gajah, dua kuda, dan delapan pion. Putih jalan dulu. Langkah biasa, en passant, promosi, dan rokade. Menang dengan skakmat atau lawan menyerah.';
+
+  @override
+  String get rulesChessDrawClassic => 'Seri karena pat, pengulangan tiga kali, aturan 50 langkah, material kurang, atau kesepakatan.';
+
+  @override
+  String get rulesChessClockClassic => 'Jam: 60+0 — 60 menit untuk seluruh partai, tanpa tambahan.';
+
+  @override
+  String get rulesChessClockRapid => 'Jam: 10+0 — 10 menit untuk seluruh partai, tanpa tambahan.';
+
+  @override
+  String get rulesChessClockBlitz => 'Jam: 5+0 — 5 menit untuk seluruh partai, tanpa tambahan.';
+
+  @override
+  String get rulesChessClockBullet => 'Jam: 3+2 — 3 menit plus 2 detik per langkah.';
+
+  @override
+  String get checkersDrawRepetition => 'Seri — posisi terulang tiga kali';
+
+  @override
+  String get checkersDrawNoProgress => 'Seri — langkah tidak menuju kemenangan';
+
+  @override
+  String get checkersDrawInsufficient => 'Seri — material tidak cukup untuk menang';
 
   @override
   String get rulesNardyTitle => 'Backgammon — aturan';
@@ -861,6 +976,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Setelah semua langkah, giliran langsung berpindah';
+
+  @override
+  String get nardyLayoutToggle => 'Ubah susunan';
 
   @override
   String get nardyNoMoves => 'Tidak ada langkah';
@@ -1344,7 +1462,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get gameOpponent => 'Lawan';
 
   @override
+  String get gameYou => 'Anda';
+
+  @override
   String get gameYouWon => 'Anda menang!';
+
+  @override
+  String get gameYouWonShort => 'Anda menang';
 
   @override
   String get gameYouLost => 'Anda kalah';
@@ -1381,6 +1505,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Tawarkan seri';
+
+  @override
+  String get gameFlipBoard => 'Balik papan';
+
+  @override
+  String get gameReviewStart => 'Ke awal permainan';
+
+  @override
+  String get gameReviewPrev => 'Langkah mundur';
+
+  @override
+  String get gameReviewNext => 'Langkah maju';
+
+  @override
+  String get gameReviewEnd => 'Ke posisi saat ini';
 
   @override
   String get gameOfferDrawTitle => 'Tawarkan seri?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Buka taruhan lebih tinggi';
+
+  @override
+  String get shopEmojisHelp => 'Emoji animasi untuk obrolan. Beli satu set dan kirim ke teman.';
+
+  @override
+  String get shopCollectionsHelp => 'Hanya koleksi baru atau vintage yang bisa dijual: 80% dari harga jika baru dan 300% dari harga jika vintage. Usang, lelah, dan lapuk tidak bisa dijual.\n\nKumpulkan set item: muncul di etalase profil, bisa dihadiahkan. Setiap item memberi koin setiap hari, dan set lengkap menambah bonus terpisah.\n\nPendapatan harian item bergantung pada kondisi dan merupakan bagian dari jumlah biasa. Baru memberi 100%. Usang memberi 60%. Lelah memberi 40%. Lapuk memberi 100%. Item vintage memberi 200%, dua kali pendapatan harian biasa.\n\nBonus set lengkap tetap sama sampai set itu sendiri vintage. Set vintage bila setiap item di dalamnya vintage: bonusnya menjadi 300%, tiga kali jumlah biasa.\n\nKondisi bergantung sudah berapa lama item ada padamu. Baru — 7 hari pertama. Usang — hari ke-8 sampai 2 bulan. Lelah — 2 sampai 6 bulan. Lapuk — 6 bulan sampai 1 tahun. Vintage — setelah 1 tahun.';
+
+  @override
+  String get shopStakesHelp => 'Buka taruhan lebih tinggi. Semakin tinggi taruhan, semakin besar pot dan kemenangan.';
 
   @override
   String get inventoryTitle => 'Item';
@@ -1947,6 +2095,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get shopOwned => 'Dibeli';
 
   @override
+  String get shopHave => 'Punya';
+
+  @override
   String get shopEmpty => 'Masih kosong';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsId extends AppLocalizations {
   String get shopBuyOnce => 'Pembelian sekali';
 
   @override
-  String get shopSellRefund => 'Menjual mengembalikan 80% biaya';
+  String get shopSellRefund => 'Penjualan tergantung kondisi koleksi';
+
+  @override
+  String get collectionConditionNew => 'Baru';
+
+  @override
+  String get collectionConditionWorn => 'Usang';
+
+  @override
+  String get collectionConditionTired => 'Lelah';
+
+  @override
+  String get collectionConditionShabby => 'Lapuk';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsId extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Anda akan menerima $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Hanya koleksi baru atau vintage yang bisa dijual.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Tidak bisa dijual';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Hanya item baru atau vintage yang bisa dijual. Gunakan elixir untuk mengubah kondisinya.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 pemain: papan 4×4, empat pemain (X, O, △, □). Menang dengan menyelesaikan garis dari tanda Anda.';
+
+  @override
+  String get adminUsersTab => 'Pengguna';
+
+  @override
+  String get adminSupportTab => 'Dukungan';
+
+  @override
+  String get adminSearchHint => 'Cari lewat email atau nama';
+
+  @override
+  String get adminRoleAdmins => 'Admin';
+
+  @override
+  String get adminRoleUsers => 'Pengguna';
+
+  @override
+  String get adminRoleAll => 'Semua peran';
+
+  @override
+  String get adminStatusFrozen => 'Dibekukan';
+
+  @override
+  String get adminStatusActive => 'Aktif';
+
+  @override
+  String get adminStatusAny => 'Status apa pun';
+
+  @override
+  String get adminOrderDesc => 'Menurun';
+
+  @override
+  String get adminOrderAsc => 'Menaik';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Gagal memuat: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Tidak ada pengguna';
+
+  @override
+  String get adminSortLastSeen => 'Menurut kunjungan terakhir';
+
+  @override
+  String get adminSortEmail => 'Menurut email';
+
+  @override
+  String get adminSortCreated => 'Menurut tanggal daftar';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount perunggu';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Cabut admin';
+
+  @override
+  String get adminGrantAdmin => 'Jadikan admin';
+
+  @override
+  String get adminAdminRevoked => 'Hak admin dicabut';
+
+  @override
+  String get adminAdminGranted => 'Hak admin diberikan';
+
+  @override
+  String get adminGrantCoins => 'Beri koin';
+
+  @override
+  String get adminWriteSupport => 'Tulis sebagai dukungan';
+
+  @override
+  String get adminUnfreeze => 'Cairkan';
+
+  @override
+  String get adminFreeze => 'Bekukan';
+
+  @override
+  String get adminUnfrozen => 'Dicairkan';
+
+  @override
+  String get adminFrozenDone => 'Dibekukan';
+
+  @override
+  String get adminResetPassword => 'Atur ulang kata sandi';
+
+  @override
+  String get adminCoinsAmountHint => 'Jumlah (negatif = potong)';
+
+  @override
+  String get adminReasonOptional => 'Alasan (opsional)';
+
+  @override
+  String get adminGrantSent => 'Kartu dikirim ke chat dukungan';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount perunggu dipotong';
+  }
+
+  @override
+  String get adminGrantVerb => 'Beri';
+
+  @override
+  String get adminNewPasswordHint => 'Kata sandi baru (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Kata sandi diatur ulang';
+
+  @override
+  String get adminResetVerb => 'Atur ulang';
+
+  @override
+  String adminShortError(String error) {
+    return 'Kesalahan: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Tidak ada permintaan dukungan';
+
+  @override
+  String get adminUserFallback => 'Pengguna';
+
+  @override
+  String get apiErrTooManyRequests => 'Terlalu banyak permintaan. Coba lagi nanti.';
+
+  @override
+  String get apiErrMoveConflict => 'Langkah bentrok. Coba lagi.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Peremajaan';
+
+  @override
+  String get elixirGroupAge => 'Penuaan';
+
+  @override
+  String get elixirGroupAccelerate => 'Percepatan';
+
+  @override
+  String get elixirEffectRejuvenate => 'peremajaan';
+
+  @override
+  String get elixirEffectAge => 'penuaan';
+
+  @override
+  String get elixirEffectAccelerate => 'percepatan';
+
+  @override
+  String get elixirAdjCelebration => 'Perayaan';
+
+  @override
+  String get elixirAdjNature => 'Alam';
+
+  @override
+  String get elixirAdjLegends => 'Legendaris';
+
+  @override
+  String get elixirAdjCosmic => 'Kosmik';
+
+  @override
+  String get elixirAdjAdventure => 'Petualangan';
+
+  @override
+  String get elixirAdjJewels => 'Berharga';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return 'Elixir $effect $adjective';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Peremaja';
+
+  @override
+  String get elixirUseAge => 'Tuakan';
+
+  @override
+  String get elixirUseAccelerate => 'Percepat';
+
+  @override
+  String get elixirUse => 'Gunakan';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hari',
+      one: '$count hari',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jam',
+      one: '$count jam',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count menit',
+      one: '$count menit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

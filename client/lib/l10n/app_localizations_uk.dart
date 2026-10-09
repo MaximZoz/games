@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад не знайдено. Підключіть контролер і натисніть будь-яку кнопку.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Хрест / стік — меню і курсор на полі';
+  String get settingsGamepadGenericName => 'Контролер';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Хрест — вибрати або сходити';
+  String get settingsGamepadHelpNavigate => 'Навігація';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Коло — назад або зняти вибір';
+  String get settingsGamepadHelpConfirm => 'Вибрати';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — вкладки меню';
+  String get settingsGamepadHelpBack => 'Назад';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Вкладки';
 
   @override
   String get settingsGamepadHelpPlay => 'Курсор на полі та в руці: шашки, хрестики-нулики, морський бій, дурень, уно, покер і нарди';
 
   @override
-  String get settingsGamepadHelpCards => 'У картах: хрест — рука, A — хід, X — вибрати / Уно, Y — взяти, бито або добрати';
+  String get settingsGamepadHelpCards => 'Карти';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'У полі вводу A відкриває клавіатуру геймпада; X — розкладка, B — стерти або закрити';
+  String get settingsGamepadHelpKeyboard => 'Клавіатура';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Баланс';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Вихід';
+
+  @override
+  String get settingsGamepadHelpPage => 'Сторінка';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Розкладка Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Розкладка PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Розкладка Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Клавіатура';
@@ -776,6 +799,51 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Кутки';
 
   @override
+  String get gamesChess => 'Шахи';
+
+  @override
+  String get gamesChessModeClassic => 'Класика';
+
+  @override
+  String get gamesChessModeRapid => 'Рапід';
+
+  @override
+  String get gamesChessModeBlitz => 'Бліц';
+
+  @override
+  String get gamesChessModeBullet => 'Куля';
+
+  @override
+  String get chessPieceQueen => 'Ферзь';
+
+  @override
+  String get chessPieceRook => 'Тура';
+
+  @override
+  String get chessPieceBishop => 'Слон';
+
+  @override
+  String get chessPieceKnight => 'Кінь';
+
+  @override
+  String get chessPromotionTitle => 'Перетворення пішака';
+
+  @override
+  String get chessDrawStalemate => 'Нічия: пат';
+
+  @override
+  String get chessDrawInsufficient => 'Нічия: недостатньо матеріалу для мату';
+
+  @override
+  String get chessDrawRepetition => 'Нічия: триразове повторення позиції';
+
+  @override
+  String get chessDrawFiftyMove => 'Нічия: правило 50 ходів';
+
+  @override
+  String get chessCheck => 'Шах';
+
+  @override
   String get rulesCheckersPlayers => 'Гравці: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Фішки, які ще не вийшли з дому, мають залишити його за перші 25 ходів гравця.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Нічия, якщо позиція повторилася тричі або 15 ходів кожної сторони минули без узяття, ходу простої й перетворення на дамку.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Нічия, якщо позиція повторилася тричі, якщо 40 ходів кожної сторони не було узяття і ходу простої, або лишилося по одній дамці.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Нічия, якщо позиція повторилася тричі або 15 ходів кожної сторони в піддавках минули без узяття, ходу простої й перетворення на дамку.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Нічия, якщо позиція повторилася тричі або 25 ходів кожної сторони не додали шашку в цільовий кут.';
+
+  @override
+  String get rulesChessPlayers => 'Гравці: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Дошка 8×8. У кожного король, ферзь, дві тури, два слони, два коні та вісім пішаків. Білі ходять першими. Фігури ходять звичними ходами; є взяття на проході, перетворення і рокірування. Перемагає той, хто поставив мат або суперник здався.';
+
+  @override
+  String get rulesChessDrawClassic => 'Нічия при паті, потрійному повторенні, правилі 50 ходів, нестачі фігур для мата або за згодою.';
+
+  @override
+  String get rulesChessClockClassic => 'Контроль партії: 60+0 — 60 хвилин на всю партію, без додавання.';
+
+  @override
+  String get rulesChessClockRapid => 'Контроль партії: 10+0 — 10 хвилин на всю партію, без додавання.';
+
+  @override
+  String get rulesChessClockBlitz => 'Контроль партії: 5+0 — 5 хвилин на всю партію, без додавання.';
+
+  @override
+  String get rulesChessClockBullet => 'Контроль партії: 3+2 — 3 хвилини на партію плюс 2 секунди за кожен хід.';
+
+  @override
+  String get checkersDrawRepetition => 'Нічия — позиція повторилася тричі';
+
+  @override
+  String get checkersDrawNoProgress => 'Нічия — ходи не ведуть до перемоги';
+
+  @override
+  String get checkersDrawInsufficient => 'Нічия — недостатньо сил для перемоги';
 
   @override
   String get rulesNardyTitle => 'Нарди — правила';
@@ -861,6 +976,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Після всіх ходів хід одразу перейде супернику';
+
+  @override
+  String get nardyLayoutToggle => 'Змінити розкладку';
 
   @override
   String get nardyNoMoves => 'Ходів немає';
@@ -1344,7 +1462,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gameOpponent => 'Суперник';
 
   @override
+  String get gameYou => 'Ви';
+
+  @override
   String get gameYouWon => 'Ви перемогли!';
+
+  @override
+  String get gameYouWonShort => 'Ви виграли';
 
   @override
   String get gameYouLost => 'Ви програли';
@@ -1381,6 +1505,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Запропонувати нічию';
+
+  @override
+  String get gameFlipBoard => 'Перевернути дошку';
+
+  @override
+  String get gameReviewStart => 'На початок партії';
+
+  @override
+  String get gameReviewPrev => 'Хід назад';
+
+  @override
+  String get gameReviewNext => 'Хід уперед';
+
+  @override
+  String get gameReviewEnd => 'До поточної позиції';
 
   @override
   String get gameOfferDrawTitle => 'Запропонувати нічию?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Розблокування підвищених ставок';
+
+  @override
+  String get shopEmojisHelp => 'Анімовані смайлики для чату. Купіть набір і надсилайте їх у повідомленнях друзям.';
+
+  @override
+  String get shopCollectionsHelp => 'Продати можна лише нову або вінтажну колекцію: 80% вартості для нової і 300% вартості для вінтажу. Потерту, втомлену і стару продати не можна.\n\nЗберіть набір предметів: вони з’являються у вітрині профілю, їх можна дарувати. Кожен предмет щодня приносить монети, а повний набір — ще й окремий бонус.\n\nДенний дохід предмета залежить від стану і рахується від звичайної суми. Нове приносить 100%. Потерте — 60%. Втомлене — 40%. Старе — 100%. Вінтажний предмет приносить 200%, тобто вдвічі більше за звичайний дохід.\n\nБонус повного набору не змінюється, поки набір не стане вінтажним. Набір вінтажний, коли вінтажний кожен його предмет: тоді бонус становить 300%, утричі більше за звичайний.\n\nСтан залежить від того, як давно предмет у вас. Нове — перші 7 днів. Потерте — з 8-го дня до 2 місяців. Втомлене — з 2 до 6 місяців. Старе — з 6 місяців до року. Вінтаж — від року.';
+
+  @override
+  String get shopStakesHelp => 'Розблокуйте вищі ставки в іграх. Що вища ставка, то більший банк і виграш.';
 
   @override
   String get inventoryTitle => 'Предмети';
@@ -1947,6 +2095,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shopOwned => 'Куплено';
 
   @override
+  String get shopHave => 'Є';
+
+  @override
   String get shopEmpty => 'Поки порожньо';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shopBuyOnce => 'Покупка один раз';
 
   @override
-  String get shopSellRefund => 'Продаж поверне 80% вартості';
+  String get shopSellRefund => 'Продаж залежить від стану колекції';
+
+  @override
+  String get collectionConditionNew => 'Нове';
+
+  @override
+  String get collectionConditionWorn => 'Потерте';
+
+  @override
+  String get collectionConditionTired => 'Втомлене';
+
+  @override
+  String get collectionConditionShabby => 'Старе';
+
+  @override
+  String get collectionConditionVintage => 'Вінтаж';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Ви отримаєте $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Продати можна лише нову або вінтажну колекцію.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Не можна продати';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Продати можна лише новий предмет або вінтажний. Скористайтеся еліксиром, щоб змінити стан.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,302 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => 'На чотирьох: поле 4×4, четверо гравців (X, O, △, □). Хто зібрав лінію зі своїх знаків — перемагає.';
+
+  @override
+  String get adminUsersTab => 'Користувачі';
+
+  @override
+  String get adminSupportTab => 'Підтримка';
+
+  @override
+  String get adminSearchHint => 'Пошук за email або ніком';
+
+  @override
+  String get adminRoleAdmins => 'Адміни';
+
+  @override
+  String get adminRoleUsers => 'Користувачі';
+
+  @override
+  String get adminRoleAll => 'Усі ролі';
+
+  @override
+  String get adminStatusFrozen => 'Заморожені';
+
+  @override
+  String get adminStatusActive => 'Активні';
+
+  @override
+  String get adminStatusAny => 'Будь-який статус';
+
+  @override
+  String get adminOrderDesc => 'За спаданням';
+
+  @override
+  String get adminOrderAsc => 'За зростанням';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Помилка завантаження: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Користувачів не знайдено';
+
+  @override
+  String get adminSortLastSeen => 'За останнім візитом';
+
+  @override
+  String get adminSortEmail => 'За email';
+
+  @override
+  String get adminSortCreated => 'За датою реєстрації';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount бр.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Забрати адміна';
+
+  @override
+  String get adminGrantAdmin => 'Зробити адміном';
+
+  @override
+  String get adminAdminRevoked => 'Права адміна знято';
+
+  @override
+  String get adminAdminGranted => 'Права адміна видано';
+
+  @override
+  String get adminGrantCoins => 'Нарахувати монети';
+
+  @override
+  String get adminWriteSupport => 'Написати від підтримки';
+
+  @override
+  String get adminUnfreeze => 'Розморозити';
+
+  @override
+  String get adminFreeze => 'Заморозити';
+
+  @override
+  String get adminUnfrozen => 'Розморожено';
+
+  @override
+  String get adminFrozenDone => 'Заморожено';
+
+  @override
+  String get adminResetPassword => 'Скинути пароль';
+
+  @override
+  String get adminCoinsAmountHint => 'Кількість (від’ємне = списання)';
+
+  @override
+  String get adminReasonOptional => 'Причина (необов’язково)';
+
+  @override
+  String get adminGrantSent => 'Картку надіслано в чат підтримки';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Списано $amount бронзових';
+  }
+
+  @override
+  String get adminGrantVerb => 'Нарахувати';
+
+  @override
+  String get adminNewPasswordHint => 'Новий пароль (мін. 6)';
+
+  @override
+  String get adminPasswordReset => 'Пароль скинуто';
+
+  @override
+  String get adminResetVerb => 'Скинути';
+
+  @override
+  String adminShortError(String error) {
+    return 'Помилка: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Немає звернень у підтримку';
+
+  @override
+  String get adminUserFallback => 'Користувач';
+
+  @override
+  String get apiErrTooManyRequests => 'Забагато запитів. Спробуйте пізніше.';
+
+  @override
+  String get apiErrMoveConflict => 'Хід конфліктує. Повторіть.';
+
+  @override
+  String get shopElixirs => 'Еліксири';
+
+  @override
+  String get shopElixirsSubtitle => 'Омолодження, старіння й прискорення колекцій';
+
+  @override
+  String get shopElixirsHelp => 'Три полиці: омолодження, старіння й прискорення. На кожній шість еліксирів — по одному на набір. Еліксир діє лише на свій набір.\n\nОмолодження робить колекцію на крок новішою і не новішою за «нове». Старіння — на крок старшою і не старшою за «старе». Прискорення лише для старої: до вінтажу лишається 3 місяці, один раз. Вінтаж еліксиром не настає.\n\nКуплений еліксир лежить у предметах. Його застосовують з картки колекції або з картки еліксира. Щоразу витрачається одна штука.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Омолодження';
+
+  @override
+  String get elixirGroupAge => 'Старіння';
+
+  @override
+  String get elixirGroupAccelerate => 'Прискорення';
+
+  @override
+  String get elixirEffectRejuvenate => 'омолодження';
+
+  @override
+  String get elixirEffectAge => 'старіння';
+
+  @override
+  String get elixirEffectAccelerate => 'прискорення';
+
+  @override
+  String get elixirAdjCelebration => 'Святковий';
+
+  @override
+  String get elixirAdjNature => 'Природний';
+
+  @override
+  String get elixirAdjLegends => 'Легендарний';
+
+  @override
+  String get elixirAdjCosmic => 'Космічний';
+
+  @override
+  String get elixirAdjAdventure => 'Пригодницький';
+
+  @override
+  String get elixirAdjJewels => 'Дорогоцінний';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective еліксир $effect';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Робить колекцію на крок новішою. Не новішою, ніж нове.';
+
+  @override
+  String get elixirHelpAge => 'Робить колекцію на крок старшою. Не старшою, ніж старе.';
+
+  @override
+  String get elixirHelpAccelerate => 'Лише для старої. До вінтажу лишається 3 місяці, один раз.';
+
+  @override
+  String get elixirUseRejuvenate => 'Омолодити';
+
+  @override
+  String get elixirUseAge => 'Состарити';
+
+  @override
+  String get elixirUseAccelerate => 'Прискорити';
+
+  @override
+  String get elixirUse => 'Використати';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count днів',
+      many: '$count днів',
+      few: '$count дні',
+      one: '$count день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count годин',
+      many: '$count годин',
+      few: '$count години',
+      one: '$count година',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count хвилин',
+      many: '$count хвилин',
+      few: '$count хвилини',
+      one: '$count хвилина',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Лише набір «$set».';
+  }
+
+  @override
+  String get elixirPickCollection => 'Оберіть колекцію';
+
+  @override
+  String get elixirNoTarget => 'Немає колекції цього набору, на яку подіяє еліксир';
+
+  @override
+  String get elixirApplied => 'Еліксир застосовано';
+
+  @override
+  String get elixirConfirmTitle => 'Застосувати еліксир?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'Немає еліксирів — купіть у магазині';
+
+  @override
+  String get elixirNotApplicable => 'Зараз цей еліксир на колекцію не подіє';
+
+  @override
+  String get elixirWrongSet => 'Еліксир з іншого набору';
+
+  @override
+  String get elixirNotOwned => 'Еліксира немає';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'До $state $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'менше хвилини';
+
+  @override
+  String get collectionCondGenNew => 'нового';
+
+  @override
+  String get collectionCondGenWorn => 'потертого';
+
+  @override
+  String get collectionCondGenTired => 'втомленого';
+
+  @override
+  String get collectionCondGenShabby => 'старого';
+
+  @override
+  String get collectionCondGenVintage => 'вінтажу';
 }

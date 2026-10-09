@@ -27,10 +27,24 @@ String checkersPlayLine(String mode, AppLocalizations l10n) {
     case CheckersEngine.modeCorners:
       return l10n.rulesCheckersPlayCorners;
     default:
-      return l10n.rulesCheckersPlay;
+      return l10n.rulesCheckersPlayRussian;
   }
 }
 
+String checkersDrawLine(String mode, AppLocalizations l10n) {
+  switch (CheckersEngine.normalizeMode(mode)) {
+    case CheckersEngine.modeEnglish:
+      return l10n.rulesCheckersDrawEnglish;
+    case CheckersEngine.modeGiveaway:
+      return l10n.rulesCheckersDrawGiveaway;
+    case CheckersEngine.modeCorners:
+      return l10n.rulesCheckersDrawCorners;
+    default:
+      return l10n.rulesCheckersDrawRussian;
+  }
+}
+
+/// Строки правил только выбранного режима — без чужих победы/ничьей.
 List<String> checkersRuleLines({
   required String gameMode,
   required int turnTimeSec,
@@ -47,12 +61,11 @@ List<String> checkersRuleLines({
     else
       l10n.rulesCheckersTime(formatTurnTime(turnTimeSec)),
     if (!offline && stakeBronze > 0) rulesStakeLine(stakeBronze, l10n),
-    if (mode != CheckersEngine.modeCorners) l10n.rulesCheckersIntro,
     checkersPlayLine(mode, l10n),
     if (mode == CheckersEngine.modeCorners) ...[
       l10n.rulesCheckersPlayCornersNoReturn,
       l10n.rulesCheckersPlayCornersLeaveHome,
     ],
-    if (mode != CheckersEngine.modeCorners) l10n.rulesCheckersWin,
+    checkersDrawLine(mode, l10n),
   ];
 }

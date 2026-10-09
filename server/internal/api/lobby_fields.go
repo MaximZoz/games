@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"multigames/server/internal/checkers"
+	"multigames/server/internal/chess"
 	"multigames/server/internal/nardy"
 	"multigames/server/internal/store"
 )
@@ -15,6 +16,27 @@ import (
 // реальный режим). Остальные игры не наследуют этот variant: иначе Уно и
 // нарды в списке лобби рисуются как «Классика». Новая игра без своих
 // пользовательских режимов тоже не должна получать classic.
+// boardGameInviteMode — режим шашек/шахмат для инвайта.
+// Пустой режим не подменяется «подкидным».
+func boardGameInviteMode(gameType string, m map[string]string) (string, bool) {
+	switch gameType {
+	case store.GameTypeChess:
+		raw := strings.TrimSpace(m["game_mode"])
+		if raw == "" {
+			raw = strings.TrimSpace(m["variant"])
+		}
+		return chess.NormalizeMode(raw), true
+	case store.GameTypeCheckers:
+		raw := strings.TrimSpace(m["game_mode"])
+		if raw == "" {
+			raw = strings.TrimSpace(m["variant"])
+		}
+		return checkers.NormalizeMode(raw), true
+	default:
+		return "", false
+	}
+}
+
 func applyLobbyTypeFields(item *LobbyItem, m map[string]string) {
 	if item == nil {
 		return
@@ -60,6 +82,15 @@ func applyLobbyTypeFields(item *LobbyItem, m map[string]string) {
 			raw = strings.TrimSpace(m["variant"])
 		}
 		mode := checkers.NormalizeMode(raw)
+		item.Variant = ""
+		item.GridSize = 0
+		item.GameMode = mode
+	case store.GameTypeChess:
+		raw := strings.TrimSpace(m["game_mode"])
+		if raw == "" {
+			raw = strings.TrimSpace(m["variant"])
+		}
+		mode := chess.NormalizeMode(raw)
 		item.Variant = ""
 		item.GridSize = 0
 		item.GameMode = mode

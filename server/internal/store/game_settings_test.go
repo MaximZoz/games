@@ -36,4 +36,9 @@ func TestDefaultUserGameSettings(t *testing.T) {
 		c.GameMode != "russian" || c.Variant != "russian" {
 		t.Fatalf("checkers defaults: %+v", c)
 	}
+	ch := DefaultUserGameSettings(GameTypeChess)
+	if ch.GameType != GameTypeChess || ch.TurnTimeSec != 60 || ch.MaxPlayers != 2 ||
+		ch.GameMode != "classic" || ch.Variant != "classic" || ch.GridSize != 8 {
+		t.Fatalf("chess defaults: %+v", ch)
+	}
 }

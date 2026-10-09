@@ -28,6 +28,7 @@ import 'package:multigames_client/screens/profile_screen.dart';
 import 'package:multigames_client/screens/register_screen.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
 import 'package:multigames_client/screens/shop_collections_screen.dart';
+import 'package:multigames_client/screens/shop_elixirs_screen.dart';
 import 'package:multigames_client/screens/shop_emojis_screen.dart';
 import 'package:multigames_client/screens/shop_screen.dart';
 import 'package:multigames_client/screens/shop_section_screen.dart';
@@ -36,6 +37,7 @@ import 'package:multigames_client/screens/forgot_password_screen.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/screens/reset_password_screen.dart';
 import 'package:multigames_client/screens/verify_email_screen.dart';
+import 'package:multigames_client/core/gamepad/gamepad_shell.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
 const _publicPaths = <String>{
@@ -81,7 +83,8 @@ class _AuthRefreshListenable extends ChangeNotifier {
 
 /// Короткий fade вместо NoTransition: Impeller не успевает снять предыдущий
 /// слой, и на Android мелькает старый виджет. Opaque fade закрывает его.
-CustomTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
+CustomTransitionPage<void> _noTransitionPage(
+    GoRouterState state, Widget child) {
   return CustomTransitionPage<void>(
     key: state.pageKey,
     child: AppOpaqueSurface(child: child),
@@ -267,10 +270,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
         builder: (context, state, navigationShell) => AppShell(
           navigationShell: navigationShell,
         ),
+        navigatorContainerBuilder: gamepadShellBranchContainer,
         branches: [
           StatefulShellBranch(
             routes: [
@@ -304,6 +308,26 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                               return _noTransitionPage(
                                 state,
                                 ShopEmojiGroupScreen(group: group),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'elixirs',
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state,
+                          const ShopElixirsScreen(),
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: ':effect',
+                            pageBuilder: (_, state) {
+                              final effect = state.pathParameters['effect'] ??
+                                  'rejuvenate';
+                              return _noTransitionPage(
+                                state,
+                                ShopElixirGroupScreen(effect: effect),
                               );
                             },
                           ),

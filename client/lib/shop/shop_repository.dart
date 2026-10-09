@@ -18,6 +18,9 @@ class ShopItem {
     this.stockRemaining,
     this.payload = const {},
     this.sortOrder = 0,
+    this.acquiredAt,
+    this.conditionShift = 0,
+    this.vintageAt,
   });
 
   final String code;
@@ -29,6 +32,9 @@ class ShopItem {
   final int? stockRemaining;
   final Map<String, dynamic> payload;
   final int sortOrder;
+  final String? acquiredAt;
+  final int conditionShift;
+  final String? vintageAt;
 
   bool get isOutOfStock =>
       stockRemaining != null && stockRemaining! <= 0 && !owned;
@@ -66,16 +72,17 @@ class ShopItem {
   String? get animatedName => payload['animated_name'] as String?;
   String? get group => payload['group'] as String?;
   String? get collectionSet => payload['set'] as String?;
+  String? get elixirEffect => payload['effect'] as String?;
   int get dailyBronze =>
       (payload['daily_bronze'] as num?)?.toInt() ??
       (payload['weekly_bronze'] as num?)?.toInt() ??
       0;
   @Deprecated('Use dailyBronze')
   int get weeklyBronze => dailyBronze;
-  int get sellRefundBronze => (priceBronze * 80) ~/ 100;
 
   ShopItem copyWith({
     bool? owned,
+    String? acquiredAt,
   }) {
     return ShopItem(
       code: code,
@@ -87,6 +94,9 @@ class ShopItem {
       stockRemaining: stockRemaining,
       payload: payload,
       sortOrder: sortOrder,
+      acquiredAt: acquiredAt ?? this.acquiredAt,
+      conditionShift: conditionShift,
+      vintageAt: vintageAt,
     );
   }
 
@@ -108,6 +118,9 @@ class ShopItem {
       stockRemaining: (json['stock_remaining'] as num?)?.toInt(),
       payload: payload,
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
+      acquiredAt: json['acquired_at'] as String?,
+      conditionShift: (json['condition_shift'] as num?)?.toInt() ?? 0,
+      vintageAt: json['vintage_at'] as String?,
     );
   }
 
@@ -121,6 +134,9 @@ class ShopItem {
         'stock_remaining': stockRemaining,
         'payload': payload,
         'sort_order': sortOrder,
+        'acquired_at': acquiredAt,
+        'condition_shift': conditionShift,
+        'vintage_at': vintageAt,
       };
 }
 
@@ -133,6 +149,8 @@ class InventoryItem {
     this.payload = const {},
     this.acquiredAt,
     this.quantity = 1,
+    this.conditionShift = 0,
+    this.vintageAt,
   });
 
   final String code;
@@ -142,12 +160,15 @@ class InventoryItem {
   final Map<String, dynamic> payload;
   final String? acquiredAt;
   final int quantity;
+  final int conditionShift;
+  final String? vintageAt;
 
   String? get emoji => payload['emoji'] as String?;
   String? get frameColor => payload['color'] as String?;
   String? get animatedName => payload['animated_name'] as String?;
   String? get group => payload['group'] as String?;
   String? get collectionSet => payload['set'] as String?;
+  String? get elixirEffect => payload['effect'] as String?;
   int get dailyBronze =>
       (payload['daily_bronze'] as num?)?.toInt() ??
       (payload['weekly_bronze'] as num?)?.toInt() ??
@@ -198,6 +219,8 @@ class InventoryItem {
       payload: payload,
       acquiredAt: json['acquired_at'] as String?,
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      conditionShift: (json['condition_shift'] as num?)?.toInt() ?? 0,
+      vintageAt: json['vintage_at'] as String?,
     );
   }
 
@@ -209,6 +232,8 @@ class InventoryItem {
         'payload': payload,
         'acquired_at': acquiredAt,
         'quantity': quantity,
+        'condition_shift': conditionShift,
+        'vintage_at': vintageAt,
       };
 }
 
@@ -246,6 +271,18 @@ class InventoryCapabilities {
         'frame_color': frameColor,
         'frame_code': frameCode,
       };
+}
+
+class ElixirApplyResult {
+  const ElixirApplyResult({
+    required this.conditionShift,
+    required this.elixirQuantity,
+    this.vintageAt,
+  });
+
+  final int conditionShift;
+  final int elixirQuantity;
+  final String? vintageAt;
 }
 
 class ShopBuyResult {
@@ -302,6 +339,12 @@ class ShopRepository {
     if (key == 'emoji not owned' || key == 'not a collection item') {
       return l10n.inventoryGiftNotOwned;
     }
+    if (key == 'elixir not owned') return l10n.elixirNotOwned;
+    if (key == 'elixir not applicable') return l10n.elixirNotApplicable;
+    if (key == 'elixir wrong set') return l10n.elixirWrongSet;
+    if (key == 'collection not sellable') {
+      return l10n.inventoryCollectionNotSellable;
+    }
     return message;
   }
 
@@ -315,7 +358,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['items'];
@@ -339,7 +383,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(
@@ -361,7 +406,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return (body['quantity'] as num?)?.toInt() ?? 0;
@@ -401,7 +447,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return InventoryCapabilities.fromJson(body);
@@ -419,7 +466,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['items'];
@@ -443,12 +491,43 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(
       balanceBronze: (body['balance_bronze'] as num?)?.toInt() ?? 0,
       quantity: (body['refund_bronze'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Future<ElixirApplyResult> applyElixir({
+    required String elixirCode,
+    required String collectionCode,
+  }) async {
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/inventory/elixir'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'elixir_code': elixirCode,
+          'collection_code': collectionCode,
+        }),
+        operation: 'ShopRepository.applyElixir',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return ElixirApplyResult(
+      conditionShift: (body['condition_shift'] as num?)?.toInt() ?? 0,
+      vintageAt: body['vintage_at'] as String?,
+      elixirQuantity: (body['elixir_quantity'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -465,7 +544,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
   }
 
@@ -479,7 +559,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return CollectionIncomeInfo.fromJson(body);
@@ -498,7 +579,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(

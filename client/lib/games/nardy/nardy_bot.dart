@@ -5,7 +5,9 @@ import 'package:multigames_client/games/nardy/nardy_engine.dart';
 /// Идентификатор бота нард (совпадает с сервером).
 const String nardyBotUserId = 'bot:nardy';
 
-/// Лучший ход жадной оценкой позиции. `null` — ходов нет.
+const int _nardyBotNodeLimit = 12000;
+
+/// Лучший ход поиском по оставшимся кубикам. `null` — ходов нет.
 NardyMove? nardyBotBestMove(NardyEngine game, math.Random rng) {
   final moves = game.legalMoves();
   if (moves.isEmpty) return null;
@@ -13,10 +15,11 @@ NardyMove? nardyBotBestMove(NardyEngine game, math.Random rng) {
   NardyMove best = moves.first;
   var bestScore = -1 << 30;
   var ties = 0;
+  var nodes = 0;
   for (final mv in moves) {
     final probe = game.clone();
     if (!probe.applyMoveUnchecked(mv)) continue;
-    final score = nardyEvaluate(probe, seat);
+    final score = _nardySearchTurn(probe, seat, () => ++nodes);
     if (score > bestScore) {
       bestScore = score;
       best = mv;
@@ -29,31 +32,49 @@ NardyMove? nardyBotBestMove(NardyEngine game, math.Random rng) {
   return best;
 }
 
+int _nardySearchTurn(NardyEngine game, int seat, int Function() bump) {
+  if (game.off[seat] >= nardyCheckers) return 200000;
+  if (game.off[nardyOpponent(seat)] >= nardyCheckers) return -200000;
+  if (bump() > _nardyBotNodeLimit) return nardyEvaluate(game, seat);
+  final moves = game.legalMoves();
+  if (moves.isEmpty) return nardyEvaluate(game, seat);
+  var best = -1 << 30;
+  for (final mv in moves) {
+    final probe = game.clone();
+    if (!probe.applyMoveUnchecked(mv)) continue;
+    final s = _nardySearchTurn(probe, seat, bump);
+    if (s > best) best = s;
+  }
+  return best;
+}
+
 /// Оценка позиции глазами [seat]; больше — лучше.
 int nardyEvaluate(NardyEngine game, int seat) {
   final opp = nardyOpponent(seat);
-  var score = (game.pips(opp) - game.pips(seat)) * 4;
-  score += game.off[seat] * 60;
-  score -= game.off[opp] * 60;
+  var score = (game.pips(opp) - game.pips(seat)) * 6;
+  score += game.off[seat] * 80;
+  score -= game.off[opp] * 80;
   if (!game.isLong) {
-    score += game.bar[opp] * 45;
-    score -= game.bar[seat] * 55;
+    score += game.bar[opp] * 70;
+    score -= game.bar[seat] * 90;
+    score += _nardyPrimeLen(game, seat) * 18 - _nardyPrimeLen(game, opp) * 16;
     for (var t = 0; t < nardyPoints; t++) {
       final mine = game.countAt(seat, t);
       if (mine == 1) {
-        score -= 16 + (nardyPoints - t) ~/ 2;
+        score -= 22 + (nardyPoints - t) ~/ 2;
       } else if (mine >= 2) {
-        score += 10;
-        if (t >= nardyHomeStart) score += 8;
+        score += 14;
+        if (t >= nardyHomeStart) score += 16;
+        if (mine >= 3) score += 4;
       }
       if (game.countAt(opp, t) == 1 && mine == 0) {
-        score += 3;
+        score += 8;
       }
     }
     return score;
   }
   final leftOnHead = game.countAt(seat, 0);
-  score -= leftOnHead * 22;
+  score -= leftOnHead * 28;
   var laggard = -1;
   var spread = 0;
   for (var t = 0; t < nardyPoints; t++) {
@@ -61,11 +82,26 @@ int nardyEvaluate(NardyEngine game, int seat) {
     if (n == 0) continue;
     laggard = laggard < 0 ? t : laggard;
     spread++;
-    if (t >= nardyHomeStart) score += 4;
+    if (t >= nardyHomeStart) score += 8;
   }
-  if (laggard >= 0) score += laggard * 3;
-  score += spread * 5;
+  if (laggard >= 0) score += laggard * 5;
+  score += spread * 4;
+  score += _nardyPrimeLen(game, seat) * 10;
   return score;
+}
+
+int _nardyPrimeLen(NardyEngine game, int seat) {
+  var best = 0;
+  var run = 0;
+  for (var t = 0; t < nardyPoints; t++) {
+    if (game.countAt(seat, t) >= 2) {
+      run++;
+      if (run > best) best = run;
+    } else {
+      run = 0;
+    }
+  }
+  return best;
 }
 
 /// Одно действие бота: бросок, одна шашка или закрытие хода.

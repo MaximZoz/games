@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ゲームパッドがありません。接続していずれかのボタンを押してください。';
 
   @override
-  String get settingsGamepadHelpNavigate => '十字 / スティック — メニューと盤上のカーソル';
+  String get settingsGamepadGenericName => 'コントローラー';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / × — 決定または着手';
+  String get settingsGamepadHelpNavigate => '移動';
 
   @override
-  String get settingsGamepadHelpBack => 'B / ○ — 戻るまたは選択解除';
+  String get settingsGamepadHelpConfirm => '決定';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — タブ切替';
+  String get settingsGamepadHelpBack => '戻る';
+
+  @override
+  String get settingsGamepadHelpTabs => 'タブ';
 
   @override
   String get settingsGamepadHelpPlay => '盤と手札のカーソル：チェッカー、三目並べ、戦艦、ドゥラク、ウノ、ポーカー、バックギャモン';
 
   @override
-  String get settingsGamepadHelpCards => 'カードでは十字で手札、Aで出す、Xで選択／ウノ、Yで取る・パス・ドロー';
+  String get settingsGamepadHelpCards => 'カード';
 
   @override
-  String get settingsGamepadHelpKeyboard => '入力欄でAはゲームパッドキーボードを開く。Xで配列切替、Bで削除または閉じる';
+  String get settingsGamepadHelpKeyboard => 'キーボード';
+
+  @override
+  String get settingsGamepadHelpBalance => '残高';
+
+  @override
+  String get settingsGamepadHelpLogout => 'ログアウト';
+
+  @override
+  String get settingsGamepadHelpPage => 'ページ';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox配列';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation配列';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo配列';
 
   @override
   String get gamepadKeyboardTitle => 'キーボード';
@@ -776,6 +799,51 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesCheckersModeCorners => 'コーナー';
 
   @override
+  String get gamesChess => 'チェス';
+
+  @override
+  String get gamesChessModeClassic => 'クラシック';
+
+  @override
+  String get gamesChessModeRapid => 'ラピッド';
+
+  @override
+  String get gamesChessModeBlitz => 'ブリッツ';
+
+  @override
+  String get gamesChessModeBullet => 'ブレット';
+
+  @override
+  String get chessPieceQueen => 'クイーン';
+
+  @override
+  String get chessPieceRook => 'ルーク';
+
+  @override
+  String get chessPieceBishop => 'ビショップ';
+
+  @override
+  String get chessPieceKnight => 'ナイト';
+
+  @override
+  String get chessPromotionTitle => 'ポーンの昇格';
+
+  @override
+  String get chessDrawStalemate => '引き分け：ステイルメイト';
+
+  @override
+  String get chessDrawInsufficient => '引き分け：駒不足';
+
+  @override
+  String get chessDrawRepetition => '引き分け：同一局面3回';
+
+  @override
+  String get chessDrawFiftyMove => '引き分け：50手ルール';
+
+  @override
+  String get chessCheck => 'チェック';
+
+  @override
   String get rulesCheckersPlayers => 'プレイヤー: 2。';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'まだ家に残っている駒は、そのプレイヤーの最初の25手以内に出なければなりません。';
+
+  @override
+  String get rulesCheckersDrawRussian => '同一局面が3回、または双方が15手ずつ進展なし（取らず、駒を動かさず、成らず）なら引き分け。';
+
+  @override
+  String get rulesCheckersDrawEnglish => '同一局面が3回、双方が40手ずつ取らず駒も動かさない、または双方にキングが1つなら引き分け。';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '同一局面が3回、またはギブアウェイで双方が15手ずつ進展なし（取らず、駒を動かさず、成らず）なら引き分け。';
+
+  @override
+  String get rulesCheckersDrawCorners => '同一局面が3回、または双方が25手ずつ目標の角に駒を足さなければ引き分け。';
+
+  @override
+  String get rulesChessPlayers => 'プレイヤー: 2。';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'モード: $mode。';
+  }
+
+  @override
+  String get rulesChessPlayClassic => '盤は8×8。各方にキング、クイーン、ルーク2、ビショップ2、ナイト2、ポーン8。白が先手。通常の動き、アンパッサン、昇格、キャスリング。チェックメイトか投了で勝ち。';
+
+  @override
+  String get rulesChessDrawClassic => '引き分け: ステイルメイト、同形3回、50手、詰み駒不足、合意。';
+
+  @override
+  String get rulesChessClockClassic => '対局時計：60+0 — 対局全体で60分、加算なし。';
+
+  @override
+  String get rulesChessClockRapid => '対局時計：10+0 — 対局全体で10分、加算なし。';
+
+  @override
+  String get rulesChessClockBlitz => '対局時計：5+0 — 対局全体で5分、加算なし。';
+
+  @override
+  String get rulesChessClockBullet => '対局時計：3+2 — 3分＋1手ごとに2秒。';
+
+  @override
+  String get checkersDrawRepetition => '引き分け — 同一局面が3回';
+
+  @override
+  String get checkersDrawNoProgress => '引き分け — 勝ちに向かわない手';
+
+  @override
+  String get checkersDrawInsufficient => '引き分け — 勝ち切る駒が足りない';
 
   @override
   String get rulesNardyTitle => 'バックギャモン — ルール';
@@ -861,6 +976,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'すべての手のあと、自動で相手の番になります';
+
+  @override
+  String get nardyLayoutToggle => '配置を変える';
 
   @override
   String get nardyNoMoves => '動かせません';
@@ -1344,7 +1462,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameOpponent => '相手';
 
   @override
+  String get gameYou => 'あなた';
+
+  @override
   String get gameYouWon => '勝ちました！';
+
+  @override
+  String get gameYouWonShort => '勝ちました';
 
   @override
   String get gameYouLost => '負けました';
@@ -1381,6 +1505,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get gameOfferDraw => '引き分けを提案';
+
+  @override
+  String get gameFlipBoard => '盤を反転';
+
+  @override
+  String get gameReviewStart => '対局の最初へ';
+
+  @override
+  String get gameReviewPrev => '一手戻る';
+
+  @override
+  String get gameReviewNext => '一手進む';
+
+  @override
+  String get gameReviewEnd => '現在の局面へ';
 
   @override
   String get gameOfferDrawTitle => '引き分けを提案しますか？';
@@ -1636,6 +1775,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'より高い賭け金を解除';
+
+  @override
+  String get shopEmojisHelp => 'チャット用のアニメ絵文字。セットを買って友達に送れます。';
+
+  @override
+  String get shopCollectionsHelp => '売れるのは新品かヴィンテージのコレクションだけです。新品は価格の 80%、ヴィンテージは価格の 300% です。使い込まれたもの、疲れたもの、ぼろぼろは売却できません。\n\nアイテムセットを集めましょう。プロフィールのショーケースに表示され、贈ったりできます。各アイテムは毎日コインをもたらし、揃ったセットには別のボーナスが付きます。\n\nアイテムの日収は状態によって決まり、いつもの額に対する割合です。新品は 100%。使い込まれたものは 60%。疲れたものは 40%。ぼろぼろは 100%。ヴィンテージのアイテムは 200% で、いつもの日収の 2 倍です。\n\n揃えたセットのボーナスは、セット自体がヴィンテージになるまで変わりません。セットがヴィンテージなのは、中のアイテムがすべてヴィンテージのときです。そのときボーナスは 300%、いつもの 3 倍になります。\n\n状態はアイテムを持っている期間で変わります。新品——最初の 7 日。使い込まれた——8 日目から 2 か月。疲れた——2 か月から 6 か月。ぼろぼろ——6 か月から 1 年。ヴィンテージ——1 年から。';
+
+  @override
+  String get shopStakesHelp => 'より高い賭け金を解除。賭け金が高いほどポットと配当が大きくなります。';
 
   @override
   String get inventoryTitle => 'アイテム';
@@ -1947,6 +2095,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shopOwned => '購入済み';
 
   @override
+  String get shopHave => '所持';
+
+  @override
   String get shopEmpty => 'まだ何もありません';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shopBuyOnce => '一度きりの購入';
 
   @override
-  String get shopSellRefund => '売却すると費用の80%が戻ります';
+  String get shopSellRefund => '売却額はコレクションの状態によります';
+
+  @override
+  String get collectionConditionNew => '新品';
+
+  @override
+  String get collectionConditionWorn => '使い込まれた';
+
+  @override
+  String get collectionConditionTired => '疲れた';
+
+  @override
+  String get collectionConditionShabby => 'ぼろぼろ';
+
+  @override
+  String get collectionConditionVintage => 'ヴィンテージ';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return '$amount を受け取ります';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => '売れるのは新品かヴィンテージのコレクションだけです。';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => '売れません';
+
+  @override
+  String get inventoryCollectionNotSellableHint => '売れるのは新品かヴィンテージのアイテムだけです。エリクサーで状態を変えてください。';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4人用：4×4盤で4人（X・O・△・□）。自分の記号で揃えると勝ちです。';
+
+  @override
+  String get adminUsersTab => 'ユーザー';
+
+  @override
+  String get adminSupportTab => 'サポート';
+
+  @override
+  String get adminSearchHint => 'メールまたは名前で検索';
+
+  @override
+  String get adminRoleAdmins => '管理者';
+
+  @override
+  String get adminRoleUsers => 'ユーザー';
+
+  @override
+  String get adminRoleAll => 'すべての役割';
+
+  @override
+  String get adminStatusFrozen => '凍結中';
+
+  @override
+  String get adminStatusActive => '有効';
+
+  @override
+  String get adminStatusAny => 'すべての状態';
+
+  @override
+  String get adminOrderDesc => '降順';
+
+  @override
+  String get adminOrderAsc => '昇順';
+
+  @override
+  String adminLoadFailed(String error) {
+    return '読み込み失敗: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'ユーザーがいません';
+
+  @override
+  String get adminSortLastSeen => '最終訪問順';
+
+  @override
+  String get adminSortEmail => 'メール順';
+
+  @override
+  String get adminSortCreated => '登録日順';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount 銅';
+  }
+
+  @override
+  String get adminRevokeAdmin => '管理者を外す';
+
+  @override
+  String get adminGrantAdmin => '管理者にする';
+
+  @override
+  String get adminAdminRevoked => '管理者権限を外しました';
+
+  @override
+  String get adminAdminGranted => '管理者権限を付与しました';
+
+  @override
+  String get adminGrantCoins => 'コインを付与';
+
+  @override
+  String get adminWriteSupport => 'サポートとして書く';
+
+  @override
+  String get adminUnfreeze => '凍結解除';
+
+  @override
+  String get adminFreeze => '凍結';
+
+  @override
+  String get adminUnfrozen => '凍結を解除しました';
+
+  @override
+  String get adminFrozenDone => '凍結しました';
+
+  @override
+  String get adminResetPassword => 'パスワードをリセット';
+
+  @override
+  String get adminCoinsAmountHint => '数量（負の値は減算）';
+
+  @override
+  String get adminReasonOptional => '理由（任意）';
+
+  @override
+  String get adminGrantSent => 'カードをサポートチャットに送りました';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '銅 $amount を減算しました';
+  }
+
+  @override
+  String get adminGrantVerb => '付与';
+
+  @override
+  String get adminNewPasswordHint => '新しいパスワード（6文字以上）';
+
+  @override
+  String get adminPasswordReset => 'パスワードをリセットしました';
+
+  @override
+  String get adminResetVerb => 'リセット';
+
+  @override
+  String adminShortError(String error) {
+    return 'エラー: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'サポート依頼はありません';
+
+  @override
+  String get adminUserFallback => 'ユーザー';
+
+  @override
+  String get apiErrTooManyRequests => 'リクエストが多すぎます。あとで試してください。';
+
+  @override
+  String get apiErrMoveConflict => '手が競合しました。もう一度試してください。';
+
+  @override
+  String get shopElixirs => 'エリクサー';
+
+  @override
+  String get shopElixirsSubtitle => 'コレクションを若返らせる、老化させる、加速する';
+
+  @override
+  String get shopElixirsHelp => '棚は三つ：若返り、老化、加速。各棚に6本、コレクションのセットごとに1本。エリクサーは自分のセットにだけ効きます。\n\n若返りは一段階新しくし、新品より新しくはなりません。老化は一段階古くし、ぼろぼろより古くはなりません。加速はぼろぼろだけ：ヴィンテージまで3か月、一度だけ。エリクサーだけではヴィンテージになりません。\n\n買ったエリクサーはアイテムに入ります。コレクションかエリクサー自身から使います。使うたびに1本消費します。';
+
+  @override
+  String get elixirGroupRejuvenate => '若返り';
+
+  @override
+  String get elixirGroupAge => '老化';
+
+  @override
+  String get elixirGroupAccelerate => '加速';
+
+  @override
+  String get elixirEffectRejuvenate => '若返り';
+
+  @override
+  String get elixirEffectAge => '老化';
+
+  @override
+  String get elixirEffectAccelerate => '加速';
+
+  @override
+  String get elixirAdjCelebration => '祝祭';
+
+  @override
+  String get elixirAdjNature => '自然';
+
+  @override
+  String get elixirAdjLegends => '伝説';
+
+  @override
+  String get elixirAdjCosmic => '宇宙';
+
+  @override
+  String get elixirAdjAdventure => '冒険';
+
+  @override
+  String get elixirAdjJewels => '宝石';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjectiveの$effectエリクサー';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => '一段階新しくします。新品より新しくはなりません。';
+
+  @override
+  String get elixirHelpAge => '一段階古くします。ぼろぼろより古くはなりません。';
+
+  @override
+  String get elixirHelpAccelerate => 'ぼろぼろだけ。ヴィンテージまで3か月、一度だけ。';
+
+  @override
+  String get elixirUseRejuvenate => '若返らせる';
+
+  @override
+  String get elixirUseAge => '老化させる';
+
+  @override
+  String get elixirUseAccelerate => '加速する';
+
+  @override
+  String get elixirUse => '使う';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count日',
+      one: '$count日',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count時間',
+      one: '$count時間',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count分',
+      one: '$count分',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'セット「$set」だけ。';
+  }
+
+  @override
+  String get elixirPickCollection => 'コレクションを選ぶ';
+
+  @override
+  String get elixirNoTarget => 'このセットで使えるコレクションがありません';
+
+  @override
+  String get elixirApplied => 'エリクサーを使いました';
+
+  @override
+  String get elixirConfirmTitle => 'このエリクサーを使いますか？';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'エリクサーがありません — ショップで購入';
+
+  @override
+  String get elixirNotApplicable => '今はこのコレクションに使えません';
+
+  @override
+  String get elixirWrongSet => '別のセット用のエリクサーです';
+
+  @override
+  String get elixirNotOwned => 'このエリクサーを持っていません';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return '$stateまで $left';
+  }
+
+  @override
+  String get collectionLeftSoon => '1分未満';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

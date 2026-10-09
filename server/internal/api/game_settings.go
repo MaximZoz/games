@@ -49,7 +49,8 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["variant"] = s.Variant
 	}
 	if s.GameType == store.GameTypeNardy ||
-		s.GameType == store.GameTypeCheckers {
+		s.GameType == store.GameTypeCheckers ||
+		s.GameType == store.GameTypeChess {
 		out["max_players"] = 2
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
@@ -82,6 +83,8 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 		return normalizeNardySettings(body)
 	case store.GameTypeCheckers:
 		return normalizeCheckersSettings(body)
+	case store.GameTypeChess:
+		return normalizeChessSettings(body)
 	default:
 		return store.UserGameSettings{}, "unsupported game_type"
 	}
@@ -266,6 +269,49 @@ func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, s
 	return store.UserGameSettings{
 		GameType:             store.GameTypeCheckers,
 		TurnTimeSec:          body.TurnTimeSec,
+		GridSize:             8,
+		Variant:              mode,
+		SwapRule:             false,
+		FirstMoveRestriction: false,
+		StakeBronze:          stake,
+		DeckSize:             36,
+		MaxPlayers:           2,
+		GameMode:             mode,
+	}, ""
+}
+
+func normalizeChessMode(raw string) string {
+	switch strings.TrimSpace(strings.ToLower(raw)) {
+	case "rapid":
+		return "rapid"
+	case "blitz":
+		return "blitz"
+	case "bullet":
+		return "bullet"
+	default:
+		return "classic"
+	}
+}
+
+func normalizeChessSettings(body gameSettingsBody) (store.UserGameSettings, string) {
+	if !validTurnTimeSec[body.TurnTimeSec] {
+		return store.UserGameSettings{}, "invalid turn_time_sec"
+	}
+	turn := body.TurnTimeSec
+	if turn == 600 {
+		turn = 60
+	}
+	mode := normalizeChessMode(body.GameMode)
+	if mode == "classic" {
+		mode = normalizeChessMode(body.Variant)
+	}
+	stake := body.StakeBronze
+	if stake < 2 {
+		stake = 2
+	}
+	return store.UserGameSettings{
+		GameType:             store.GameTypeChess,
+		TurnTimeSec:          turn,
 		GridSize:             8,
 		Variant:              mode,
 		SwapRule:             false,

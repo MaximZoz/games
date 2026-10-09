@@ -19,6 +19,10 @@ GamepadAction? gamepadActionFromStandardButton(int index) {
       return GamepadAction.shoulderL;
     case 5:
       return GamepadAction.shoulderR;
+    case 6:
+      return GamepadAction.triggerL;
+    case 7:
+      return GamepadAction.triggerR;
     case 8:
       return GamepadAction.select;
     case 9:
@@ -53,6 +57,85 @@ GamepadAction? gamepadActionFromStick({
   return y < 0 ? GamepadAction.up : GamepadAction.down;
 }
 
+/// Правый стик: страница / курсор в поле, не выбор карточек.
+GamepadAction? gamepadScrollFromStick({
+  required double x,
+  required double y,
+  double deadzone = kGamepadStickDeadzone,
+}) {
+  return switch (gamepadActionFromStick(x: x, y: y, deadzone: deadzone)) {
+    GamepadAction.up => GamepadAction.scrollUp,
+    GamepadAction.down => GamepadAction.scrollDown,
+    GamepadAction.left => GamepadAction.scrollLeft,
+    GamepadAction.right => GamepadAction.scrollRight,
+    _ => null,
+  };
+}
+
+/// Правый стик, если оси не копируют левый (на части Android AXIS_Z = AXIS_X).
+GamepadAction? gamepadIndependentScroll({
+  required double leftX,
+  required double leftY,
+  required double rightX,
+  required double rightY,
+  double deadzone = kGamepadStickDeadzone,
+}) {
+  final left = gamepadActionFromStick(
+    x: leftX,
+    y: leftY,
+    deadzone: deadzone,
+  );
+  final scroll = gamepadScrollFromStick(
+    x: rightX,
+    y: rightY,
+    deadzone: deadzone,
+  );
+  if (left == null || scroll == null) return scroll;
+  final mirrored = switch (left) {
+    GamepadAction.left => scroll == GamepadAction.scrollLeft,
+    GamepadAction.right => scroll == GamepadAction.scrollRight,
+    GamepadAction.up => scroll == GamepadAction.scrollUp,
+    GamepadAction.down => scroll == GamepadAction.scrollDown,
+    _ => false,
+  };
+  return mirrored ? null : scroll;
+}
+
+/// Настоящие кнопки геймпада, не стрелки/Enter клавиатуры.
+bool isDedicatedGamepadKey(LogicalKeyboardKey key) {
+  return key == LogicalKeyboardKey.gameButtonA ||
+      key == LogicalKeyboardKey.gameButtonB ||
+      key == LogicalKeyboardKey.gameButtonC ||
+      key == LogicalKeyboardKey.gameButtonX ||
+      key == LogicalKeyboardKey.gameButtonY ||
+      key == LogicalKeyboardKey.gameButtonZ ||
+      key == LogicalKeyboardKey.gameButtonLeft1 ||
+      key == LogicalKeyboardKey.gameButtonLeft2 ||
+      key == LogicalKeyboardKey.gameButtonRight1 ||
+      key == LogicalKeyboardKey.gameButtonRight2 ||
+      key == LogicalKeyboardKey.gameButtonThumbLeft ||
+      key == LogicalKeyboardKey.gameButtonThumbRight ||
+      key == LogicalKeyboardKey.gameButtonStart ||
+      key == LogicalKeyboardKey.gameButtonSelect ||
+      key == LogicalKeyboardKey.gameButtonMode ||
+      key == LogicalKeyboardKey.gameButton1 ||
+      key == LogicalKeyboardKey.gameButton2 ||
+      key == LogicalKeyboardKey.gameButton3 ||
+      key == LogicalKeyboardKey.gameButton4 ||
+      key == LogicalKeyboardKey.gameButton5 ||
+      key == LogicalKeyboardKey.gameButton6 ||
+      key == LogicalKeyboardKey.gameButton7 ||
+      key == LogicalKeyboardKey.gameButton8 ||
+      key == LogicalKeyboardKey.gameButton9 ||
+      key == LogicalKeyboardKey.gameButton10 ||
+      key == LogicalKeyboardKey.gameButton11 ||
+      key == LogicalKeyboardKey.gameButton12 ||
+      key == LogicalKeyboardKey.gameButton13 ||
+      key == LogicalKeyboardKey.gameButton14 ||
+      key == LogicalKeyboardKey.gameButton15 ||
+      key == LogicalKeyboardKey.gameButton16;
+}
+
 /// Клавиши и кнопки геймпада, которые Android/десктоп шлют как [KeyEvent].
 GamepadAction? gamepadActionFromKey(LogicalKeyboardKey key) {
   if (key == LogicalKeyboardKey.arrowUp) {
@@ -85,12 +168,20 @@ GamepadAction? gamepadActionFromKey(LogicalKeyboardKey key) {
     return GamepadAction.actionY;
   }
   if (key == LogicalKeyboardKey.gameButtonLeft1 ||
+      key == LogicalKeyboardKey.gameButton5 ||
       key == LogicalKeyboardKey.pageUp) {
     return GamepadAction.shoulderL;
   }
   if (key == LogicalKeyboardKey.gameButtonRight1 ||
+      key == LogicalKeyboardKey.gameButton6 ||
       key == LogicalKeyboardKey.pageDown) {
     return GamepadAction.shoulderR;
+  }
+  if (key == LogicalKeyboardKey.gameButtonLeft2) {
+    return GamepadAction.triggerL;
+  }
+  if (key == LogicalKeyboardKey.gameButtonRight2) {
+    return GamepadAction.triggerR;
   }
   if (key == LogicalKeyboardKey.gameButtonStart) {
     return GamepadAction.menu;
@@ -99,4 +190,45 @@ GamepadAction? gamepadActionFromKey(LogicalKeyboardKey key) {
     return GamepadAction.select;
   }
   return null;
+}
+
+/// Android [KeyEvent] keyCode → действие. Дубль HardwareKeyboard.
+GamepadAction? gamepadActionFromAndroidKeyCode(int keyCode) {
+  switch (keyCode) {
+    case 19: // KEYCODE_DPAD_UP
+      return GamepadAction.up;
+    case 20: // KEYCODE_DPAD_DOWN
+      return GamepadAction.down;
+    case 21: // KEYCODE_DPAD_LEFT
+      return GamepadAction.left;
+    case 22: // KEYCODE_DPAD_RIGHT
+      return GamepadAction.right;
+    case 23: // KEYCODE_DPAD_CENTER
+    case 66: // KEYCODE_ENTER
+    case 96: // KEYCODE_BUTTON_A
+      return GamepadAction.confirm;
+    case 4: // KEYCODE_BACK
+    case 97: // KEYCODE_BUTTON_B
+      return GamepadAction.cancel;
+    case 99: // KEYCODE_BUTTON_X
+      return GamepadAction.actionX;
+    case 100: // KEYCODE_BUTTON_Y
+      return GamepadAction.actionY;
+    case 102: // KEYCODE_BUTTON_L1
+    case 192: // KEYCODE_BUTTON_5
+      return GamepadAction.shoulderL;
+    case 103: // KEYCODE_BUTTON_R1
+    case 193: // KEYCODE_BUTTON_6
+      return GamepadAction.shoulderR;
+    case 104: // KEYCODE_BUTTON_L2
+      return GamepadAction.triggerL;
+    case 105: // KEYCODE_BUTTON_R2
+      return GamepadAction.triggerR;
+    case 108: // KEYCODE_BUTTON_START
+      return GamepadAction.menu;
+    case 109: // KEYCODE_BUTTON_SELECT
+      return GamepadAction.select;
+    default:
+      return null;
+  }
 }

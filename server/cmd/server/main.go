@@ -26,6 +26,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -359,11 +360,11 @@ func main() {
 	}
 
 	pushSender := &api.WebPushSender{
-		Pool:                  pool,
-		PublicKey:             getEnv("VAPID_PUBLIC_KEY", ""),
-		PrivateKey:            getEnv("VAPID_PRIVATE_KEY", ""),
-		Subject:               getEnv("VAPID_SUBJECT", "admin@zozu.games"),
-		TTLSeconds:            86400,
+		Pool:       pool,
+		PublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
+		PrivateKey: getEnv("VAPID_PRIVATE_KEY", ""),
+		Subject:    getEnv("VAPID_SUBJECT", "admin@zozu.games"),
+		TTLSeconds: 86400,
 		FCMServiceAccountJSON: api.NormalizeFCMServiceAccountJSON(
 			getEnv("FCM_SERVICE_ACCOUNT_JSON", ""),
 		),
@@ -419,6 +420,7 @@ func main() {
 		YandexClientSecret: getEnv("YANDEX_CLIENT_SECRET", ""),
 		VKClientID:         getEnv("VK_CLIENT_ID", ""),
 		VKClientSecret:     getEnv("VK_CLIENT_SECRET", ""),
+		Rdb:                rdb,
 	}
 	if providers := oauthCfg.EnabledProviders(); len(providers) > 0 {
 		log.Printf("OAuth providers: %s", strings.Join(providers, ", "))
@@ -427,6 +429,7 @@ func main() {
 	}
 
 	realtimeHub := api.NewRealtimeHub()
+	rateLimiter := api.NewRateLimiter(rdb)
 	authHandler := &api.AuthHandler{
 		Pool:      pool,
 		JWTSecret: []byte(jwtSecret),
@@ -438,10 +441,12 @@ func main() {
 	wsHandler := &api.RealtimeWSHandler{
 		Hub:           realtimeHub,
 		Pool:          pool,
+		Rdb:           rdb,
 		JWTSecret:     []byte(jwtSecret),
 		LogWriter:     logWriter,
 		AppLogEnabled: appLogEnabled,
 		Push:          pushSender,
+		Limiter:       rateLimiter,
 	}
 	webPushHandler := &api.WebPushHandler{Pool: pool, Sender: pushSender}
 	settingsHandler := &api.SettingsHandler{Pool: pool}
@@ -452,6 +457,16 @@ func main() {
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	chatsHandler := &api.ChatsHandler{Pool: pool, Rdb: rdb, Hub: realtimeHub, Push: pushSender}
 	gamesBroadcaster := &api.GamesBroadcaster{Rdb: rdb, Hub: realtimeHub}
+	realtimeHub.SetFanout(func(userIDs []uuid.UUID, all bool, payload any) bool {
+		if gamesBroadcaster.Rdb == nil {
+			return false
+		}
+		if err := gamesBroadcaster.PublishRemote(userIDs, all, payload); err != nil {
+			log.Printf("realtime fanout: %v", err)
+			return false
+		}
+		return true
+	})
 	gamesHandler := &api.GamesHandler{
 		Pool:        pool,
 		Rdb:         rdb,
@@ -460,7 +475,7 @@ func main() {
 		Push:        pushSender,
 		Registry:    gameregistry.Default(),
 	}
-	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
+	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub, Rdb: rdb}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
 	achievementsHandler := &api.AchievementsHandler{Pool: pool}
 	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
@@ -490,13 +505,13 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/start", handleStart)
 	mux.HandleFunc("/api/version", handleVersion)
-	mux.HandleFunc("/api/auth/register", authHandler.Register)
-	mux.HandleFunc("/api/auth/login", authHandler.Login)
+	mux.Handle("/api/auth/register", rateLimiter.Middleware("register", api.RateRegisterPer15Min, 15*time.Minute, http.HandlerFunc(authHandler.Register)))
+	mux.Handle("/api/auth/login", rateLimiter.Middleware("login", api.RateLoginPerMinute, time.Minute, http.HandlerFunc(authHandler.Login)))
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/api/auth/verify-email", authHandler.VerifyEmail)
-	mux.HandleFunc("/api/auth/resend-verification", authHandler.ResendVerification)
-	mux.HandleFunc("/api/auth/forgot-password", authHandler.ForgotPassword)
-	mux.HandleFunc("/api/auth/reset-password", authHandler.ResetPassword)
+	mux.Handle("/api/auth/resend-verification", rateLimiter.Middleware("resend", api.RateResendPer15Min, 15*time.Minute, http.HandlerFunc(authHandler.ResendVerification)))
+	mux.Handle("/api/auth/forgot-password", rateLimiter.Middleware("forgot", api.RateForgotPer15Min, 15*time.Minute, http.HandlerFunc(authHandler.ForgotPassword)))
+	mux.Handle("/api/auth/reset-password", rateLimiter.Middleware("reset", api.RateResetPer15Min, 15*time.Minute, http.HandlerFunc(authHandler.ResetPassword)))
 	mux.HandleFunc("/api/auth/oauth/providers", authHandler.OAuthProviders)
 	mux.HandleFunc("/api/auth/oauth/poll", authHandler.OAuthPoll)
 	mux.HandleFunc("/api/auth/oauth/google/id-token", authHandler.GoogleIDTokenLogin)
@@ -576,6 +591,7 @@ func main() {
 	mux.Handle("/api/inventory/capabilities", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Capabilities)))
 	mux.Handle("/api/inventory/consume", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Consume)))
 	mux.Handle("/api/inventory/sell", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Sell)))
+	mux.Handle("/api/inventory/elixir", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.ApplyElixir)))
 	mux.Handle("/api/inventory/gift", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Gift)))
 	mux.Handle("/api/inventory/collections", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.CollectionsShowcase)))
 	mux.Handle("/api/inventory/collection-income", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.CollectionIncome)))

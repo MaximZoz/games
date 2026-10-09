@@ -86,6 +86,11 @@ target API: `Target SDK of artifact is too low` (в логе upload-google-play
 рядом может быть `versionCode`, например `10059`). Не брать
 `flutter.targetSdkVersion` из Flutter 3.27 — там 35.
 
+`minSdk` должен быть **24** (Android 7). Play Automatic Protection
+отклоняет AAB с `minSdk` 21: `Play automatic protection requires a
+minimum SDK version of 24`. Не брать `flutter.minSdkVersion` из
+Flutter 3.27 — там 21.
+
 ### Если Queued / Failed to cancel
 
 Settings → Actions → Disable → Enable; не спамь Run workflow.

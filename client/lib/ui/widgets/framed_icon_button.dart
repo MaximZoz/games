@@ -45,6 +45,7 @@ class FramedIconButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
+            canRequestFocus: false,
             onTap: enabled ? onPressed : null,
             borderRadius: BorderRadius.circular(borderRadius),
             child: Container(

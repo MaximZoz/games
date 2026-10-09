@@ -44,7 +44,7 @@ func TestNormalizeGameSettingsStakeClamp(t *testing.T) {
 
 func TestNormalizeGameSettingsRejects(t *testing.T) {
 	cases := []gameSettingsBody{
-		{GameType: "chess", TurnTimeSec: 0, GridSize: 3, StakeBronze: 2},
+		{GameType: "go", TurnTimeSec: 0, GridSize: 3, StakeBronze: 2},
 		{TurnTimeSec: 15, GridSize: 3, StakeBronze: 2},
 	}
 	for i, body := range cases {
@@ -259,6 +259,75 @@ func TestNormalizeCheckersGameSettings(t *testing.T) {
 	}
 	if s4.GameMode != "corners" || s4.Variant != "corners" {
 		t.Fatalf("corners: %+v", s4)
+	}
+}
+
+func TestNormalizeChessGameSettings(t *testing.T) {
+	s, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 60,
+		StakeBronze: 10,
+		GameMode:    "rapid",
+		MaxPlayers:  4,
+	})
+	if errMsg != "" {
+		t.Fatalf("err=%s", errMsg)
+	}
+	if s.GameType != store.GameTypeChess || s.MaxPlayers != 2 ||
+		s.GameMode != "rapid" || s.Variant != "rapid" ||
+		s.GridSize != 8 || s.StakeBronze != 10 {
+		t.Fatalf("unexpected %+v", s)
+	}
+	s2, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 20,
+		StakeBronze: 2,
+		GameMode:    "unknown",
+		Variant:     "bullet",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s2.GameMode != "bullet" || s2.Variant != "bullet" {
+		t.Fatalf("bullet from variant: %+v", s2)
+	}
+	s3, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 0,
+		StakeBronze: 2,
+		GameMode:    "classic",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s3.GameMode != "classic" || s3.Variant != "classic" {
+		t.Fatalf("classic: %+v", s3)
+	}
+	s4, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 20,
+		StakeBronze: 2,
+		GameMode:    "blitz",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s4.GameMode != "blitz" || s4.Variant != "blitz" {
+		t.Fatalf("blitz: %+v", s4)
+	}
+	legacy, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 600,
+		StakeBronze: 2,
+		GameMode:    "chess960",
+		Variant:     "antichess",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if legacy.GameMode != "classic" || legacy.Variant != "classic" ||
+		legacy.TurnTimeSec != 60 {
+		t.Fatalf("legacy 960/antichess and 10 min: %+v", legacy)
 	}
 }
 

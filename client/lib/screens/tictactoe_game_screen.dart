@@ -587,16 +587,13 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 playerCount: playersN,
                 winnerCount: 1,
               );
-              final settledCredit = iWonEarly
-                  ? pot
-                  : isDraw
-                      ? game.stakeBronze
-                      : 0;
+              final settledCredit = iWonEarly ? pot : 0;
               final settledReward = iWonEarly ? netProfit : 0;
-              final settledLost =
-                  (!iWonEarly && !isDraw && game.stakeBronze > 0)
-                      ? game.stakeBronze
-                      : 0;
+              final settledLost = stakeLostOnFinish(
+                stakeBronze: game.stakeBronze,
+                isDraw: isDraw,
+                iWon: iWonEarly,
+              );
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
                 // Партия окончена — снять active/observation/пин, иначе
@@ -735,19 +732,23 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 ? game.playerUserIds.length
                 : (game.maxPlayers > 2 ? game.maxPlayers : 2);
             final iLost = isOver && !iWon && !isDraw && game.stakeBronze > 0;
-            final showRewardChip = isOver &&
-                game.stakeBronze > 0 &&
+            final rewardBronze = stakeFinishRewardChip(
+              stakeBronze: game.stakeBronze,
+              isDraw: isDraw,
+              iWon: iWon,
+              netProfit: stakeWinnerNetProfit(
+                stake: game.stakeBronze,
+                playerCount: playersNForReward,
+                winnerCount: 1,
+              ),
+            );
+            final showRewardChip = stakeShowFinishReward(
+                  stakeBronze: game.stakeBronze,
+                  isOver: isOver,
+                  isDraw: isDraw,
+                  rewardChip: rewardBronze,
+                ) &&
                 (iWon || (iLost && _lossChipRevealed));
-            // Чистый выигрыш / проигрыш ставки (как меняется баланс до матча).
-            final rewardBronze = iWon
-                ? stakeWinnerNetProfit(
-                    stake: game.stakeBronze,
-                    playerCount: playersNForReward,
-                    winnerCount: 1,
-                  )
-                : iLost
-                    ? -game.stakeBronze
-                    : 0;
             final isDesktop = isWide(context);
             final narrow = isNarrow(context);
             final phoneLandscape = isPhoneLandscape(context);
@@ -889,7 +890,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           ),
                         )
                       else
-                        _RematchSection(
+                        GameRematchSection(
                           rematchLobbyId: _rematchLobbyId,
                           rematchDeclined: _rematchDeclined,
                           iDeclinedRematch: _iDeclinedRematch,
@@ -904,6 +905,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           onCancelWait: _cancelRematchWait,
                           onFindGame: () => _findGame(context),
                           compact: true,
+                          table: RematchTable(
+                            gameType: 'tictactoe',
+                            stakeBronze: game.stakeBronze,
+                            variant: game.variant,
+                          ),
                         ),
                     ],
                   ],
@@ -1077,23 +1083,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final me = ref.read(authStateProvider).valueOrNull?.id;
     final mark = game.markForUser(me);
     if (mark != null && game.isEliminated(mark)) return;
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.gameSurrenderTitle),
-        content: Text(context.l10n.gameSurrenderConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.l10n.gameStay),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(context.l10n.gameSurrender),
-          ),
-        ],
-      ),
-    ).then((ok) {
+    confirmSurrenderDialog(context).then((ok) {
       if (ok != true || !mounted || !context.mounted) return;
       final gameId = widget.gameId;
       // Не выходим из игры: после forfeit сервер завершит партию, статус
@@ -1125,23 +1115,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
     if (game == null || game.status != 'active' || !game.isActivePvp) return;
     final l10n = context.l10n;
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.gameOfferDrawTitle),
-        content: Text(l10n.gameOfferDrawConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.gameOfferDraw),
-          ),
-        ],
-      ),
-    ).then((ok) async {
+    confirmDrawDialog(context).then((ok) async {
       if (ok != true || !mounted) return;
       try {
         await ref.read(gamesRepositoryProvider).offerDraw(widget.gameId);
@@ -1166,23 +1140,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       return;
     }
     final l10n = context.l10n;
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.gameAcceptDrawTitle),
-        content: Text(l10n.gameAcceptDrawConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.gameDraw),
-          ),
-        ],
-      ),
-    ).then((ok) async {
+    confirmDrawDialog(context, accept: true).then((ok) async {
       if (ok != true || !mounted) return;
       try {
         await ref.read(gamesRepositoryProvider).acceptDraw(widget.gameId);
@@ -1888,223 +1846,6 @@ class _IconWithBadge extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _RematchSection extends StatelessWidget {
-  const _RematchSection({
-    required this.rematchLobbyId,
-    required this.rematchDeclined,
-    required this.iDeclinedRematch,
-    required this.isRematching,
-    required this.isAcceptingRematch,
-    required this.isFindingGame,
-    required this.peerIds,
-    required this.invites,
-    required this.onRematch,
-    required this.onAccept,
-    required this.onDecline,
-    required this.onCancelWait,
-    required this.onFindGame,
-    this.compact = false,
-  });
-
-  final String? rematchLobbyId;
-  final bool rematchDeclined;
-  final bool iDeclinedRematch;
-  final bool isRematching;
-  final bool isAcceptingRematch;
-  final bool isFindingGame;
-
-  /// Все соперники прошлой партии (для multi — несколько).
-  final List<String> peerIds;
-  final List<GameInvite> invites;
-  final VoidCallback onRematch;
-  final void Function(String lobbyId) onAccept;
-  final void Function(String lobbyId) onDecline;
-  final VoidCallback? onCancelWait;
-  final VoidCallback onFindGame;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final peerSet = peerIds.toSet();
-    // Реванш от любого участника прошлой партии (не только «первого» x/o).
-    final rematchOffer =
-        invites.where((i) => peerSet.contains(i.creatorId)).firstOrNull;
-
-    // После нажатия «Принять» показываем часики до перехода в игру
-    if (isAcceptingRematch) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.hourglass_empty_rounded,
-              size: 20, color: AppColors.accentStart),
-          const SizedBox(width: 8),
-          Text(
-            context.l10n.gameConnecting,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      );
-    }
-    // Приглашение соперника показываем всегда, даже если ранее отклоняли — новое предложение.
-    if (rematchOffer != null) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.gameRematchOffer,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: compact ? 13 : 14,
-            ),
-          ),
-          SizedBox(height: compact ? 8 : 12),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                onPressed: () => onDecline(rematchOffer.lobbyId),
-                child: Text(context.l10n.commonDecline),
-              ),
-              SizedBox(width: compact ? 8 : 12),
-              FilledButton(
-                onPressed: () => onAccept(rematchOffer.lobbyId),
-                child: Text(context.l10n.commonAccept),
-              ),
-            ],
-          ),
-        ],
-      );
-    }
-    if (iDeclinedRematch) {
-      return _buildRematchButtons(
-        context,
-        isRematching: isRematching,
-        isFindingGame: isFindingGame,
-        onRematch: onRematch,
-        onFindGame: onFindGame,
-        compact: compact,
-      );
-    }
-    if (rematchDeclined) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.gameRematchDeclined,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: compact ? 13 : 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: compact ? 8 : 12),
-          _buildRematchButtons(
-            context,
-            isRematching: isRematching,
-            isFindingGame: isFindingGame,
-            onRematch: onRematch,
-            onFindGame: onFindGame,
-            compact: compact,
-          ),
-        ],
-      );
-    }
-    if (rematchLobbyId != null) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.hourglass_empty_rounded,
-                  size: compact ? 18 : 20, color: AppColors.accentStart),
-              SizedBox(width: compact ? 6 : 8),
-              Text(
-                context.l10n.gameWaitingOpponent,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: compact ? 14 : 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          if (onCancelWait != null) ...[
-            SizedBox(height: compact ? 8 : 12),
-            TextButton(
-              onPressed: onCancelWait,
-              child: Text(context.l10n.commonCancel),
-            ),
-          ],
-        ],
-      );
-    }
-    return _buildRematchButtons(
-      context,
-      isRematching: isRematching,
-      isFindingGame: isFindingGame,
-      onRematch: onRematch,
-      onFindGame: onFindGame,
-      compact: compact,
-    );
-  }
-
-  Widget _buildRematchButtons(
-    BuildContext context, {
-    required bool isRematching,
-    required bool isFindingGame,
-    required VoidCallback onRematch,
-    required VoidCallback onFindGame,
-    bool compact = false,
-  }) {
-    final btnPadding = compact
-        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
-        : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: compact ? 8 : 12,
-      runSpacing: compact ? 6 : 8,
-      children: [
-        FilledButton.icon(
-          onPressed: isRematching ? null : onRematch,
-          icon: isRematching
-              ? SizedBox(
-                  width: compact ? 16 : 18,
-                  height: compact ? 16 : 18,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.textPrimary,
-                  ),
-                )
-              : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
-          label: Text(isRematching
-              ? context.l10n.commonCreating
-              : context.l10n.gameRematch),
-          style: AppButtonStyles.of(padding: btnPadding),
-        ),
-        OutlinedButton.icon(
-          onPressed: isFindingGame ? null : onFindGame,
-          icon: isFindingGame
-              ? SizedBox(
-                  width: compact ? 16 : 18,
-                  height: compact ? 16 : 18,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(Icons.search_rounded, size: compact ? 18 : 20),
-          label: Text(isFindingGame
-              ? context.l10n.commonSearching
-              : context.l10n.gameOtherOpponent),
-          style: AppButtonStyles.of(padding: btnPadding),
-        ),
-      ],
     );
   }
 }

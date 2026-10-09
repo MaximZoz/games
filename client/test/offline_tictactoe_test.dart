@@ -17,6 +17,21 @@ void main() {
     expect(cell, 2);
   });
 
+  test('бот ставит вилку, если нет мгновенной победы', () {
+    final board = [
+      'x', '', '',
+      '', 'o', 'x',
+      '', '', '',
+    ];
+    final cell = pickBotCell(
+      board: board,
+      gridSize: 3,
+      turn: 'x',
+      firstMoveRestriction: false,
+    );
+    expect(cell, 2);
+  });
+
   test('бот блокирует победу игрока', () {
     final board = [
       'x', 'x', '',

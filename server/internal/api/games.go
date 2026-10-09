@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/chess"
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/gameregistry"
@@ -95,24 +96,24 @@ type LobbyPlayerItem struct {
 }
 
 type LobbyItem struct {
-	ID                   string            `json:"id"`
-	CreatorID            string            `json:"creator_id"`
-	CreatorName          string            `json:"creator_name,omitempty"`
-	OpponentID           *string           `json:"opponent_id,omitempty"`
-	Status               string            `json:"status"`
-	Mode                 string            `json:"mode,omitempty"`
-	GameID               *string           `json:"game_id,omitempty"`
-	CreatedAt            string            `json:"created_at"`
-	TurnTimeSec          int               `json:"turn_time_sec,omitempty"`
-	Variant              string            `json:"variant,omitempty"`
-	GridSize             int               `json:"grid_size,omitempty"`
-	MaxPlayers           int               `json:"max_players,omitempty"`
-	PlayersCount         int               `json:"players_count,omitempty"`
-	PlayerIDs            []string          `json:"player_ids,omitempty"`
-	Players              []LobbyPlayerItem `json:"players,omitempty"`
+	ID           string            `json:"id"`
+	CreatorID    string            `json:"creator_id"`
+	CreatorName  string            `json:"creator_name,omitempty"`
+	OpponentID   *string           `json:"opponent_id,omitempty"`
+	Status       string            `json:"status"`
+	Mode         string            `json:"mode,omitempty"`
+	GameID       *string           `json:"game_id,omitempty"`
+	CreatedAt    string            `json:"created_at"`
+	TurnTimeSec  int               `json:"turn_time_sec,omitempty"`
+	Variant      string            `json:"variant,omitempty"`
+	GridSize     int               `json:"grid_size,omitempty"`
+	MaxPlayers   int               `json:"max_players,omitempty"`
+	PlayersCount int               `json:"players_count,omitempty"`
+	PlayerIDs    []string          `json:"player_ids,omitempty"`
+	Players      []LobbyPlayerItem `json:"players,omitempty"`
 	// Invited — кому уже ушло приглашение. Нужен, чтобы в своей игре был
 	// виден приглашённый соперник, даже если его нет в друзьях (реванш).
-	Invited []LobbyPlayerItem `json:"invited,omitempty"`
+	Invited              []LobbyPlayerItem `json:"invited,omitempty"`
 	ChatID               string            `json:"chat_id,omitempty"`
 	SwapRule             bool              `json:"swap_rule,omitempty"`              // deprecated
 	FirstMoveRestriction bool              `json:"first_move_restriction,omitempty"` // deprecated
@@ -342,6 +343,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.serveCheckers(w, r)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/chess/") {
+		h.serveChess(w, r)
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 
@@ -389,22 +394,24 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.MakeMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "swap" && r.Method == http.MethodPost:
-			h.SwapSides(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
-			h.OfferDraw(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
-			h.AcceptDraw(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.MakeMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "swap" && r.Method == http.MethodPost:
+				h.SwapSides(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+				h.OfferDraw(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+				h.AcceptDraw(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 		return
 	}
 
@@ -510,6 +517,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 						reuseLobbyID = otherLobbyID
 					} else {
 						h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
+						h.forgetLobby(otherLobbyID)
 					}
 				}
 				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, reuseLobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze, string(variant))
@@ -537,6 +545,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	status := lobbyStatusWaitingInvite
 	if mode == "matchmake" && !openMultiFind {
 		status = lobbyStatusWaitingMatchmake
@@ -617,7 +626,7 @@ func (h *GamesHandler) findOpenMultiLobbyID(
 	variantStr string,
 	stakeBronze, maxPlayers int,
 ) string {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
 	}
@@ -944,6 +953,7 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	// Всегда создаём лобби и отправляем приглашение. Игра начнётся только после
 	// явного принятия (JoinLobby) всеми нужными игроками.
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	invitedKey := key + ":invited"
 	now := time.Now().UTC().Format(time.RFC3339Nano)
@@ -1227,39 +1237,117 @@ func cellCompletesWin(board []string, cell int, mark string, gridSize int) bool 
 }
 
 // botPickCellSmart — осмысленный ход: победа > блок > минимакс (3x3) > центр > случайный.
+func botOpponents(board []string, turn string) []string {
+	seen := map[string]bool{"x": true, "o": true}
+	for _, c := range board {
+		if c != "" && c != turn {
+			seen[c] = true
+		}
+	}
+	var out []string
+	for _, m := range []string{"x", "o", "t", "s"} {
+		if m != turn && seen[m] {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
 func botPickCellSmart(board []string, gridSize int, turn string, firstMoveRestriction bool) int {
+	return botPickCellSmartAt(board, gridSize, turn, firstMoveRestriction, winLength(gridSize))
+}
+
+func botCellWins(board []string, cell int, mark string, gridSize, winLen int) bool {
+	cp := append([]string(nil), board...)
+	if cell < 0 || cell >= len(cp) {
+		return false
+	}
+	cp[cell] = mark
+	return boardHasWin(cp, mark, gridSize, winLen)
+}
+
+func boardHasWin(board []string, mark string, gridSize, winLen int) bool {
+	if winLen <= 0 || gridSize <= 0 || winLen > gridSize {
+		return false
+	}
+	n := gridSize * gridSize
+	if len(board) < n {
+		return false
+	}
+	dirs := [][2]int{{0, 1}, {1, 0}, {1, 1}, {1, -1}}
+	for r := 0; r < gridSize; r++ {
+		for c := 0; c < gridSize; c++ {
+			for _, d := range dirs {
+				ok := true
+				for k := 0; k < winLen; k++ {
+					rr, cc := r+d[0]*k, c+d[1]*k
+					if rr < 0 || cc < 0 || rr >= gridSize || cc >= gridSize ||
+						board[rr*gridSize+cc] != mark {
+						ok = false
+						break
+					}
+				}
+				if ok {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func botPickCellSmartAt(board []string, gridSize int, turn string, firstMoveRestriction bool, winLen int) int {
 	moves := validMoves(board, gridSize, turn, firstMoveRestriction)
 	if len(moves) == 0 {
 		return -1
 	}
-	opponent := "o"
-	if turn == "o" {
-		opponent = "x"
+	opponents := botOpponents(board, turn)
+	if winLen <= 0 {
+		winLen = winLength(gridSize)
 	}
 	// 1. Победа в один ход
 	for _, cell := range moves {
-		if cellCompletesWin(board, cell, turn, gridSize) {
+		if botCellWins(board, cell, turn, gridSize, winLen) {
 			return cell
 		}
 	}
-	// 2. Блокировать победу соперника
-	for _, cell := range moves {
-		if cellCompletesWin(board, cell, opponent, gridSize) {
-			return cell
+	// 2. Блокировать победу любого соперника
+	for _, opponent := range opponents {
+		for _, cell := range moves {
+			if botCellWins(board, cell, opponent, gridSize, winLen) {
+				return cell
+			}
 		}
 	}
-	// 3. Для 3x3 — минимакс
+	// 3. Вилка: две угрозы сразу, затем блок чужой вилки.
+	if fork := botBestFork(board, moves, turn, gridSize, winLen); fork >= 0 {
+		return fork
+	}
+	for _, opponent := range opponents {
+		if fork := botBestFork(board, moves, opponent, gridSize, winLen); fork >= 0 {
+			return fork
+		}
+	}
+	// 4. Для 3x3 — минимакс
 	if gridSize == 3 {
 		if cell := botMinimax(board, turn, firstMoveRestriction); cell >= 0 {
 			return cell
 		}
 	}
-	// 4. Своя угроза (winLen-1), затем блок чужой.
-	if threat := botBestThreat(board, moves, turn, gridSize); threat >= 0 {
+	// 5. Поиск на больших досках (два игрока).
+	if gridSize >= 4 && gridSize <= 8 && len(opponents) == 1 {
+		if cell := botSearchBoard(board, moves, turn, opponents[0], gridSize, winLen, firstMoveRestriction); cell >= 0 {
+			return cell
+		}
+	}
+	// 6. Своя угроза (winLen-1), затем блок чужой.
+	if threat := botBestThreat(board, moves, turn, gridSize, winLen); threat >= 0 {
 		return threat
 	}
-	if threat := botBestThreat(board, moves, opponent, gridSize); threat >= 0 {
-		return threat
+	for _, opponent := range opponents {
+		if threat := botBestThreat(board, moves, opponent, gridSize, winLen); threat >= 0 {
+			return threat
+		}
 	}
 	// 5. Предпочтение центру (для нечётных сеток)
 	centerIdxs := centerCellIndices(gridSize)
@@ -1282,14 +1370,13 @@ func botPickCellSmart(board []string, gridSize int, turn string, firstMoveRestri
 	return bestCell
 }
 
-func botBestThreat(board []string, moves []int, mark string, gridSize int) int {
-	wl := winLength(gridSize)
+func botBestThreat(board []string, moves []int, mark string, gridSize, winLen int) int {
 	best, bestScore := -1, 0
 	for _, cell := range moves {
 		cp := make([]string, len(board))
 		copy(cp, board)
 		cp[cell] = mark
-		n := countOpenThreats(cp, mark, gridSize, wl)
+		n := countOpenThreats(cp, mark, gridSize, winLen)
 		if n > bestScore {
 			bestScore = n
 			best = cell
@@ -1332,6 +1419,210 @@ func countOpenThreats(board []string, mark string, gridSize, winLen int) int {
 		}
 	}
 	return n
+}
+
+func botBestFork(board []string, moves []int, mark string, gridSize, winLen int) int {
+	best, bestScore := -1, 1
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = mark
+		n := countOpenThreats(cp, mark, gridSize, winLen)
+		if n > bestScore {
+			bestScore = n
+			best = cell
+		}
+	}
+	return best
+}
+
+func botSearchBoard(board []string, moves []int, botMark, opponent string, gridSize, winLen int, firstMoveRestriction bool) int {
+	depth := 2
+	switch gridSize {
+	case 4:
+		depth = 4
+	case 5:
+		depth = 3
+	}
+	bestCell, bestScore := -1, -1<<30
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = botMark
+		score := botNegamax(cp, opponent, botMark, opponent, gridSize, winLen, depth-1, -1<<30, 1<<30, firstMoveRestriction)
+		if score > bestScore {
+			bestScore = score
+			bestCell = cell
+		}
+	}
+	return bestCell
+}
+
+func botNegamax(board []string, toMove, botMark, opponent string, gridSize, winLen, depth, alpha, beta int, firstMoveRestriction bool) int {
+	if boardHasWin(board, botMark, gridSize, winLen) {
+		return 1000 + depth
+	}
+	if boardHasWin(board, opponent, gridSize, winLen) {
+		return -1000 - depth
+	}
+	if isDraw(board, gridSize) || depth <= 0 {
+		return botBoardEval(board, botMark, opponent, gridSize, winLen)
+	}
+	moves := validMoves(board, gridSize, toMove, firstMoveRestriction)
+	if len(moves) == 0 {
+		return 0
+	}
+	next := opponent
+	if toMove == opponent {
+		next = botMark
+	}
+	if toMove == botMark {
+		best := -1 << 30
+		for _, cell := range moves {
+			cp := append([]string(nil), board...)
+			cp[cell] = toMove
+			s := botNegamax(cp, next, botMark, opponent, gridSize, winLen, depth-1, alpha, beta, firstMoveRestriction)
+			if s > best {
+				best = s
+			}
+			if s > alpha {
+				alpha = s
+			}
+			if alpha >= beta {
+				break
+			}
+		}
+		return best
+	}
+	best := 1 << 30
+	for _, cell := range moves {
+		cp := append([]string(nil), board...)
+		cp[cell] = toMove
+		s := botNegamax(cp, next, botMark, opponent, gridSize, winLen, depth-1, alpha, beta, firstMoveRestriction)
+		if s < best {
+			best = s
+		}
+		if s < beta {
+			beta = s
+		}
+		if alpha >= beta {
+			break
+		}
+	}
+	return best
+}
+
+func botBoardEval(board []string, botMark, opponent string, gridSize, winLen int) int {
+	return countOpenThreats(board, botMark, gridSize, winLen)*30 -
+		countOpenThreats(board, opponent, gridSize, winLen)*40
+}
+
+func botPickUltimate(st gameengine.State, legal []int) int {
+	if len(legal) == 0 {
+		return -1
+	}
+	meta := st.MetaBoard
+	if meta == nil {
+		meta = make([]string, 9)
+	}
+	bot := st.Turn
+	opp := "o"
+	if bot == "o" {
+		opp = "x"
+	}
+	scoreCell := func(cell int) int {
+		board := append([]string(nil), st.Board...)
+		board[cell] = bot
+		sub := cell / 9
+		local := cell % 9
+		nextMeta := append([]string(nil), meta...)
+		subBoard := make([]string, 9)
+		base := sub * 9
+		for i := 0; i < 9; i++ {
+			subBoard[i] = board[base+i]
+		}
+		wonSub := len(gameengineWinLine(subBoard, bot)) == 3
+		if wonSub {
+			nextMeta[sub] = bot
+		}
+		if len(gameengineWinLine(metaMarks(nextMeta), bot)) == 3 {
+			return 10000
+		}
+		score := 0
+		if wonSub {
+			score += 400
+		}
+		if wouldWinSub(st.Board, meta, cell, opp) {
+			score += 350
+		}
+		if local == 4 {
+			score += 18
+		} else if local%2 == 0 {
+			score += 8
+		}
+		if sub == 4 {
+			score += 12
+		}
+		forced := local
+		if forced < 9 && (metaFilled(nextMeta, forced) || subFull(board, forced)) {
+			score += 40
+		} else if forced == 4 {
+			score -= 15
+		}
+		return score
+	}
+	best, bestScore := legal[0], -1<<30
+	for _, cell := range legal {
+		s := scoreCell(cell)
+		if s > bestScore {
+			bestScore = s
+			best = cell
+		}
+	}
+	return best
+}
+
+func gameengineWinLine(board []string, mark string) []int {
+	return checkWinLine(board, mark, 3)
+}
+
+func metaMarks(meta []string) []string {
+	out := make([]string, 9)
+	for i, m := range meta {
+		if m == "x" || m == "o" {
+			out[i] = m
+		}
+	}
+	return out
+}
+
+func metaFilled(meta []string, sub int) bool {
+	return sub >= 0 && sub < len(meta) && meta[sub] != ""
+}
+
+func subFull(board []string, sub int) bool {
+	base := sub * 9
+	for i := 0; i < 9; i++ {
+		if board[base+i] == "" {
+			return false
+		}
+	}
+	return true
+}
+
+func wouldWinSub(board, meta []string, cell int, mark string) bool {
+	sub := cell / 9
+	if sub < len(meta) && meta[sub] != "" {
+		return false
+	}
+	cp := append([]string(nil), board...)
+	cp[cell] = mark
+	subBoard := make([]string, 9)
+	base := sub * 9
+	for i := 0; i < 9; i++ {
+		subBoard[i] = cp[base+i]
+	}
+	return len(checkWinLine(subBoard, mark, 3)) == 3
 }
 
 func botCellLineScore(gridSize, cell int) int {
@@ -1467,8 +1758,10 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 		return false
 	}
 	cell := -1
-	if variant != gameengine.VariantUltimate {
-		cell = botPickCellSmart(st.Board, cfg.GridSize, st.Turn, false)
+	if variant == gameengine.VariantUltimate {
+		cell = botPickUltimate(st, legal)
+	} else {
+		cell = botPickCellSmartAt(st.Board, cfg.GridSize, st.Turn, false, cfg.WinLength)
 	}
 	if cell < 0 || !intInSlice(legal, cell) {
 		cell = legal[rand.Intn(len(legal))]
@@ -1564,7 +1857,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -1983,8 +2276,13 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	} else if gameType == unoGameType {
 		inviteData["variant"] = "classic"
 		inviteData["game_mode"] = "classic"
+	} else if gameType == pokerGameType {
+		inviteData["game_mode"] = "holdem"
 	} else if gameType == nardyGameType {
 		mode := nardy.NormalizeMode(m["game_mode"])
+		inviteData["variant"] = mode
+		inviteData["game_mode"] = mode
+	} else if mode, ok := boardGameInviteMode(gameType, m); ok {
 		inviteData["variant"] = mode
 		inviteData["game_mode"] = mode
 	} else {
@@ -2297,7 +2595,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 
 	if status == lobbyStatusWaitingInvite {
-		keys, _ := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+		keys, _ := h.lobbyHashKeys(ctx)
 		for _, k := range keys {
 			if k == key || strings.HasSuffix(k, ":invited") {
 				continue
@@ -2314,6 +2612,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			h.Rdb.Del(ctx, k)
 			h.Rdb.Del(ctx, k+":invited")
 			staleLobbyID := strings.TrimPrefix(k, "lobby:")
+			h.forgetLobby(staleLobbyID)
 			if staleLobbyID != "" {
 				h.cleanupInviteLobbyChatMessages(ctx, staleLobbyID)
 				_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, staleLobbyID)
@@ -2752,14 +3051,13 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 	}
 	ctx := r.Context()
 	uid := userID.String()
-	indexed, _ := h.Rdb.SMembers(ctx, userInvitesRedisKey(uid)).Result()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*:invited")
-	if err != nil && len(indexed) == 0 {
+	indexed, err := h.Rdb.SMembers(ctx, userInvitesRedisKey(uid)).Result()
+	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	out := make([]map[string]any, 0)
-	for _, lobbyID := range mergePendingInviteLobbyIDs(indexed, keys) {
+	for _, lobbyID := range mergePendingInviteLobbyIDs(indexed, nil) {
 		invitedKey := "lobby:" + lobbyID + ":invited"
 		okMem, _ := h.Rdb.SIsMember(ctx, invitedKey, uid).Result()
 		m, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
@@ -2833,8 +3131,13 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 		} else if gt == unoGameType {
 			item["variant"] = "classic"
 			item["game_mode"] = "classic"
+		} else if gt == pokerGameType {
+			item["game_mode"] = "holdem"
 		} else if gt == nardyGameType {
 			mode := nardy.NormalizeMode(m["game_mode"])
+			item["variant"] = mode
+			item["game_mode"] = mode
+		} else if mode, ok := boardGameInviteMode(gt, m); ok {
 			item["variant"] = mode
 			item["game_mode"] = mode
 		} else {
@@ -4089,6 +4392,7 @@ func (h *GamesHandler) onGameFinishedWithMap(
 		if maxPlayers > 2 || m["t_user_id"] != "" || m["s_user_id"] != "" {
 			if h.Rdb != nil {
 				h.Rdb.Del(ctx, "lobby:"+lobbyID)
+				h.forgetLobby(lobbyID)
 				h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 				if gameID != "" {
 					h.Rdb.HDel(ctx, "game:"+gameID, "chat_id")
@@ -4488,6 +4792,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyUnoTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == nardyGameType {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
+			} else if m["game_type"] == store.GameTypeChess {
+				h.applyChessTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4630,6 +4936,27 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":   gameID,
 						"lobby_id":  m["lobby_id"],
 						"game_type": nardyGameType,
+					}
+				}
+			} else if m["game_type"] == store.GameTypeChess {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				if !stringSliceContains(players, userID.String()) {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if state, decodeErr := chess.Decode(m["state"]); decodeErr == nil {
+					seat := simple1v1SeatOf(players, userID.String())
+					active = map[string]any{
+						"type":       "game",
+						"game_id":    gameID,
+						"lobby_id":   m["lobby_id"],
+						"game_type":  store.GameTypeChess,
+						"is_my_turn": seat >= 0 && seat == state.Turn && !state.IsOver(),
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": store.GameTypeChess,
 					}
 				}
 			} else {

@@ -17,4 +17,15 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(again.state, isTrue);
   });
+
+  test('раскладка дома запоминается локально', () async {
+    SharedPreferences.setMockInitialValues({});
+    final n = PrefBoolNotifier('nardy_home_on_right', defaultValue: false);
+    await Future<void>.delayed(Duration.zero);
+    expect(n.state, isFalse);
+    await n.set(true);
+    expect(n.state, isTrue);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('nardy_home_on_right'), isTrue);
+  });
 }

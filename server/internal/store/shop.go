@@ -14,18 +14,22 @@ import (
 )
 
 var (
-	ErrShopItemUnknown  = errors.New("unknown shop item")
-	ErrShopItemInactive = errors.New("shop item inactive")
-	ErrShopOutOfStock   = errors.New("out of stock")
-	ErrShopAlreadyOwned = errors.New("already owned")
-	ErrStakeNotAllowed  = errors.New("stake not allowed")
-	ErrEmojiNotOwned    = errors.New("emoji not owned")
-	ErrEmojiDepleted    = errors.New("emoji depleted")
-	ErrNotCollection    = errors.New("not a collection item")
-	ErrGiftSelf         = errors.New("cannot gift to self")
-	ErrGiftTargetOwned  = errors.New("target already owns item")
-	ErrIncomeNotReady   = errors.New("collection income not ready")
-	ErrNoCollections    = errors.New("no collections")
+	ErrShopItemUnknown       = errors.New("unknown shop item")
+	ErrShopItemInactive      = errors.New("shop item inactive")
+	ErrShopOutOfStock        = errors.New("out of stock")
+	ErrShopAlreadyOwned      = errors.New("already owned")
+	ErrStakeNotAllowed       = errors.New("stake not allowed")
+	ErrEmojiNotOwned         = errors.New("emoji not owned")
+	ErrEmojiDepleted         = errors.New("emoji depleted")
+	ErrNotCollection         = errors.New("not a collection item")
+	ErrGiftSelf              = errors.New("cannot gift to self")
+	ErrGiftTargetOwned       = errors.New("target already owns item")
+	ErrIncomeNotReady        = errors.New("collection income not ready")
+	ErrNoCollections         = errors.New("no collections")
+	ErrElixirNotOwned        = errors.New("elixir not owned")
+	ErrElixirNotApplicable   = errors.New("elixir not applicable")
+	ErrElixirWrongSet        = errors.New("elixir wrong set")
+	ErrCollectionNotSellable = errors.New("collection not sellable")
 )
 
 // FreeStakeBronze — бронзовые ставки без покупки в магазине.
@@ -44,16 +48,23 @@ type ShopItemView struct {
 	StockRemaining *int
 	Owned          bool
 	SortOrder      int
+	// AcquiredAt — момент появления в инвентаре, если предмет уже куплен.
+	AcquiredAt string
+	// ConditionShift и VintageAt — эликсиры на коллекции (0 и пусто у остальных).
+	ConditionShift int
+	VintageAt      string
 }
 
 type InventoryItemView struct {
-	Code        string
-	Kind        string
-	Title       string
-	Description string
-	Payload     json.RawMessage
-	AcquiredAt  string
-	Quantity    int
+	Code           string
+	Kind           string
+	Title          string
+	Description    string
+	Payload        json.RawMessage
+	AcquiredAt     string
+	Quantity       int
+	ConditionShift int
+	VintageAt      string
 }
 
 type BuyResult struct {
@@ -69,7 +80,22 @@ func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 		       EXISTS (
 		         SELECT 1 FROM user_inventory u
 		         WHERE u.user_id = $1 AND u.item_code = s.code
-		       ) AS owned
+		       ) AS owned,
+		       COALESCE((
+		         SELECT to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+		         FROM user_inventory u
+		         WHERE u.user_id = $1 AND u.item_code = s.code
+		       ), ''),
+		       COALESCE((
+		         SELECT u.condition_shift
+		         FROM user_inventory u
+		         WHERE u.user_id = $1 AND u.item_code = s.code
+		       ), 0),
+		       COALESCE((
+		         SELECT to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+		         FROM user_inventory u
+		         WHERE u.user_id = $1 AND u.item_code = s.code
+		       ), '')
 		FROM shop_items s
 		WHERE s.active = TRUE
 		ORDER BY s.sort_order, s.code`, userID)
@@ -84,7 +110,8 @@ func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 		var payload []byte
 		if err := rows.Scan(
 			&it.Code, &it.Kind, &it.Title, &it.Description, &it.PriceBronze, &payload,
-			&it.StockRemaining, &it.SortOrder, &it.Owned,
+			&it.StockRemaining, &it.SortOrder, &it.Owned, &it.AcquiredAt,
+			&it.ConditionShift, &it.VintageAt,
 		); err != nil {
 			return nil, err
 		}
@@ -99,7 +126,9 @@ func ListInventory(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 	rows, err := pool.Query(ctx, `
 		SELECT s.code, s.kind, s.title, s.description, s.payload,
 		       to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-		       u.quantity
+		       u.quantity,
+		       u.condition_shift,
+		       COALESCE(to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '')
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1
@@ -113,7 +142,7 @@ func ListInventory(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 	for rows.Next() {
 		var it InventoryItemView
 		var payload []byte
-		if err := rows.Scan(&it.Code, &it.Kind, &it.Title, &it.Description, &payload, &it.AcquiredAt, &it.Quantity); err != nil {
+		if err := rows.Scan(&it.Code, &it.Kind, &it.Title, &it.Description, &payload, &it.AcquiredAt, &it.Quantity, &it.ConditionShift, &it.VintageAt); err != nil {
 			return nil, err
 		}
 		it.Payload = json.RawMessage(payload)
@@ -227,7 +256,7 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		return nil, err
 	}
 	// Смайлики можно докупать (стекируются по quantity); рамки/ставки — один раз.
-	if owned && kind != "emoji" {
+	if owned && kind != "emoji" && kind != "elixir" {
 		return nil, ErrShopAlreadyOwned
 	}
 
@@ -257,6 +286,15 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 			ON CONFLICT (user_id, item_code) DO UPDATE
 			SET quantity = user_inventory.quantity + EXCLUDED.quantity`,
 			userID, code, qty); err != nil {
+			return nil, err
+		}
+	case "elixir":
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO user_inventory (user_id, item_code, quantity)
+			VALUES ($1, $2, 1)
+			ON CONFLICT (user_id, item_code) DO UPDATE
+			SET quantity = user_inventory.quantity + 1`,
+			userID, code); err != nil {
 			return nil, err
 		}
 	case "emoji_pack":
@@ -464,7 +502,9 @@ func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 	rows, err := pool.Query(ctx, `
 		SELECT s.code, s.kind, s.title, s.description, s.payload,
 		       to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-		       u.quantity
+		       u.quantity,
+		       u.condition_shift,
+		       COALESCE(to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '')
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE
@@ -480,7 +520,7 @@ func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 		var payload []byte
 		if err := rows.Scan(
 			&it.Code, &it.Kind, &it.Title, &it.Description, &payload,
-			&it.AcquiredAt, &it.Quantity,
+			&it.AcquiredAt, &it.Quantity, &it.ConditionShift, &it.VintageAt,
 		); err != nil {
 			return nil, err
 		}
@@ -490,7 +530,8 @@ func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 	return out, rows.Err()
 }
 
-// SellCollection refunds 80% of shop price and removes the item.
+// SellCollection возвращает долю цены каталога и удаляет предмет.
+// Продать можно только новое (80%) или винтаж (300%).
 func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code string) (balance int, refund int, err error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -500,12 +541,15 @@ func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, c
 
 	var kind string
 	var price int
+	var acquiredAt time.Time
+	var shift int
+	var vintageAt *time.Time
 	err = tx.QueryRow(ctx, `
-		SELECT s.kind, s.price_bronze
+		SELECT s.kind, s.price_bronze, u.acquired_at, u.condition_shift, u.vintage_at
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND u.item_code = $2
-		FOR UPDATE OF u`, userID, code).Scan(&kind, &price)
+		FOR UPDATE OF u`, userID, code).Scan(&kind, &price, &acquiredAt, &shift, &vintageAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, 0, ErrEmojiNotOwned
@@ -515,10 +559,12 @@ func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, c
 	if kind != "collection" {
 		return 0, 0, ErrNotCollection
 	}
-	refund = (price * 80) / 100
-	if refund < 0 {
-		refund = 0
+	now := time.Now().UTC()
+	cond := CollectionConditionEffective(acquiredAt, now, shift, vintageAt)
+	if !CollectionCanSell(cond) {
+		return 0, 0, ErrCollectionNotSellable
 	}
+	refund = CollectionRefundAged(price, acquiredAt, now, shift, vintageAt)
 	if _, err := tx.Exec(ctx, `
 		DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, userID, code); err != nil {
 		return 0, 0, err
@@ -640,19 +686,37 @@ func EncodeGiftCollectionMessage(code, title, emoji, animatedName string) string
 }
 
 type CollectionIncomeInfo struct {
-	Available       bool
-	AmountBronze    int
-	ItemsBronze     int
-	SetBonusBronze  int
-	CompletedSets   int
-	NextClaimAt     *string // RFC3339 UTC, if not available
-	OwnedCount      int
+	Available      bool
+	AmountBronze   int
+	ItemsBronze    int
+	SetBonusBronze int
+	CompletedSets  int
+	NextClaimAt    *string // RFC3339 UTC, if not available
+	OwnedCount     int
 }
 
 type collectionCatalogRow struct {
 	Code         string
 	Set          string
 	WeeklyBronze int
+}
+
+// CollectionSetBonusBronze — дневной бонус за полностью собранную группу.
+func CollectionSetBonusBronze(set string) int {
+	switch set {
+	case "celebration", "nature":
+		return 50
+	case "cosmic":
+		return 100
+	case "adventure":
+		return 200
+	case "legends":
+		return 500
+	case "jewels":
+		return 5000
+	default:
+		return 0
+	}
 }
 
 func loadActiveCollectionCatalog(ctx context.Context, q interface {
@@ -679,11 +743,17 @@ func loadActiveCollectionCatalog(ctx context.Context, q interface {
 	return out, rows.Err()
 }
 
-func ownedCollectionCodes(ctx context.Context, q interface {
+type ownedCollectionState struct {
+	Acquired time.Time
+	Shift    int
+	Vintage  *time.Time
+}
+
+func ownedCollectionStates(ctx context.Context, q interface {
 	Query(context.Context, string, ...any) (pgx.Rows, error)
-}, userID uuid.UUID) (map[string]struct{}, error) {
+}, userID uuid.UUID) (map[string]ownedCollectionState, error) {
 	rows, err := q.Query(ctx, `
-		SELECT u.item_code
+		SELECT u.item_code, u.acquired_at, u.condition_shift, u.vintage_at
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE`, userID)
@@ -691,47 +761,56 @@ func ownedCollectionCodes(ctx context.Context, q interface {
 		return nil, err
 	}
 	defer rows.Close()
-	owned := map[string]struct{}{}
+	owned := map[string]ownedCollectionState{}
 	for rows.Next() {
 		var code string
-		if err := rows.Scan(&code); err != nil {
+		var st ownedCollectionState
+		if err := rows.Scan(&code, &st.Acquired, &st.Shift, &st.Vintage); err != nil {
 			return nil, err
 		}
-		owned[code] = struct{}{}
+		owned[code] = st
 	}
 	return owned, rows.Err()
 }
 
-// calcCollectionWeeklyIncome: сумма daily по владеемым + бонус за каждую
-// полностью собранную группу (= сумма daily всех предметов группы).
-// Поле payload остаётся weekly_bronze (историческое имя), смысл — дневной бонус.
-func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string]struct{}) (items, setBonus, ownedCount, completedSets int) {
+// calcCollectionWeeklyIncome: дневной доход предметов с учётом состояния
+// плюс бонус полного набора. Винтажный набор (каждый предмет винтажный)
+// получает 300% бонуса. Поле payload остаётся weekly_bronze.
+func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string]ownedCollectionState, now time.Time) (items, setBonus, ownedCount, completedSets int) {
+	now = now.UTC()
 	bySet := map[string][]collectionCatalogRow{}
 	for _, r := range catalog {
 		bySet[r.Set] = append(bySet[r.Set], r)
-		if _, ok := owned[r.Code]; ok {
-			ownedCount++
-			if r.WeeklyBronze > 0 {
-				items += r.WeeklyBronze
-			}
+		st, ok := owned[r.Code]
+		if !ok {
+			continue
+		}
+		ownedCount++
+		if r.WeeklyBronze > 0 {
+			items += CollectionDailyIncomeBronze(r.WeeklyBronze, st.Acquired, now, st.Shift, st.Vintage)
 		}
 	}
-	for _, group := range bySet {
+	for set, group := range bySet {
 		if len(group) == 0 {
 			continue
 		}
 		complete := true
-		sum := 0
+		allVintage := true
 		for _, r := range group {
-			sum += r.WeeklyBronze
-			if _, ok := owned[r.Code]; !ok {
+			st, ok := owned[r.Code]
+			if !ok {
 				complete = false
+				allVintage = false
+				break
+			}
+			if CollectionConditionEffective(st.Acquired, now, st.Shift, st.Vintage) != CollectionCondVintage {
+				allVintage = false
 			}
 		}
 		if complete {
 			completedSets++
-			if sum > 0 {
-				setBonus += sum
+			if bonus := CollectionSetBonusAged(CollectionSetBonusBronze(set), allVintage); bonus > 0 {
+				setBonus += bonus
 			}
 		}
 	}
@@ -744,11 +823,12 @@ func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uui
 	if err != nil {
 		return nil, err
 	}
-	owned, err := ownedCollectionCodes(ctx, pool, userID)
+	owned, err := ownedCollectionStates(ctx, pool, userID)
 	if err != nil {
 		return nil, err
 	}
-	items, setBonus, ownedCount, completedSets := calcCollectionWeeklyIncome(catalog, owned)
+	now := time.Now().UTC()
+	items, setBonus, ownedCount, completedSets := calcCollectionWeeklyIncome(catalog, owned, now)
 	total := items + setBonus
 	info := &CollectionIncomeInfo{
 		OwnedCount:     ownedCount,
@@ -766,7 +846,6 @@ func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uui
 		SELECT collection_income_claimed_at FROM users WHERE id = $1`, userID).Scan(&claimedAt); err != nil {
 		return nil, err
 	}
-	now := time.Now().UTC()
 	if claimedAt == nil || !utcDate(*claimedAt).Equal(utcDate(now)) {
 		info.Available = true
 		return info, nil
@@ -799,11 +878,11 @@ func ClaimCollectionIncome(ctx context.Context, pool *pgxpool.Pool, userID uuid.
 	if err != nil {
 		return 0, 0, err
 	}
-	owned, err := ownedCollectionCodes(ctx, tx, userID)
+	owned, err := ownedCollectionStates(ctx, tx, userID)
 	if err != nil {
 		return 0, 0, err
 	}
-	items, setBonus, _, _ := calcCollectionWeeklyIncome(catalog, owned)
+	items, setBonus, _, _ := calcCollectionWeeklyIncome(catalog, owned, now)
 	amount = items + setBonus
 	if amount <= 0 {
 		return 0, 0, ErrNoCollections

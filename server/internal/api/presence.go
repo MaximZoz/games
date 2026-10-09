@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 const maxPresenceUserIDs = 50
@@ -17,6 +20,61 @@ const maxPresenceUserIDs = 50
 type PresenceHandler struct {
 	Pool *pgxpool.Pool
 	Hub  *RealtimeHub
+	Rdb  *redis.Client
+}
+
+const presenceTTL = 90 * time.Second
+
+func presenceRedisKey(id uuid.UUID) string {
+	return "presence:" + id.String()
+}
+
+// MarkOnline увеличивает счётчик соединений. Ключ общий для всех реплик.
+func (h *RealtimeHub) MarkOnline(ctx context.Context, rdb *redis.Client, userID uuid.UUID) {
+	if rdb == nil {
+		return
+	}
+	key := presenceRedisKey(userID)
+	if err := rdb.Incr(ctx, key).Err(); err != nil {
+		log.Printf("presence incr: %v", err)
+		return
+	}
+	_ = rdb.Expire(ctx, key, presenceTTL).Err()
+}
+
+// MarkOffline уменьшает счётчик. Ноль — пользователь ни на одной машине.
+func (h *RealtimeHub) MarkOffline(ctx context.Context, rdb *redis.Client, userID uuid.UUID) {
+	if rdb == nil {
+		return
+	}
+	key := presenceRedisKey(userID)
+	n, err := rdb.Decr(ctx, key).Result()
+	if err != nil {
+		return
+	}
+	if n <= 0 {
+		_ = rdb.Del(ctx, key).Err()
+	}
+}
+
+// RefreshOnline продлевает онлайн, пока сокет жив (пинг раз в 30 с).
+func (h *RealtimeHub) RefreshOnline(ctx context.Context, rdb *redis.Client, userID uuid.UUID) {
+	if h == nil || rdb == nil {
+		return
+	}
+	_ = rdb.Expire(ctx, presenceRedisKey(userID), presenceTTL).Err()
+}
+
+// IsUserOnlineAnywhere — локальный сокет или ключ presence в Redis.
+func (h *RealtimeHub) IsUserOnlineAnywhere(ctx context.Context, rdb *redis.Client, userID uuid.UUID) bool {
+	if h != nil && h.IsUserOnline(userID) {
+		return true
+	}
+	if rdb == nil {
+		return false
+	}
+	n, err := rdb.Exists(ctx, presenceRedisKey(userID)).Result()
+	return err == nil && n > 0
 }
 
 type PresenceUserResponse struct {
@@ -72,7 +130,7 @@ func (h *PresenceHandler) Get(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	users := make(map[string]PresenceUserResponse)
 	for _, id := range userIDs {
-		online := h.Hub != nil && h.Hub.IsUserOnline(id)
+		online := h.Hub != nil && h.Hub.IsUserOnlineAnywhere(r.Context(), h.Rdb, id)
 		if !online && lastSeen[id] != nil {
 			// Считаем онлайн, если last_seen < 60 сек (activity от HTTP, WebSocket в фоне и т.п.)
 			online = now.Sub(lastSeen[id].UTC()) < recentActiveThreshold

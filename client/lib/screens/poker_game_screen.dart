@@ -727,13 +727,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   Future<void> _confirmSurrender() async {
     final game = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;
     if (game == null || game.isOver || game.iAmEliminated) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameSurrenderTitle,
-      message: context.l10n.gameSurrenderConfirm,
-      cancelLabel: context.l10n.gameStay,
-      confirmLabel: context.l10n.gameSurrender,
-    );
+    final ok = await confirmSurrenderDialog(context);
     if (!ok || !mounted) return;
     unawaited(() async {
       try {
@@ -1316,6 +1310,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 bottom: 0,
                 child: _buildBottomBar(game, narrow, tight: tight),
               ),
+            if (isOver && game.iWon)
+              Positioned.fill(
+                child: GameConfettiOverlay(
+                  key: ValueKey('poker-confetti-${widget.gameId}'),
+                ),
+              ),
           ],
         );
       },
@@ -1491,6 +1491,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             onCancelWait: () => unawaited(_cancelRematchWait()),
             onFindGame: () => unawaited(_findGame()),
             compact: true,
+            table: RematchTable(
+              gameType: 'poker',
+              stakeBronze: game.stakeBronze,
+              gameMode: 'holdem',
+            ),
           ),
       ],
     );

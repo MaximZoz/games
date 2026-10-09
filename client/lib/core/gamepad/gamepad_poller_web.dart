@@ -79,19 +79,22 @@ class WebGamepadPoller implements GamepadPoller {
       _prevButtons[index] = prev;
 
       final axes = pad.axes.toDart;
+      var leftX = 0.0;
+      var leftY = 0.0;
       if (axes.length >= 2) {
-        final stick = gamepadActionFromStick(
-          x: axes[0].toDartDouble,
-          y: axes[1].toDartDouble,
-        );
+        leftX = axes[0].toDartDouble;
+        leftY = axes[1].toDartDouble;
+        final stick = gamepadActionFromStick(x: leftX, y: leftY);
         if (stick != null) heldDirections.add(stick);
       }
       if (axes.length >= 4) {
-        final right = gamepadActionFromStick(
-          x: axes[2].toDartDouble,
-          y: axes[3].toDartDouble,
+        final scroll = gamepadIndependentScroll(
+          leftX: leftX,
+          leftY: leftY,
+          rightX: axes[2].toDartDouble,
+          rightY: axes[3].toDartDouble,
         );
-        if (right != null) heldDirections.add(right);
+        if (scroll != null) heldDirections.add(scroll);
       }
 
       final tracker = _repeat.putIfAbsent(index, GamepadRepeatTracker.new);

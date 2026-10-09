@@ -4,12 +4,18 @@ enum GamepadAction {
   down,
   left,
   right,
+  scrollUp,
+  scrollDown,
+  scrollLeft,
+  scrollRight,
   confirm,
   cancel,
   actionX,
   actionY,
   shoulderL,
   shoulderR,
+  triggerL,
+  triggerR,
   menu,
   select,
 }
@@ -20,6 +26,12 @@ extension GamepadActionX on GamepadAction {
       this == GamepadAction.down ||
       this == GamepadAction.left ||
       this == GamepadAction.right;
+
+  bool get isScroll =>
+      this == GamepadAction.scrollUp ||
+      this == GamepadAction.scrollDown ||
+      this == GamepadAction.scrollLeft ||
+      this == GamepadAction.scrollRight;
 }
 
 /// Событие после антидребезга и repeat.

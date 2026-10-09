@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGamepadDisconnected => '未检测到手柄。请连接并按下任意键。';
 
   @override
-  String get settingsGamepadHelpNavigate => '方向键 / 摇杆 — 菜单和棋盘光标';
+  String get settingsGamepadGenericName => '手柄';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / 叉 — 确认或落子';
+  String get settingsGamepadHelpNavigate => '导航';
 
   @override
-  String get settingsGamepadHelpBack => 'B / 圈 — 返回或取消选择';
+  String get settingsGamepadHelpConfirm => '选择';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — 切换标签';
+  String get settingsGamepadHelpBack => '返回';
+
+  @override
+  String get settingsGamepadHelpTabs => '标签';
 
   @override
   String get settingsGamepadHelpPlay => '棋盘与手牌光标：跳棋、井字棋、海战、杜拉克、UNO、扑克和西洋双陆';
 
   @override
-  String get settingsGamepadHelpCards => '卡牌中：方向键选择手牌，A出牌，X多选/UNO，Y拿牌、过牌或摸牌';
+  String get settingsGamepadHelpCards => '卡牌';
 
   @override
-  String get settingsGamepadHelpKeyboard => '在输入框按 A 打开手柄键盘；X 切换布局，B 删除或关闭';
+  String get settingsGamepadHelpKeyboard => '键盘';
+
+  @override
+  String get settingsGamepadHelpBalance => '余额';
+
+  @override
+  String get settingsGamepadHelpLogout => '退出';
+
+  @override
+  String get settingsGamepadHelpPage => '翻页';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox 布局';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation 布局';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo 布局';
 
   @override
   String get gamepadKeyboardTitle => '键盘';
@@ -776,6 +799,51 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesCheckersModeCorners => '角落棋';
 
   @override
+  String get gamesChess => '国际象棋';
+
+  @override
+  String get gamesChessModeClassic => '经典';
+
+  @override
+  String get gamesChessModeRapid => '快棋';
+
+  @override
+  String get gamesChessModeBlitz => '闪击';
+
+  @override
+  String get gamesChessModeBullet => '子弹';
+
+  @override
+  String get chessPieceQueen => '皇后';
+
+  @override
+  String get chessPieceRook => '车';
+
+  @override
+  String get chessPieceBishop => '象';
+
+  @override
+  String get chessPieceKnight => '马';
+
+  @override
+  String get chessPromotionTitle => '兵的升变';
+
+  @override
+  String get chessDrawStalemate => '和棋：逼和';
+
+  @override
+  String get chessDrawInsufficient => '和棋：子力不足';
+
+  @override
+  String get chessDrawRepetition => '和棋：三次重复局面';
+
+  @override
+  String get chessDrawFiftyMove => '和棋：50回合规则';
+
+  @override
+  String get chessCheck => '将军';
+
+  @override
   String get rulesCheckersPlayers => '玩家：2 人。';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => '仍留在家里的棋子必须在该玩家前 25 步内离开家。';
+
+  @override
+  String get rulesCheckersDrawRussian => '同一局面出现三次，或双方各走 15 步没有进展（无吃子、无兵移动、无升变）则为和棋。';
+
+  @override
+  String get rulesCheckersDrawEnglish => '同一局面出现三次，双方各走 40 步无吃子且无兵移动，或双方各剩一王，则为和棋。';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '同一局面出现三次，或让子模式中双方各走 15 步没有进展（无吃子、无兵移动、无升变）则为和棋。';
+
+  @override
+  String get rulesCheckersDrawCorners => '同一局面出现三次，或双方各走 25 步未再有棋子进入目标角，则为和棋。';
+
+  @override
+  String get rulesChessPlayers => '玩家：2 人。';
+
+  @override
+  String rulesChessMode(String mode) {
+    return '模式：$mode。';
+  }
+
+  @override
+  String get rulesChessPlayClassic => '8×8 棋盘。各方有王、后、双车、双象、双马和八兵。白方先行。常规走法，可吃过路兵、升变和王车易位。将死或对手认输即胜。';
+
+  @override
+  String get rulesChessDrawClassic => '和棋：逼和、三次重复、50 步规则、不足以将死或双方同意。';
+
+  @override
+  String get rulesChessClockClassic => '对局时限：60+0 — 整局 60 分钟，无加秒。';
+
+  @override
+  String get rulesChessClockRapid => '对局时限：10+0 — 整局 10 分钟，无加秒。';
+
+  @override
+  String get rulesChessClockBlitz => '对局时限：5+0 — 整局 5 分钟，无加秒。';
+
+  @override
+  String get rulesChessClockBullet => '对局时限：3+2 — 3 分钟，每步加 2 秒。';
+
+  @override
+  String get checkersDrawRepetition => '和棋 — 同一局面三次';
+
+  @override
+  String get checkersDrawNoProgress => '和棋 — 着法无法取胜';
+
+  @override
+  String get checkersDrawInsufficient => '和棋 — 不足以取胜';
 
   @override
   String get rulesNardyTitle => '西洋双陆 — 规则';
@@ -861,6 +976,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => '走完所有步后自动把回合交给对手';
+
+  @override
+  String get nardyLayoutToggle => '更换布局';
 
   @override
   String get nardyNoMoves => '无棋可走';
@@ -1344,7 +1462,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameOpponent => '对手';
 
   @override
+  String get gameYou => '你';
+
+  @override
   String get gameYouWon => '你赢了！';
+
+  @override
+  String get gameYouWonShort => '你赢了';
 
   @override
   String get gameYouLost => '你输了';
@@ -1381,6 +1505,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gameOfferDraw => '提议和棋';
+
+  @override
+  String get gameFlipBoard => '翻转棋盘';
+
+  @override
+  String get gameReviewStart => '回到开局';
+
+  @override
+  String get gameReviewPrev => '后退一步';
+
+  @override
+  String get gameReviewNext => '前进一步';
+
+  @override
+  String get gameReviewEnd => '回到当前局面';
 
   @override
   String get gameOfferDrawTitle => '提议和棋？';
@@ -1636,6 +1775,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => '解锁更高赌注';
+
+  @override
+  String get shopEmojisHelp => '聊天用动态表情。购买一套后即可发给好友。';
+
+  @override
+  String get shopCollectionsHelp => '只能出售崭新或古旧的收藏：崭新按价格的 80% 出售，古旧按价格的 300% 出售。破旧、疲倦和残旧不能出售。\n\n收集一套物品：它们会显示在个人橱窗，可以赠送。每件物品每天带来金币，集齐的一套还会额外给一笔奖励。\n\n物品的每日收入取决于状态，按平时的数额计算。崭新为 100%。破旧为 60%。疲倦为 40%。残旧为 100%。古旧物品为 200%，也就是平时收入的两倍。\n\n整套奖励保持不变，直到整套都成为古旧。当套装里的每件物品都是古旧时，套装奖励为 300%，即平时的三倍。\n\n状态取决于物品在你这里多久。崭新——前 7 天。破旧——第 8 天到 2 个月。疲倦——2 到 6 个月。残旧——6 个月到 1 年。古旧——满 1 年。';
+
+  @override
+  String get shopStakesHelp => '解锁更高赌注。赌注越高，奖池和收益越大。';
 
   @override
   String get inventoryTitle => '物品';
@@ -1947,6 +2095,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopOwned => '已购买';
 
   @override
+  String get shopHave => '已有';
+
+  @override
   String get shopEmpty => '暂无内容';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopBuyOnce => '一次性购买';
 
   @override
-  String get shopSellRefund => '出售可返还 80% 费用';
+  String get shopSellRefund => '出售价格取决于收藏状态';
+
+  @override
+  String get collectionConditionNew => '崭新';
+
+  @override
+  String get collectionConditionWorn => '破旧';
+
+  @override
+  String get collectionConditionTired => '疲倦';
+
+  @override
+  String get collectionConditionShabby => '残旧';
+
+  @override
+  String get collectionConditionVintage => '古旧';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return '您将获得 $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => '只能出售崭新或古旧的收藏。';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => '无法出售';
+
+  @override
+  String get inventoryCollectionNotSellableHint => '只能出售崭新或古旧的物品。请用灵药改变状态。';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '四人局：4×4 棋盘，四位玩家（X、O、△、□）。用自己的符号连成一线即胜。';
+
+  @override
+  String get adminUsersTab => '用户';
+
+  @override
+  String get adminSupportTab => '支持';
+
+  @override
+  String get adminSearchHint => '按邮箱或昵称搜索';
+
+  @override
+  String get adminRoleAdmins => '管理员';
+
+  @override
+  String get adminRoleUsers => '用户';
+
+  @override
+  String get adminRoleAll => '全部角色';
+
+  @override
+  String get adminStatusFrozen => '已冻结';
+
+  @override
+  String get adminStatusActive => '活跃';
+
+  @override
+  String get adminStatusAny => '任意状态';
+
+  @override
+  String get adminOrderDesc => '降序';
+
+  @override
+  String get adminOrderAsc => '升序';
+
+  @override
+  String adminLoadFailed(String error) {
+    return '加载失败：$error';
+  }
+
+  @override
+  String get adminUsersEmpty => '没有用户';
+
+  @override
+  String get adminSortLastSeen => '按最近访问';
+
+  @override
+  String get adminSortEmail => '按邮箱';
+
+  @override
+  String get adminSortCreated => '按注册日期';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount 铜币';
+  }
+
+  @override
+  String get adminRevokeAdmin => '取消管理员';
+
+  @override
+  String get adminGrantAdmin => '设为管理员';
+
+  @override
+  String get adminAdminRevoked => '已取消管理员权限';
+
+  @override
+  String get adminAdminGranted => '已授予管理员权限';
+
+  @override
+  String get adminGrantCoins => '发放金币';
+
+  @override
+  String get adminWriteSupport => '以支持身份写信';
+
+  @override
+  String get adminUnfreeze => '解冻';
+
+  @override
+  String get adminFreeze => '冻结';
+
+  @override
+  String get adminUnfrozen => '已解冻';
+
+  @override
+  String get adminFrozenDone => '已冻结';
+
+  @override
+  String get adminResetPassword => '重置密码';
+
+  @override
+  String get adminCoinsAmountHint => '数量（负数为扣除）';
+
+  @override
+  String get adminReasonOptional => '原因（可选）';
+
+  @override
+  String get adminGrantSent => '卡片已发到支持聊天';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '已扣除 $amount 铜币';
+  }
+
+  @override
+  String get adminGrantVerb => '发放';
+
+  @override
+  String get adminNewPasswordHint => '新密码（至少 6 位）';
+
+  @override
+  String get adminPasswordReset => '密码已重置';
+
+  @override
+  String get adminResetVerb => '重置';
+
+  @override
+  String adminShortError(String error) {
+    return '错误：$error';
+  }
+
+  @override
+  String get adminSupportEmpty => '没有支持请求';
+
+  @override
+  String get adminUserFallback => '用户';
+
+  @override
+  String get apiErrTooManyRequests => '请求过多，请稍后再试。';
+
+  @override
+  String get apiErrMoveConflict => '着法冲突，请重试。';
+
+  @override
+  String get shopElixirs => '灵药';
+
+  @override
+  String get shopElixirsSubtitle => '让藏品回春、老化或加速';
+
+  @override
+  String get shopElixirsHelp => '三层货架：回春、老化和加速。每层六瓶，每个藏品套装一瓶。灵药只对所属套装生效。\n\n回春让藏品年轻一步，不会比全新更年轻。老化让它老一步，不会比破旧更老。加速只用于破旧：距离古董还剩 3 个月，只能用一次。灵药本身不会变成古董。\n\n买下的灵药放在物品里。可以从藏品卡片或灵药卡片使用。每次消耗一瓶。';
+
+  @override
+  String get elixirGroupRejuvenate => '回春';
+
+  @override
+  String get elixirGroupAge => '老化';
+
+  @override
+  String get elixirGroupAccelerate => '加速';
+
+  @override
+  String get elixirEffectRejuvenate => '回春';
+
+  @override
+  String get elixirEffectAge => '老化';
+
+  @override
+  String get elixirEffectAccelerate => '加速';
+
+  @override
+  String get elixirAdjCelebration => '节日';
+
+  @override
+  String get elixirAdjNature => '自然';
+
+  @override
+  String get elixirAdjLegends => '传说';
+
+  @override
+  String get elixirAdjCosmic => '宇宙';
+
+  @override
+  String get elixirAdjAdventure => '冒险';
+
+  @override
+  String get elixirAdjJewels => '宝石';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective$effect灵药';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => '让藏品年轻一步。不会比全新更年轻。';
+
+  @override
+  String get elixirHelpAge => '让藏品老一步。不会比破旧更老。';
+
+  @override
+  String get elixirHelpAccelerate => '仅限破旧。距离古董还剩 3 个月，只能用一次。';
+
+  @override
+  String get elixirUseRejuvenate => '回春';
+
+  @override
+  String get elixirUseAge => '老化';
+
+  @override
+  String get elixirUseAccelerate => '加速';
+
+  @override
+  String get elixirUse => '使用';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count天',
+      one: '$count天',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count小时',
+      one: '$count小时',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count分钟',
+      one: '$count分钟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return '仅限「$set」套装。';
+  }
+
+  @override
+  String get elixirPickCollection => '选择藏品';
+
+  @override
+  String get elixirNoTarget => '这套藏品里没有能用这瓶灵药的';
+
+  @override
+  String get elixirApplied => '已使用灵药';
+
+  @override
+  String get elixirConfirmTitle => '使用这瓶灵药？';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => '没有灵药 — 去商店购买';
+
+  @override
+  String get elixirNotApplicable => '这瓶灵药现在不能用在这件藏品上';
+
+  @override
+  String get elixirWrongSet => '这瓶灵药属于另一套';
+
+  @override
+  String get elixirNotOwned => '没有这瓶灵药';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return '距$state还有 $left';
+  }
+
+  @override
+  String get collectionLeftSoon => '不到一分钟';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

@@ -33,8 +33,7 @@ class CheckersMove {
   Map<String, dynamic> toJson() => {
         'from': from.toJson(),
         'to': to.toJson(),
-        if (jumped.isNotEmpty)
-          'jumped': jumped.map((e) => e.toJson()).toList(),
+        if (jumped.isNotEmpty) 'jumped': jumped.map((e) => e.toJson()).toList(),
       };
 
   factory CheckersMove.fromJson(Map<String, dynamic> json) {
@@ -70,7 +69,11 @@ class CheckersEngine {
     this.lastFromC = -1,
     this.lastToR = -1,
     this.lastToC = -1,
-  }) : board = List<int>.from(board);
+    this.noProgress = 0,
+    Map<String, int>? posCounts,
+    this.drawReason = '',
+  })  : board = List<int>.from(board),
+        posCounts = Map<String, int>.from(posCounts ?? const {});
 
   static const modeRussian = 'russian';
   static const modeEnglish = 'english';
@@ -94,6 +97,20 @@ class CheckersEngine {
   /// За столько своих ходов фишки должны покинуть стартовый угол.
   static const cornersLeaveHomeMoves = 25;
 
+  /// 15 ходов каждой стороны только дамками без взятий (ФШР).
+  static const russianNoProgressPlies = 30;
+
+  /// 40 ходов без взятия и хода простой (WCDF / английские).
+  static const englishNoProgressPlies = 80;
+
+  /// 25 ходов каждой стороны без прогресса в целевой угол.
+  static const cornersNoProgressPlies = 50;
+
+  static const drawReasonRepetition = 'repetition';
+  static const drawReasonNoProgress = 'no_progress';
+  static const drawReasonInsufficient = 'insufficient';
+  static const drawReasonAgreed = 'agreed';
+
   String mode;
   List<int> board;
   int turn;
@@ -106,6 +123,9 @@ class CheckersEngine {
   int lastFromC;
   int lastToR;
   int lastToC;
+  int noProgress;
+  Map<String, int> posCounts;
+  String drawReason;
 
   static String normalizeMode(String? raw) {
     switch (raw) {
@@ -168,6 +188,9 @@ class CheckersEngine {
         lastFromC: lastFromC,
         lastToR: lastToR,
         lastToC: lastToC,
+        noProgress: noProgress,
+        posCounts: posCounts,
+        drawReason: drawReason,
       );
 
   int idx(int r, int c) => r * size + c;
@@ -442,6 +465,9 @@ class CheckersEngine {
     }
     if (chosen == null) throw StateError('illegal move');
     var piece = at(chosen.from.r, chosen.from.c);
+    final captured = !isCorners && chosen.jumped.isNotEmpty;
+    final manMoved = !isKing(piece);
+    final cornersBefore = isCorners ? cornersTargetCount(seat) : 0;
     set(chosen.from.r, chosen.from.c, empty);
     var promoted = false;
     if (!isCorners) {
@@ -478,7 +504,7 @@ class CheckersEngine {
         contC = -1;
         return;
       }
-    } else if (chosen.jumped.isNotEmpty && !(isEnglish && promoted)) {
+    } else if (captured && !(isEnglish && promoted)) {
       final more = capturesFrom(chosen.to.r, chosen.to.c);
       if (more.isNotEmpty) {
         mustContinue = true;
@@ -491,10 +517,99 @@ class CheckersEngine {
     contR = -1;
     contC = -1;
     turn = 1 - turn;
+    noteProgress(
+      !isCorners && (captured || manMoved || promoted),
+      isCorners && cornersTargetCount(seat) > cornersBefore,
+    );
     resolveEnd();
   }
 
+  int get noProgressLimit {
+    switch (mode) {
+      case modeEnglish:
+        return englishNoProgressPlies;
+      case modeCorners:
+        return cornersNoProgressPlies;
+      default:
+        return russianNoProgressPlies;
+    }
+  }
+
+  int cornersTargetCount(int seat) {
+    final tr0 = seat == 1 ? 0 : 5;
+    final tc0 = seat == 1 ? 0 : 5;
+    var n = 0;
+    for (var r = tr0; r < tr0 + 3; r++) {
+      for (var c = tc0; c < tc0 + 3; c++) {
+        if (owner(at(r, c)) == seat) n++;
+      }
+    }
+    return n;
+  }
+
+  bool get loneKings {
+    var whiteMen = 0, blackMen = 0, whiteKings = 0, blackKings = 0;
+    for (final p in board) {
+      switch (p) {
+        case whiteMan:
+          whiteMen++;
+        case blackMan:
+          blackMen++;
+        case whiteKing:
+          whiteKings++;
+        case blackKing:
+          blackKings++;
+      }
+    }
+    return whiteMen == 0 && blackMen == 0 && whiteKings == 1 && blackKings == 1;
+  }
+
+  String positionKey() {
+    final buf = StringBuffer(board.join());
+    buf
+      ..write('|')
+      ..write(turn)
+      ..write('|')
+      ..write(mustContinue ? 1 : 0)
+      ..write('|')
+      ..write(contR)
+      ..write('|')
+      ..write(contC);
+    return buf.toString();
+  }
+
+  void noteProgress(bool didProgress, bool cornersProgress) {
+    if (isOver) return;
+    if (didProgress || cornersProgress) {
+      noProgress = 0;
+    } else {
+      noProgress++;
+    }
+    checkAutomaticDraw();
+  }
+
+  void checkAutomaticDraw() {
+    if (isOver) return;
+    if (isEnglish && loneKings) {
+      winner = winnerDraw;
+      drawReason = drawReasonInsufficient;
+      return;
+    }
+    if (noProgress >= noProgressLimit) {
+      winner = winnerDraw;
+      drawReason = drawReasonNoProgress;
+      return;
+    }
+    final key = positionKey();
+    posCounts[key] = (posCounts[key] ?? 0) + 1;
+    if (posCounts[key]! >= 3) {
+      winner = winnerDraw;
+      drawReason = drawReasonRepetition;
+    }
+  }
+
   void resolveEnd() {
+    if (isOver) return;
     if (isCorners) {
       if (cornersFilled(0)) {
         winner = 0;
@@ -525,6 +640,7 @@ class CheckersEngine {
   void agreeDraw() {
     if (isOver) return;
     winner = winnerDraw;
+    drawReason = drawReasonAgreed;
     seq++;
   }
 
@@ -536,4 +652,3 @@ class CheckersEngine {
     return true;
   }
 }
-

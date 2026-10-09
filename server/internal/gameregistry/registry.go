@@ -91,5 +91,6 @@ func Default() *Registry {
 	r.Register(NewUno())
 	r.Register(NewNardy())
 	r.Register(NewCheckers())
+	r.Register(NewChess())
 	return r
 }

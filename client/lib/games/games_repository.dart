@@ -7,6 +7,8 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/checkers/checkers_engine.dart';
+import 'package:multigames_client/games/chess/chess_rules.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/l10n/display_names.dart';
@@ -262,8 +264,26 @@ class UserGameSettings {
         gameMode: mode,
       );
     }
+    if (gameType == 'chess') {
+      final rawMode = (modeRaw == null || modeRaw.isEmpty)
+          ? json['variant']?.toString()
+          : gameMode;
+      final mode = chessNormalizeMode(rawMode);
+      return UserGameSettings(
+        gameType: 'chess',
+        turnTimeSec: chessNormalizeTurnTime(turn),
+        variant: mode,
+        gridSize: 8,
+        stakeBronze: stake < 2 ? 2 : stake,
+        maxPlayers: 2,
+        gameMode: mode,
+      );
+    }
     if (gameType == 'checkers') {
-      final mode = gameMode == 'giveaway' ? 'giveaway' : 'russian';
+      final rawMode = (modeRaw == null || modeRaw.isEmpty)
+          ? json['variant']?.toString()
+          : gameMode;
+      final mode = CheckersEngine.normalizeMode(rawMode);
       return UserGameSettings(
         gameType: 'checkers',
         turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
@@ -313,9 +333,11 @@ class UserGameSettings {
       out['deck_size'] = 108;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
-    } else if (gameType == 'nardy' || gameType == 'checkers') {
+    } else if (gameType == 'nardy' ||
+        gameType == 'checkers' ||
+        gameType == 'chess') {
       out['variant'] = gameMode;
-      out['grid_size'] = gameType == 'checkers' ? 8 : 3;
+      out['grid_size'] = (gameType == 'checkers' || gameType == 'chess') ? 8 : 3;
       out['max_players'] = 2;
       out['game_mode'] = gameMode;
     } else if (gameType == 'checkers') {
@@ -684,6 +706,8 @@ class LobbyItem {
   bool get isNardy => gameType == 'nardy';
 
   bool get isCheckers => gameType == 'checkers';
+
+  bool get isChess => gameType == 'chess';
 
   /// Режим для чипа на карточке лобби — из реестра, без фейковой «Классики».
   String modeLabel([AppLocalizations? l10n]) => localizedGameModeLabel(

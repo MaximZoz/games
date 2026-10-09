@@ -204,6 +204,31 @@ func TestBotPickShotExtendsHitLine(t *testing.T) {
 	}
 }
 
+func TestBotPickShotHuntSkipsCorners(t *testing.T) {
+	ships := Ships{
+		{0, 1, 2, 3},
+		{5, 6, 7},
+		{20, 21, 22},
+		{40, 41},
+		{43, 44},
+		{46, 47},
+		{60},
+		{62},
+		{64},
+		{66},
+	}
+	for seed := int64(1); seed <= 8; seed++ {
+		cell, err := BotPickShot(ships, nil, rand.New(rand.NewSource(seed)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		switch cell {
+		case 0, 9, 90, 99:
+			t.Fatalf("hunt should not open on a corner, seed=%d cell=%d", seed, cell)
+		}
+	}
+}
+
 func TestBotPickShotExhausted(t *testing.T) {
 	ships := fallbackShips()
 	shots := make([]int, CellCount)

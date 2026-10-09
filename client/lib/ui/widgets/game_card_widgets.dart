@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show rulesLineWithStakeIcon;
 import 'package:multigames_client/l10n/l10n.dart';
@@ -6,6 +9,8 @@ import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scroll_dismiss.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
@@ -120,58 +125,80 @@ class GameCardHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: GameCardTitle(
-                  title: title,
-                  isDesktop: isDesktop,
-                  isMedium: isMedium,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: gameCardTitleMinHeight(
+                      isDesktop: isDesktop,
+                      isMedium: isMedium,
+                    ),
+                  ),
+                  child: GameCardTitle(
+                    title: title,
+                    isDesktop: isDesktop,
+                    isMedium: isMedium,
+                  ),
                 ),
               ),
               if (stakeBronze != null && stakeBronze! > 0) ...[
                 SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: busy ? null : onStakeTap,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 2),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            stakeLabel ?? '$stakeBronze',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                GamepadFocusBlock(
+                  radius: 12,
+                  outlinePadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  onActivate: busy ? null : onStakeTap,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      canRequestFocus: false,
+                      onTap: busy ? null : onStakeTap,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              stakeLabel ?? '$stakeBronze',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          CoinIcon(
-                            coinType: stakeCoinType,
-                            size: 20,
-                            showBorder: true,
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            CoinIcon(
+                              coinType: stakeCoinType,
+                              size: 20,
+                              showBorder: true,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ],
               if (onInfoTap != null)
-                IconButton(
-                  // Не отключать при busy: IconButton с onPressed == null
-                  // уходит в disabled и анимирует цвет — иконка «моргает».
-                  onPressed: onInfoTap,
-                  icon: const Icon(
-                    Icons.info_outline_rounded,
-                    size: 22,
-                    color: AppColors.textSecondary,
-                  ),
-                  style: IconButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    minimumSize: const Size(32, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: const EdgeInsets.all(4),
+                GamepadFocusBlock(
+                  radius: 16,
+                  shape: GamepadHighlightShape.circle,
+                  onActivate: onInfoTap,
+                  child: IconButton(
+                    // Не отключать при busy: IconButton с onPressed == null
+                    // уходит в disabled и анимирует цвет — иконка «моргает».
+                    onPressed: onInfoTap,
+                    icon: const Icon(
+                      Icons.info_outline_rounded,
+                      size: 22,
+                      color: AppColors.textSecondary,
+                    ),
+                    style: IconButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: const Size(32, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: const EdgeInsets.all(4),
+                    ),
                   ),
                 ),
             ],
@@ -220,14 +247,24 @@ class GameCardChip extends StatelessWidget {
     final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
     final fontSz =
         compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
-    return Material(
+    final chipH = gameCardChipHeight(
+      compact: compact,
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+    );
+    return GamepadFocusBlock(
+      radius: 10,
+      onActivate: onTap,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
+        canRequestFocus: false,
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         splashColor: AppColors.accentStart.withValues(alpha: 0.2),
         highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
         child: Container(
+          constraints: BoxConstraints(minHeight: chipH),
           padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
           decoration: BoxDecoration(
             color: AppColors.buttonFill,
@@ -241,6 +278,7 @@ class GameCardChip extends StatelessWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               iconChild ??
                   (flipIcon
@@ -260,13 +298,14 @@ class GameCardChip extends StatelessWidget {
           ),
         ),
       ),
+      ),
     );
   }
 }
 
 /// Ряд кнопок «Создать игру» / «Найти игру».
 ///
-/// Всегда одна линия: на узкой карточке уменьшаются отступ и кегль.
+/// Всегда одна линия и одинаковый размер на любой ширине карточки.
 /// Loading заменяет иконку на spinner и текст на «Создание…» / «Поиск…».
 /// В offline-режиме — одна широкая кнопка «Играть».
 class GameCardActionsRow extends StatelessWidget {
@@ -316,12 +355,15 @@ class GameCardActionsRow extends StatelessWidget {
     if (inDevelopment) {
       return SizedBox(
         height: _height,
-        child: FramedButton(
-          onPressed: null,
-          icon: Icons.construction_rounded,
-          label: context.l10n.gamesInDevelopment,
-          expanded: true,
-          minHeight: _height,
+        child: GamepadFocusBlock(
+          radius: AppRadius.button,
+          child: FramedButton(
+            onPressed: null,
+            icon: Icons.construction_rounded,
+            label: context.l10n.gamesInDevelopment,
+            expanded: true,
+            minHeight: _height,
+          ),
         ),
       );
     }
@@ -329,70 +371,68 @@ class GameCardActionsRow extends StatelessWidget {
     if (offline) {
       return SizedBox(
         height: _height,
-        child: FramedButton(
-          onPressed: onOfflinePlay,
-          icon: Icons.play_arrow_rounded,
-          label: offlinePlayLabel ?? context.l10n.gamesPlay,
-          expanded: true,
-          minHeight: _height,
+        child: GamepadFocusBlock(
+          radius: AppRadius.button,
+          pageAnchor: true,
+          onActivate: onOfflinePlay,
+          child: FramedButton(
+            onPressed: onOfflinePlay,
+            icon: Icons.play_arrow_rounded,
+            label: offlinePlayLabel ?? context.l10n.gamesPlay,
+            expanded: true,
+            minHeight: _height,
+          ),
         ),
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final veryTight = width < 300;
-        final tight = width < 360;
-        final height = veryTight ? 42.0 : (tight ? 44.0 : _height);
-        final padH = veryTight ? 6.0 : (tight ? 8.0 : 12.0);
-        final fontSize = veryTight ? 11.5 : (tight ? 12.5 : 13.5);
-        final iconSize = veryTight ? 16.0 : (tight ? 17.0 : 18.0);
-        final gap = veryTight ? 6.0 : (tight ? 8.0 : 10.0);
-        final padding = EdgeInsets.symmetric(horizontal: padH, vertical: 8);
+    Widget action({
+      required IconData icon,
+      required String label,
+      required VoidCallback? onPressed,
+      required bool loading,
+      bool pageAnchor = false,
+    }) {
+      return Expanded(
+        child: SizedBox(
+          height: _height,
+          child: GamepadFocusBlock(
+            radius: AppRadius.button,
+            pageAnchor: pageAnchor,
+            onActivate: loading ? null : onPressed,
+            child: FramedButton(
+              onPressed: onPressed,
+              icon: icon,
+              label: label,
+              loading: loading,
+              expanded: true,
+              minHeight: _height,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              fontSize: 13.5,
+              iconSize: 18,
+            ),
+          ),
+        ),
+      );
+    }
 
-        Widget action({
-          required IconData icon,
-          required String label,
-          required VoidCallback? onPressed,
-          required bool loading,
-        }) {
-          return Expanded(
-            child: SizedBox(
-              height: height,
-              child: FramedButton(
-                onPressed: onPressed,
-                icon: icon,
-                label: label,
-                loading: loading,
-                expanded: true,
-                minHeight: height,
-                padding: padding,
-                fontSize: fontSize,
-                iconSize: iconSize,
-              ),
-            ),
-          );
-        }
-
-        return Row(
-          children: [
-            action(
-              icon: Icons.add_rounded,
-              label: isCreating ? creatingLabel : createLabel,
-              onPressed: isCreating || isFinding ? null : onCreate,
-              loading: isCreating,
-            ),
-            SizedBox(width: gap),
-            action(
-              icon: Icons.search_rounded,
-              label: isFinding ? findingLabel : findLabel,
-              onPressed: isCreating || isFinding ? null : onFind,
-              loading: isFinding,
-            ),
-          ],
-        );
-      },
+    return Row(
+      children: [
+        action(
+          icon: Icons.add_rounded,
+          label: isCreating ? creatingLabel : createLabel,
+          onPressed: isCreating || isFinding ? null : onCreate,
+          loading: isCreating,
+          pageAnchor: true,
+        ),
+        const SizedBox(width: 10),
+        action(
+          icon: Icons.search_rounded,
+          label: isFinding ? findingLabel : findLabel,
+          onPressed: isCreating || isFinding ? null : onFind,
+          loading: isFinding,
+        ),
+      ],
     );
   }
 }
@@ -407,15 +447,18 @@ Future<void> showGameRulesDialog({
   final resolvedClose = closeLabel ?? context.l10n.commonClose;
   return showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(context.l10n.gamesRulesTitle),
-      content: SingleChildScrollView(child: content),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(resolvedClose),
-        ),
-      ],
+    builder: (ctx) => wrapGamepadScrollDismissDialog(
+      dialogContext: ctx,
+      child: AlertDialog(
+        title: Text(context.l10n.gamesRulesTitle),
+        content: SingleChildScrollView(child: content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(resolvedClose),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -439,6 +482,68 @@ Widget rulesTextLines(List<String> lines) {
   );
 }
 
+/// Две строки названия — как у «Крестики-нолики», чтобы шапка совпадала с Дураком.
+@visibleForTesting
+double gameCardTitleMinHeight({
+  required bool isDesktop,
+  required bool isMedium,
+}) {
+  final fontSize = isMedium ? 18.0 : (isDesktop ? 20.0 : 18.0);
+  return fontSize * 1.15 * 2;
+}
+
+/// Высота одного чипа режима — одинаковая для короткой и длинной подписи.
+@visibleForTesting
+double gameCardChipHeight({
+  required bool compact,
+  required bool isDesktop,
+  bool isMedium = false,
+}) {
+  final padV = compact ? 4.0 : 6.0;
+  final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
+  final fontSz =
+      compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+  return (math.max(iconSz, fontSz * 1.35) + padV * 2 + 2).ceilToDouble();
+}
+
+/// Полоса чипов на три ряда: на плитке ~340px четыре чипа Дурака
+/// («Переводной», «24 карты») переносятся дважды, не в два ряда.
+@visibleForTesting
+double gameCardChipsMinHeight({
+  required bool compact,
+  required bool isDesktop,
+  bool isMedium = false,
+}) {
+  final row = gameCardChipHeight(
+    compact: compact,
+    isDesktop: isDesktop,
+    isMedium: isMedium,
+  );
+  const rows = 3;
+  return row * rows + 8 * (rows - 1) + 4;
+}
+
+/// Ширина плитки и растяжение по высоте ряда — без LayoutBuilder
+/// (он не считается в IntrinsicHeight).
+class GameCardLayout extends InheritedWidget {
+  const GameCardLayout({
+    super.key,
+    required this.cardWidth,
+    required super.child,
+  });
+
+  final double cardWidth;
+
+  static GameCardLayout? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<GameCardLayout>();
+  }
+
+  @override
+  bool updateShouldNotify(GameCardLayout oldWidget) {
+    return cardWidth != oldWidget.cardWidth;
+  }
+}
+
 /// Общий «скелет» карточки игры: заголовок + чипы + кнопки, единый стиль.
 class GameCardShell extends StatelessWidget {
   const GameCardShell({
@@ -460,32 +565,164 @@ class GameCardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = gamesHubStackActions(constraints.maxWidth);
-        return GradientCard(
+    final layout = GameCardLayout.maybeOf(context);
+    final cardWidth = layout?.cardWidth;
+    final compact = gamesHubStackActions(
+      cardWidth ?? MediaQuery.sizeOf(context).width,
+    );
+    final chipsGap = isDesktop ? 18.0 : 14.0;
+    final actionsGap = isDesktop ? 20.0 : 16.0;
+    return GradientCard(
       animate: false,
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 14 : (isMedium ? 18 : (isDesktop ? 24 : 20)),
         vertical: compact ? 14 : (isMedium ? 16 : (isDesktop ? 22 : 20)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
+      child: _GameCardBodyColumn(
+        headerGap: chipsGap,
+        actionsGap: actionsGap,
         children: [
           header,
-          SizedBox(height: isDesktop ? 18 : 14),
-          Wrap(
-            spacing: isDesktop ? 10 : 8,
-            runSpacing: 8,
-            children: chips,
+          SizedBox(
+            width: double.infinity,
+            height: gameCardChipsMinHeight(
+              compact: false,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Wrap(
+                spacing: isDesktop ? 10 : 8,
+                runSpacing: 8,
+                children: chips,
+              ),
+            ),
           ),
-          SizedBox(height: isDesktop ? 20 : 16),
           actions,
         ],
       ),
-        );
-      },
     );
+  }
+}
+
+/// Шапка + чипы сверху, кнопки внизу, если сетка дала общую высоту.
+class _GameCardBodyColumn extends MultiChildRenderObjectWidget {
+  const _GameCardBodyColumn({
+    required this.headerGap,
+    required this.actionsGap,
+    required super.children,
+  });
+
+  final double headerGap;
+  final double actionsGap;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderGameCardBodyColumn(
+      headerGap: headerGap,
+      actionsGap: actionsGap,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderGameCardBodyColumn renderObject,
+  ) {
+    renderObject
+      ..headerGap = headerGap
+      ..actionsGap = actionsGap;
+  }
+}
+
+class _GameCardBodyParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderGameCardBodyColumn extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _GameCardBodyParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _GameCardBodyParentData> {
+  _RenderGameCardBodyColumn({
+    required double headerGap,
+    required double actionsGap,
+  })  : _headerGap = headerGap,
+        _actionsGap = actionsGap;
+
+  double _headerGap;
+  double _actionsGap;
+
+  double get headerGap => _headerGap;
+  set headerGap(double value) {
+    if (_headerGap == value) return;
+    _headerGap = value;
+    markNeedsLayout();
+  }
+
+  double get actionsGap => _actionsGap;
+  set actionsGap(double value) {
+    if (_actionsGap == value) return;
+    _actionsGap = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _GameCardBodyParentData) {
+      child.parentData = _GameCardBodyParentData();
+    }
+  }
+
+  @override
+  void performLayout() {
+    final header = firstChild;
+    final chips = header == null ? null : childAfter(header);
+    final actions = chips == null ? null : childAfter(chips);
+    if (header == null || chips == null || actions == null) {
+      size = constraints.smallest;
+      return;
+    }
+
+    final width = constraints.hasBoundedWidth
+        ? constraints.maxWidth
+        : constraints.constrainWidth();
+    final childConstraints = BoxConstraints(
+      minWidth: width,
+      maxWidth: width,
+    );
+    header.layout(childConstraints, parentUsesSize: true);
+    chips.layout(childConstraints, parentUsesSize: true);
+    actions.layout(childConstraints, parentUsesSize: true);
+
+    final contentHeight = header.size.height +
+        headerGap +
+        chips.size.height +
+        actionsGap +
+        actions.size.height;
+    final height = constraints.hasBoundedHeight &&
+            constraints.maxHeight.isFinite &&
+            constraints.maxHeight > contentHeight
+        ? constraints.maxHeight
+        : contentHeight;
+
+    final headerData = header.parentData! as _GameCardBodyParentData;
+    final chipsData = chips.parentData! as _GameCardBodyParentData;
+    final actionsData = actions.parentData! as _GameCardBodyParentData;
+    headerData.offset = Offset.zero;
+    chipsData.offset = Offset(0, header.size.height + headerGap);
+    actionsData.offset = Offset(
+      0,
+      height - actions.size.height,
+    );
+    size = constraints.constrain(Size(constraints.maxWidth, height));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    defaultPaint(context, offset);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    return defaultHitTestChildren(result, position: position);
   }
 }

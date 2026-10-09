@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 
 void main() {
   group('Breakpoints', () {
@@ -109,7 +110,70 @@ void main() {
       ),
     );
     expect(cols, greaterThanOrEqualTo(4));
-    expect(rows, greaterThanOrEqualTo(2));
+    expect(rows, 2);
     expect(fill, isTrue);
   });
+
+  testWidgets('shop tiles: в альбоме телефона всегда 2 ряда', (tester) async {
+    late int shortRows;
+    late int tallRows;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(size: Size(800, 360)),
+        child: Builder(
+          builder: (context) {
+            shortRows = shopTileRows(context, maxHeight: 280);
+            tallRows = shopTileRows(context, maxHeight: 420);
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+    expect(shortRows, 2);
+    expect(tallRows, 2);
+  });
+
+  testWidgets('ShopFillGrid растягивает 2 ряда без переполнения',
+      (tester) async {
+    FlutterError.onError = (details) {
+      if (details.toString().contains('overflowed')) {
+        fail('сетка обрезалась: ${details.exception}');
+      }
+      FlutterError.presentError(details);
+    };
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(size: Size(800, 280)),
+        child: MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 720,
+              height: 220,
+              child: ShopFillGrid(
+                columns: 6,
+                rows: 2,
+                itemCount: 12,
+                itemBuilder: _fillCell,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('11'), findsOneWidget);
+    final first = tester.getRect(find.text('0'));
+    final last = tester.getRect(find.text('11'));
+    expect(first.top, lessThan(last.top));
+    expect(last.bottom, lessThanOrEqualTo(220 + 0.5));
+  });
+}
+
+Widget _fillCell(BuildContext context, int index) {
+  return ColoredBox(
+    color: const Color(0xFFCCCCCC),
+    child: Center(child: Text('$index')),
+  );
 }

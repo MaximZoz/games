@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'לא נמצא גיימפד. חברו בקר ולחצו על כפתור.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'חיצים / סטיק — תפריטים וסמן על הלוח';
+  String get settingsGamepadGenericName => 'בקר';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / איקס — אישור או מהלך';
+  String get settingsGamepadHelpNavigate => 'ניווט';
 
   @override
-  String get settingsGamepadHelpBack => 'B / עיגול — חזרה או ביטול בחירה';
+  String get settingsGamepadHelpConfirm => 'בחירה';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — לשוניות תפריט';
+  String get settingsGamepadHelpBack => 'חזרה';
+
+  @override
+  String get settingsGamepadHelpTabs => 'לשוניות';
 
   @override
   String get settingsGamepadHelpPlay => 'סמן על הלוח וביד: דמקה, איקס-עיגול, קרב אוניות, דוראק, אונו, פוקר ושש-בש';
 
   @override
-  String get settingsGamepadHelpCards => 'בקלפים: חיצים מזיזים את היד, A משחק, X בוחר / אונו, Y לוקח או שולף';
+  String get settingsGamepadHelpCards => 'קלפים';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'בשדה טקסט A פותח מקלדת גיימפד; X מחליף פריסה, B מוחק או סוגר';
+  String get settingsGamepadHelpKeyboard => 'מקלדת';
+
+  @override
+  String get settingsGamepadHelpBalance => 'יתרה';
+
+  @override
+  String get settingsGamepadHelpLogout => 'יציאה';
+
+  @override
+  String get settingsGamepadHelpPage => 'עמוד';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'פריסת Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'פריסת PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'פריסת Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'מקלדת';
@@ -776,6 +799,51 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesCheckersModeCorners => 'פינות';
 
   @override
+  String get gamesChess => 'שחמט';
+
+  @override
+  String get gamesChessModeClassic => 'קלאסי';
+
+  @override
+  String get gamesChessModeRapid => 'רפיד';
+
+  @override
+  String get gamesChessModeBlitz => 'בליץ';
+
+  @override
+  String get gamesChessModeBullet => 'כדור';
+
+  @override
+  String get chessPieceQueen => 'מלכה';
+
+  @override
+  String get chessPieceRook => 'צריח';
+
+  @override
+  String get chessPieceBishop => 'רץ';
+
+  @override
+  String get chessPieceKnight => 'פרש';
+
+  @override
+  String get chessPromotionTitle => 'הכתרת רגלי';
+
+  @override
+  String get chessDrawStalemate => 'תיקו: פט';
+
+  @override
+  String get chessDrawInsufficient => 'תיקו: חומר לא מספיק';
+
+  @override
+  String get chessDrawRepetition => 'תיקו: חזרה משולשת';
+
+  @override
+  String get chessDrawFiftyMove => 'תיקו: חוק 50 המסעים';
+
+  @override
+  String get chessCheck => 'שח';
+
+  @override
   String get rulesCheckersPlayers => 'שחקנים: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'חיילים שעדיין בבית חייבים לצאת ממנו ב־25 המהלכים הראשונים של השחקן.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 15 מהלכים של כל צד בלי התקדמות: בלי אכילה, בלי מהלך חייל ובלי הכתרה.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'תיקו אם העמדה חוזרת שלוש פעמים, אם 40 מהלכים של כל צד בלי אכילה ובלי מהלך חייל, או אם נשארה מלכה אחת לכל צד.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 15 מהלכים של כל צד במשחק הוויתור בלי התקדמות: בלי אכילה, בלי מהלך חייל ובלי הכתרה.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 25 מהלכים של כל צד לא הוסיפו כלי לפינה היעד.';
+
+  @override
+  String get rulesChessPlayers => 'שחקנים: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'מצב: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'לוח 8×8. לכל צד מלך, מלכה, שני צריחים, שני רצים, שני פרשים ושמונה רגלים. הלבן מתחיל. מהלכים רגילים, הכאה דרך הילוכו, הכתרה והצרחה. ניצחון במט או בפרישה.';
+
+  @override
+  String get rulesChessDrawClassic => 'תיקו בפאט, חזרה משולשת, כלל 50 המהלכים, חוסר חומר או הסכמה.';
+
+  @override
+  String get rulesChessClockClassic => 'שעון: 60+0 — 60 דקות לכל המשחק, בלי תוספת.';
+
+  @override
+  String get rulesChessClockRapid => 'שעון: 10+0 — 10 דקות לכל המשחק, בלי תוספת.';
+
+  @override
+  String get rulesChessClockBlitz => 'שעון: 5+0 — 5 דקות לכל המשחק, בלי תוספת.';
+
+  @override
+  String get rulesChessClockBullet => 'שעון: 3+2 — 3 דקות ועוד 2 שניות לכל מהלך.';
+
+  @override
+  String get checkersDrawRepetition => 'תיקו — העמדה חזרה שלוש פעמים';
+
+  @override
+  String get checkersDrawNoProgress => 'תיקו — המהלכים לא מובילים לניצחון';
+
+  @override
+  String get checkersDrawInsufficient => 'תיקו — אין מספיק כוח לניצחון';
 
   @override
   String get rulesNardyTitle => 'שש-בש — חוקים';
@@ -861,6 +976,9 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'לאחר כל המהלכים התור עובר ליריב';
+
+  @override
+  String get nardyLayoutToggle => 'החלפת סידור';
 
   @override
   String get nardyNoMoves => 'אין מהלכים';
@@ -1344,7 +1462,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gameOpponent => 'יריב';
 
   @override
+  String get gameYou => 'אתה';
+
+  @override
   String get gameYouWon => 'ניצחתם!';
+
+  @override
+  String get gameYouWonShort => 'ניצחתם';
 
   @override
   String get gameYouLost => 'הפסדת';
@@ -1381,6 +1505,21 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'הצע תיקו';
+
+  @override
+  String get gameFlipBoard => 'הפוך את הלוח';
+
+  @override
+  String get gameReviewStart => 'לתחילת המשחק';
+
+  @override
+  String get gameReviewPrev => 'מהלך אחורה';
+
+  @override
+  String get gameReviewNext => 'מהלך קדימה';
+
+  @override
+  String get gameReviewEnd => 'למצב הנוכחי';
 
   @override
   String get gameOfferDrawTitle => 'להציע תיקו?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'פתיחת הימורים גבוהים יותר';
+
+  @override
+  String get shopEmojisHelp => 'אימוג\'ים מונפשים לצ\'אט. קנו סט ושלחו אותם לחברים.';
+
+  @override
+  String get shopCollectionsHelp => 'אפשר למכור רק אוסף חדש או וינטאג׳: 80% מהמחיר אם הוא חדש ו-300% מהמחיר אם הוא וינטאג׳. בלוי, עייף ורעוע אי אפשר למכור.\n\nאספו סט פריטים: הם מופיעים בחלון הראווה של הפרופיל, אפשר לתת במתנה. כל פריט מביא מטבעות בכל יום, וסט מלא מוסיף גם בונוס נפרד.\n\nההכנסה היומית של פריט תלויה במצב והיא חלק מהסכום הרגיל. חדש מביא 100%. בלוי מביא 60%. עייף מביא 40%. רעוע מביא 100%. פריט וינטאג׳ מביא 200%, כלומר פי שניים מההכנסה היומית הרגילה.\n\nבונוס הסט המלא לא משתנה עד שהסט עצמו הופך לווינטאג׳. סט הוא וינטאג׳ כשכל פריט בו הוא וינטאג׳: הבונוס אז הוא 300%, פי שלושה מהרגיל.\n\nהמצב תלוי בכמה זמן הפריט אצלך. חדש — 7 הימים הראשונים. בלוי — מהיום השמיני עד חודשיים. עייף — מחודשיים עד 6 חודשים. רעוע — מ-6 חודשים עד שנה. וינטאג׳ — משנה.';
+
+  @override
+  String get shopStakesHelp => 'פתחו הימורים גבוהים יותר. ככל שההימור גבוה יותר, כך הקופה והזכייה גדולים יותר.';
 
   @override
   String get inventoryTitle => 'פריטים';
@@ -1947,6 +2095,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shopOwned => 'נרכש';
 
   @override
+  String get shopHave => 'יש';
+
+  @override
   String get shopEmpty => 'עדיין ריק';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shopBuyOnce => 'רכישה חד-פעמית';
 
   @override
-  String get shopSellRefund => 'מכירה מחזירה 80% מהעלות';
+  String get shopSellRefund => 'המכירה תלויה במצב האוסף';
+
+  @override
+  String get collectionConditionNew => 'חדש';
+
+  @override
+  String get collectionConditionWorn => 'בלוי';
+
+  @override
+  String get collectionConditionTired => 'עייף';
+
+  @override
+  String get collectionConditionShabby => 'רעוע';
+
+  @override
+  String get collectionConditionVintage => 'וינטאג׳';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'תקבלו $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'אפשר למכור רק אוסף חדש או וינטאג׳.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'אי אפשר למכור';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'אפשר למכור רק פריט חדש או וינטאג׳. השתמש בשיקוי כדי לשנות את המצב.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 שחקנים: לוח 4×4, ארבעה שחקנים (X, O, △, □). השלימו שורה בסימנים שלכם כדי לנצח.';
+
+  @override
+  String get adminUsersTab => 'משתמשים';
+
+  @override
+  String get adminSupportTab => 'תמיכה';
+
+  @override
+  String get adminSearchHint => 'חיפוש לפי אימייל או כינוי';
+
+  @override
+  String get adminRoleAdmins => 'מנהלים';
+
+  @override
+  String get adminRoleUsers => 'משתמשים';
+
+  @override
+  String get adminRoleAll => 'כל התפקידים';
+
+  @override
+  String get adminStatusFrozen => 'מוקפאים';
+
+  @override
+  String get adminStatusActive => 'פעילים';
+
+  @override
+  String get adminStatusAny => 'כל סטטוס';
+
+  @override
+  String get adminOrderDesc => 'יורד';
+
+  @override
+  String get adminOrderAsc => 'עולה';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'הטעינה נכשלה: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'לא נמצאו משתמשים';
+
+  @override
+  String get adminSortLastSeen => 'לפי ביקור אחרון';
+
+  @override
+  String get adminSortEmail => 'לפי אימייל';
+
+  @override
+  String get adminSortCreated => 'לפי תאריך הרשמה';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount ברונזה';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'הסר מנהל';
+
+  @override
+  String get adminGrantAdmin => 'הפוך למנהל';
+
+  @override
+  String get adminAdminRevoked => 'הרשאות מנהל הוסרו';
+
+  @override
+  String get adminAdminGranted => 'הרשאות מנהל ניתנו';
+
+  @override
+  String get adminGrantCoins => 'הענק מטבעות';
+
+  @override
+  String get adminWriteSupport => 'כתוב כתמיכה';
+
+  @override
+  String get adminUnfreeze => 'בטל הקפאה';
+
+  @override
+  String get adminFreeze => 'הקפא';
+
+  @override
+  String get adminUnfrozen => 'ההקפאה בוטלה';
+
+  @override
+  String get adminFrozenDone => 'הוקפא';
+
+  @override
+  String get adminResetPassword => 'איפוס סיסמה';
+
+  @override
+  String get adminCoinsAmountHint => 'כמות (שלילי = חיסור)';
+
+  @override
+  String get adminReasonOptional => 'סיבה (לא חובה)';
+
+  @override
+  String get adminGrantSent => 'הכרטיס נשלח לצ\'אט התמיכה';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'הופחתו $amount ברונזה';
+  }
+
+  @override
+  String get adminGrantVerb => 'הענק';
+
+  @override
+  String get adminNewPasswordHint => 'סיסמה חדשה (לפחות 6)';
+
+  @override
+  String get adminPasswordReset => 'הסיסמה אופסה';
+
+  @override
+  String get adminResetVerb => 'אפס';
+
+  @override
+  String adminShortError(String error) {
+    return 'שגיאה: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'אין פניות תמיכה';
+
+  @override
+  String get adminUserFallback => 'משתמש';
+
+  @override
+  String get apiErrTooManyRequests => 'יותר מדי בקשות. נסו שוב מאוחר יותר.';
+
+  @override
+  String get apiErrMoveConflict => 'התנגשות מהלך. נסו שוב.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'הצערה';
+
+  @override
+  String get elixirGroupAge => 'הזדקנות';
+
+  @override
+  String get elixirGroupAccelerate => 'האצה';
+
+  @override
+  String get elixirEffectRejuvenate => 'הצערה';
+
+  @override
+  String get elixirEffectAge => 'הזדקנות';
+
+  @override
+  String get elixirEffectAccelerate => 'האצה';
+
+  @override
+  String get elixirAdjCelebration => 'חגיגי';
+
+  @override
+  String get elixirAdjNature => 'טבעי';
+
+  @override
+  String get elixirAdjLegends => 'אגדי';
+
+  @override
+  String get elixirAdjCosmic => 'קוסמי';
+
+  @override
+  String get elixirAdjAdventure => 'הרפתקה';
+
+  @override
+  String get elixirAdjJewels => 'יקר';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return 'שיקוי $effect $adjective';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'הצעיר';
+
+  @override
+  String get elixirUseAge => 'הזדקן';
+
+  @override
+  String get elixirUseAccelerate => 'האץ';
+
+  @override
+  String get elixirUse => 'השתמש';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ימים',
+      one: 'יום $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count שעות',
+      one: 'שעה $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count דקות',
+      one: 'דקה $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

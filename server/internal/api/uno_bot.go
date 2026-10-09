@@ -18,45 +18,51 @@ func (h *GamesHandler) scheduleUnoBotAct(gameID string) {
 	go func() {
 		for {
 			time.Sleep(unoBotDelay)
-			ctx := context.Background()
 			lockKey := "uno_bot_lock:" + gameID
-			locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+			locked, _ := h.Rdb.SetNX(context.Background(), lockKey, "1", 5*time.Second).Result()
 			if !locked {
 				return
 			}
-			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-			if err != nil || len(m) == 0 || m["game_type"] != unoGameType ||
-				m["status"] != gameStatusActive {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			state, err := uno.Decode(m["state"])
-			if err != nil || !unoCurrentPlayerIsBot(state) {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			if err := unoApplyBotAction(state); err != nil {
-				if recoverErr := unoRecoverBotAction(state); recoverErr != nil {
-					botID := state.Players[state.CurrentIndex].UserID
-					_ = state.Apply(uno.Action{Type: uno.ActionForfeit, ActorUserID: botID})
+			var stop bool
+			err := h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+				m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+				if err != nil || len(m) == 0 || m["game_type"] != unoGameType ||
+					m["status"] != gameStatusActive {
+					stop = true
+					return nil
 				}
-			}
-			h.saveUnoState(ctx, gameID, m, state)
-			h.broadcastUnoState(gameID, m)
-			over := state.IsOver()
-			if over {
-				h.onUnoGameFinished(ctx, gameID, m, state, "normal")
-			}
-			h.Rdb.Del(ctx, lockKey)
-			if over {
-				return
-			}
-			if state.Status == uno.StatusBetweenRounds {
-				h.scheduleUnoNextRound(gameID)
-				return
-			}
-			if !unoCurrentPlayerIsBot(state) {
-				h.notifyUnoTurn(gameID, state)
+				state, err := uno.Decode(m["state"])
+				if err != nil || !unoCurrentPlayerIsBot(state) {
+					stop = true
+					return nil
+				}
+				if err := unoApplyBotAction(state); err != nil {
+					if recoverErr := unoRecoverBotAction(state); recoverErr != nil {
+						botID := state.Players[state.CurrentIndex].UserID
+						_ = state.Apply(uno.Action{Type: uno.ActionForfeit, ActorUserID: botID})
+					}
+				}
+				h.saveUnoState(ctx, gameID, m, state)
+				h.broadcastUnoState(gameID, m)
+				over := state.IsOver()
+				if over {
+					h.onUnoGameFinished(ctx, gameID, m, state, "normal")
+					stop = true
+					return nil
+				}
+				if state.Status == uno.StatusBetweenRounds {
+					h.scheduleUnoNextRound(gameID)
+					stop = true
+					return nil
+				}
+				if !unoCurrentPlayerIsBot(state) {
+					h.notifyUnoTurn(gameID, state)
+					stop = true
+				}
+				return nil
+			})
+			h.Rdb.Del(context.Background(), lockKey)
+			if err != nil || stop {
 				return
 			}
 		}
@@ -205,7 +211,9 @@ func unoNextHandSize(state *uno.Game, playerIndex int) int {
 func unoCardScore(state *uno.Game, playerIndex int, card uno.Card) int {
 	next := unoNextHandSize(state, playerIndex)
 	colorCounts := map[uno.Color]int{}
+	handLen := 0
 	if state != nil && playerIndex >= 0 && playerIndex < len(state.Players) {
+		handLen = len(state.Players[playerIndex].Hand)
 		for _, c := range state.Players[playerIndex].Hand {
 			if c.Color == uno.ColorRed || c.Color == uno.ColorYellow ||
 				c.Color == uno.ColorGreen || c.Color == uno.ColorBlue {
@@ -214,29 +222,35 @@ func unoCardScore(state *uno.Game, playerIndex int, card uno.Card) int {
 		}
 	}
 	score := card.Points()
+	if next <= 2 {
+		score += card.Points()
+	}
 	switch card.Kind {
 	case uno.KindSkip, uno.KindReverse, uno.KindDrawTwo:
 		if next <= 2 {
-			score += 70
+			score += 90
 		} else if next <= 4 {
-			score += 25
+			score += 35
 		} else {
-			score += 8
+			score += 6
 		}
 	case uno.KindWild:
-		if next <= 2 {
-			score += 40
+		if next <= 2 || handLen <= 2 {
+			score += 50
 		} else {
-			score -= 25
+			score -= 40
 		}
 	case uno.KindWildDrawFour:
 		if next <= 2 {
-			score += 90
+			score += 110
 		} else {
-			score -= 45
+			score -= 70
 		}
 	default:
-		score += colorCounts[card.Color] * 10
+		score += colorCounts[card.Color] * 14
+		if state != nil && card.Color == state.CurrentColor {
+			score += 8
+		}
 	}
 	return score
 }
@@ -351,28 +365,30 @@ func (h *GamesHandler) scheduleUnoNextRound(gameID string) {
 	}
 	go func() {
 		time.Sleep(unoRoundPause)
-		ctx := context.Background()
 		lockKey := "uno_next_round_lock:" + gameID
-		locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+		locked, _ := h.Rdb.SetNX(context.Background(), lockKey, "1", 5*time.Second).Result()
 		if !locked {
 			return
 		}
-		defer h.Rdb.Del(ctx, lockKey)
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-		if err != nil || len(m) == 0 || m["game_type"] != unoGameType ||
-			m["status"] != gameStatusActive {
-			return
-		}
-		state, err := uno.Decode(m["state"])
-		if err != nil || state.Status != uno.StatusBetweenRounds {
-			return
-		}
-		if err := state.Apply(uno.Action{Type: uno.ActionNextRound}); err != nil {
-			return
-		}
-		h.saveUnoState(ctx, gameID, m, state)
-		h.broadcastUnoState(gameID, m)
-		h.notifyUnoTurn(gameID, state)
+		defer h.Rdb.Del(context.Background(), lockKey)
+		_ = h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || len(m) == 0 || m["game_type"] != unoGameType ||
+				m["status"] != gameStatusActive {
+				return nil
+			}
+			state, err := uno.Decode(m["state"])
+			if err != nil || state.Status != uno.StatusBetweenRounds {
+				return nil
+			}
+			if err := state.Apply(uno.Action{Type: uno.ActionNextRound}); err != nil {
+				return nil
+			}
+			h.saveUnoState(ctx, gameID, m, state)
+			h.broadcastUnoState(gameID, m)
+			h.notifyUnoTurn(gameID, state)
+			return nil
+		})
 	}()
 }
 

@@ -102,20 +102,37 @@ int battleshipBotPickShot(
     return cands[rng.nextInt(cands.length)];
   }
   final hitSet = shots.toSet();
-  final minLen = _battleshipMinUnsunkLen(ships, shots);
-  final parity = minLen > 1 ? minLen % 2 : 0;
-  final preferred = <int>[];
+  return _battleshipHuntCell(ships, shots, hitSet, rng);
+}
+
+int _battleshipHuntCell(
+  List<List<int>> ships,
+  List<int> shots,
+  Set<int> hitSet,
+  Random rng,
+) {
+  final remaining = _battleshipRemainingLens(ships, shots);
+  final scores = List<int>.filled(kBattleshipCellCount, 0);
+  for (final length in remaining) {
+    _addBattleshipPlacements(scores, hitSet, length);
+  }
+  var bestScore = 0;
+  final best = <int>[];
   final free = <int>[];
   for (var i = 0; i < kBattleshipCellCount; i++) {
     if (hitSet.contains(i)) continue;
     free.add(i);
-    if (minLen > 1 &&
-        (i ~/ kBattleshipBoardSize + i % kBattleshipBoardSize) % 2 == parity) {
-      preferred.add(i);
+    if (scores[i] > bestScore) {
+      bestScore = scores[i];
+      best
+        ..clear()
+        ..add(i);
+    } else if (scores[i] == bestScore && bestScore > 0) {
+      best.add(i);
     }
   }
-  if (preferred.isNotEmpty) {
-    return preferred[rng.nextInt(preferred.length)];
+  if (best.isNotEmpty) {
+    return best[rng.nextInt(best.length)];
   }
   if (free.isEmpty) {
     throw GamesException(400, 'no cells left');
@@ -123,14 +140,36 @@ int battleshipBotPickShot(
   return free[rng.nextInt(free.length)];
 }
 
-int _battleshipMinUnsunkLen(List<List<int>> ships, List<int> shots) {
+List<int> _battleshipRemainingLens(List<List<int>> ships, List<int> shots) {
   final hit = shots.toSet();
-  var minLen = 0;
+  final out = <int>[];
   for (final ship in ships) {
-    if (ship.every(hit.contains)) continue;
-    if (minLen == 0 || ship.length < minLen) minLen = ship.length;
+    if (!ship.every(hit.contains)) out.add(ship.length);
   }
-  return minLen == 0 ? 1 : minLen;
+  return out.isEmpty ? const [1] : out;
+}
+
+void _addBattleshipPlacements(List<int> scores, Set<int> blocked, int length) {
+  if (length <= 0) return;
+  void place(List<int> cells) {
+    for (final cell in cells) {
+      if (blocked.contains(cell)) return;
+    }
+    for (final cell in cells) {
+      scores[cell]++;
+    }
+  }
+
+  for (var r = 0; r < kBattleshipBoardSize; r++) {
+    for (var c = 0; c <= kBattleshipBoardSize - length; c++) {
+      place([for (var k = 0; k < length; k++) r * kBattleshipBoardSize + c + k]);
+    }
+  }
+  for (var c = 0; c < kBattleshipBoardSize; c++) {
+    for (var r = 0; r <= kBattleshipBoardSize - length; r++) {
+      place([for (var k = 0; k < length; k++) (r + k) * kBattleshipBoardSize + c]);
+    }
+  }
 }
 
 List<int> _battleshipUnsunkHits(List<List<int>> ships, List<int> shots) {

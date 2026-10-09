@@ -19,6 +19,14 @@ import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/screens/profile_about_line.dart';
 import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/soft_keyboard.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/keyboard_inset.dart';
@@ -198,7 +206,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   ProfileExtra? _lastProfileExtra;
   final _cardKey = GlobalKey();
   final _displayNameController = TextEditingController();
-  final _displayNameFocus = FocusNode();
+  final _displayNameFocus = FocusNode(skipTraversal: true);
 
   static const _closeDuration = Duration(milliseconds: 280);
 
@@ -695,7 +703,6 @@ class _ProfileContent extends StatelessWidget {
                         user: user,
                         profileExtra: profileExtra,
                         onEdit: () => onStartEdit(),
-                        onEditAbout: () => onStartEdit(focusAbout: true),
                       ),
               ),
     );
@@ -726,13 +733,11 @@ class _ProfileView extends ConsumerWidget {
     required this.user,
     required this.profileExtra,
     required this.onEdit,
-    this.onEditAbout,
   });
 
   final AuthUser user;
   final ProfileExtra profileExtra;
   final VoidCallback onEdit;
-  final VoidCallback? onEditAbout;
 
   String get _displayTitle => user.displayName?.trim().isNotEmpty == true
       ? user.displayName!
@@ -862,21 +867,17 @@ class _ProfileView extends ConsumerWidget {
         ? Material(
             color: AppColors.accentSoft.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              onTap: onEditAbout ?? onEdit,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                width: double.infinity,
-                constraints: const BoxConstraints(minHeight: 48),
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                child: AboutOneLineText(
-                  text: profileExtra.about!.trim(),
-                  maxLines: 8,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    height: 1.25,
-                  ),
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+              child: AboutOneLineText(
+                text: profileExtra.about!.trim(),
+                maxLines: 8,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  height: 1.25,
                 ),
               ),
             ),
@@ -914,13 +915,19 @@ class _ProfileView extends ConsumerWidget {
       },
     );
 
-    final editButton = FramedButton(
-      onPressed: onEdit,
-      icon: Icons.edit_outlined,
-      label: context.l10n.profileEdit,
-      padding: EdgeInsets.symmetric(
-        horizontal: 22,
-        vertical: shortScreen ? 11 : 13,
+    final editButton = GamepadFocusBlock(
+      autofocus: true,
+      radius: AppRadius.button,
+      borderWidth: 2.2,
+      onActivate: onEdit,
+      child: FramedButton(
+        onPressed: onEdit,
+        icon: Icons.edit_outlined,
+        label: context.l10n.profileEdit,
+        padding: EdgeInsets.symmetric(
+          horizontal: 22,
+          vertical: shortScreen ? 11 : 13,
+        ),
       ),
     );
 
@@ -1080,6 +1087,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   ProfileExtra? _initialExtra;
   String? _avatarCacheKey;
   Widget? _cachedAvatarWidget;
+  final GlobalKey _genderFieldKey = GlobalKey();
 
   @override
   void initState() {
@@ -1095,8 +1103,8 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       text: widget.profileExtra.about ?? '',
     );
     _lastAboutText = _aboutController.text;
-    _ageFocus = FocusNode();
-    _aboutFocus = FocusNode();
+    _ageFocus = FocusNode(skipTraversal: true);
+    _aboutFocus = FocusNode(skipTraversal: true);
     _ageFocus.addListener(_onAgeFocusChanged);
     _aboutFocus.addListener(_onAboutFocusChanged);
     _ageController.addListener(_onAgeTextChanged);
@@ -1126,6 +1134,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   bool get _fieldIsOpen => profileEditFieldActive(_activeField);
+
+  /// В режиме контроллера — как на входе: без IME-полоски, клавиатура по A.
+  bool get _gamepadEditor => gamepadConnected();
 
   static const List<ProfileEditField> _stripFieldOrder = [
     ProfileEditField.name,
@@ -1203,6 +1214,19 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   void _requestFieldFocus(ProfileEditField field) {
     if (!mounted) return;
+    if (_gamepadEditor) {
+      switch (field) {
+        case ProfileEditField.name:
+          widget.focusNode.requestFocus();
+        case ProfileEditField.age:
+          _ageFocus.requestFocus();
+        case ProfileEditField.about:
+          _aboutFocus.requestFocus();
+        case ProfileEditField.none:
+          break;
+      }
+      return;
+    }
     switch (field) {
       case ProfileEditField.name:
         openSoftKeyboard(widget.focusNode);
@@ -1217,6 +1241,11 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   void _openField(ProfileEditField field) {
     if (_isSaving || field == ProfileEditField.none) return;
+    if (_gamepadEditor) {
+      _requestFieldFocus(field);
+      GamepadKeyboardController.instance.show();
+      return;
+    }
     // Фокус — до setState: поле уже в дереве (offstage-полоска), поэтому
     // клавиатура выезжает тем же жестом, без «полоска есть, IME нет».
     _requestFieldFocus(field);
@@ -1233,12 +1262,21 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   void _openAboutField() => _openField(ProfileEditField.about);
 
   void _onEmptyEditorTap() {
+    if (_gamepadEditor) {
+      dismissGamepadKeyboard();
+      return;
+    }
     if (shouldUnfocusFieldOnEmptyTap(fieldFocused: _fieldIsOpen)) {
       _leaveActiveField();
     }
   }
 
   bool _handleEditBack() {
+    if (_gamepadEditor) {
+      dismissGamepadKeyboard();
+      widget.onCancel();
+      return true;
+    }
     final action = profileEditBackAction(fieldFocused: _fieldIsOpen);
     if (action == ProfileEditBackAction.stayInEditor) {
       _leaveActiveField();
@@ -1249,7 +1287,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   void _syncActiveField(ProfileEditField field) {
-    if (!mounted || !widget.compact) return;
+    if (!mounted || !widget.compact || _gamepadEditor) return;
     if (shouldClearFieldOpenOnFocusLost()) return;
     if (_activeField != field) {
       setState(() => _activeField = field);
@@ -1576,53 +1614,101 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     kGenderFemaleApi,
   ];
 
+  void _selectGender(String value, BuildContext dialogContext) {
+    if (!mounted) return;
+    setState(() => _gender = value);
+    final nav = Navigator.of(dialogContext, rootNavigator: true);
+    if (nav.canPop()) {
+      nav.pop();
+      return;
+    }
+    Navigator.of(dialogContext).maybePop();
+  }
+
   void _openGenderMenu() {
     showDialog<void>(
       context: context,
       barrierColor: Colors.black26,
-      builder: (ctx) => Center(
-        child: Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 200),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: _genderOptions.map((value) {
-                final selected = _gender == value;
-                final label = localizeGender(value, context.l10n);
-                return InkWell(
-                  onTap: () {
-                    setState(() => _gender = value);
-                    Navigator.of(ctx).pop();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            label,
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 15,
-                              fontWeight: selected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+      builder: (ctx) => GamepadScope(
+        exclusive: true,
+        onAction: (action) {
+          if (action == GamepadAction.cancel) {
+            Navigator.of(ctx).maybePop();
+            return true;
+          }
+          if (action == GamepadAction.confirm || action.isDirection) {
+            return handleGamepadUiAction(ctx, action);
+          }
+          return true;
+        },
+        child: GamepadNavGroup(
+          name: 'gender-popup',
+          exclusive: true,
+          child: Center(
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.input),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < _genderOptions.length; i++)
+                      _ProfileGamepadTarget(
+                        autofocus: i == 0,
+                        onActivate: () => _selectGender(_genderOptions[i], ctx),
+                        child: InkWell(
+                          key: ValueKey('gender_option_$i'),
+                          canRequestFocus: false,
+                          onTap: () => _selectGender(_genderOptions[i], ctx),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    localizeGender(
+                                      _genderOptions[i],
+                                      context.l10n,
+                                    ),
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 15,
+                                      fontWeight: _gender == _genderOptions[i]
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
       ),
-    );
+    ).whenComplete(_restoreGenderFieldFocus);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      focusFirstVisibleGamepadTarget();
+    });
+  }
+
+  void _restoreGenderFieldFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = _genderFieldKey.currentContext;
+      if (ctx == null) return;
+      GamepadFocusBlock.maybeOf(ctx)?.focusNode.requestFocus();
+    });
   }
 
   Widget _buildCompactHeader(BuildContext context) {
@@ -1630,13 +1716,18 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       height: 48,
       child: Row(
         children: [
-          IconButton(
-            tooltip: context.l10n.commonBack,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            onPressed: _isSaving ? null : _handleEditBack,
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: AppColors.textPrimary,
+          _ProfileGamepadTarget(
+            radius: 20,
+            shape: GamepadHighlightShape.circle,
+            onActivate: _isSaving ? null : () => _handleEditBack(),
+            child: IconButton(
+              tooltip: context.l10n.commonBack,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              onPressed: _isSaving ? null : _handleEditBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -1656,13 +1747,23 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   Widget _buildAboutPreview({Key? key}) {
+    if (_gamepadEditor) {
+      return GamepadFieldBlock(
+        inputFocus: _aboutFocus,
+        openOnFocus: false,
+        child: _buildAboutEditorField(key: key, autofocus: false),
+      );
+    }
     final text = _aboutController.text.trim();
     final empty = text.isEmpty;
-    return Material(
+    return _ProfileGamepadTarget(
+      onActivate: _isSaving ? null : _openAboutField,
+      child: Material(
       key: key,
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(AppRadius.input),
       child: InkWell(
+        canRequestFocus: false,
         onTap: _isSaving ? null : _openAboutField,
         borderRadius: BorderRadius.circular(AppRadius.input),
         child: Container(
@@ -1712,6 +1813,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -1912,13 +2014,28 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     required String label,
     required String text,
     required ProfileEditField field,
+    required FocusNode inputFocus,
     String? errorText,
   }) {
-    return Material(
+    if (_gamepadEditor) {
+      return GamepadFieldBlock(
+        autofocus: field == ProfileEditField.name,
+        inputFocus: inputFocus,
+        openOnFocus: false,
+        child: field == ProfileEditField.name
+            ? _buildNameEditorField(key: key, autofocus: false)
+            : _buildAgeEditorField(key: key, autofocus: false),
+      );
+    }
+    return _ProfileGamepadTarget(
+      autofocus: field == ProfileEditField.name,
+      onActivate: _isSaving ? null : () => _openField(field),
+      child: Material(
       key: key,
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(AppRadius.input),
       child: InkWell(
+        canRequestFocus: false,
         onTap: _isSaving ? null : () => _openField(field),
         borderRadius: BorderRadius.circular(AppRadius.input),
         child: InputDecorator(
@@ -1939,17 +2056,156 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           ),
         ),
       ),
+    ),
+    );
+  }
+
+  Widget _buildGenderField({Key? key, bool showDropdown = false}) {
+    return _ProfileGamepadTarget(
+      onActivate: _openGenderMenu,
+      child: Material(
+        key: _genderFieldKey,
+        color: Colors.transparent,
+        child: KeyedSubtree(
+          key: key,
+          child: InkWell(
+          canRequestFocus: false,
+          onTap: _openGenderMenu,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: context.l10n.profileGender,
+              prefixIcon: const Icon(Icons.wc_rounded),
+              filled: true,
+              fillColor: AppColors.surfaceCard,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    localizeGender(_gender, context.l10n),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.25,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                if (showDropdown) const Icon(Icons.arrow_drop_down),
+              ],
+            ),
+          ),
+        ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarPresetChip({
+    required int index,
+    required double size,
+    required double iconSize,
+    required double verticalMargin,
+  }) {
+    final selected =
+        _avatarKind == AvatarKind.preset && _avatarValue == index.toString();
+    return _ProfileGamepadTarget(
+      radius: size / 2,
+      shape: GamepadHighlightShape.circle,
+      onActivate: () => setState(() {
+        _avatarKind = AvatarKind.preset;
+        _avatarValue = index.toString();
+      }),
+      child: GestureDetector(
+        onTap: () => setState(() {
+          _avatarKind = AvatarKind.preset;
+          _avatarValue = index.toString();
+        }),
+        child: AnimatedContainer(
+          key: ValueKey('compact_avatar_preset_$index'),
+          duration: AppDurations.short,
+          width: size,
+          height: size,
+          margin: EdgeInsets.symmetric(vertical: verticalMargin),
+          decoration: BoxDecoration(
+            color: AppColors.accentSoft,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected ? AppColors.accentStart : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Icon(
+            _presetAvatarIcons[index],
+            color: AppColors.accentStart,
+            size: iconSize,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChangePhotoButton({bool compact = false}) {
+    return _ProfileGamepadTarget(
+      radius: AppRadius.button,
+      outlined: false,
+      onActivate: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+      child: Builder(
+        builder: (context) {
+          return OutlinedButton.icon(
+            onPressed:
+                (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+            style: AppButtonStyles.of(
+              minimumSize: const Size(double.infinity, 48),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              radius: AppRadius.button,
+            ).copyWith(
+              side: WidgetStatePropertyAll(
+                GamepadFocusBlock.buttonSide(context),
+              ),
+            ),
+            icon: _isAvatarProcessing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    compact
+                        ? Icons.photo_library_outlined
+                        : Icons.change_circle_outlined,
+                    size: compact ? 19 : 20,
+                  ),
+            label: Text(
+              profileAvatarActionLabel(
+                processing: _isAvatarProcessing,
+                processingLabel: context.l10n.profileProcessingPhoto,
+                changeLabel: context.l10n.profileChangePhoto,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildCompactSaveButton() {
-    return AppButton(
-      onPressed: (_isSaving || !_hasChanges || _ageError != null)
+    return _ProfileGamepadTarget(
+      radius: AppRadius.button,
+      onActivate: (_isSaving || !_hasChanges || _ageError != null)
           ? null
           : _submit,
-      label: context.l10n.commonSave,
-      isLoading: _isSaving,
-      expanded: true,
+      child: AppButton(
+        onPressed: (_isSaving || !_hasChanges || _ageError != null)
+            ? null
+            : _submit,
+        label: context.l10n.commonSave,
+        isLoading: _isSaving,
+        expanded: true,
+      ),
     );
   }
 
@@ -1963,6 +2219,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           label: context.l10n.registerNameLabel,
           text: widget.displayNameController.text.trim(),
           field: ProfileEditField.name,
+          inputFocus: widget.focusNode,
         ),
         const SizedBox(height: 16),
         Row(
@@ -1974,25 +2231,14 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 label: context.l10n.profileAge,
                 text: _ageController.text.trim(),
                 field: ProfileEditField.age,
+                inputFocus: _ageFocus,
                 errorText: _ageError,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: InkWell(
-                onTap: _openGenderMenu,
-                borderRadius: BorderRadius.circular(AppRadius.input),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: context.l10n.profileGender,
-                    prefixIcon: const Icon(Icons.wc_rounded),
-                  ),
-                  child: Text(
-                    localizeGender(_gender, context.l10n),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+              child: _buildGenderField(
+                key: const ValueKey('compact_gender'),
               ),
             ),
           ],
@@ -2047,43 +2293,27 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: ListView.separated(
+                  child: GamepadNavGroup(
+                    name: 'profile-avatar-presets',
+                    child: SingleChildScrollView(
+                    key: const ValueKey('compact_avatar_presets'),
                     scrollDirection: Axis.horizontal,
-                    itemCount: _presetAvatarIcons.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 5),
-                    itemBuilder: (context, index) {
-                      final selected = _avatarKind == AvatarKind.preset &&
-                          _avatarValue == index.toString();
-                      return GestureDetector(
-                        onTap: () => setState(() {
-                          _avatarKind = AvatarKind.preset;
-                          _avatarValue = index.toString();
-                        }),
-                        child: AnimatedContainer(
-                          duration: AppDurations.short,
-                          width: phoneLand ? 40 : 48,
-                          height: phoneLand ? 40 : 48,
-                          margin: EdgeInsets.symmetric(
-                            vertical: phoneLand ? 12 : 15,
+                    child: Row(
+                      children: [
+                        for (var index = 0;
+                            index < _presetAvatarIcons.length;
+                            index++) ...[
+                          if (index > 0) const SizedBox(width: 5),
+                          _buildAvatarPresetChip(
+                            index: index,
+                            size: phoneLand ? 40 : 48,
+                            iconSize: phoneLand ? 22 : 25,
+                            verticalMargin: phoneLand ? 12 : 15,
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selected
-                                  ? AppColors.accentStart
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(
-                            _presetAvatarIcons[index],
-                            color: AppColors.accentStart,
-                            size: phoneLand ? 22 : 25,
-                          ),
-                        ),
-                      );
-                    },
+                        ],
+                      ],
+                    ),
+                    ),
                   ),
                 ),
               ],
@@ -2108,31 +2338,18 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(height: phoneLand ? 8 : 12),
-          ProfileGalleryEditSlots(
-            userId: widget.user.id,
-            enabled: !_isSaving,
-            compact: true,
-            onPhotosChanged: _onGalleryPhotosChanged,
-            onMutated: _onGalleryMutated,
-          ),
-          SizedBox(height: phoneLand ? 8 : 12),
-          OutlinedButton.icon(
-            onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
-            icon: _isAvatarProcessing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.photo_library_outlined, size: 19),
-            label: Text(
-              profileAvatarActionLabel(
-                processing: _isAvatarProcessing,
-                processingLabel: context.l10n.profileProcessingPhoto,
-                changeLabel: context.l10n.profileChangePhoto,
-              ),
+          GamepadNavGroup(
+            name: 'profile-gallery',
+            child: ProfileGalleryEditSlots(
+              userId: widget.user.id,
+              enabled: !_isSaving,
+              compact: true,
+              onPhotosChanged: _onGalleryPhotosChanged,
+              onMutated: _onGalleryMutated,
             ),
           ),
+          SizedBox(height: phoneLand ? 8 : 12),
+          _buildChangePhotoButton(compact: true),
           if (_saveError != null) ...[
             const SizedBox(height: 12),
             MessageBanner(
@@ -2292,22 +2509,25 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   Widget _buildShowStatsCheckbox() {
-    // Кликается только квадрат (не подпись). Выровнен по левому краю как поля.
     final checked = _showStatsToOthers;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => setState(() => _showStatsToOthers = !checked),
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: AnimatedContainer(
+    return SizedBox(
+      width: double.infinity,
+      child: _ProfileGamepadTarget(
+      radius: AppRadius.input,
+      onActivate: () => setState(() => _showStatsToOthers = !checked),
+      child: Material(
+        key: const ValueKey('compact_show_stats'),
+        color: Colors.transparent,
+        child: InkWell(
+          canRequestFocus: false,
+          onTap: () => setState(() => _showStatsToOthers = !checked),
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                AnimatedContainer(
                   duration: const Duration(milliseconds: 140),
                   width: 22,
                   height: 22,
@@ -2325,31 +2545,52 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                       ? const Icon(Icons.check, size: 16, color: Colors.white)
                       : null,
                 ),
-              ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.profileShowStats,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              context.l10n.profileShowStats,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
+    ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.compact) {
-      return _buildCompactEditor(context);
-    }
+    return ListenableBuilder(
+      listenable: GamepadService.instance.devices,
+      builder: (context, _) {
+        final editor = widget.compact
+            ? _buildCompactEditor(context)
+            : _buildWideEditor(context);
+        if (!_gamepadEditor) return editor;
+        return GamepadScope(
+          onAction: (action) {
+            if (action != GamepadAction.cancel) return false;
+            if (GamepadKeyboardController.instance.visible ||
+                isEditableTextFocused()) {
+              return false;
+            }
+            return _handleEditBack();
+          },
+          child: editor,
+        );
+      },
+    );
+  }
+
+  Widget _buildWideEditor(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -2369,18 +2610,23 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 32),
-                TextFormField(
-                  controller: widget.displayNameController,
-                  focusNode: widget.focusNode,
-                  inputFormatters: _displayNameFormatters,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.registerNameLabel,
-                    hintText: context.l10n.profileNameHint,
-                    prefixIcon: Icon(Icons.person_outline_rounded),
+                GamepadFieldBlock(
+                  autofocus: true,
+                  inputFocus: widget.focusNode,
+                  openOnFocus: false,
+                  child: TextFormField(
+                    controller: widget.displayNameController,
+                    focusNode: widget.focusNode,
+                    inputFormatters: _displayNameFormatters,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.registerNameLabel,
+                      hintText: context.l10n.profileNameHint,
+                      prefixIcon: Icon(Icons.person_outline_rounded),
+                    ),
+                    textCapitalization: TextCapitalization.none,
+                    autocorrect: false,
+                    onFieldSubmitted: (_) => _submit(),
                   ),
-                  textCapitalization: TextCapitalization.none,
-                  autocorrect: false,
-                  onFieldSubmitted: (_) => _submit(),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -2391,40 +2637,33 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _ageController,
-                  inputFormatters: _ageFormatters,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.profileAge,
-                    hintText: context.l10n.profileAgeHint,
-                    prefixIcon: const Icon(Icons.cake_outlined),
-                    errorText: _ageError,
+                GamepadFieldBlock(
+                  inputFocus: _ageFocus,
+                  openOnFocus: false,
+                  child: TextFormField(
+                    controller: _ageController,
+                    focusNode: _ageFocus,
+                    inputFormatters: _ageFormatters,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.profileAge,
+                      hintText: context.l10n.profileAgeHint,
+                      prefixIcon: const Icon(Icons.cake_outlined),
+                      errorText: _ageError,
+                    ),
+                    keyboardType: TextInputType.number,
                   ),
-                  keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 16),
-                InkWell(
-                  onTap: _openGenderMenu,
-                  borderRadius: BorderRadius.circular(AppRadius.input),
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: context.l10n.profileGender,
-                      prefixIcon: Icon(Icons.wc_rounded),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(localizeGender(_gender, context.l10n)),
-                        const Icon(Icons.arrow_drop_down),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildGenderField(showDropdown: true),
                 const SizedBox(height: 16),
                 _buildShowStatsCheckbox(),
                 const SizedBox(height: 12),
-                _activeField == ProfileEditField.about
-                    ? _buildAboutEditorField()
+                _gamepadEditor || _activeField == ProfileEditField.about
+                    ? GamepadFieldBlock(
+                        inputFocus: _aboutFocus,
+                        openOnFocus: false,
+                        child: _buildAboutEditorField(autofocus: false),
+                      )
                     : _buildAboutPreview(),
                 const SizedBox(height: 20),
                 Text(
@@ -2463,37 +2702,47 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Wrap(
+                GamepadNavGroup(
+                  name: 'profile-avatar-presets',
+                  child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     ...List.generate(_presetAvatarIcons.length, (index) {
                       final selected = _avatarKind == AvatarKind.preset &&
                           _avatarValue == index.toString();
-                      return GestureDetector(
-                        onTap: () => setState(() {
+                      return _ProfileGamepadTarget(
+                        radius: 24,
+                        shape: GamepadHighlightShape.circle,
+                        onActivate: () => setState(() {
                           _avatarKind = AvatarKind.preset;
                           _avatarValue = index.toString();
                         }),
-                        child: AnimatedContainer(
-                          duration: AppDurations.short,
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selected
-                                  ? AppColors.accentStart
-                                  : Colors.transparent,
-                              width: 2,
+                        child: GestureDetector(
+                          onTap: () => setState(() {
+                            _avatarKind = AvatarKind.preset;
+                            _avatarValue = index.toString();
+                          }),
+                          child: AnimatedContainer(
+                            duration: AppDurations.short,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: selected
+                                    ? AppColors.accentStart
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
                             ),
-                          ),
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.accentSoft,
-                            child: Icon(
-                              _presetAvatarIcons[index],
-                              color: AppColors.accentStart,
-                              size: 24,
+                            child: CircleAvatar(
+                              radius: 20,
+                              backgroundColor: AppColors.accentSoft,
+                              child: Icon(
+                                _presetAvatarIcons[index],
+                                color: AppColors.accentStart,
+                                size: 24,
+                              ),
                             ),
                           ),
                         ),
@@ -2501,44 +2750,37 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                     }),
                   ],
                 ),
-                const SizedBox(height: 12),
-                ProfileGalleryEditSlots(
-                  userId: widget.user.id,
-                  enabled: !_isSaving,
-                  onPhotosChanged: _onGalleryPhotosChanged,
-                  onMutated: _onGalleryMutated,
                 ),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed:
-                      (_isSaving || _isAvatarProcessing) ? null : _pickImage,
-                  icon: _isAvatarProcessing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.change_circle_outlined, size: 20),
-                  label: Text(
-                    profileAvatarActionLabel(
-                      processing: _isAvatarProcessing,
-                      processingLabel: context.l10n.profileProcessingPhoto,
-                      changeLabel: context.l10n.profileChangePhoto,
-                    ),
+                GamepadNavGroup(
+                  name: 'profile-gallery',
+                  child: ProfileGalleryEditSlots(
+                    userId: widget.user.id,
+                    enabled: !_isSaving,
+                    onPhotosChanged: _onGalleryPhotosChanged,
+                    onMutated: _onGalleryMutated,
                   ),
                 ),
+                const SizedBox(height: 12),
+                _buildChangePhotoButton(),
                 if (_saveError != null) ...[
                   MessageBanner(message: _saveError!, type: BannerType.error),
                   const SizedBox(height: 16),
                 ],
                 const SizedBox(height: 24),
-                AppButton(
-                  onPressed: (_isSaving || !_hasChanges || _ageError != null)
+                _ProfileGamepadTarget(
+                  radius: AppRadius.button,
+                  onActivate: (_isSaving || !_hasChanges || _ageError != null)
                       ? null
                       : _submit,
-                  label: context.l10n.commonSave,
-                  isLoading: _isSaving,
-                  expanded: true,
+                  child: AppButton(
+                    onPressed: (_isSaving || !_hasChanges || _ageError != null)
+                        ? null
+                        : _submit,
+                    label: context.l10n.commonSave,
+                    isLoading: _isSaving,
+                    expanded: true,
+                  ),
                 ),
               ],
             ),
@@ -2547,20 +2789,57 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         Positioned(
           top: -8,
           right: -8,
-          child: IconButton(
-            onPressed: _isSaving ? null : widget.onCancel,
-            icon: const Icon(Icons.close),
-            color: Colors.red,
-            style: IconButton.styleFrom(
-              minimumSize: const Size(40, 40),
-              padding: EdgeInsets.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          child: _ProfileGamepadTarget(
+            radius: 20,
+            shape: GamepadHighlightShape.circle,
+            onActivate: _isSaving ? null : widget.onCancel,
+            child: IconButton(
+              onPressed: _isSaving ? null : widget.onCancel,
+              icon: const Icon(Icons.close),
+              color: Colors.red,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(40, 40),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
             ),
           ),
         ),
       ],
         ),
       ),
+    );
+  }
+}
+
+/// Обводка геймпада на контроле формы профиля (как карточки на главной).
+class _ProfileGamepadTarget extends StatelessWidget {
+  const _ProfileGamepadTarget({
+    required this.child,
+    this.onActivate,
+    this.radius = AppRadius.input,
+    this.shape = GamepadHighlightShape.roundedRect,
+    this.autofocus = false,
+    this.outlined = true,
+  });
+
+  final Widget child;
+  final VoidCallback? onActivate;
+  final double radius;
+  final GamepadHighlightShape shape;
+  final bool autofocus;
+  final bool outlined;
+
+  @override
+  Widget build(BuildContext context) {
+    return GamepadFocusBlock(
+      autofocus: autofocus,
+      radius: radius,
+      borderWidth: 2.2,
+      shape: shape,
+      outlined: outlined,
+      onActivate: onActivate,
+      child: child,
     );
   }
 }

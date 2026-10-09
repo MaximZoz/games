@@ -8,11 +8,15 @@ import 'package:multigames_client/router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/chats/chats_gamepad.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
-import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
-import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/presence_sort.dart';
@@ -92,6 +96,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   List<FriendItem> _cachedFriends = const [];
   List<ChatPreviewItem> _chats = const [];
   int _gamepadChatIndex = 0;
+  int? _gamepadActionIndex;
+  final Map<String, SlidableController> _slidableControllers = {};
+  final Map<String, GlobalKey> _gamepadChatKeys = {};
   DateTime? _friendsCachedAt;
   Timer? _navigationLockTimer;
 
@@ -160,6 +167,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     });
     chatsRouteObserver.unsubscribe(this);
     _borderAnimationController.dispose();
+    for (final controller in _slidableControllers.values) {
+      controller.dispose();
+    }
     _chatsScrollController.removeListener(_onChatsScroll);
     _chatsScrollController.dispose();
     _navigationLockTimer?.cancel();
@@ -822,30 +832,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     required String title,
     required String description,
     required String confirmText,
-    bool destructive = false,
   }) async {
-    final confirmed = await showDialog<bool>(
+    return showGamepadChoiceDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(description),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(context.l10n.commonCancel),
-          ),
-          FilledButton(
-            style: AppButtonStyles.of(
-              foregroundColor:
-                  destructive ? Colors.red.shade800 : AppColors.textPrimary,
-            ),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(confirmText),
-          ),
-        ],
-      ),
+      title: title,
+      message: description,
+      confirmLabel: confirmText,
     );
-    return confirmed == true;
   }
 
   Future<void> _clearChatFromList(ChatPreviewItem item) async {
@@ -853,7 +846,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       title: context.l10n.chatsClearTitle,
       description: context.l10n.chatsClearDesc,
       confirmText: context.l10n.chatsClearConfirm,
-      destructive: true,
     );
     if (!confirmed) return;
 
@@ -899,7 +891,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       title: context.l10n.chatsBlockTitle,
       description: context.l10n.chatsBlockDesc,
       confirmText: context.l10n.chatsBlockConfirm,
-      destructive: true,
     );
     if (!confirmed) return;
 
@@ -999,26 +990,58 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   Future<FriendUserItem?> _pickFriendDialog() async {
     final queryController = TextEditingController();
+    final searchFocus = FocusNode();
     Future<List<FriendItem>> friendsFuture = _loadFriendsForStartChat();
     final wide = isWide(context);
     try {
       if (wide) {
         return await _showNewChatDialogCentered(
           queryController: queryController,
+          searchFocus: searchFocus,
           friendsFuture: friendsFuture,
         );
       }
       return await _showNewChatBottomSheet(
         queryController: queryController,
+        searchFocus: searchFocus,
         friendsFuture: friendsFuture,
       );
     } finally {
+      dismissGamepadKeyboard();
+      searchFocus.dispose();
       queryController.dispose();
     }
   }
 
+  Widget _wrapNewChatGamepad({
+    required BuildContext modalContext,
+    required Widget child,
+  }) {
+    return GamepadScope(
+      exclusive: true,
+      onAction: (action) {
+        if (action == GamepadAction.cancel) {
+          dismissGamepadKeyboard();
+          final nav = Navigator.of(modalContext);
+          if (nav.canPop()) nav.pop();
+          return true;
+        }
+        if (action == GamepadAction.confirm || action.isDirection) {
+          return handleGamepadUiAction(modalContext, action);
+        }
+        return true;
+      },
+      child: GamepadNavGroup(
+        name: 'new-chat-popup',
+        exclusive: true,
+        child: child,
+      ),
+    );
+  }
+
   Future<FriendUserItem?> _showNewChatDialogCentered({
     required TextEditingController queryController,
+    required FocusNode searchFocus,
     required Future<List<FriendItem>> friendsFuture,
   }) async {
     var query = '';
@@ -1040,10 +1063,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             ),
             child: StatefulBuilder(
               builder: (context, setSheetState) {
-                return _buildNewChatContent(
+                return _wrapNewChatGamepad(
+                  modalContext: dialogContext,
+                  child: _buildNewChatContent(
                   modalContext: dialogContext,
                   setSheetState: setSheetState,
                   queryController: queryController,
+                  searchFocus: searchFocus,
                   friendsFuture: currentFriendsFuture,
                   query: query,
                   visibleCount: visibleCount,
@@ -1054,6 +1080,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     setSheetState(() {});
                   },
                   wrapInSheet: false,
+                  ),
                 );
               },
             ),
@@ -1065,6 +1092,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   Future<FriendUserItem?> _showNewChatBottomSheet({
     required TextEditingController queryController,
+    required FocusNode searchFocus,
     required Future<List<FriendItem>> friendsFuture,
   }) async {
     var query = '';
@@ -1094,10 +1122,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             ),
             child: StatefulBuilder(
               builder: (context, setSheetState) {
-                return _buildNewChatContent(
+                return _wrapNewChatGamepad(
+                  modalContext: sheetContext,
+                  child: _buildNewChatContent(
                   modalContext: sheetContext,
                   setSheetState: setSheetState,
                   queryController: queryController,
+                  searchFocus: searchFocus,
                   friendsFuture: currentFriendsFuture,
                   query: query,
                   visibleCount: visibleCount,
@@ -1109,6 +1140,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                   },
                   wrapInSheet: true,
                   sheetHeight: sheetHeight,
+                  ),
                 );
               },
             ),
@@ -1122,6 +1154,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     required BuildContext modalContext,
     required void Function(void Function()) setSheetState,
     required TextEditingController queryController,
+    required FocusNode searchFocus,
     required Future<List<FriendItem>> friendsFuture,
     required String query,
     required int visibleCount,
@@ -1151,6 +1184,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
               height: sheetHeight ?? 420,
               child: _newChatColumn(
                 queryController: queryController,
+                searchFocus: searchFocus,
                 friendsFuture: friendsFuture,
                 modalContext: modalContext,
                 setSheetState: setSheetState,
@@ -1165,6 +1199,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             )
           : _newChatColumn(
               queryController: queryController,
+              searchFocus: searchFocus,
               friendsFuture: friendsFuture,
               modalContext: modalContext,
               setSheetState: setSheetState,
@@ -1181,6 +1216,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   Widget _newChatColumn({
     required TextEditingController queryController,
+    required FocusNode searchFocus,
     required Future<List<FriendItem>> friendsFuture,
     required BuildContext modalContext,
     required void Function(void Function()) setSheetState,
@@ -1320,11 +1356,20 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                     final friendPresence = presence[friend.id];
                                     final statusText =
                                         formatPresenceStatus(friendPresence);
-                                    return Material(
+                                    return GamepadFocusBlock(
+                                      radius: 12,
+                                      onActivate: () {
+                                        dismissGamepadKeyboard();
+                                        Navigator.of(modalContext).pop(friend);
+                                      },
+                                      child: Material(
                                       color: Colors.transparent,
                                       child: InkWell(
                                         borderRadius: BorderRadius.circular(12),
-                                        onTap: () => Navigator.of(modalContext).pop(friend),
+                                        onTap: () {
+                                          dismissGamepadKeyboard();
+                                          Navigator.of(modalContext).pop(friend);
+                                        },
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 6,
@@ -1389,6 +1434,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                           ),
                                         ),
                                       ),
+                                    ),
                                     );
                                   },
                                 );
@@ -1400,8 +1446,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             child: listChild,
           )
         : Expanded(child: listChild);
-    final searchField = TextField(
+    final searchField = GamepadFieldBlock(
+      inputFocus: searchFocus,
+      child: TextField(
       controller: queryController,
+      focusNode: searchFocus,
+      readOnly: gamepadConnected(),
+      showCursor: true,
       autofillHints: null,
       enableSuggestions: false,
       autocorrect: false,
@@ -1422,16 +1473,41 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
           onVisibleCountChanged(_modalPageSize);
         });
       },
+      ),
     );
-    final supportButton = IconButton(
+    void openSupport() {
+      dismissGamepadKeyboard();
+      Navigator.of(modalContext).maybePop();
+      _openSupport();
+    }
+
+    final supportButton = GamepadFocusBlock(
+      shape: GamepadHighlightShape.circle,
+      radius: 22,
+      onActivate: openSupport,
+      child: IconButton(
       tooltip: context.l10n.supportTitle,
-      onPressed: () {
-        Navigator.of(modalContext).maybePop();
-        _openSupport();
-      },
+      onPressed: openSupport,
       icon: const Icon(
         Icons.support_agent_rounded,
         color: AppColors.accentStart,
+      ),
+      ),
+    );
+    final closeButton = GamepadFocusBlock(
+      shape: GamepadHighlightShape.circle,
+      radius: 22,
+      onActivate: () {
+        dismissGamepadKeyboard();
+        Navigator.of(modalContext).maybePop();
+      },
+      child: IconButton(
+        tooltip: context.l10n.commonClose,
+        onPressed: () {
+          dismissGamepadKeyboard();
+          Navigator.of(modalContext).maybePop();
+        },
+        icon: const Icon(Icons.close_rounded),
       ),
     );
     return Column(
@@ -1443,11 +1519,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             children: [
               Expanded(child: searchField),
               supportButton,
-              IconButton(
-                tooltip: context.l10n.commonClose,
-                onPressed: () => Navigator.of(modalContext).maybePop(),
-                icon: const Icon(Icons.close_rounded),
-              ),
+              closeButton,
             ],
           )
         else ...[
@@ -1561,10 +1633,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       children: [
         Padding(
           padding: const EdgeInsets.only(right: 4),
-          child: _buildHeaderFrameIconButton(
+          child: ChatsGamepadLtHint(
+            child: _buildHeaderFrameIconButton(
             icon: Icons.add_comment_rounded,
             tooltip: context.l10n.chatsNewChat,
             onPressed: actionBusy ? null : _openStartChatDialog,
+            ),
           ),
         ),
         if (hasBlockedUsers)
@@ -1754,10 +1828,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
               SizedBox(
                 height: 48,
                 child: Center(
-                  child: IconButton(
+                  child: ChatsGamepadLtHint(
+                    child: IconButton(
                     onPressed: actionBusy ? null : _openStartChatDialog,
                     tooltip: context.l10n.chatsNewChat,
                     icon: const Icon(Icons.add_comment_rounded),
+                    ),
                   ),
                 ),
               ),
@@ -1793,7 +1869,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: Center(
                                     child: wrapGamepadCursor(
-                                      highlighted: _isGamepadChat(item),
+                                      highlighted: _isGamepadChat(item) &&
+                                          _gamepadActionIndex == null,
                                       radius: 24,
                                       child: Material(
                                       color: Colors.transparent,
@@ -1976,13 +2053,16 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                   !isSupportPeer &&
                                   !item.isGroup;
                               return Padding(
+                                key: _gamepadKeyForChat(item.chatID),
                                 padding: EdgeInsets.only(
                                   top: index == 0 ? 0 : 10,
                                 ),
                                 child: Slidable(
                                   key: ValueKey('chat_${item.chatID}'),
+                                  controller: _slidableFor(item.chatID),
                                   groupTag: 'chats_list',
                                   enabled: !itemBusy,
+                                  closeOnScroll: _gamepadActionIndex == null,
                                   endActionPane: ActionPane(
                                     motion: const DrawerMotion(),
                                     extentRatio: blockDisabled ? 0.20 : 0.40,
@@ -2004,11 +2084,18 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                           horizontal: 6,
                                           vertical: 8,
                                         ),
-                                        child: _buildSlidableActionContent(
+                                        child: wrapGamepadCursor(
+                                          highlighted: _isGamepadChatAction(
+                                            item,
+                                            0,
+                                          ),
+                                          radius: 12,
+                                          child: _buildSlidableActionContent(
                                           icon: Icons.delete_sweep_rounded,
                                           iconColor: const Color(0xFF1E88E5),
                                           phaseShift: 0.0,
                                           busy: clearBusy,
+                                          ),
                                         ),
                                       ),
                                       if (!blockDisabled)
@@ -2029,17 +2116,25 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                             horizontal: 6,
                                             vertical: 8,
                                           ),
-                                          child: _buildSlidableActionContent(
+                                          child: wrapGamepadCursor(
+                                            highlighted: _isGamepadChatAction(
+                                              item,
+                                              1,
+                                            ),
+                                            radius: 12,
+                                            child: _buildSlidableActionContent(
                                             icon: Icons.block_rounded,
                                             iconColor: const Color(0xFFD32F2F),
                                             phaseShift: 0.5,
                                             busy: blockBusy,
+                                            ),
                                           ),
                                         ),
                                     ],
                                   ),
                                   child: wrapGamepadCursor(
-                                    highlighted: _isGamepadChat(item),
+                                    highlighted: _isGamepadChat(item) &&
+                                        _gamepadActionIndex == null,
                                     radius: AppRadius.card,
                                     child: Opacity(
                                     opacity: itemBusy ? 0.65 : 1,
@@ -2321,30 +2416,131 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         action == GamepadAction.shoulderR) {
       return false;
     }
+    if (action == GamepadAction.triggerL) {
+      unawaited(_openStartChatDialog());
+      return true;
+    }
     if (_chats.isEmpty) return false;
     _gamepadChatIndex = _gamepadChatIndex.clamp(0, _chats.length - 1);
-    if (action.isDirection) {
+    final item = _chats[_gamepadChatIndex];
+    final actions = _swipeActionsFor(item);
+    if (chatsGamepadIsHorizontal(action)) {
+      if (widget.sidebarCompact) return true;
       setState(() {
-        _gamepadChatIndex = cycleIndex(_gamepadChatIndex, _chats.length, action);
+        _gamepadActionIndex = chatsActionIndexAfterMove(
+          current: _gamepadActionIndex,
+          actionCount: actions.length,
+          action: action,
+        );
       });
+      _syncOpenSlidable();
+      return true;
+    }
+    if (chatsGamepadIsVertical(action)) {
+      setState(() {
+        _gamepadActionIndex = null;
+        _gamepadChatIndex = chatsListIndexAfterMove(
+          index: _gamepadChatIndex,
+          count: _chats.length,
+          action: action,
+        );
+      });
+      _syncOpenSlidable();
+      _ensureGamepadChatVisible();
       return true;
     }
     if (action == GamepadAction.confirm) {
       if (_isNavigatingToChat) return true;
-      final item = _chats[_gamepadChatIndex];
+      final actionIndex = _gamepadActionIndex;
+      if (actionIndex != null &&
+          actionIndex >= 0 &&
+          actionIndex < actions.length) {
+        unawaited(
+          _runSwipeAction(item, actions[actionIndex]),
+        );
+        return true;
+      }
       FocusManager.instance.primaryFocus?.unfocus();
       _openChatRoute(chatID: item.chatID, peerName: _chatTitle(item));
+      return true;
+    }
+    if (action == GamepadAction.cancel && _gamepadActionIndex != null) {
+      setState(() => _gamepadActionIndex = null);
+      _syncOpenSlidable();
       return true;
     }
     return false;
   }
 
-  bool _isGamepadChat(ChatPreviewItem item) {
-    if (!GamepadService.instance.isRecentlyActive || _chats.isEmpty) {
-      return false;
+  List<_ChatSwipeAction> _swipeActionsFor(ChatPreviewItem item) {
+    final isSupport = item.user.isSupport ||
+        item.user.displayName?.trim() == 'Поддержка';
+    final canBlock = !isSupport && !item.isGroup;
+    return [
+      _ChatSwipeAction.clear,
+      if (canBlock) _ChatSwipeAction.block,
+    ];
+  }
+
+  SlidableController _slidableFor(String chatId) {
+    return _slidableControllers.putIfAbsent(
+      chatId,
+      () => SlidableController(this),
+    );
+  }
+
+  GlobalKey _gamepadKeyForChat(String chatId) {
+    return _gamepadChatKeys.putIfAbsent(chatId, GlobalKey.new);
+  }
+
+  void _syncOpenSlidable() {
+    if (widget.sidebarCompact || _chats.isEmpty) return;
+    final id = _chats[_gamepadChatIndex.clamp(0, _chats.length - 1)].chatID;
+    for (final entry in _slidableControllers.entries) {
+      if (entry.key == id && _gamepadActionIndex != null) {
+        unawaited(entry.value.openEndActionPane());
+      } else if (entry.value.actionPaneType.value != ActionPaneType.none) {
+        unawaited(entry.value.close());
+      }
     }
+  }
+
+  void _ensureGamepadChatVisible() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _chats.isEmpty) return;
+      final id = _chats[_gamepadChatIndex.clamp(0, _chats.length - 1)].chatID;
+      final ctx = _gamepadChatKeys[id]?.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.25,
+        duration: const Duration(milliseconds: 120),
+      );
+    });
+  }
+
+  Future<void> _runSwipeAction(
+    ChatPreviewItem item,
+    _ChatSwipeAction action,
+  ) async {
+    if (action == _ChatSwipeAction.clear) {
+      await _clearChatFromList(item);
+    } else {
+      await _blockChatUserFromList(item);
+    }
+    if (!mounted) return;
+    setState(() => _gamepadActionIndex = null);
+    _syncOpenSlidable();
+  }
+
+  bool _isGamepadChat(ChatPreviewItem item) {
+    if (_chats.isEmpty) return false;
     final i = _gamepadChatIndex.clamp(0, _chats.length - 1);
     return _chats[i].chatID == item.chatID;
+  }
+
+  bool _isGamepadChatAction(ChatPreviewItem item, int actionIndex) {
+    return _isGamepadChat(item) && _gamepadActionIndex == actionIndex;
   }
 }
 

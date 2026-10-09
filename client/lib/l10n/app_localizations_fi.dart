@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Risti / tikku — valikot ja laudan kursori';
+  String get settingsGamepadGenericName => 'Ohjain';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Risti — vahvista tai siirrä';
+  String get settingsGamepadHelpNavigate => 'Navigointi';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Ympyrä — takaisin tai poista valinta';
+  String get settingsGamepadHelpConfirm => 'Valitse';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — valikon välilehdet';
+  String get settingsGamepadHelpBack => 'Takaisin';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Välilehdet';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursori laudalla ja kädessä: tammi, ristinolla, laivanupotus, durak, uno, pokeri ja backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Korteissa: risti siirtää kättä, A pelaa, X valitsee / Uno, Y ottaa, skippaa tai nostaa';
+  String get settingsGamepadHelpCards => 'Kortit';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Kentässä A avaa peliohjaimen näppäimistön; X vaihtaa asettelua, B poistaa tai sulkee';
+  String get settingsGamepadHelpKeyboard => 'Näppäimistö';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Kirjaudu ulos';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sivu';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-asettelu';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-asettelu';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-asettelu';
 
   @override
   String get gamepadKeyboardTitle => 'Näppäimistö';
@@ -776,6 +799,51 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Kulmat';
 
   @override
+  String get gamesChess => 'Shakki';
+
+  @override
+  String get gamesChessModeClassic => 'Klassinen';
+
+  @override
+  String get gamesChessModeRapid => 'Nopea';
+
+  @override
+  String get gamesChessModeBlitz => 'Salama';
+
+  @override
+  String get gamesChessModeBullet => 'Luoti';
+
+  @override
+  String get chessPieceQueen => 'Kuningatar';
+
+  @override
+  String get chessPieceRook => 'Torni';
+
+  @override
+  String get chessPieceBishop => 'Lähetti';
+
+  @override
+  String get chessPieceKnight => 'Ratsu';
+
+  @override
+  String get chessPromotionTitle => 'Sotilaan korotus';
+
+  @override
+  String get chessDrawStalemate => 'Tasapeli: patti';
+
+  @override
+  String get chessDrawInsufficient => 'Tasapeli: riittämätön materiaali';
+
+  @override
+  String get chessDrawRepetition => 'Tasapeli: kolminkertainen toisto';
+
+  @override
+  String get chessDrawFiftyMove => 'Tasapeli: 50 siirron sääntö';
+
+  @override
+  String get chessCheck => 'Shakki';
+
+  @override
   String get rulesCheckersPlayers => 'Pelaajat: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Nappuloiden, jotka ovat vielä kotona, on poistuttava pelaajan 25 ensimmäisen siirron aikana.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Tasapeli, jos asema toistuu kolmesti tai 15 siirtoa kummaltakin ei vie peliä eteenpäin: ei syöntiä, ei sotilassiirtoa eikä korotusta.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Tasapeli, jos asema toistuu kolmesti, jos 40 siirtoa kummaltakin menee ilman syöntiä ja sotilassiirtoa, tai kummallekin jää yksi daami.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Tasapeli, jos asema toistuu kolmesti tai 15 siirtoa kummaltakin luovutuspelissä ei vie peliä eteenpäin: ei syöntiä, ei sotilassiirtoa eikä korotusta.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Tasapeli, jos asema toistuu kolmesti tai 25 siirtoa kummaltakin ei tuo nappulaa maaliruutuun.';
+
+  @override
+  String get rulesChessPlayers => 'Pelaajat: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Tila: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Lauta 8×8. Kummallakin on kuningas, kuningatar, kaksi tornia, kaksi lähettiä, kaksi ratsua ja kahdeksan sotilasta. Valkoinen aloittaa. Tavalliset siirrot, ohestalyönti, korotus ja linnoitus. Voitto matilla tai luovutuksella.';
+
+  @override
+  String get rulesChessDrawClassic => 'Tasapeli patissa, kolminkertaisessa toistossa, 50 siirron säännössä, materiaalin puutteessa tai sopimuksella.';
+
+  @override
+  String get rulesChessClockClassic => 'Kello: 60+0 — 60 minuuttia koko peliin, ilman lisäystä.';
+
+  @override
+  String get rulesChessClockRapid => 'Kello: 10+0 — 10 minuuttia koko peliin, ilman lisäystä.';
+
+  @override
+  String get rulesChessClockBlitz => 'Kello: 5+0 — 5 minuuttia koko peliin, ilman lisäystä.';
+
+  @override
+  String get rulesChessClockBullet => 'Kello: 3+2 — 3 minuuttia plus 2 sekuntia siirtoa kohti.';
+
+  @override
+  String get checkersDrawRepetition => 'Tasapeli — asema toistui kolmesti';
+
+  @override
+  String get checkersDrawNoProgress => 'Tasapeli — siirrot eivät johda voittoon';
+
+  @override
+  String get checkersDrawInsufficient => 'Tasapeli — voittoon ei ole tarpeeksi voimaa';
 
   @override
   String get rulesNardyTitle => 'Backgammon — säännöt';
@@ -861,6 +976,9 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Siirron jälkeen vuoro siirtyy automaattisesti';
+
+  @override
+  String get nardyLayoutToggle => 'Vaihda asettelu';
 
   @override
   String get nardyNoMoves => 'Ei siirtoja';
@@ -1344,7 +1462,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gameOpponent => 'Vastustaja';
 
   @override
+  String get gameYou => 'Sinä';
+
+  @override
   String get gameYouWon => 'Voitit!';
+
+  @override
+  String get gameYouWonShort => 'Voitit';
 
   @override
   String get gameYouLost => 'Hävisit';
@@ -1381,6 +1505,21 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Tarjoa tasapeliä';
+
+  @override
+  String get gameFlipBoard => 'Käännä lauta';
+
+  @override
+  String get gameReviewStart => 'Pelin alkuun';
+
+  @override
+  String get gameReviewPrev => 'Siirto taaksepäin';
+
+  @override
+  String get gameReviewNext => 'Siirto eteenpäin';
+
+  @override
+  String get gameReviewEnd => 'Nykyiseen asemaan';
 
   @override
   String get gameOfferDrawTitle => 'Tarjoa tasapeliä?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Avaa korkeammat panokset';
+
+  @override
+  String get shopEmojisHelp => 'Animoidut emojit chattiin. Osta setti ja lähetä niitä ystäville.';
+
+  @override
+  String get shopCollectionsHelp => 'Vain uuden tai vintage-kokoelman voi myydä: 80 % hinnasta, jos se on uusi, ja 300 % hinnasta, jos se on vintage. Kulunutta, väsynyttä ja rähjäistä ei voi myydä.\n\nKerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa. Jokainen esine tuo kolikoita joka päivä, ja täysi setti tuo vielä erillisen bonuksen.\n\nEsineen päivittäinen tulo riippuu tilasta ja on osuus tavallisesta summasta. Uusi tuo 100 %. Kulunut tuo 60 %. Väsynyt tuo 40 %. Rähjäinen tuo 100 %. Vintage-esine tuo 200 %, siis kaksinkertaisen tavalliseen päivittäiseen tuloon verrattuna.\n\nTäyden setin bonus pysyy samana, kunnes setti itse on vintage. Setti on vintage, kun jokainen sen esine on vintage: bonus on silloin 300 %, kolminkertainen tavalliseen verrattuna.\n\nTila riippuu siitä, kuinka kauan esine on ollut sinulla. Uusi — ensimmäiset 7 päivää. Kulunut — 8. päivästä 2 kuukauteen. Väsynyt — 2–6 kuukautta. Rähjäinen — 6 kuukaudesta vuoteen. Vintage — vuodesta eteenpäin.';
+
+  @override
+  String get shopStakesHelp => 'Avaa korkeammat panokset. Mitä korkeampi panos, sitä suurempi potti ja voitto.';
 
   @override
   String get inventoryTitle => 'Esineet';
@@ -1947,6 +2095,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopOwned => 'Ostettu';
 
   @override
+  String get shopHave => 'On';
+
+  @override
   String get shopEmpty => 'Vielä tyhjä';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopBuyOnce => 'Kertaluonteinen osto';
 
   @override
-  String get shopSellRefund => 'Myynti palauttaa 80% hinnasta';
+  String get shopSellRefund => 'Myynti riippuu kokoelman tilasta';
+
+  @override
+  String get collectionConditionNew => 'Uusi';
+
+  @override
+  String get collectionConditionWorn => 'Kulunut';
+
+  @override
+  String get collectionConditionTired => 'Väsynyt';
+
+  @override
+  String get collectionConditionShabby => 'Rähjäinen';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Saat $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Vain uuden tai vintage-kokoelman voi myydä.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Ei voi myydä';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Vain uuden tai vintage-esineen voi myydä. Käytä eliksiiriä ja muuta kuntoa.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 pelaajaa: 4×4-lauta, neljä pelaajaa (X, O, △, □). Voita omien merkkien rivillä.';
+
+  @override
+  String get adminUsersTab => 'Käyttäjät';
+
+  @override
+  String get adminSupportTab => 'Tuki';
+
+  @override
+  String get adminSearchHint => 'Hae sähköpostilla tai nimellä';
+
+  @override
+  String get adminRoleAdmins => 'Ylläpitäjät';
+
+  @override
+  String get adminRoleUsers => 'Käyttäjät';
+
+  @override
+  String get adminRoleAll => 'Kaikki roolit';
+
+  @override
+  String get adminStatusFrozen => 'Jäädytetyt';
+
+  @override
+  String get adminStatusActive => 'Aktiiviset';
+
+  @override
+  String get adminStatusAny => 'Mikä tahansa tila';
+
+  @override
+  String get adminOrderDesc => 'Laskeva';
+
+  @override
+  String get adminOrderAsc => 'Nouseva';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Lataus epäonnistui: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Ei käyttäjiä';
+
+  @override
+  String get adminSortLastSeen => 'Viimeisen käynnin mukaan';
+
+  @override
+  String get adminSortEmail => 'Sähköpostin mukaan';
+
+  @override
+  String get adminSortCreated => 'Rekisteröintipäivän mukaan';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount pr.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Poista ylläpito';
+
+  @override
+  String get adminGrantAdmin => 'Tee ylläpitäjäksi';
+
+  @override
+  String get adminAdminRevoked => 'Ylläpito-oikeudet poistettu';
+
+  @override
+  String get adminAdminGranted => 'Ylläpito-oikeudet annettu';
+
+  @override
+  String get adminGrantCoins => 'Anna kolikoita';
+
+  @override
+  String get adminWriteSupport => 'Kirjoita tukena';
+
+  @override
+  String get adminUnfreeze => 'Poista jäädytys';
+
+  @override
+  String get adminFreeze => 'Jäädytä';
+
+  @override
+  String get adminUnfrozen => 'Jäädytys poistettu';
+
+  @override
+  String get adminFrozenDone => 'Jäädytetty';
+
+  @override
+  String get adminResetPassword => 'Nollaa salasana';
+
+  @override
+  String get adminCoinsAmountHint => 'Määrä (negatiivinen = vähennys)';
+
+  @override
+  String get adminReasonOptional => 'Syy (valinnainen)';
+
+  @override
+  String get adminGrantSent => 'Kortti lähetettiin tukichattiin';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Vähennettiin $amount pronssia';
+  }
+
+  @override
+  String get adminGrantVerb => 'Anna';
+
+  @override
+  String get adminNewPasswordHint => 'Uusi salasana (väh. 6)';
+
+  @override
+  String get adminPasswordReset => 'Salasana nollattu';
+
+  @override
+  String get adminResetVerb => 'Nollaa';
+
+  @override
+  String adminShortError(String error) {
+    return 'Virhe: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Ei tukipyyntöjä';
+
+  @override
+  String get adminUserFallback => 'Käyttäjä';
+
+  @override
+  String get apiErrTooManyRequests => 'Liian monta pyyntöä. Yritä myöhemmin.';
+
+  @override
+  String get apiErrMoveConflict => 'Siirto ristiriidassa. Yritä uudelleen.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Nuorennus';
+
+  @override
+  String get elixirGroupAge => 'Vanhennus';
+
+  @override
+  String get elixirGroupAccelerate => 'Kiihdytys';
+
+  @override
+  String get elixirEffectRejuvenate => 'nuorennus';
+
+  @override
+  String get elixirEffectAge => 'vanhennus';
+
+  @override
+  String get elixirEffectAccelerate => 'kiihdytys';
+
+  @override
+  String get elixirAdjCelebration => 'Juhla';
+
+  @override
+  String get elixirAdjNature => 'Luonto';
+
+  @override
+  String get elixirAdjLegends => 'Legendaarinen';
+
+  @override
+  String get elixirAdjCosmic => 'Kosminen';
+
+  @override
+  String get elixirAdjAdventure => 'Seikkailu';
+
+  @override
+  String get elixirAdjJewels => 'Jalokivi';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect-eliksiiri';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Nuorenna';
+
+  @override
+  String get elixirUseAge => 'Vanhenna';
+
+  @override
+  String get elixirUseAccelerate => 'Nopeuta';
+
+  @override
+  String get elixirUse => 'Käytä';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count päivää',
+      one: '$count päivä',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tuntia',
+      one: '$count tunti',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minuuttia',
+      one: '$count minuutti',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

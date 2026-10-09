@@ -436,4 +436,19 @@ void main() {
     ));
     expect(engine.players[0].hand, hasLength(3));
   });
+
+  test('бот бьёт короткую руку скипом, а не числом', () {
+    final skip = action('skip-red', UnoColor.red, UnoCardKind.skip);
+    final num = number('red-3', UnoColor.red, 3);
+    final engine = controlled(
+      firstHand: [skip, num, number('keep', UnoColor.blue, 9)],
+      secondHand: [
+        number('p1-a', UnoColor.blue, 1),
+        number('p1-b', UnoColor.blue, 2),
+      ],
+    );
+    final move = pickUnoBotAction(engine);
+    expect(move.type, UnoActionType.play);
+    expect(move.cardId, skip.id);
+  });
 }

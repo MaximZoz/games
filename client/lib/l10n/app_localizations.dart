@@ -275,28 +275,34 @@ abstract class AppLocalizations {
   /// **'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.'**
   String get settingsGamepadDisconnected;
 
+  /// No description provided for @settingsGamepadGenericName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроллер'**
+  String get settingsGamepadGenericName;
+
   /// No description provided for @settingsGamepadHelpNavigate.
   ///
   /// In ru, this message translates to:
-  /// **'Крест / стик — меню и курсор на поле'**
+  /// **'Навигация'**
   String get settingsGamepadHelpNavigate;
 
   /// No description provided for @settingsGamepadHelpConfirm.
   ///
   /// In ru, this message translates to:
-  /// **'A / Крест — выбрать или сходить'**
+  /// **'Выбрать'**
   String get settingsGamepadHelpConfirm;
 
   /// No description provided for @settingsGamepadHelpBack.
   ///
   /// In ru, this message translates to:
-  /// **'B / Круг — назад или снять выбор'**
+  /// **'Назад'**
   String get settingsGamepadHelpBack;
 
   /// No description provided for @settingsGamepadHelpTabs.
   ///
   /// In ru, this message translates to:
-  /// **'L1 / R1 — вкладки меню'**
+  /// **'Вкладки'**
   String get settingsGamepadHelpTabs;
 
   /// No description provided for @settingsGamepadHelpPlay.
@@ -308,14 +314,50 @@ abstract class AppLocalizations {
   /// No description provided for @settingsGamepadHelpCards.
   ///
   /// In ru, this message translates to:
-  /// **'В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать'**
+  /// **'Карты'**
   String get settingsGamepadHelpCards;
 
   /// No description provided for @settingsGamepadHelpKeyboard.
   ///
   /// In ru, this message translates to:
-  /// **'В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть'**
+  /// **'Клавиатура'**
   String get settingsGamepadHelpKeyboard;
+
+  /// No description provided for @settingsGamepadHelpBalance.
+  ///
+  /// In ru, this message translates to:
+  /// **'Баланс'**
+  String get settingsGamepadHelpBalance;
+
+  /// No description provided for @settingsGamepadHelpLogout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выход'**
+  String get settingsGamepadHelpLogout;
+
+  /// No description provided for @settingsGamepadHelpPage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Страница'**
+  String get settingsGamepadHelpPage;
+
+  /// No description provided for @settingsGamepadLayoutXbox.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка Xbox'**
+  String get settingsGamepadLayoutXbox;
+
+  /// No description provided for @settingsGamepadLayoutPlayStation.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка PlayStation'**
+  String get settingsGamepadLayoutPlayStation;
+
+  /// No description provided for @settingsGamepadLayoutNintendo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка Nintendo'**
+  String get settingsGamepadLayoutNintendo;
 
   /// No description provided for @gamepadKeyboardTitle.
   ///
@@ -1631,6 +1673,96 @@ abstract class AppLocalizations {
   /// **'Уголки'**
   String get gamesCheckersModeCorners;
 
+  /// No description provided for @gamesChess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шахматы'**
+  String get gamesChess;
+
+  /// No description provided for @gamesChessModeClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классика'**
+  String get gamesChessModeClassic;
+
+  /// No description provided for @gamesChessModeRapid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рапид'**
+  String get gamesChessModeRapid;
+
+  /// No description provided for @gamesChessModeBlitz.
+  ///
+  /// In ru, this message translates to:
+  /// **'Блиц'**
+  String get gamesChessModeBlitz;
+
+  /// No description provided for @gamesChessModeBullet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пуля'**
+  String get gamesChessModeBullet;
+
+  /// No description provided for @chessPieceQueen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ферзь'**
+  String get chessPieceQueen;
+
+  /// No description provided for @chessPieceRook.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ладья'**
+  String get chessPieceRook;
+
+  /// No description provided for @chessPieceBishop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слон'**
+  String get chessPieceBishop;
+
+  /// No description provided for @chessPieceKnight.
+  ///
+  /// In ru, this message translates to:
+  /// **'Конь'**
+  String get chessPieceKnight;
+
+  /// No description provided for @chessPromotionTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Превращение пешки'**
+  String get chessPromotionTitle;
+
+  /// No description provided for @chessDrawStalemate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: пат'**
+  String get chessDrawStalemate;
+
+  /// No description provided for @chessDrawInsufficient.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: недостаточно материала для мата'**
+  String get chessDrawInsufficient;
+
+  /// No description provided for @chessDrawRepetition.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: троекратное повторение позиции'**
+  String get chessDrawRepetition;
+
+  /// No description provided for @chessDrawFiftyMove.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: правило 50 ходов'**
+  String get chessDrawFiftyMove;
+
+  /// No description provided for @chessCheck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шах'**
+  String get chessCheck;
+
   /// No description provided for @rulesCheckersPlayers.
   ///
   /// In ru, this message translates to:
@@ -1708,6 +1840,96 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.'**
   String get rulesCheckersPlayCornersLeaveHome;
+
+  /// No description provided for @rulesCheckersDrawRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов каждой стороны прошли без взятия, хода простой и превращения в дамку.'**
+  String get rulesCheckersDrawRussian;
+
+  /// No description provided for @rulesCheckersDrawEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды, если 40 ходов каждой стороны не было взятия и хода простой, или если осталось по одной дамке.'**
+  String get rulesCheckersDrawEnglish;
+
+  /// No description provided for @rulesCheckersDrawGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов каждой стороны в поддавках прошли без взятия, хода простой и превращения в дамку.'**
+  String get rulesCheckersDrawGiveaway;
+
+  /// No description provided for @rulesCheckersDrawCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашку в целевой угол.'**
+  String get rulesCheckersDrawCorners;
+
+  /// No description provided for @rulesChessPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesChessPlayers;
+
+  /// No description provided for @rulesChessMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesChessMode(String mode);
+
+  /// No description provided for @rulesChessPlayClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доска 8×8. У каждого король, ферзь, две ладьи, два слона, два коня и восемь пешек. Белые ходят первыми. Король — на одну клетку, ферзь — по вертикали, горизонтали и диагонали, ладья — по прямым, слон — по диагонали, конь — буквой «Г». Пешка идёт вперёд на одну клетку (с начальной — на две), бьёт по диагонали; есть взятие на проходе и превращение на последней линии. Рокировка — если король и ладья не ходили и путь свободен. Побеждает тот, кто поставил мат или соперник сдался.'**
+  String get rulesChessPlayClassic;
+
+  /// No description provided for @rulesChessDrawClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья при пате, троекратном повторении позиции, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.'**
+  String get rulesChessDrawClassic;
+
+  /// No description provided for @rulesChessClockClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроль партии: 60+0 — 60 минут на всю партию, без добавления.'**
+  String get rulesChessClockClassic;
+
+  /// No description provided for @rulesChessClockRapid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроль партии: 10+0 — 10 минут на всю партию, без добавления.'**
+  String get rulesChessClockRapid;
+
+  /// No description provided for @rulesChessClockBlitz.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроль партии: 5+0 — 5 минут на всю партию, без добавления.'**
+  String get rulesChessClockBlitz;
+
+  /// No description provided for @rulesChessClockBullet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроль партии: 3+2 — 3 минуты на партию плюс 2 секунды за каждый ход.'**
+  String get rulesChessClockBullet;
+
+  /// No description provided for @checkersDrawRepetition.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — позиция повторилась трижды'**
+  String get checkersDrawRepetition;
+
+  /// No description provided for @checkersDrawNoProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — ходы не ведут к победе'**
+  String get checkersDrawNoProgress;
+
+  /// No description provided for @checkersDrawInsufficient.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — недостаточно сил для победы'**
+  String get checkersDrawInsufficient;
 
   /// No description provided for @rulesNardyTitle.
   ///
@@ -1792,6 +2014,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'После всех ходов сразу передать ход сопернику'**
   String get nardyAutoConfirmHint;
+
+  /// No description provided for @nardyLayoutToggle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поменять раскладку'**
+  String get nardyLayoutToggle;
 
   /// No description provided for @nardyNoMoves.
   ///
@@ -2663,11 +2891,23 @@ abstract class AppLocalizations {
   /// **'Соперник'**
   String get gameOpponent;
 
+  /// No description provided for @gameYou.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы'**
+  String get gameYou;
+
   /// No description provided for @gameYouWon.
   ///
   /// In ru, this message translates to:
   /// **'Вы победили!'**
   String get gameYouWon;
+
+  /// No description provided for @gameYouWonShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы выиграли'**
+  String get gameYouWonShort;
 
   /// No description provided for @gameYouLost.
   ///
@@ -2740,6 +2980,36 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Предложить ничью'**
   String get gameOfferDraw;
+
+  /// No description provided for @gameFlipBoard.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевернуть доску'**
+  String get gameFlipBoard;
+
+  /// No description provided for @gameReviewStart.
+  ///
+  /// In ru, this message translates to:
+  /// **'К началу партии'**
+  String get gameReviewStart;
+
+  /// No description provided for @gameReviewPrev.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход назад'**
+  String get gameReviewPrev;
+
+  /// No description provided for @gameReviewNext.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход вперёд'**
+  String get gameReviewNext;
+
+  /// No description provided for @gameReviewEnd.
+  ///
+  /// In ru, this message translates to:
+  /// **'К текущей позиции'**
+  String get gameReviewEnd;
 
   /// No description provided for @gameOfferDrawTitle.
   ///
@@ -3250,6 +3520,24 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Разблокировка повышенных ставок'**
   String get shopStakesSubtitle;
+
+  /// No description provided for @shopEmojisHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Анимированные смайлики для чата. Купите набор — и отправляйте его в сообщениях друзьям.'**
+  String get shopEmojisHelp;
+
+  /// No description provided for @shopCollectionsHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продать можно только новую или винтажную коллекцию: продажа 80% от стоимости у нового и продажа 300% от стоимости у винтажа. Потрепанное, уставшее и ветхое продать нельзя.\n\nСоберите набор предметов: они появляются в витрине профиля, их можно дарить. Каждый предмет каждый день приносит монеты, а полный набор — ещё и отдельный бонус.\n\nДневной доход предмета зависит от состояния и считается от обычной суммы. Новое приносит 100%. Потрепанное — 60%. Уставшее — 40%. Ветхое — 100%. Винтажный предмет приносит 200%, то есть вдвое больше обычного дохода.\n\nБонус полного набора не меняется, пока набор не станет винтажным. Набор винтажный, когда винтажный каждый его предмет: тогда бонус составляет 300%, втрое больше обычного.\n\nСостояние зависит от того, как давно предмет у вас. Новое — первые 7 дней. Потрепанное — с 8-го дня до 2 месяцев. Уставшее — с 2 до 6 месяцев. Ветхое — с 6 месяцев до года. Винтаж — от года.'**
+  String get shopCollectionsHelp;
+
+  /// No description provided for @shopStakesHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разблокируйте более высокие ставки в играх. Чем выше ставка, тем больше банк и выигрыш.'**
+  String get shopStakesHelp;
 
   /// No description provided for @inventoryTitle.
   ///
@@ -3797,6 +4085,12 @@ abstract class AppLocalizations {
   /// **'Куплено'**
   String get shopOwned;
 
+  /// No description provided for @shopHave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть'**
+  String get shopHave;
+
   /// No description provided for @shopEmpty.
   ///
   /// In ru, this message translates to:
@@ -3848,8 +4142,38 @@ abstract class AppLocalizations {
   /// No description provided for @shopSellRefund.
   ///
   /// In ru, this message translates to:
-  /// **'Продажа вернет 80% стоимости'**
+  /// **'Продажа зависит от состояния коллекции'**
   String get shopSellRefund;
+
+  /// No description provided for @collectionConditionNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новое'**
+  String get collectionConditionNew;
+
+  /// No description provided for @collectionConditionWorn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Потрепанное'**
+  String get collectionConditionWorn;
+
+  /// No description provided for @collectionConditionTired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уставшее'**
+  String get collectionConditionTired;
+
+  /// No description provided for @collectionConditionShabby.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ветхое'**
+  String get collectionConditionShabby;
+
+  /// No description provided for @collectionConditionVintage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Винтаж'**
+  String get collectionConditionVintage;
 
   /// No description provided for @shopCollectionAdded.
   ///
@@ -3886,6 +4210,24 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вы получите {amount}'**
   String inventorySellDesc(String amount);
+
+  /// No description provided for @inventoryCollectionNotSellable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продать можно только новую или винтажную коллекцию.'**
+  String get inventoryCollectionNotSellable;
+
+  /// No description provided for @inventoryCollectionNotSellableTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нельзя продать'**
+  String get inventoryCollectionNotSellableTitle;
+
+  /// No description provided for @inventoryCollectionNotSellableHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продать можно только новый предмет или винтажный. Воспользуйтесь эликсиром, чтобы изменить состояние.'**
+  String get inventoryCollectionNotSellableHint;
 
   /// No description provided for @inventorySold.
   ///
@@ -5140,6 +5482,510 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает.'**
   String get rulesTttMulti4;
+
+  /// No description provided for @adminUsersTab.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователи'**
+  String get adminUsersTab;
+
+  /// No description provided for @adminSupportTab.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддержка'**
+  String get adminSupportTab;
+
+  /// No description provided for @adminSearchHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск по email или нику'**
+  String get adminSearchHint;
+
+  /// No description provided for @adminRoleAdmins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Админы'**
+  String get adminRoleAdmins;
+
+  /// No description provided for @adminRoleUsers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователи'**
+  String get adminRoleUsers;
+
+  /// No description provided for @adminRoleAll.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все роли'**
+  String get adminRoleAll;
+
+  /// No description provided for @adminStatusFrozen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Замороженные'**
+  String get adminStatusFrozen;
+
+  /// No description provided for @adminStatusActive.
+  ///
+  /// In ru, this message translates to:
+  /// **'Активные'**
+  String get adminStatusActive;
+
+  /// No description provided for @adminStatusAny.
+  ///
+  /// In ru, this message translates to:
+  /// **'Любой статус'**
+  String get adminStatusAny;
+
+  /// No description provided for @adminOrderDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'По убыванию'**
+  String get adminOrderDesc;
+
+  /// No description provided for @adminOrderAsc.
+  ///
+  /// In ru, this message translates to:
+  /// **'По возрастанию'**
+  String get adminOrderAsc;
+
+  /// No description provided for @adminLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка загрузки: {error}'**
+  String adminLoadFailed(String error);
+
+  /// No description provided for @adminUsersEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователи не найдены'**
+  String get adminUsersEmpty;
+
+  /// No description provided for @adminSortLastSeen.
+  ///
+  /// In ru, this message translates to:
+  /// **'По последнему визиту'**
+  String get adminSortLastSeen;
+
+  /// No description provided for @adminSortEmail.
+  ///
+  /// In ru, this message translates to:
+  /// **'По email'**
+  String get adminSortEmail;
+
+  /// No description provided for @adminSortCreated.
+  ///
+  /// In ru, this message translates to:
+  /// **'По дате рег.'**
+  String get adminSortCreated;
+
+  /// No description provided for @adminBronzeBalance.
+  ///
+  /// In ru, this message translates to:
+  /// **'{amount} бр.'**
+  String adminBronzeBalance(int amount);
+
+  /// No description provided for @adminRevokeAdmin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать админа'**
+  String get adminRevokeAdmin;
+
+  /// No description provided for @adminGrantAdmin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделать админом'**
+  String get adminGrantAdmin;
+
+  /// No description provided for @adminAdminRevoked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Права админа сняты'**
+  String get adminAdminRevoked;
+
+  /// No description provided for @adminAdminGranted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Права админа выданы'**
+  String get adminAdminGranted;
+
+  /// No description provided for @adminGrantCoins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начислить монеты'**
+  String get adminGrantCoins;
+
+  /// No description provided for @adminWriteSupport.
+  ///
+  /// In ru, this message translates to:
+  /// **'Написать от поддержки'**
+  String get adminWriteSupport;
+
+  /// No description provided for @adminUnfreeze.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разморозить'**
+  String get adminUnfreeze;
+
+  /// No description provided for @adminFreeze.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заморозить'**
+  String get adminFreeze;
+
+  /// No description provided for @adminUnfrozen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разморожен'**
+  String get adminUnfrozen;
+
+  /// No description provided for @adminFrozenDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заморожен'**
+  String get adminFrozenDone;
+
+  /// No description provided for @adminResetPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить пароль'**
+  String get adminResetPassword;
+
+  /// No description provided for @adminCoinsAmountHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Количество (отрицательное = списание)'**
+  String get adminCoinsAmountHint;
+
+  /// No description provided for @adminReasonOptional.
+  ///
+  /// In ru, this message translates to:
+  /// **'Причина (необязательно)'**
+  String get adminReasonOptional;
+
+  /// No description provided for @adminGrantSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карточка отправлена в чат поддержки'**
+  String get adminGrantSent;
+
+  /// No description provided for @adminCoinsDebited.
+  ///
+  /// In ru, this message translates to:
+  /// **'Списано {amount} бронзовых'**
+  String adminCoinsDebited(int amount);
+
+  /// No description provided for @adminGrantVerb.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начислить'**
+  String get adminGrantVerb;
+
+  /// No description provided for @adminNewPasswordHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый пароль (мин. 6)'**
+  String get adminNewPasswordHint;
+
+  /// No description provided for @adminPasswordReset.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароль сброшен'**
+  String get adminPasswordReset;
+
+  /// No description provided for @adminResetVerb.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить'**
+  String get adminResetVerb;
+
+  /// No description provided for @adminShortError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка: {error}'**
+  String adminShortError(String error);
+
+  /// No description provided for @adminSupportEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет обращений в поддержку'**
+  String get adminSupportEmpty;
+
+  /// No description provided for @adminUserFallback.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователь'**
+  String get adminUserFallback;
+
+  /// No description provided for @apiErrTooManyRequests.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слишком много запросов. Попробуйте позже.'**
+  String get apiErrTooManyRequests;
+
+  /// No description provided for @apiErrMoveConflict.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход конфликтует. Повторите.'**
+  String get apiErrMoveConflict;
+
+  /// No description provided for @shopElixirs.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсиры'**
+  String get shopElixirs;
+
+  /// No description provided for @shopElixirsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Омоложение, старение и ускорение коллекций'**
+  String get shopElixirsSubtitle;
+
+  /// No description provided for @shopElixirsHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Три полки: омоложение, старение и ускорение. На каждой шесть эликсиров — по одному на набор коллекций. Эликсир действует только на свой набор.\n\nОмоложение делает коллекцию на шаг новее и не новее, чем новое. Старение делает на шаг старше и не старше, чем ветхое. Ускорение только для ветхой: до винтажа остаётся 3 месяца, один раз. Винтаж эликсиром не наступает.\n\nКупленный эликсир лежит в предметах. Его применяют с карточки коллекции или с карточки эликсира. Каждый раз тратится одна штука.'**
+  String get shopElixirsHelp;
+
+  /// No description provided for @elixirGroupRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Омоложение'**
+  String get elixirGroupRejuvenate;
+
+  /// No description provided for @elixirGroupAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Старение'**
+  String get elixirGroupAge;
+
+  /// No description provided for @elixirGroupAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ускорение'**
+  String get elixirGroupAccelerate;
+
+  /// No description provided for @elixirEffectRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'омоложения'**
+  String get elixirEffectRejuvenate;
+
+  /// No description provided for @elixirEffectAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'старения'**
+  String get elixirEffectAge;
+
+  /// No description provided for @elixirEffectAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'ускорения'**
+  String get elixirEffectAccelerate;
+
+  /// No description provided for @elixirAdjCelebration.
+  ///
+  /// In ru, this message translates to:
+  /// **'Праздничный'**
+  String get elixirAdjCelebration;
+
+  /// No description provided for @elixirAdjNature.
+  ///
+  /// In ru, this message translates to:
+  /// **'Природный'**
+  String get elixirAdjNature;
+
+  /// No description provided for @elixirAdjLegends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Легендарный'**
+  String get elixirAdjLegends;
+
+  /// No description provided for @elixirAdjCosmic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Космический'**
+  String get elixirAdjCosmic;
+
+  /// No description provided for @elixirAdjAdventure.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приключенческий'**
+  String get elixirAdjAdventure;
+
+  /// No description provided for @elixirAdjJewels.
+  ///
+  /// In ru, this message translates to:
+  /// **'Драгоценный'**
+  String get elixirAdjJewels;
+
+  /// No description provided for @elixirName.
+  ///
+  /// In ru, this message translates to:
+  /// **'{adjective} эликсир {effect}'**
+  String elixirName(String adjective, String effect);
+
+  /// No description provided for @elixirHelpRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Делает коллекцию на шаг новее. Не новее, чем новое.'**
+  String get elixirHelpRejuvenate;
+
+  /// No description provided for @elixirHelpAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Делает коллекцию на шаг старше. Не старше, чем ветхое.'**
+  String get elixirHelpAge;
+
+  /// No description provided for @elixirHelpAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только для ветхой. До винтажа остаётся 3 месяца, один раз.'**
+  String get elixirHelpAccelerate;
+
+  /// No description provided for @elixirUseRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Омолодить'**
+  String get elixirUseRejuvenate;
+
+  /// No description provided for @elixirUseAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Состарить'**
+  String get elixirUseAge;
+
+  /// No description provided for @elixirUseAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ускорить'**
+  String get elixirUseAccelerate;
+
+  /// No description provided for @elixirUse.
+  ///
+  /// In ru, this message translates to:
+  /// **'Использовать'**
+  String get elixirUse;
+
+  /// No description provided for @collectionLeftDays.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дней}}'**
+  String collectionLeftDays(int count);
+
+  /// No description provided for @collectionLeftHours.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} час} few{{count} часа} many{{count} часов} other{{count} часов}}'**
+  String collectionLeftHours(int count);
+
+  /// No description provided for @collectionLeftMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} минута} few{{count} минуты} many{{count} минут} other{{count} минут}}'**
+  String collectionLeftMinutes(int count);
+
+  /// No description provided for @elixirSetOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только набор «{set}».'**
+  String elixirSetOnly(String set);
+
+  /// No description provided for @elixirPickCollection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите коллекцию'**
+  String get elixirPickCollection;
+
+  /// No description provided for @elixirNoTarget.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет коллекции этого набора, на которую эликсир подействует'**
+  String get elixirNoTarget;
+
+  /// No description provided for @elixirApplied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсир применён'**
+  String get elixirApplied;
+
+  /// No description provided for @elixirConfirmTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Применить эликсир?'**
+  String get elixirConfirmTitle;
+
+  /// No description provided for @elixirConfirmBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'{elixir}\n{collection}'**
+  String elixirConfirmBody(String elixir, String collection);
+
+  /// No description provided for @inventoryNoElixirs.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет эликсиров — купите в магазине'**
+  String get inventoryNoElixirs;
+
+  /// No description provided for @elixirNotApplicable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сейчас этот эликсир на коллекцию не подействует'**
+  String get elixirNotApplicable;
+
+  /// No description provided for @elixirWrongSet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсир от другого набора'**
+  String get elixirWrongSet;
+
+  /// No description provided for @elixirNotOwned.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсира нет'**
+  String get elixirNotOwned;
+
+  /// No description provided for @collectionUntil.
+  ///
+  /// In ru, this message translates to:
+  /// **'До {state} {left}'**
+  String collectionUntil(String state, String left);
+
+  /// No description provided for @collectionLeftSoon.
+  ///
+  /// In ru, this message translates to:
+  /// **'меньше минуты'**
+  String get collectionLeftSoon;
+
+  /// No description provided for @collectionCondGenNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'нового'**
+  String get collectionCondGenNew;
+
+  /// No description provided for @collectionCondGenWorn.
+  ///
+  /// In ru, this message translates to:
+  /// **'потрепанного'**
+  String get collectionCondGenWorn;
+
+  /// No description provided for @collectionCondGenTired.
+  ///
+  /// In ru, this message translates to:
+  /// **'уставшего'**
+  String get collectionCondGenTired;
+
+  /// No description provided for @collectionCondGenShabby.
+  ///
+  /// In ru, this message translates to:
+  /// **'ветхого'**
+  String get collectionCondGenShabby;
+
+  /// No description provided for @collectionCondGenVintage.
+  ///
+  /// In ru, this message translates to:
+  /// **'винтажа'**
+  String get collectionCondGenVintage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

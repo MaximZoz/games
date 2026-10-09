@@ -121,7 +121,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     super.initState();
     _hitPulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 520),
+      duration: kBattleshipShotPulse,
     );
   }
 
@@ -398,16 +398,19 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }
 
   int _rewardChipBronze(BattleshipGameView game, String? me) {
-    if (game.stakeBronze <= 0 || !game.isOver) return 0;
-    if (_isWinner(game, me)) {
-      return stakeWinnerNetProfit(
+    if (!game.isOver) return 0;
+    final chip = stakeFinishRewardChip(
+      stakeBronze: game.stakeBronze,
+      isDraw: game.isDraw,
+      iWon: _isWinner(game, me),
+      netProfit: stakeWinnerNetProfit(
         stake: game.stakeBronze,
         playerCount: 2,
         winnerCount: 1,
-      );
-    }
-    if (!_lossChipRevealed) return 0;
-    return -game.stakeBronze;
+      ),
+    );
+    if (chip < 0 && !_lossChipRevealed) return 0;
+    return chip;
   }
 
   Future<void> _onGameSettled({
@@ -460,7 +463,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     );
     final credit = iWon ? pot : 0;
     final display = iWon ? net : 0;
-    final lost = (!iWon && game.stakeBronze > 0) ? game.stakeBronze : 0;
+    final lost = stakeLostOnFinish(
+      stakeBronze: game.stakeBronze,
+      isDraw: game.isDraw,
+      iWon: iWon,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _clearSessionForFinishedGame();
@@ -674,28 +681,36 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     });
   }
 
-  void _playLocalShotFx({
+  Future<void> _playLocalShotFx({
     required int cell,
     required bool hit,
     required bool sunk,
-  }) {
+    required bool keepAttacking,
+    required bool vsBot,
+  }) async {
     if (!mounted) return;
+    _fxInProgress = true;
     setState(() {
       _pulseHitCell = cell;
       _fxHit = hit;
+      _fxShowMineBoard = false;
     });
     if (sunk) {
       Sfx.play(SfxId.sink);
     } else {
       Sfx.play(hit ? SfxId.hit : SfxId.miss);
     }
-    _hitPulse
-      ..stop()
-      ..forward(from: 0);
-    Future<void>.delayed(_kShotRevealDelay, () {
-      if (!mounted) return;
-      if (_pulseHitCell != cell) return;
-      setState(() => _pulseHitCell = null);
+    _hitPulse.stop();
+    await _hitPulse.forward(from: 0);
+    if (!mounted) return;
+    if (_pulseHitCell != cell) return;
+    setState(() {
+      _pulseHitCell = null;
+      _fxShowMineBoard = battleshipBoardAfterLocalShot(
+        keepAttacking: keepAttacking,
+        vsBot: vsBot,
+      );
+      _fxInProgress = false;
     });
   }
 
@@ -721,6 +736,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       final sunk = sunkShip != null ||
           view.opponentSunkShips.any((ship) => ship.contains(cell));
       final keepAttacking = battleshipKeepAttacking(view, shotCell: cell);
+      final vsBot = view.hasBotOpponent || _isOffline;
       _lastFxKey = _fxKey(view);
       setState(() {
         _overlay = _overlay.resolvePending(
@@ -734,19 +750,29 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         if (view.isOver && !_hideTimers) {
           _hideTimers = true;
         }
-        // Против бота: после промаха не переключаем поле, пока бот
-        // не выстрелит и клиент не удержит его ход секунду.
-        if (!keepAttacking) {
-          _fxShowMineBoard =
-              (view.hasBotOpponent || _isOffline) ? false : null;
-        }
+        // Поле соперника не отпускаем, пока пульс своего выстрела не кончится.
+        _fxShowMineBoard = false;
       });
-      _playLocalShotFx(
+      await _playLocalShotFx(
         cell: cell,
         hit: hit,
         sunk: sunk,
+        keepAttacking: keepAttacking,
+        vsBot: vsBot,
       );
       ref.invalidate(battleshipGameProvider(widget.gameId));
+      if (mounted) {
+        var me = ref.read(authStateProvider).valueOrNull?.id;
+        if (_isOffline && (me == null || me.isEmpty)) {
+          me = OfflineBattleshipRegistry.instance
+              .get(widget.gameId)
+              ?.humanUserId;
+        }
+        final latest =
+            ref.read(battleshipGameProvider(widget.gameId)).valueOrNull ??
+                view;
+        _maybeRevealRemoteShot(_displayGame(latest), me);
+      }
     } on GamesException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -754,6 +780,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _pendingShotCell = null;
         _pulseHitCell = null;
         _fxShowMineBoard = null;
+        _fxInProgress = false;
         _busy = false;
       });
       if (!isStaleNotYourTurnError(e)) {
@@ -768,13 +795,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   Future<void> _confirmOfferDraw() async {
     final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
     if (game == null || game.isOver || game.hasBotOpponent) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameOfferDrawTitle,
-      message: context.l10n.gameOfferDrawConfirm,
-      cancelLabel: context.l10n.commonCancel,
-      confirmLabel: context.l10n.gameOfferDraw,
-    );
+    final ok = await confirmDrawDialog(context);
     if (!ok || !mounted) return;
     try {
       await ref.read(battleshipRepositoryProvider).offerDraw(widget.gameId);
@@ -791,13 +812,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final me = ref.read(authStateProvider).valueOrNull?.id;
     final offerBy = game?.drawOfferBy?.trim();
     if (game == null || me == null || offerBy == null || offerBy == me) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameAcceptDrawTitle,
-      message: context.l10n.gameAcceptDrawConfirm,
-      cancelLabel: context.l10n.commonCancel,
-      confirmLabel: context.l10n.gameDraw,
-    );
+    final ok = await confirmDrawDialog(context, accept: true);
     if (!ok || !mounted) return;
     try {
       await ref.read(battleshipRepositoryProvider).acceptDraw(widget.gameId);
@@ -939,13 +954,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   Future<void> _confirmSurrender() async {
     final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
     if (game == null || game.isOver) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameSurrenderTitle,
-      message: context.l10n.gameSurrenderConfirm,
-      cancelLabel: context.l10n.gameStay,
-      confirmLabel: context.l10n.gameSurrender,
-    );
+    final ok = await confirmSurrenderDialog(context);
     if (!ok || !mounted) return;
     unawaited(() async {
       try {
@@ -1405,6 +1414,10 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                             onDecline: (id) => unawaited(_declineRematch(id)),
                             onCancelWait: () => unawaited(_cancelRematchWait()),
                             onFindGame: () => unawaited(_findGame()),
+                            table: RematchTable(
+                              gameType: 'battleship',
+                              stakeBronze: game.stakeBronze,
+                            ),
                             compact: true,
                           ),
                       ],
@@ -1524,6 +1537,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                     ),
                   ),
                 ),
+                if (gameAsync.valueOrNull case final won?)
+                  if (won.isOver && !won.isDraw && _isWinner(won, me))
+                    Positioned.fill(
+                      child: GameConfettiOverlay(
+                        key: ValueKey('battleship-confetti-${widget.gameId}'),
+                      ),
+                    ),
                 if (gameAsync.valueOrNull != null &&
                     !gameAsync.valueOrNull!.isOver)
                   Builder(

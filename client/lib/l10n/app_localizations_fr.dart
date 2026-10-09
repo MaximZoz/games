@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Aucune manette. Branchez-en une et appuyez sur un bouton.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Croix / stick — menus et curseur sur le plateau';
+  String get settingsGamepadGenericName => 'Manette';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Croix — valider ou jouer';
+  String get settingsGamepadHelpNavigate => 'Naviguer';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Rond — retour ou désélection';
+  String get settingsGamepadHelpConfirm => 'Choisir';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — onglets du menu';
+  String get settingsGamepadHelpBack => 'Retour';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Onglets';
 
   @override
   String get settingsGamepadHelpPlay => 'Curseur plateau et main : dames, morpion, bataille navale, durak, uno, poker et backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Aux cartes : croix = main, A joue, X sélectionne / Uno, Y prend, passe ou pioche';
+  String get settingsGamepadHelpCards => 'Cartes';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Dans un champ, A ouvre le clavier manette ; X change la disposition, B efface ou ferme';
+  String get settingsGamepadHelpKeyboard => 'Clavier';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Solde';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Déconnexion';
+
+  @override
+  String get settingsGamepadHelpPage => 'Page';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Disposition Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Disposition PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Disposition Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Clavier';
@@ -776,6 +799,51 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Coins';
 
   @override
+  String get gamesChess => 'Échecs';
+
+  @override
+  String get gamesChessModeClassic => 'Classique';
+
+  @override
+  String get gamesChessModeRapid => 'Rapide';
+
+  @override
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
+
+  @override
+  String get chessPieceQueen => 'Dame';
+
+  @override
+  String get chessPieceRook => 'Tour';
+
+  @override
+  String get chessPieceBishop => 'Fou';
+
+  @override
+  String get chessPieceKnight => 'Cavalier';
+
+  @override
+  String get chessPromotionTitle => 'Promotion du pion';
+
+  @override
+  String get chessDrawStalemate => 'Nulle : pat';
+
+  @override
+  String get chessDrawInsufficient => 'Nulle : matériel insuffisant';
+
+  @override
+  String get chessDrawRepetition => 'Nulle : triple répétition';
+
+  @override
+  String get chessDrawFiftyMove => 'Nulle : règle des 50 coups';
+
+  @override
+  String get chessCheck => 'Échec';
+
+  @override
   String get rulesCheckersPlayers => 'Joueurs : 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Les pions encore dans la maison doivent la quitter durant les 25 premiers coups du joueur.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Nulle si la position se répète trois fois, ou si 15 coups de chaque côté n\'apportent aucun progrès : ni prise, ni coup de pion, ni promotion.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Nulle si la position se répète trois fois, si 40 coups de chaque côté passent sans prise ni coup de pion, ou s\'il ne reste qu\'une dame de chaque côté.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Nulle si la position se répète trois fois, ou si 15 coups de chaque côté au jeu de la donne n\'apportent aucun progrès : ni prise, ni coup de pion, ni promotion.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Nulle si la position se répète trois fois, ou si 25 coups de chaque côté n\'ajoutent aucun pion dans le coin cible.';
+
+  @override
+  String get rulesChessPlayers => 'Joueurs : 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Mode : $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Plateau 8×8. Chaque camp a roi, dame, deux tours, deux fous, deux cavaliers et huit pions. Les blancs commencent. Coups habituels, prise en passant, promotion et roque. On gagne par mat ou abandon.';
+
+  @override
+  String get rulesChessDrawClassic => 'Nulle par pat, triple répétition, règle des 50 coups, matériel insuffisant ou accord.';
+
+  @override
+  String get rulesChessClockClassic => 'Pendule : 60+0 — 60 minutes pour toute la partie, sans incrément.';
+
+  @override
+  String get rulesChessClockRapid => 'Pendule : 10+0 — 10 minutes pour toute la partie, sans incrément.';
+
+  @override
+  String get rulesChessClockBlitz => 'Pendule : 5+0 — 5 minutes pour toute la partie, sans incrément.';
+
+  @override
+  String get rulesChessClockBullet => 'Pendule : 3+2 — 3 minutes plus 2 secondes par coup.';
+
+  @override
+  String get checkersDrawRepetition => 'Nulle — position répétée trois fois';
+
+  @override
+  String get checkersDrawNoProgress => 'Nulle — les coups n’aboutissent pas à une victoire';
+
+  @override
+  String get checkersDrawInsufficient => 'Nulle — matériel insuffisant pour gagner';
 
   @override
   String get rulesNardyTitle => 'Backgammon — règles';
@@ -861,6 +976,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Passe le tour automatiquement après tous les coups';
+
+  @override
+  String get nardyLayoutToggle => 'Changer la disposition';
 
   @override
   String get nardyNoMoves => 'Aucun coup';
@@ -1344,7 +1462,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gameOpponent => 'Adversaire';
 
   @override
+  String get gameYou => 'Vous';
+
+  @override
   String get gameYouWon => 'Vous avez gagné !';
+
+  @override
+  String get gameYouWonShort => 'Vous avez gagné';
 
   @override
   String get gameYouLost => 'Vous avez perdu';
@@ -1381,6 +1505,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Proposer nulle';
+
+  @override
+  String get gameFlipBoard => 'Retourner l\'échiquier';
+
+  @override
+  String get gameReviewStart => 'Au début de la partie';
+
+  @override
+  String get gameReviewPrev => 'Coup précédent';
+
+  @override
+  String get gameReviewNext => 'Coup suivant';
+
+  @override
+  String get gameReviewEnd => 'À la position actuelle';
 
   @override
   String get gameOfferDrawTitle => 'Proposer nulle ?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Débloquer les mises plus élevées';
+
+  @override
+  String get shopEmojisHelp => 'Emojis animés pour le chat. Achetez un lot et envoyez-les à vos amis.';
+
+  @override
+  String get shopCollectionsHelp => 'On ne peut vendre qu’une collection neuve ou vintage : 80 % du prix si elle est neuve, et 300 % du prix si elle est vintage. Une collection usée, fatiguée ou vétuste ne se vend pas.\n\nRassemblez un ensemble d’objets : ils apparaissent dans la vitrine du profil et peuvent être offerts. Chaque objet rapporte des pièces chaque jour, et un ensemble complet ajoute un bonus à part.\n\nLe revenu quotidien d’un objet dépend de son état et se calcule sur la somme habituelle. Neuf rapporte 100 %. Usé rapporte 60 %. Fatigué rapporte 40 %. Vétuste rapporte 100 %. Un objet vintage rapporte 200 %, soit le double du revenu habituel.\n\nLe bonus d’un ensemble complet ne change pas tant que l’ensemble n’est pas vintage. Un ensemble est vintage lorsque chaque objet l’est : le bonus passe alors à 300 %, le triple de l’habituel.\n\nL’état dépend depuis combien de temps l’objet est à vous. Neuf — les 7 premiers jours. Usé — du 8e jour à 2 mois. Fatigué — de 2 à 6 mois. Vétuste — de 6 mois à 1 an. Vintage — à partir d’1 an.';
+
+  @override
+  String get shopStakesHelp => 'Débloquez des mises plus élevées. Plus la mise est haute, plus le pot et le gain sont importants.';
 
   @override
   String get inventoryTitle => 'Objets';
@@ -1947,6 +2095,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopOwned => 'Acheté';
 
   @override
+  String get shopHave => 'En possession';
+
+  @override
   String get shopEmpty => 'Rien pour l’instant';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopBuyOnce => 'Achat unique';
 
   @override
-  String get shopSellRefund => 'La vente rembourse 80% du prix';
+  String get shopSellRefund => 'La vente dépend de l’état de la collection';
+
+  @override
+  String get collectionConditionNew => 'Neuf';
+
+  @override
+  String get collectionConditionWorn => 'Usé';
+
+  @override
+  String get collectionConditionTired => 'Fatigué';
+
+  @override
+  String get collectionConditionShabby => 'Vétuste';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Vous recevrez $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'On ne peut vendre qu’une collection neuve ou vintage.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Vente impossible';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'On ne peut vendre qu’un objet neuf ou vintage. Utilisez un élixir pour changer son état.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 joueurs : grille 4×4, quatre joueurs (X, O, △, □). Alignez vos symboles pour gagner.';
+
+  @override
+  String get adminUsersTab => 'Utilisateurs';
+
+  @override
+  String get adminSupportTab => 'Assistance';
+
+  @override
+  String get adminSearchHint => 'Recherche par e-mail ou pseudo';
+
+  @override
+  String get adminRoleAdmins => 'Admins';
+
+  @override
+  String get adminRoleUsers => 'Utilisateurs';
+
+  @override
+  String get adminRoleAll => 'Tous les rôles';
+
+  @override
+  String get adminStatusFrozen => 'Gelés';
+
+  @override
+  String get adminStatusActive => 'Actifs';
+
+  @override
+  String get adminStatusAny => 'Tout statut';
+
+  @override
+  String get adminOrderDesc => 'Décroissant';
+
+  @override
+  String get adminOrderAsc => 'Croissant';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Échec du chargement : $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Aucun utilisateur';
+
+  @override
+  String get adminSortLastSeen => 'Par dernière visite';
+
+  @override
+  String get adminSortEmail => 'Par e-mail';
+
+  @override
+  String get adminSortCreated => 'Par date d’inscription';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Retirer l’admin';
+
+  @override
+  String get adminGrantAdmin => 'Rendre admin';
+
+  @override
+  String get adminAdminRevoked => 'Droits admin retirés';
+
+  @override
+  String get adminAdminGranted => 'Droits admin accordés';
+
+  @override
+  String get adminGrantCoins => 'Ajouter des pièces';
+
+  @override
+  String get adminWriteSupport => 'Écrire en tant que support';
+
+  @override
+  String get adminUnfreeze => 'Dégeler';
+
+  @override
+  String get adminFreeze => 'Geler';
+
+  @override
+  String get adminUnfrozen => 'Dégelé';
+
+  @override
+  String get adminFrozenDone => 'Gelé';
+
+  @override
+  String get adminResetPassword => 'Réinitialiser le mot de passe';
+
+  @override
+  String get adminCoinsAmountHint => 'Montant (négatif = débit)';
+
+  @override
+  String get adminReasonOptional => 'Motif (facultatif)';
+
+  @override
+  String get adminGrantSent => 'Carte envoyée au chat du support';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount bronze débités';
+  }
+
+  @override
+  String get adminGrantVerb => 'Ajouter';
+
+  @override
+  String get adminNewPasswordHint => 'Nouveau mot de passe (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Mot de passe réinitialisé';
+
+  @override
+  String get adminResetVerb => 'Réinitialiser';
+
+  @override
+  String adminShortError(String error) {
+    return 'Erreur : $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Aucune demande d’assistance';
+
+  @override
+  String get adminUserFallback => 'Utilisateur';
+
+  @override
+  String get apiErrTooManyRequests => 'Trop de requêtes. Réessayez plus tard.';
+
+  @override
+  String get apiErrMoveConflict => 'Conflit de coup. Réessayez.';
+
+  @override
+  String get shopElixirs => 'Élixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rajeunir, vieillir ou accélérer les collections';
+
+  @override
+  String get shopElixirsHelp => 'Trois rayons : rajeunissement, vieillissement et accélération. Six élixirs chacun, un par ensemble. Un élixir n\'agit que sur son ensemble.\n\nLe rajeunissement avance d\'un état, jamais au-delà de neuf. Le vieillissement recule d\'un état, jamais au-delà d\'usé. L\'accélération seulement sur un objet usé : 3 mois avant le vintage, une fois. Un élixir ne donne pas le vintage.\n\nL\'élixir acheté est dans Objets. On l\'utilise depuis la collection ou depuis l\'élixir. Chaque usage en consomme un.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Rajeunissement';
+
+  @override
+  String get elixirGroupAge => 'Vieillissement';
+
+  @override
+  String get elixirGroupAccelerate => 'Accélération';
+
+  @override
+  String get elixirEffectRejuvenate => 'rajeunissement';
+
+  @override
+  String get elixirEffectAge => 'vieillissement';
+
+  @override
+  String get elixirEffectAccelerate => 'accélération';
+
+  @override
+  String get elixirAdjCelebration => 'festif';
+
+  @override
+  String get elixirAdjNature => 'naturel';
+
+  @override
+  String get elixirAdjLegends => 'légendaire';
+
+  @override
+  String get elixirAdjCosmic => 'cosmique';
+
+  @override
+  String get elixirAdjAdventure => 'd\'aventure';
+
+  @override
+  String get elixirAdjJewels => 'précieux';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return 'Élixir $adjective : $effect';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Avance la collection d\'un état. Pas plus neuf que neuf.';
+
+  @override
+  String get elixirHelpAge => 'Recule la collection d\'un état. Pas plus vieux qu\'usé.';
+
+  @override
+  String get elixirHelpAccelerate => 'Seulement si elle est usée. 3 mois avant le vintage, une fois.';
+
+  @override
+  String get elixirUseRejuvenate => 'Rajeunir';
+
+  @override
+  String get elixirUseAge => 'Vieillir';
+
+  @override
+  String get elixirUseAccelerate => 'Accélérer';
+
+  @override
+  String get elixirUse => 'Utiliser';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jours',
+      one: '$count jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count heures',
+      one: '$count heure',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '$count minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Uniquement l\'ensemble « $set ».';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choisissez une collection';
+
+  @override
+  String get elixirNoTarget => 'Aucune collection de cet ensemble ne peut recevoir cet élixir';
+
+  @override
+  String get elixirApplied => 'Élixir appliqué';
+
+  @override
+  String get elixirConfirmTitle => 'Utiliser cet élixir ?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'Aucun élixir — achetez-en à la boutique';
+
+  @override
+  String get elixirNotApplicable => 'Cet élixir ne peut pas modifier cette collection maintenant';
+
+  @override
+  String get elixirWrongSet => 'Élixir d\'un autre ensemble';
+
+  @override
+  String get elixirNotOwned => 'Vous n\'avez pas cet élixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Jusqu\'à $state : $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'moins d\'une minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

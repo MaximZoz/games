@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGamepadDisconnected => '게임패드가 없습니다. 컨트롤러를 연결하고 아무 버튼이나 누르세요.';
 
   @override
-  String get settingsGamepadHelpNavigate => '십자 / 스틱 — 메뉴와 보드 커서';
+  String get settingsGamepadGenericName => '컨트롤러';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / 십자 — 확인 또는 수 두기';
+  String get settingsGamepadHelpNavigate => '이동';
 
   @override
-  String get settingsGamepadHelpBack => 'B / 원 — 뒤로 또는 선택 해제';
+  String get settingsGamepadHelpConfirm => '선택';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — 메뉴 탭';
+  String get settingsGamepadHelpBack => '뒤로';
+
+  @override
+  String get settingsGamepadHelpTabs => '탭';
 
   @override
   String get settingsGamepadHelpPlay => '보드와 손패 커서: 체커, 틱택토, 배틀십, 두락, 우노, 포커, 주사위 놀이';
 
   @override
-  String get settingsGamepadHelpCards => '카드에서는 십자로 손패, A로 내기, X로 선택/우노, Y로 가져오거나 드로우';
+  String get settingsGamepadHelpCards => '카드';
 
   @override
-  String get settingsGamepadHelpKeyboard => '입력란에서 A는 게임패드 키보드를 엽니다. X는 배열, B는 지우거나 닫기';
+  String get settingsGamepadHelpKeyboard => '키보드';
+
+  @override
+  String get settingsGamepadHelpBalance => '잔액';
+
+  @override
+  String get settingsGamepadHelpLogout => '로그아웃';
+
+  @override
+  String get settingsGamepadHelpPage => '페이지';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox 배치';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation 배치';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo 배치';
 
   @override
   String get gamepadKeyboardTitle => '키보드';
@@ -776,6 +799,51 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesCheckersModeCorners => '코너';
 
   @override
+  String get gamesChess => '체스';
+
+  @override
+  String get gamesChessModeClassic => '클래식';
+
+  @override
+  String get gamesChessModeRapid => '래피드';
+
+  @override
+  String get gamesChessModeBlitz => '블리츠';
+
+  @override
+  String get gamesChessModeBullet => '불릿';
+
+  @override
+  String get chessPieceQueen => '퀸';
+
+  @override
+  String get chessPieceRook => '룩';
+
+  @override
+  String get chessPieceBishop => '비숍';
+
+  @override
+  String get chessPieceKnight => '나이트';
+
+  @override
+  String get chessPromotionTitle => '폰 승격';
+
+  @override
+  String get chessDrawStalemate => '무승부: 스테일메이트';
+
+  @override
+  String get chessDrawInsufficient => '무승부: 기물 부족';
+
+  @override
+  String get chessDrawRepetition => '무승부: 3회 동형 반복';
+
+  @override
+  String get chessDrawFiftyMove => '무승부: 50수 규칙';
+
+  @override
+  String get chessCheck => '체크';
+
+  @override
   String get rulesCheckersPlayers => '플레이어: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => '아직 집에 있는 말은 해당 플레이어의 처음 25수 안에 집을 떠나야 합니다.';
+
+  @override
+  String get rulesCheckersDrawRussian => '같은 국면이 세 번 나오거나, 양쪽이 15수씩 진전 없이 두면 무승부입니다. 잡기, 졸의 이동, 왕 승급이 없습니다.';
+
+  @override
+  String get rulesCheckersDrawEnglish => '같은 국면이 세 번 나오거나, 양쪽이 40수씩 잡기와 졸의 이동 없이 두거나, 양쪽에 킹이 하나씩만 남으면 무승부입니다.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '같은 국면이 세 번 나오거나, 기브어웨이에서 양쪽이 15수씩 진전 없이 두면 무승부입니다. 잡기, 졸의 이동, 왕 승급이 없습니다.';
+
+  @override
+  String get rulesCheckersDrawCorners => '같은 국면이 세 번 나오거나, 양쪽이 25수씩 목표 귀퉁이에 말을 더하지 않으면 무승부입니다.';
+
+  @override
+  String get rulesChessPlayers => '플레이어: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return '모드: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => '보드 8×8. 각 진영에 킹, 퀸, 룩 2, 비숍 2, 나이트 2, 폰 8. 백이 선공. 일반 수, 앙파상, 승진, 캐슬링. 체크메이트나 기권으로 승리.';
+
+  @override
+  String get rulesChessDrawClassic => '무승부: 스테일메이트, 3회 반복, 50수, 부족한 전력 또는 합의.';
+
+  @override
+  String get rulesChessClockClassic => '대국 시계: 60+0 — 대국 전체 60분, 추가 시간 없음.';
+
+  @override
+  String get rulesChessClockRapid => '대국 시계: 10+0 — 대국 전체 10분, 추가 시간 없음.';
+
+  @override
+  String get rulesChessClockBlitz => '대국 시계: 5+0 — 대국 전체 5분, 추가 시간 없음.';
+
+  @override
+  String get rulesChessClockBullet => '대국 시계: 3+2 — 3분에 수마다 2초 추가.';
+
+  @override
+  String get checkersDrawRepetition => '무승부 — 같은 국면이 세 번';
+
+  @override
+  String get checkersDrawNoProgress => '무승부 — 승리로 이어지지 않는 수';
+
+  @override
+  String get checkersDrawInsufficient => '무승부 — 이길 전력이 부족함';
 
   @override
   String get rulesNardyTitle => '백개먼 — 규칙';
@@ -861,6 +976,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => '모든 수를 두면 차례가 자동으로 넘어갑니다';
+
+  @override
+  String get nardyLayoutToggle => '배치 바꾸기';
 
   @override
   String get nardyNoMoves => '둘 수 없음';
@@ -1344,7 +1462,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameOpponent => '상대';
 
   @override
+  String get gameYou => '나';
+
+  @override
   String get gameYouWon => '이겼습니다!';
+
+  @override
+  String get gameYouWonShort => '이겼습니다';
 
   @override
   String get gameYouLost => '패배했습니다';
@@ -1381,6 +1505,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get gameOfferDraw => '무승부 제안';
+
+  @override
+  String get gameFlipBoard => '보드 뒤집기';
+
+  @override
+  String get gameReviewStart => '게임 시작으로';
+
+  @override
+  String get gameReviewPrev => '한 수 뒤로';
+
+  @override
+  String get gameReviewNext => '한 수 앞으로';
+
+  @override
+  String get gameReviewEnd => '현재 위치로';
 
   @override
   String get gameOfferDrawTitle => '무승부를 제안하시겠습니까?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => '더 높은 배팅 잠금 해제';
+
+  @override
+  String get shopEmojisHelp => '채팅용 애니메이션 이모지. 세트를 사서 친구에게 보내세요.';
+
+  @override
+  String get shopCollectionsHelp => '새것이나 빈티지 컬렉션만 팔 수 있습니다. 새것은 가격의 80%, 빈티지는 가격의 300%입니다. 해진 것, 지친 것, 낡은 것은 팔 수 없습니다.\n\n아이템 세트를 모으세요. 프로필 진열장에 나타나며 선물할 수 있습니다. 각 아이템은 매일 코인을 주고, 세트를 완성하면 별도의 보너스도 받습니다.\n\n아이템의 일일 수입은 상태에 따라 달라지며 평소 금액의 비율입니다. 새것은 100%입니다. 해진 것은 60%입니다. 지친 것은 40%입니다. 낡은 것은 100%입니다. 빈티지 아이템은 200%로, 평소 일일 수입의 두 배입니다.\n\n완성 세트 보너스는 세트 자체가 빈티지가 될 때까지 그대로입니다. 세트의 모든 아이템이 빈티지일 때 그 세트는 빈티지이며, 보너스는 300%, 평소의 세 배가 됩니다.\n\n상태는 아이템을 가진 기간에 따라 달라집니다. 새것 — 처음 7일. 해진 것 — 8일째부터 2개월. 지친 것 — 2개월부터 6개월. 낡은 것 — 6개월부터 1년. 빈티지 — 1년부터.';
+
+  @override
+  String get shopStakesHelp => '더 높은 판돈을 잠금 해제하세요. 판돈이 클수록 팟과 배당이 커집니다.';
 
   @override
   String get inventoryTitle => '아이템';
@@ -1947,6 +2095,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shopOwned => '구매함';
 
   @override
+  String get shopHave => '보유';
+
+  @override
   String get shopEmpty => '아직 비어 있음';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shopBuyOnce => '일회성 구매';
 
   @override
-  String get shopSellRefund => '판매 시 비용의 80%가 반환됩니다';
+  String get shopSellRefund => '판매는 컬렉션 상태에 따라 달라집니다';
+
+  @override
+  String get collectionConditionNew => '새것';
+
+  @override
+  String get collectionConditionWorn => '해진 것';
+
+  @override
+  String get collectionConditionTired => '지친 것';
+
+  @override
+  String get collectionConditionShabby => '낡은 것';
+
+  @override
+  String get collectionConditionVintage => '빈티지';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return '$amount을(를) 받습니다';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => '새것이나 빈티지 컬렉션만 팔 수 있습니다.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => '판매할 수 없습니다';
+
+  @override
+  String get inventoryCollectionNotSellableHint => '새것이나 빈티지 아이템만 팔 수 있습니다. 엘릭서로 상태를 바꾸세요.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4인: 4×4 보드, 네 명(X, O, △, □). 자신의 기호로 줄을 완성하면 승리합니다.';
+
+  @override
+  String get adminUsersTab => '사용자';
+
+  @override
+  String get adminSupportTab => '지원';
+
+  @override
+  String get adminSearchHint => '이메일 또는 닉네임 검색';
+
+  @override
+  String get adminRoleAdmins => '관리자';
+
+  @override
+  String get adminRoleUsers => '사용자';
+
+  @override
+  String get adminRoleAll => '모든 역할';
+
+  @override
+  String get adminStatusFrozen => '정지됨';
+
+  @override
+  String get adminStatusActive => '활성';
+
+  @override
+  String get adminStatusAny => '모든 상태';
+
+  @override
+  String get adminOrderDesc => '내림차순';
+
+  @override
+  String get adminOrderAsc => '오름차순';
+
+  @override
+  String adminLoadFailed(String error) {
+    return '불러오기 실패: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => '사용자가 없습니다';
+
+  @override
+  String get adminSortLastSeen => '최근 방문순';
+
+  @override
+  String get adminSortEmail => '이메일순';
+
+  @override
+  String get adminSortCreated => '가입일순';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount 브론즈';
+  }
+
+  @override
+  String get adminRevokeAdmin => '관리자 해제';
+
+  @override
+  String get adminGrantAdmin => '관리자로 지정';
+
+  @override
+  String get adminAdminRevoked => '관리자 권한을 해제했습니다';
+
+  @override
+  String get adminAdminGranted => '관리자 권한을 부여했습니다';
+
+  @override
+  String get adminGrantCoins => '코인 지급';
+
+  @override
+  String get adminWriteSupport => '지원으로 메시지';
+
+  @override
+  String get adminUnfreeze => '정지 해제';
+
+  @override
+  String get adminFreeze => '정지';
+
+  @override
+  String get adminUnfrozen => '정지를 해제했습니다';
+
+  @override
+  String get adminFrozenDone => '정지했습니다';
+
+  @override
+  String get adminResetPassword => '비밀번호 재설정';
+
+  @override
+  String get adminCoinsAmountHint => '수량(음수 = 차감)';
+
+  @override
+  String get adminReasonOptional => '사유(선택)';
+
+  @override
+  String get adminGrantSent => '카드를 지원 채팅으로 보냈습니다';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '브론즈 $amount을 차감했습니다';
+  }
+
+  @override
+  String get adminGrantVerb => '지급';
+
+  @override
+  String get adminNewPasswordHint => '새 비밀번호(최소 6자)';
+
+  @override
+  String get adminPasswordReset => '비밀번호를 재설정했습니다';
+
+  @override
+  String get adminResetVerb => '재설정';
+
+  @override
+  String adminShortError(String error) {
+    return '오류: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => '지원 요청이 없습니다';
+
+  @override
+  String get adminUserFallback => '사용자';
+
+  @override
+  String get apiErrTooManyRequests => '요청이 너무 많습니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get apiErrMoveConflict => '수가 충돌했습니다. 다시 시도하세요.';
+
+  @override
+  String get shopElixirs => '엘릭서';
+
+  @override
+  String get shopElixirsSubtitle => '컬렉션을 회춘, 노화 또는 가속';
+
+  @override
+  String get shopElixirsHelp => '선반 세 개: 회춘, 노화, 가속. 각 선반에 여섯 병, 컬렉션 세트마다 하나. 엘릭서는 자기 세트에만 작용합니다.\n\n회춘은 한 단계 새롭게 하고 새것보다 새로워지지 않습니다. 노화는 한 단계 낡게 하고 낡은 것보다 더 낡지 않습니다. 가속은 낡은 것만: 빈티지까지 3개월, 한 번. 엘릭서만으로 빈티지가 되지는 않습니다.\n\n산 엘릭서는 아이템에 있습니다. 컬렉션 카드나 엘릭서 카드에서 사용합니다. 쓸 때마다 하나 소모됩니다.';
+
+  @override
+  String get elixirGroupRejuvenate => '회춘';
+
+  @override
+  String get elixirGroupAge => '노화';
+
+  @override
+  String get elixirGroupAccelerate => '가속';
+
+  @override
+  String get elixirEffectRejuvenate => '회춘';
+
+  @override
+  String get elixirEffectAge => '노화';
+
+  @override
+  String get elixirEffectAccelerate => '가속';
+
+  @override
+  String get elixirAdjCelebration => '축제';
+
+  @override
+  String get elixirAdjNature => '자연';
+
+  @override
+  String get elixirAdjLegends => '전설';
+
+  @override
+  String get elixirAdjCosmic => '우주';
+
+  @override
+  String get elixirAdjAdventure => '모험';
+
+  @override
+  String get elixirAdjJewels => '보석';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect 엘릭서';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => '한 단계 새롭게 합니다. 새것보다 새로워지지 않습니다.';
+
+  @override
+  String get elixirHelpAge => '한 단계 낡게 합니다. 낡은 것보다 더 낡지 않습니다.';
+
+  @override
+  String get elixirHelpAccelerate => '낡은 것만. 빈티지까지 3개월, 한 번.';
+
+  @override
+  String get elixirUseRejuvenate => '회춘';
+
+  @override
+  String get elixirUseAge => '노화';
+
+  @override
+  String get elixirUseAccelerate => '가속';
+
+  @override
+  String get elixirUse => '사용';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count일',
+      one: '$count일',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count시간',
+      one: '$count시간',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count분',
+      one: '$count분',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return '「$set」세트만.';
+  }
+
+  @override
+  String get elixirPickCollection => '컬렉션 선택';
+
+  @override
+  String get elixirNoTarget => '이 세트에서 이 엘릭서를 쓸 컬렉션이 없습니다';
+
+  @override
+  String get elixirApplied => '엘릭서를 사용했습니다';
+
+  @override
+  String get elixirConfirmTitle => '이 엘릭서를 사용할까요?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => '엘릭서가 없습니다 — 상점에서 구매하세요';
+
+  @override
+  String get elixirNotApplicable => '지금은 이 컬렉션에 쓸 수 없습니다';
+
+  @override
+  String get elixirWrongSet => '다른 세트용 엘릭서입니다';
+
+  @override
+  String get elixirNotOwned => '이 엘릭서가 없습니다';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return '$state까지 $left';
+  }
+
+  @override
+  String get collectionLeftSoon => '1분 미만';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

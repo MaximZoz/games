@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।';
 
   @override
-  String get settingsGamepadHelpNavigate => 'डी-पैड / स्टिक — मेनू और बोर्ड कर्सर';
+  String get settingsGamepadGenericName => 'कंट्रोलर';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / क्रॉस — पुष्टि या चाल';
+  String get settingsGamepadHelpNavigate => 'नेविगेट';
 
   @override
-  String get settingsGamepadHelpBack => 'B / सर्कल — वापस या चयन हटाएँ';
+  String get settingsGamepadHelpConfirm => 'चुनें';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — मेनू टैब';
+  String get settingsGamepadHelpBack => 'वापस';
+
+  @override
+  String get settingsGamepadHelpTabs => 'टैब';
 
   @override
   String get settingsGamepadHelpPlay => 'बोर्ड और हाथ कर्सर: चेकर्स, टिक-टैक-टो, बैटलशिप, दुराक, ऊनो, पोकर और बैकगैमन';
 
   @override
-  String get settingsGamepadHelpCards => 'पत्तों में: डी-पैड हाथ घुमाता है, A खेलता है, X चुनता है / ऊनो, Y लेता या खींचता है';
+  String get settingsGamepadHelpCards => 'पत्ते';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है';
+  String get settingsGamepadHelpKeyboard => 'कीबोर्ड';
+
+  @override
+  String get settingsGamepadHelpBalance => 'बैलेंस';
+
+  @override
+  String get settingsGamepadHelpLogout => 'लॉग आउट';
+
+  @override
+  String get settingsGamepadHelpPage => 'पेज';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox लेआउट';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation लेआउट';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo लेआउट';
 
   @override
   String get gamepadKeyboardTitle => 'कीबोर्ड';
@@ -776,6 +799,51 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesCheckersModeCorners => 'कॉर्नर';
 
   @override
+  String get gamesChess => 'शतरंज';
+
+  @override
+  String get gamesChessModeClassic => 'क्लासिक';
+
+  @override
+  String get gamesChessModeRapid => 'रैपिड';
+
+  @override
+  String get gamesChessModeBlitz => 'ब्लिट्ज';
+
+  @override
+  String get gamesChessModeBullet => 'बुलेट';
+
+  @override
+  String get chessPieceQueen => 'वज़ीर';
+
+  @override
+  String get chessPieceRook => 'हाथी';
+
+  @override
+  String get chessPieceBishop => 'ऊँट';
+
+  @override
+  String get chessPieceKnight => 'घोड़ा';
+
+  @override
+  String get chessPromotionTitle => 'प्यादे का प्रमोशन';
+
+  @override
+  String get chessDrawStalemate => 'ड्रॉ: गतिरोध';
+
+  @override
+  String get chessDrawInsufficient => 'ड्रॉ: अपर्याप्त सामग्री';
+
+  @override
+  String get chessDrawRepetition => 'ड्रॉ: तीन बार पुनरावृत्ति';
+
+  @override
+  String get chessDrawFiftyMove => 'ड्रॉ: 50-चाल नियम';
+
+  @override
+  String get chessCheck => 'शह';
+
+  @override
   String get rulesCheckersPlayers => 'खिलाड़ी: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'जो मोहरे अभी घर में हैं, उन्हें खिलाड़ी के पहले 25 चालों में घर छोड़ना होगा।';
+
+  @override
+  String get rulesCheckersDrawRussian => 'ड्रॉ यदि स्थिति तीन बार दोहराई जाए, या प्रत्येक पक्ष के 15 चालों में प्रगति न हो: न कब्जा, न साधारण चाल, न बादशाह बनना।';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'ड्रॉ यदि स्थिति तीन बार दोहराई जाए, प्रत्येक पक्ष के 40 चाल बिना कब्जे और साधारण चाल के हों, या प्रत्येक पक्ष के पास एक ही बादशाह बचे।';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'ड्रॉ यदि स्थिति तीन बार दोहराई जाए, या गिवअवे में प्रत्येक पक्ष के 15 चालों में प्रगति न हो: न कब्जा, न साधारण चाल, न बादशाह बनना।';
+
+  @override
+  String get rulesCheckersDrawCorners => 'ड्रॉ यदि स्थिति तीन बार दोहराई जाए, या प्रत्येक पक्ष के 25 चाल लक्ष्य कोने में गोटी न जोड़ें।';
+
+  @override
+  String get rulesChessPlayers => 'खिलाड़ी: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'मोड: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'बोर्ड 8×8. प्रत्येक पक्ष के पास राजा, वज़ीर, दो हाथी, दो ऊँट, दो घोड़े और आठ प्यादे। सफ़ेद पहले चलता है। सामान्य चालें, एन पासॉं, प्रमोशन और कैसलिंग। मात या हार मानना जीत है।';
+
+  @override
+  String get rulesChessDrawClassic => 'ड्रॉ: स्टेलमेट, तीन बार दोहराव, 50 चाल, मात के लिए मोहरे कम, या सहमति।';
+
+  @override
+  String get rulesChessClockClassic => 'घड़ी: 60+0 — पूरी पार्टी के लिए 60 मिनट, कोई जोड़ नहीं.';
+
+  @override
+  String get rulesChessClockRapid => 'घड़ी: 10+0 — पूरी पार्टी के लिए 10 मिनट, कोई जोड़ नहीं.';
+
+  @override
+  String get rulesChessClockBlitz => 'घड़ी: 5+0 — पूरी पार्टी के लिए 5 मिनट, कोई जोड़ नहीं.';
+
+  @override
+  String get rulesChessClockBullet => 'घड़ी: 3+2 — 3 मिनट और हर चाल पर 2 सेकंड.';
+
+  @override
+  String get checkersDrawRepetition => 'ड्रॉ — स्थिति तीन बार दोहराई गई';
+
+  @override
+  String get checkersDrawNoProgress => 'ड्रॉ — चालें जीत तक नहीं पहुँचतीं';
+
+  @override
+  String get checkersDrawInsufficient => 'ड्रॉ — जीत के लिए पर्याप्त मोहरे नहीं';
 
   @override
   String get rulesNardyTitle => 'बैकगैमन — नियम';
@@ -861,6 +976,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'सभी चालों के बाद बारी अपने आप चली जाएगी';
+
+  @override
+  String get nardyLayoutToggle => 'खांचे बदलें';
 
   @override
   String get nardyNoMoves => 'कोई चाल नहीं';
@@ -1344,7 +1462,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gameOpponent => 'प्रतिद्वंद्वी';
 
   @override
+  String get gameYou => 'आप';
+
+  @override
   String get gameYouWon => 'आप जीत गए!';
+
+  @override
+  String get gameYouWonShort => 'आप जीत गए';
 
   @override
   String get gameYouLost => 'आप हारे';
@@ -1381,6 +1505,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'ड्रॉ का प्रस्ताव';
+
+  @override
+  String get gameFlipBoard => 'बोर्ड पलटें';
+
+  @override
+  String get gameReviewStart => 'खेल की शुरुआत में';
+
+  @override
+  String get gameReviewPrev => 'एक चाल पीछे';
+
+  @override
+  String get gameReviewNext => 'एक चाल आगे';
+
+  @override
+  String get gameReviewEnd => 'वर्तमान स्थिति पर';
 
   @override
   String get gameOfferDrawTitle => 'ड्रॉ का प्रस्ताव दें?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'उच्च दाँव अनलॉक करें';
+
+  @override
+  String get shopEmojisHelp => 'चैट के लिए एनिमेटेड इमोजी। सेट खरीदें और दोस्तों को भेजें।';
+
+  @override
+  String get shopCollectionsHelp => 'केवल नया या विंटेज संग्रह बेचा जा सकता है: नया कीमत का 80% और विंटेज कीमत का 300%। घिसा, थका और जर्जर नहीं बेचे जा सकते।\n\nवस्तुओं का सेट इकट्ठा करें: वे प्रोफ़ाइल शोकेस में दिखती हैं, उपहार दी जा सकती हैं। हर वस्तु हर दिन सिक्के देती है, और पूरा सेट अलग बोनस भी देता है।\n\nवस्तु की दैनिक आय स्थिति पर निर्भर है और सामान्य राशि का हिस्सा है। नया 100% देता है। घिसा 60% देता है। थका 40% देता है। जर्जर 100% देता है। विंटेज वस्तु 200% देती है, यानी सामान्य दैनिक आय से दोगुना।\n\nपूरे सेट का बोनस तब तक वही रहता है जब तक सेट खुद विंटेज न हो जाए। सेट तब विंटेज है जब उसकी हर वस्तु विंटेज हो: बोनस तब 300% होता है, सामान्य से तीन गुना।\n\nस्थिति इस पर निर्भर करती है कि वस्तु आपके पास कब से है। नया — पहले 7 दिन। घिसा — 8वें दिन से 2 महीने। थका — 2 से 6 महीने। जर्जर — 6 महीने से 1 साल। विंटेज — 1 साल के बाद।';
+
+  @override
+  String get shopStakesHelp => 'ऊँची बाज़ियाँ अनलॉक करें। बाज़ी जितनी बड़ी, पॉट और जीत उतनी बड़ी।';
 
   @override
   String get inventoryTitle => 'आइटम';
@@ -1947,6 +2095,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopOwned => 'खरीदा गया';
 
   @override
+  String get shopHave => 'है';
+
+  @override
   String get shopEmpty => 'अभी खाली';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopBuyOnce => 'एक बार की खरीद';
 
   @override
-  String get shopSellRefund => 'बेचने पर लागत का 80% वापस मिलता है';
+  String get shopSellRefund => 'बिक्री संग्रह की स्थिति पर निर्भर करती है';
+
+  @override
+  String get collectionConditionNew => 'नया';
+
+  @override
+  String get collectionConditionWorn => 'घिसा';
+
+  @override
+  String get collectionConditionTired => 'थका';
+
+  @override
+  String get collectionConditionShabby => 'जर्जर';
+
+  @override
+  String get collectionConditionVintage => 'विंटेज';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'आपको $amount मिलेगा';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'केवल नया या विंटेज संग्रह बेचा जा सकता है।';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'बेचा नहीं जा सकता';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'केवल नया या विंटेज आइटम बेचा जा सकता है। अवस्था बदलने के लिए अमृत का उपयोग करें।';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 खिलाड़ी: 4×4 बोर्ड, चार खिलाड़ी (X, O, △, □)। अपनी चिह्नों की रेखा पूरी करें।';
+
+  @override
+  String get adminUsersTab => 'उपयोगकर्ता';
+
+  @override
+  String get adminSupportTab => 'सहायता';
+
+  @override
+  String get adminSearchHint => 'ईमेल या नाम से खोजें';
+
+  @override
+  String get adminRoleAdmins => 'एडमिन';
+
+  @override
+  String get adminRoleUsers => 'उपयोगकर्ता';
+
+  @override
+  String get adminRoleAll => 'सभी भूमिकाएँ';
+
+  @override
+  String get adminStatusFrozen => 'जमे हुए';
+
+  @override
+  String get adminStatusActive => 'सक्रिय';
+
+  @override
+  String get adminStatusAny => 'कोई भी स्थिति';
+
+  @override
+  String get adminOrderDesc => 'घटते क्रम';
+
+  @override
+  String get adminOrderAsc => 'बढ़ते क्रम';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'लोड नहीं हो सका: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'कोई उपयोगकर्ता नहीं';
+
+  @override
+  String get adminSortLastSeen => 'अंतिम विज़िट के अनुसार';
+
+  @override
+  String get adminSortEmail => 'ईमेल के अनुसार';
+
+  @override
+  String get adminSortCreated => 'पंजीकरण तिथि के अनुसार';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount कांस्य';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'एडमिन हटाएँ';
+
+  @override
+  String get adminGrantAdmin => 'एडमिन बनाएँ';
+
+  @override
+  String get adminAdminRevoked => 'एडमिन अधिकार हटाए गए';
+
+  @override
+  String get adminAdminGranted => 'एडमिन अधिकार दिए गए';
+
+  @override
+  String get adminGrantCoins => 'सिक्के दें';
+
+  @override
+  String get adminWriteSupport => 'सहायता के रूप में लिखें';
+
+  @override
+  String get adminUnfreeze => 'अनफ़्रीज़';
+
+  @override
+  String get adminFreeze => 'फ़्रीज़';
+
+  @override
+  String get adminUnfrozen => 'अनफ़्रीज़ हो गया';
+
+  @override
+  String get adminFrozenDone => 'फ़्रीज़ हो गया';
+
+  @override
+  String get adminResetPassword => 'पासवर्ड रीसेट';
+
+  @override
+  String get adminCoinsAmountHint => 'मात्रा (ऋण = कटौती)';
+
+  @override
+  String get adminReasonOptional => 'कारण (वैकल्पिक)';
+
+  @override
+  String get adminGrantSent => 'कार्ड सहायता चैट में भेजा गया';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount कांस्य काटे गए';
+  }
+
+  @override
+  String get adminGrantVerb => 'दें';
+
+  @override
+  String get adminNewPasswordHint => 'नया पासवर्ड (कम से कम 6)';
+
+  @override
+  String get adminPasswordReset => 'पासवर्ड रीसेट हो गया';
+
+  @override
+  String get adminResetVerb => 'रीसेट';
+
+  @override
+  String adminShortError(String error) {
+    return 'त्रुटि: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'कोई सहायता अनुरोध नहीं';
+
+  @override
+  String get adminUserFallback => 'उपयोगकर्ता';
+
+  @override
+  String get apiErrTooManyRequests => 'बहुत अधिक अनुरोध। बाद में कोशिश करें।';
+
+  @override
+  String get apiErrMoveConflict => 'चाल का टकराव। फिर कोशिश करें।';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'यौवन';
+
+  @override
+  String get elixirGroupAge => 'बुढ़ापा';
+
+  @override
+  String get elixirGroupAccelerate => 'त्वरण';
+
+  @override
+  String get elixirEffectRejuvenate => 'यौवन';
+
+  @override
+  String get elixirEffectAge => 'बुढ़ापा';
+
+  @override
+  String get elixirEffectAccelerate => 'त्वरण';
+
+  @override
+  String get elixirAdjCelebration => 'उत्सव';
+
+  @override
+  String get elixirAdjNature => 'प्राकृतिक';
+
+  @override
+  String get elixirAdjLegends => 'पौराणिक';
+
+  @override
+  String get elixirAdjCosmic => 'ब्रह्मांडीय';
+
+  @override
+  String get elixirAdjAdventure => 'रोमांच';
+
+  @override
+  String get elixirAdjJewels => 'कीमती';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect अमृत';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'जवान करें';
+
+  @override
+  String get elixirUseAge => 'बूढ़ा करें';
+
+  @override
+  String get elixirUseAccelerate => 'तेज़ करें';
+
+  @override
+  String get elixirUse => 'उपयोग करें';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count दिन',
+      one: '$count दिन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count घंटे',
+      one: '$count घंटा',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count मिनट',
+      one: '$count मिनट',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

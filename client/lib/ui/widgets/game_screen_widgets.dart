@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/games/games_provider.dart' show GameInvite;
+import 'package:multigames_client/games/rematch_match.dart';
+
+export 'package:multigames_client/games/rematch_match.dart' show RematchTable;
 import 'package:multigames_client/games/games_repository.dart'
     show formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/l10n/l10n.dart';
@@ -474,7 +477,7 @@ class GameOpponentCard extends StatelessWidget {
 
 /// Overlay «сдаться» / «ничья» справа сверху под кнопкой правил.
 /// Общий для 1×1 партий (крестики-нолики, дурак).
-class GameActionsOverlay extends StatefulWidget {
+class GameActionsOverlay extends StatelessWidget {
   const GameActionsOverlay({
     super.key,
     required this.canDraw,
@@ -499,55 +502,6 @@ class GameActionsOverlay extends StatefulWidget {
   final String drawOfferedTooltip;
 
   @override
-  State<GameActionsOverlay> createState() => _GameActionsOverlayState();
-}
-
-class _GameActionsOverlayState extends State<GameActionsOverlay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _blink;
-  late final Animation<Color?> _color;
-
-  @override
-  void initState() {
-    super.initState();
-    _blink = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _color = ColorTween(
-      begin: AppColors.accentStart,
-      end: AppColors.textPrimary,
-    ).animate(_blink);
-    _applyBlink();
-  }
-
-  @override
-  void didUpdateWidget(covariant GameActionsOverlay oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.opponentOfferedDraw != widget.opponentOfferedDraw) {
-      _applyBlink();
-    }
-    if (!oldWidget.opponentOfferedDraw && widget.opponentOfferedDraw) {
-      AlertSfx.playNotify();
-    }
-  }
-
-  void _applyBlink() {
-    if (widget.opponentOfferedDraw) {
-      _blink.repeat(reverse: true);
-    } else {
-      _blink.stop();
-      _blink.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _blink.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -557,35 +511,18 @@ class _GameActionsOverlayState extends State<GameActionsOverlay>
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           iconSize: 22,
           icon: const Icon(Icons.flag_outlined),
-          tooltip: widget.surrenderTooltip,
-          onPressed: widget.onSurrender,
+          tooltip: surrenderTooltip,
+          onPressed: onSurrender,
         ),
-        if (widget.canDraw) ...[
+        if (canDraw) ...[
           const SizedBox(height: 4),
-          AnimatedBuilder(
-            animation: _color,
-            builder: (_, child) => child!,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              iconSize: 22,
-              icon: Icon(
-                widget.opponentOfferedDraw
-                    ? Icons.handshake_rounded
-                    : Icons.handshake_outlined,
-                color: widget.opponentOfferedDraw
-                    ? _color.value
-                    : (widget.iOfferedDraw
-                        ? AppColors.accentStart.withValues(alpha: 0.45)
-                        : null),
-              ),
-              tooltip: widget.opponentOfferedDraw
-                  ? widget.acceptDrawTooltip
-                  : (widget.iOfferedDraw
-                      ? widget.drawOfferedTooltip
-                      : widget.drawTooltip),
-              onPressed: widget.iOfferedDraw ? null : widget.onDraw,
-            ),
+          DrawOfferButton(
+            iOffered: iOfferedDraw,
+            opponentOffered: opponentOfferedDraw,
+            onPressed: onDraw,
+            offerTooltip: drawTooltip,
+            acceptTooltip: acceptDrawTooltip,
+            offeredTooltip: drawOfferedTooltip,
           ),
         ],
       ],
@@ -1591,10 +1528,15 @@ List<Widget> buildGameAppBarActions({
   String? surrenderTooltip,
   VoidCallback? onOfferDraw,
   String? drawTooltip,
+  bool iOfferedDraw = false,
+  bool opponentOfferedDraw = false,
+  String? acceptDrawTooltip,
+  String? drawOfferedTooltip,
   required VoidCallback onShowRules,
   required String rulesTooltip,
 }) {
   const constraints = BoxConstraints(minWidth: 40, minHeight: 40);
+  final showDraw = onOfferDraw != null || iOfferedDraw || opponentOfferedDraw;
   return [
     if (onSurrender != null)
       IconButton(
@@ -1605,14 +1547,16 @@ List<Widget> buildGameAppBarActions({
         tooltip: surrenderTooltip,
         onPressed: onSurrender,
       ),
-    if (onOfferDraw != null)
-      IconButton(
-        padding: EdgeInsets.zero,
+    if (showDraw)
+      DrawOfferButton(
+        iOffered: iOfferedDraw,
+        opponentOffered: opponentOfferedDraw,
+        onPressed: iOfferedDraw ? null : onOfferDraw,
+        offerTooltip: drawTooltip ?? '',
+        acceptTooltip: acceptDrawTooltip ?? drawTooltip ?? '',
+        offeredTooltip: drawOfferedTooltip ?? drawTooltip ?? '',
         constraints: constraints,
         iconSize: 22,
-        icon: const Icon(Icons.handshake_outlined),
-        tooltip: drawTooltip,
-        onPressed: onOfferDraw,
       ),
     IconButton(
       padding: EdgeInsets.zero,
@@ -1623,6 +1567,494 @@ List<Widget> buildGameAppBarActions({
       onPressed: onShowRules,
     ),
   ];
+}
+
+/// Кто предложил ничью относительно меня.
+class DrawOfferFlags {
+  const DrawOfferFlags({this.iOffered = false, this.opponentOffered = false});
+
+  final bool iOffered;
+  final bool opponentOffered;
+}
+
+/// Пустой [offerBy] или неизвестный я — предложения нет.
+DrawOfferFlags drawOfferFlags(String? offerBy, String? meId) {
+  final offer = offerBy?.trim() ?? '';
+  final me = meId?.trim() ?? '';
+  if (offer.isEmpty || me.isEmpty) return const DrawOfferFlags();
+  if (offer == me) return const DrawOfferFlags(iOffered: true);
+  return const DrawOfferFlags(opponentOffered: true);
+}
+
+/// Рукопожатие ничьей: как в крестиках-ноликах.
+///
+/// Я уже предложил — кнопка тусклая и не жмётся. Соперник предложил —
+/// иконка мигает, нажатие принимает ничью.
+class DrawOfferButton extends StatefulWidget {
+  const DrawOfferButton({
+    super.key,
+    required this.iOffered,
+    required this.opponentOffered,
+    required this.onPressed,
+    required this.offerTooltip,
+    required this.acceptTooltip,
+    required this.offeredTooltip,
+    this.constraints = const BoxConstraints(minWidth: 44, minHeight: 44),
+    this.iconSize = 22,
+  });
+
+  final bool iOffered;
+  final bool opponentOffered;
+  final VoidCallback? onPressed;
+  final String offerTooltip;
+  final String acceptTooltip;
+  final String offeredTooltip;
+  final BoxConstraints constraints;
+  final double iconSize;
+
+  @override
+  State<DrawOfferButton> createState() => _DrawOfferButtonState();
+}
+
+class _DrawOfferButtonState extends State<DrawOfferButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _blink;
+  late final Animation<Color?> _color;
+
+  @override
+  void initState() {
+    super.initState();
+    _blink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _color = ColorTween(
+      begin: AppColors.accentStart,
+      end: AppColors.textPrimary,
+    ).animate(_blink);
+    _applyBlink();
+  }
+
+  @override
+  void didUpdateWidget(covariant DrawOfferButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.opponentOffered != widget.opponentOffered) {
+      _applyBlink();
+    }
+    if (!oldWidget.opponentOffered && widget.opponentOffered) {
+      AlertSfx.playNotify();
+    }
+  }
+
+  void _applyBlink() {
+    if (widget.opponentOffered) {
+      _blink.repeat(reverse: true);
+    } else {
+      _blink.stop();
+      _blink.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tooltip = widget.opponentOffered
+        ? widget.acceptTooltip
+        : (widget.iOffered ? widget.offeredTooltip : widget.offerTooltip);
+    return AnimatedBuilder(
+      animation: _color,
+      builder: (_, child) => child!,
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        constraints: widget.constraints,
+        iconSize: widget.iconSize,
+        icon: Icon(
+          widget.opponentOffered
+              ? Icons.handshake_rounded
+              : Icons.handshake_outlined,
+          color: widget.opponentOffered
+              ? _color.value
+              : (widget.iOffered
+                  ? AppColors.accentStart.withValues(alpha: 0.45)
+                  : null),
+        ),
+        tooltip: tooltip,
+        onPressed: widget.iOffered ? null : widget.onPressed,
+      ),
+    );
+  }
+}
+
+/// Секунда, которую показывают часы (округление вверх, как [formatClockMs]).
+@visibleForTesting
+int clockDisplayedSec(int ms) {
+  if (ms < 0) ms = 0;
+  return (ms / 1000).ceil();
+}
+
+/// Щелчок часов. Без [playOnArm] первый кадр только запоминает секунду.
+/// Дальше звук на каждой смене показанной секунды. Скачок на несколько
+/// секунд — один щелчок, без очереди. [playOnArm] щёлкает сразу, когда
+/// часы начали идти.
+@visibleForTesting
+class GameClockTick {
+  const GameClockTick({required this.play, required this.sec});
+
+  final bool play;
+  final int? sec;
+}
+
+@visibleForTesting
+GameClockTick nextGameClockTick({
+  required bool enabled,
+  required bool running,
+  required int displayedSec,
+  required int? lastSec,
+  bool playOnArm = false,
+}) {
+  if (!enabled || !running) {
+    return const GameClockTick(play: false, sec: null);
+  }
+  if (lastSec == null) {
+    return GameClockTick(play: playOnArm, sec: displayedSec);
+  }
+  if (lastSec == displayedSec) {
+    return GameClockTick(play: false, sec: displayedSec);
+  }
+  return GameClockTick(play: true, sec: displayedSec);
+}
+
+/// Форматирует остаток времени в `MM:SS` (60:00, 17:14).
+/// Часы появляются только от 100 минут: `1:40:00`.
+String formatClockMs(int ms) {
+  if (ms < 0) ms = 0;
+  final totalSec = clockDisplayedSec(ms);
+  final h = totalSec ~/ 3600;
+  final m = (totalSec % 3600) ~/ 60;
+  final s = totalSec % 60;
+  String two(int v) => v.toString().padLeft(2, '0');
+  if (h == 0 || totalSec < 100 * 60) {
+    return '${totalSec ~/ 60}:${two(s)}';
+  }
+  return '$h:${two(m)}:${two(s)}';
+}
+
+/// Часы игрока: общий остаток времени (формат `M:SS`), для активного игрока
+/// локально тикает вниз. Общий для настольных игр с контролем времени.
+class GameClock extends StatefulWidget {
+  const GameClock({
+    super.key,
+    required this.remainingMs,
+    required this.running,
+    this.label,
+    this.compact = false,
+    this.prominent = false,
+    this.tickSound = false,
+    this.tickOnStart = false,
+  });
+
+  /// Остаток времени на момент снимка сервера, мс.
+  final int remainingMs;
+
+  /// Идут ли сейчас часы этого игрока (тикаем локально).
+  final bool running;
+
+  /// Подпись слева (например, «Вы» / имя соперника).
+  final String? label;
+
+  final bool compact;
+
+  /// Крупная плашка у края доски (как на lichess): большие цифры, без подписи.
+  /// Пока [running], цифры красные — это ход владельца часов.
+  final bool prominent;
+
+  /// Щелчок раз в секунду, пока [running].
+  final bool tickSound;
+
+  /// Щелчок сразу, когда часы начали идти, не дожидаясь смены секунды.
+  final bool tickOnStart;
+
+  /// Подмена прошедшего времени в widget-тестах: [Stopwatch] там идёт
+  /// в реальном времени и не совпадает с `tester.pump`.
+  @visibleForTesting
+  static int Function()? debugElapsedMs;
+
+  /// Вместо [Sfx.play] в тестах.
+  @visibleForTesting
+  static void Function()? debugOnTick;
+
+  @override
+  State<GameClock> createState() => _GameClockState();
+}
+
+class _GameClockState extends State<GameClock> {
+  final Stopwatch _sw = Stopwatch();
+  int _baseMs = 0;
+  int? _lastTickSec;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _reset();
+  }
+
+  void _reset({bool keepTickArm = false}) {
+    _baseMs = widget.remainingMs;
+    if (!keepTickArm) _lastTickSec = null;
+    _sw
+      ..reset()
+      ..stop();
+    _timer?.cancel();
+    if (widget.running) {
+      _sw.start();
+      _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        _emitTick();
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  void _emitTick() {
+    if (!widget.tickSound) return;
+    final decision = nextGameClockTick(
+      enabled: true,
+      running: widget.running,
+      displayedSec: clockDisplayedSec(_currentMs),
+      lastSec: _lastTickSec,
+      playOnArm: widget.tickOnStart,
+    );
+    _lastTickSec = decision.sec;
+    if (!decision.play) return;
+    final hook = GameClock.debugOnTick;
+    if (hook != null) {
+      hook();
+      return;
+    }
+    Sfx.play(SfxId.tick);
+  }
+
+  @override
+  void didUpdateWidget(covariant GameClock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final stillTicking = widget.running &&
+        widget.tickSound &&
+        oldWidget.running == widget.running &&
+        oldWidget.tickSound == widget.tickSound;
+    if (oldWidget.remainingMs != widget.remainingMs ||
+        oldWidget.running != widget.running ||
+        oldWidget.tickSound != widget.tickSound) {
+      _reset(keepTickArm: stillTicking);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  int get _elapsedMs =>
+      GameClock.debugElapsedMs?.call() ?? _sw.elapsedMilliseconds;
+
+  int get _currentMs {
+    final ms = widget.running ? _baseMs - _elapsedMs : _baseMs;
+    return ms < 0 ? 0 : ms;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ms = _currentMs;
+    final low = widget.running && ms <= 20000;
+    if (widget.prominent) return _prominentBox(ms, low);
+    final bg = widget.running
+        ? (low
+            ? const Color(0x33E53935)
+            : AppColors.accentStart.withValues(alpha: 0.18))
+        : Colors.white.withValues(alpha: 0.06);
+    final border = widget.running
+        ? (low ? const Color(0xFFE53935) : AppColors.accentStart)
+        : Colors.white24;
+    final fg = low ? const Color(0xFFFF8A80) : Colors.white;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.compact ? 8 : 10,
+        vertical: widget.compact ? 3 : 5,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: border, width: widget.running ? 1.4 : 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.schedule_rounded,
+              size: widget.compact ? 13 : 15, color: fg.withValues(alpha: 0.8)),
+          const SizedBox(width: 4),
+          if (widget.label != null && widget.label!.isNotEmpty) ...[
+            Text(
+              widget.label!,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: widget.compact ? 11 : 12,
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            formatClockMs(ms),
+            style: TextStyle(
+              color: fg,
+              fontSize: widget.compact ? 14 : 16,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Часы у края доски: та же системная рамка, что у кнопок. Без чёрной заливки
+  /// и без толстой акцентной обводки. Цифры красные, пока идут эти часы.
+  /// Цейтнот дополнительно красит рамку.
+  Widget _prominentBox(int ms, bool low) {
+    final fg = widget.running ? const Color(0xFFE53935) : AppColors.textPrimary;
+    final border = low ? const Color(0xFFE53935) : AppColors.buttonBorder;
+    return Container(
+      constraints: const BoxConstraints(minWidth: 64, minHeight: 36),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.buttonFill,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: border),
+      ),
+      child: Text(
+        formatClockMs(ms),
+        style: TextStyle(
+          color: fg,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          height: 1.0,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+  }
+}
+
+/// Панель просмотра партии (как на lichess): кнопка переворота доски и
+/// стрелки перемотки ходов (в начало / назад / вперёд / в конец).
+///
+/// Общая для настольных игр: достаточно передать колбэки. `null` — кнопка
+/// недоступна (например, нет истории ходов или уже первый/последний ход).
+class GameReviewBar extends StatelessWidget {
+  const GameReviewBar({
+    super.key,
+    this.onFlip,
+    this.flipTooltip,
+    this.onFirst,
+    this.onPrev,
+    this.onNext,
+    this.onLast,
+    this.reviewing = false,
+    this.flipped = false,
+    this.showNavigation = true,
+  });
+
+  /// Перевернуть доску (белые ↔ чёрные снизу). `null` — кнопки нет.
+  final VoidCallback? onFlip;
+  final String? flipTooltip;
+  final VoidCallback? onFirst;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final VoidCallback? onLast;
+
+  /// Сейчас смотрим не последнюю позицию — фиолетовые только стрелки.
+  final bool reviewing;
+
+  /// Доска перевёрнута относительно вида по умолчанию — фиолетовая кнопка вида.
+  /// Перемотка ходов это не включает.
+  final bool flipped;
+
+  /// Показывать стрелки перемотки (для игр с историей ходов).
+  final bool showNavigation;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget btn(
+      IconData icon,
+      VoidCallback? onTap,
+      String? tip, {
+      required bool highlighted,
+      double width = 32,
+      double iconSize = 22,
+    }) {
+      final color = onTap == null
+          ? Colors.black38
+          : (highlighted ? AppColors.accentStart : AppColors.textPrimary);
+      return IconButton(
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+        constraints: BoxConstraints.tightFor(width: width, height: 36),
+        iconSize: iconSize,
+        icon: Icon(icon, color: color),
+        color: color,
+        disabledColor: Colors.black38,
+        tooltip: tip,
+        onPressed: onTap,
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (onFlip != null)
+          btn(Icons.cached_rounded, onFlip, flipTooltip, highlighted: flipped),
+        if (showNavigation) ...[
+          btn(
+            Icons.first_page_rounded,
+            onFirst,
+            context.l10n.gameReviewStart,
+            highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
+          ),
+          btn(
+            Icons.chevron_left_rounded,
+            onPrev,
+            context.l10n.gameReviewPrev,
+            highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
+          ),
+          btn(
+            Icons.chevron_right_rounded,
+            onNext,
+            context.l10n.gameReviewNext,
+            highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
+          ),
+          btn(
+            Icons.last_page_rounded,
+            onLast,
+            context.l10n.gameReviewEnd,
+            highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 /// Диалог подтверждения (сдаться / выйти / ничья) — общий стиль.
@@ -1649,6 +2081,64 @@ Future<bool> confirmGameActionDialog({
         ),
       ],
     ),
+  );
+  return ok == true;
+}
+
+/// Подтверждение сдачи. Один диалог для всех игр.
+Future<bool> confirmSurrenderDialog(BuildContext context) {
+  final l10n = context.l10n;
+  return confirmGameActionDialog(
+    context: context,
+    title: l10n.gameSurrenderTitle,
+    message: l10n.gameSurrenderConfirm,
+    cancelLabel: l10n.gameStay,
+    confirmLabel: l10n.gameSurrender,
+  );
+}
+
+/// Подтверждение ничьей: [accept] — принять предложение соперника.
+///
+/// «Предложить ничью» и «Отмена» всегда в одну линию, с зазором между ними.
+Future<bool> confirmDrawDialog(BuildContext context, {bool accept = false}) async {
+  final l10n = context.l10n;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) {
+      Widget action(String label, bool value) => FramedButton(
+            onPressed: () => Navigator.of(ctx).pop(value),
+            label: label,
+            expanded: true,
+            minHeight: 40,
+            fontSize: 13,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          );
+      return AlertDialog(
+        title: Text(accept ? l10n.gameAcceptDrawTitle : l10n.gameOfferDrawTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              accept ? l10n.gameAcceptDrawConfirm : l10n.gameOfferDrawConfirm,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: action(l10n.commonCancel, false)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: action(
+                    accept ? l10n.gameDraw : l10n.gameOfferDraw,
+                    true,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
   );
   return ok == true;
 }
@@ -1755,6 +2245,8 @@ Future<bool> playGameSettledLoss({
     if (!context.mounted) return false;
     final toBalance =
         ref.read(authStateProvider).valueOrNull?.balanceBronze ?? before;
+    // Ничья: сервер вернул ставку — баланс вырос, это не проигрыш.
+    if (toBalance > before) return false;
     // Если refresh ещё списал ставку — крутим реальный дроп; иначе визуальный.
     final fromBalance = toBalance < before ? before : toBalance + lostBronze;
     if (fromBalance <= toBalance) return false;
@@ -1964,6 +2456,7 @@ class GameRematchSection extends StatelessWidget {
     required this.onCancelWait,
     required this.onFindGame,
     this.compact = false,
+    this.table,
   });
 
   final String? rematchLobbyId;
@@ -1981,11 +2474,17 @@ class GameRematchSection extends StatelessWidget {
   final VoidCallback onFindGame;
   final bool compact;
 
+  /// Стол текущей партии. Без него любой инвайт соперника считается реваншем.
+  final RematchTable? table;
+
   @override
   Widget build(BuildContext context) {
     final peerSet = peerIds.toSet();
-    final rematchOffer =
-        invites.where((i) => peerSet.contains(i.creatorId)).firstOrNull;
+    final table = this.table;
+    final rematchOffer = invites.where((invite) {
+      if (table == null) return peerSet.contains(invite.creatorId);
+      return inviteIsRematch(invite, table, peerSet);
+    }).firstOrNull;
 
     if (isAcceptingRematch) {
       return Row(
@@ -2071,51 +2570,27 @@ class GameRematchSection extends StatelessWidget {
         ],
       );
     }
-    if (rematchLobbyId != null) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.hourglass_empty_rounded,
-                  size: compact ? 18 : 20, color: AppColors.accentStart),
-              SizedBox(width: compact ? 6 : 8),
-              Text(
-                context.l10n.gameWaitingOpponent,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: compact ? 14 : 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          if (onCancelWait != null) ...[
-            SizedBox(height: compact ? 8 : 12),
-            FramedButton(
-              onPressed: onCancelWait,
-              label: context.l10n.commonCancel,
-            ),
-          ],
-        ],
-      );
-    }
-    return _buildRematchButtons(context);
+    return _buildRematchButtons(
+      context,
+      waiting: rematchLobbyId != null,
+    );
   }
 
-  Widget _buildRematchButtons(BuildContext context) {
-    final btnPadding = compact
-        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
-        : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
+  Widget _buildRematchButtons(BuildContext context, {bool waiting = false}) {
+    const pad = EdgeInsets.symmetric(horizontal: 8, vertical: 8);
+    final waitingFor = waiting;
     final rematch = FramedButton(
-      onPressed: isRematching ? null : onRematch,
+      onPressed: (isRematching || waitingFor) ? null : onRematch,
       icon: Icons.replay_rounded,
       label: isRematching
           ? context.l10n.commonCreating
           : context.l10n.gameRematch,
       loading: isRematching,
-      padding: btnPadding,
+      expanded: true,
+      padding: pad,
+      minHeight: 40,
+      fontSize: 13,
+      iconSize: 16,
     );
     final other = FramedButton(
       onPressed: isFindingGame ? null : onFindGame,
@@ -2124,27 +2599,50 @@ class GameRematchSection extends StatelessWidget {
           ? context.l10n.commonSearching
           : context.l10n.gameOtherOpponent,
       loading: isFindingGame,
-      padding: btnPadding,
+      expanded: true,
+      padding: pad,
+      minHeight: 40,
+      fontSize: 13,
+      iconSize: 16,
     );
-    // Телефон в альбоме: две кнопки в ряд, а не портретная колонка по центру.
-    final landscape = isPhoneLandscape(context);
-    final buttons = landscape
-        ? Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 10,
-            runSpacing: 8,
-            children: [rematch, other],
-          )
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (waitingFor) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              rematch,
-              SizedBox(height: compact ? 8 : 10),
-              other,
+              const Icon(Icons.hourglass_empty_rounded,
+                  size: 16, color: AppColors.accentStart),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  context.l10n.gameWaitingOpponent,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (onCancelWait != null)
+                TextButton(
+                  onPressed: onCancelWait,
+                  child: Text(context.l10n.commonCancel),
+                ),
             ],
-          );
-    return _capDesktopWidth(context, buttons);
+          ),
+          const SizedBox(height: 4),
+        ],
+        Row(
+          children: [
+            Expanded(child: rematch),
+            const SizedBox(width: 8),
+            Expanded(child: other),
+          ],
+        ),
+      ],
+    );
   }
 }
 

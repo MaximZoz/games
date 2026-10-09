@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/chats/chat_image_pick.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/profile/profile_gallery_gamepad.dart';
 import 'package:multigames_client/profile/profile_photo_cache.dart';
 import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -89,27 +91,33 @@ class _ProfilePhotoViewerPageState extends ConsumerState<ProfilePhotoViewerPage>
     final avatarValue = liveSelf ? me.avatarValue : widget.avatarValue;
     final showAvatar = isProfileFileAvatar(avatarKind, avatarValue);
     if (!showAvatar && photos.isEmpty) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            Positioned(
-              top: MediaQuery.viewPaddingOf(context).top + 4,
-              right: 8,
-              child: IconButton(
-                onPressed: () {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                },
-                icon: const Icon(
-                  Icons.close_rounded,
-                  color: Colors.white,
-                  size: 28,
+      void closeEmpty() {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      }
+
+      return ProfileGalleryGamepadScope(
+        onClose: closeEmpty,
+        onStep: (_) {},
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Positioned(
+                top: MediaQuery.viewPaddingOf(context).top + 4,
+                right: 8,
+                child: IconButton(
+                  onPressed: closeEmpty,
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -254,6 +262,13 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
     );
   }
 
+  void _step(int delta) {
+    if (_pageCount <= 1) return;
+    final next = (_safeIndex + delta).clamp(0, _pageCount - 1);
+    if (next == _safeIndex) return;
+    widget.onSelectIndex(next);
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -289,7 +304,10 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
     final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
     final showStrip = _pageCount > 1;
 
-    return Scaffold(
+    return ProfileGalleryGamepadScope(
+      onClose: widget.onClose,
+      onStep: _step,
+      child: Scaffold(
       backgroundColor: Colors.black,
       body: Column(
         children: [
@@ -369,6 +387,7 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
             ),
         ],
       ),
+    ),
     );
   }
 }
@@ -724,12 +743,19 @@ class _EditSlotCard extends StatelessWidget {
       children: [
         SizedBox(
           height: size,
-          child: Material(
+          child: GamepadFocusBlock(
+            radius: 12,
+            borderWidth: 2.2,
+            onActivate: !enabled || busy
+                ? null
+                : (filled ? onReplace : onAdd),
+            child: Material(
             key: ValueKey('profile-gallery-slot-$slot'),
             color: AppColors.accentSoft,
             borderRadius: BorderRadius.circular(12),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
+              canRequestFocus: false,
               onTap: !enabled || busy
                   ? null
                   : (filled ? onReplace : onAdd),
@@ -790,6 +816,7 @@ class _EditSlotCard extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ],
@@ -989,7 +1016,15 @@ class _ProfilePhotoFullscreenViewerState
         systemNavigationBarColor: Colors.black,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
-      child: Scaffold(
+      child: ProfileGalleryGamepadScope(
+        onClose: _close,
+        onStep: (delta) {
+          if (widget.photos.length <= 1) return;
+          final next = (_index + delta).clamp(0, widget.photos.length - 1);
+          if (next == _index) return;
+          _jumpTo(next);
+        },
+        child: Scaffold(
         backgroundColor: Colors.black,
         body: Column(
           children: [
@@ -1067,6 +1102,7 @@ class _ProfilePhotoFullscreenViewerState
             ),
           ],
         ),
+      ),
       ),
     );
   }

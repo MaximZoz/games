@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGamepadDisconnected => 'No gamepad found. Connect a controller and press any button.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menus and the board cursor';
+  String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Cross — confirm or make a move';
+  String get settingsGamepadHelpNavigate => 'Navigate';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Circle — back or deselect';
+  String get settingsGamepadHelpConfirm => 'Select';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — switch tabs';
+  String get settingsGamepadHelpBack => 'Back';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tabs';
 
   @override
   String get settingsGamepadHelpPlay => 'Board and hand cursor: checkers, tic-tac-toe, battleship, durak, uno, poker and backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'In card games: D-pad moves the hand, A plays, X selects / Uno, Y takes, passes or draws';
+  String get settingsGamepadHelpCards => 'Cards';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'On a text field A opens the gamepad keyboard; X switches layout, B deletes or closes';
+  String get settingsGamepadHelpKeyboard => 'Keyboard';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Balance';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Log out';
+
+  @override
+  String get settingsGamepadHelpPage => 'Page';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox layout';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation layout';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo layout';
 
   @override
   String get gamepadKeyboardTitle => 'Keyboard';
@@ -776,6 +799,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Corners';
 
   @override
+  String get gamesChess => 'Chess';
+
+  @override
+  String get gamesChessModeClassic => 'Classic';
+
+  @override
+  String get gamesChessModeRapid => 'Rapid';
+
+  @override
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
+
+  @override
+  String get chessPieceQueen => 'Queen';
+
+  @override
+  String get chessPieceRook => 'Rook';
+
+  @override
+  String get chessPieceBishop => 'Bishop';
+
+  @override
+  String get chessPieceKnight => 'Knight';
+
+  @override
+  String get chessPromotionTitle => 'Pawn promotion';
+
+  @override
+  String get chessDrawStalemate => 'Draw: stalemate';
+
+  @override
+  String get chessDrawInsufficient => 'Draw: insufficient material';
+
+  @override
+  String get chessDrawRepetition => 'Draw: threefold repetition';
+
+  @override
+  String get chessDrawFiftyMove => 'Draw: fifty-move rule';
+
+  @override
+  String get chessCheck => 'Check';
+
+  @override
   String get rulesCheckersPlayers => 'Players: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Pieces still in the home corner must leave it within the player’s first 25 moves.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'A draw if the position repeats three times, or if 15 moves by each side make no progress: no capture, no man move and no promotion.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'A draw if the position repeats three times, if 40 moves by each side pass with no capture and no man move, or if each side has only one king.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'A draw if the position repeats three times, or if 15 moves by each side in giveaway make no progress: no capture, no man move and no promotion.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'A draw if the position repeats three times, or if 25 moves by each side add no piece to the target corner.';
+
+  @override
+  String get rulesChessPlayers => 'Players: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'An 8×8 board. Each side has a king, queen, two rooks, two bishops, two knights and eight pawns. White moves first. The king moves one square, the queen along ranks, files and diagonals, the rook along ranks and files, the bishop on diagonals, the knight in an L. A pawn steps forward one square (two from its start), captures diagonally; en passant and promotion apply. Castling is allowed if the king and rook have not moved and the path is clear. Win by checkmate or if the opponent resigns.';
+
+  @override
+  String get rulesChessDrawClassic => 'A draw on stalemate, threefold repetition, the 50-move rule with no capture or pawn move, insufficient mating material, or by agreement.';
+
+  @override
+  String get rulesChessClockClassic => 'Game clock: 60+0 — 60 minutes for the whole game, no increment.';
+
+  @override
+  String get rulesChessClockRapid => 'Game clock: 10+0 — 10 minutes for the whole game, no increment.';
+
+  @override
+  String get rulesChessClockBlitz => 'Game clock: 5+0 — 5 minutes for the whole game, no increment.';
+
+  @override
+  String get rulesChessClockBullet => 'Game clock: 3+2 — 3 minutes plus 2 seconds per move.';
+
+  @override
+  String get checkersDrawRepetition => 'Draw — the position repeated three times';
+
+  @override
+  String get checkersDrawNoProgress => 'Draw — the moves do not lead to a win';
+
+  @override
+  String get checkersDrawInsufficient => 'Draw — not enough material to win';
 
   @override
   String get rulesNardyTitle => 'Backgammon — rules';
@@ -861,6 +976,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Pass the turn automatically after all moves';
+
+  @override
+  String get nardyLayoutToggle => 'Change layout';
 
   @override
   String get nardyNoMoves => 'No moves';
@@ -1344,7 +1462,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameOpponent => 'Opponent';
 
   @override
+  String get gameYou => 'You';
+
+  @override
   String get gameYouWon => 'You won!';
+
+  @override
+  String get gameYouWonShort => 'You won';
 
   @override
   String get gameYouLost => 'You lost';
@@ -1381,6 +1505,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Offer draw';
+
+  @override
+  String get gameFlipBoard => 'Flip board';
+
+  @override
+  String get gameReviewStart => 'To game start';
+
+  @override
+  String get gameReviewPrev => 'Move back';
+
+  @override
+  String get gameReviewNext => 'Move forward';
+
+  @override
+  String get gameReviewEnd => 'To current position';
 
   @override
   String get gameOfferDrawTitle => 'Offer a draw?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Unlock higher stakes';
+
+  @override
+  String get shopEmojisHelp => 'Animated emojis for chat. Buy a set and send them in messages to friends.';
+
+  @override
+  String get shopCollectionsHelp => 'You can sell only a new or vintage collection: 80% of the price when it is new, and 300% of the price when it is vintage. Worn, tired and shabby collections cannot be sold.\n\nCollect a set of items: they appear in your profile showcase and can be gifted. Each item pays coins every day, and a complete set also pays a separate bonus.\n\nAn item\'s daily income depends on its condition and is a share of the usual amount. New pays 100%. Worn pays 60%. Tired pays 40%. Shabby pays 100%. A vintage item pays 200%, twice the usual daily income.\n\nThe complete-set bonus stays the same until the set is vintage. A set is vintage when every item in it is vintage: the bonus is then 300%, three times the usual amount.\n\nCondition depends on how long you have owned the item. New — the first 7 days. Worn — from day 8 until 2 months. Tired — from 2 to 6 months. Shabby — from 6 months until 1 year. Vintage — after 1 year.';
+
+  @override
+  String get shopStakesHelp => 'Unlock higher stakes in games. The higher the stake, the bigger the pot and the payout.';
 
   @override
   String get inventoryTitle => 'Items';
@@ -1947,6 +2095,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopOwned => 'Owned';
 
   @override
+  String get shopHave => 'Have';
+
+  @override
   String get shopEmpty => 'Nothing here yet';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopBuyOnce => 'One-time purchase';
 
   @override
-  String get shopSellRefund => 'Selling returns 80% of the cost';
+  String get shopSellRefund => 'Selling depends on the collection\'s condition';
+
+  @override
+  String get collectionConditionNew => 'New';
+
+  @override
+  String get collectionConditionWorn => 'Worn';
+
+  @override
+  String get collectionConditionTired => 'Tired';
+
+  @override
+  String get collectionConditionShabby => 'Shabby';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'You will receive $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'You can sell only a new or vintage collection.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Can\'t sell';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'You can sell only a new or vintage item. Use an elixir to change its condition.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 players: 4×4 board, four players (X, O, △, □). Complete a line of your marks to win.';
+
+  @override
+  String get adminUsersTab => 'Users';
+
+  @override
+  String get adminSupportTab => 'Support';
+
+  @override
+  String get adminSearchHint => 'Search by email or name';
+
+  @override
+  String get adminRoleAdmins => 'Admins';
+
+  @override
+  String get adminRoleUsers => 'Users';
+
+  @override
+  String get adminRoleAll => 'All roles';
+
+  @override
+  String get adminStatusFrozen => 'Frozen';
+
+  @override
+  String get adminStatusActive => 'Active';
+
+  @override
+  String get adminStatusAny => 'Any status';
+
+  @override
+  String get adminOrderDesc => 'Descending';
+
+  @override
+  String get adminOrderAsc => 'Ascending';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Couldn’t load: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'No users found';
+
+  @override
+  String get adminSortLastSeen => 'By last visit';
+
+  @override
+  String get adminSortEmail => 'By email';
+
+  @override
+  String get adminSortCreated => 'By signup date';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Remove admin';
+
+  @override
+  String get adminGrantAdmin => 'Make admin';
+
+  @override
+  String get adminAdminRevoked => 'Admin rights removed';
+
+  @override
+  String get adminAdminGranted => 'Admin rights granted';
+
+  @override
+  String get adminGrantCoins => 'Grant coins';
+
+  @override
+  String get adminWriteSupport => 'Message as support';
+
+  @override
+  String get adminUnfreeze => 'Unfreeze';
+
+  @override
+  String get adminFreeze => 'Freeze';
+
+  @override
+  String get adminUnfrozen => 'Unfrozen';
+
+  @override
+  String get adminFrozenDone => 'Frozen';
+
+  @override
+  String get adminResetPassword => 'Reset password';
+
+  @override
+  String get adminCoinsAmountHint => 'Amount (negative = deduct)';
+
+  @override
+  String get adminReasonOptional => 'Reason (optional)';
+
+  @override
+  String get adminGrantSent => 'Card sent to the support chat';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Deducted $amount bronze';
+  }
+
+  @override
+  String get adminGrantVerb => 'Grant';
+
+  @override
+  String get adminNewPasswordHint => 'New password (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Password reset';
+
+  @override
+  String get adminResetVerb => 'Reset';
+
+  @override
+  String adminShortError(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'No support requests';
+
+  @override
+  String get adminUserFallback => 'User';
+
+  @override
+  String get apiErrTooManyRequests => 'Too many requests. Try again later.';
+
+  @override
+  String get apiErrMoveConflict => 'That move conflicted. Try again.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Rejuvenation';
+
+  @override
+  String get elixirGroupAge => 'Aging';
+
+  @override
+  String get elixirGroupAccelerate => 'Acceleration';
+
+  @override
+  String get elixirEffectRejuvenate => 'rejuvenation';
+
+  @override
+  String get elixirEffectAge => 'aging';
+
+  @override
+  String get elixirEffectAccelerate => 'acceleration';
+
+  @override
+  String get elixirAdjCelebration => 'Festive';
+
+  @override
+  String get elixirAdjNature => 'Natural';
+
+  @override
+  String get elixirAdjLegends => 'Legendary';
+
+  @override
+  String get elixirAdjCosmic => 'Cosmic';
+
+  @override
+  String get elixirAdjAdventure => 'Adventure';
+
+  @override
+  String get elixirAdjJewels => 'Precious';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect elixir';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Rejuvenate';
+
+  @override
+  String get elixirUseAge => 'Age';
+
+  @override
+  String get elixirUseAccelerate => 'Speed up';
+
+  @override
+  String get elixirUse => 'Use';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '$count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '$count hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '$count minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

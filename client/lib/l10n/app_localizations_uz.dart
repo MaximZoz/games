@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Xrest / stik — menyu va doskadagi kursor';
+  String get settingsGamepadGenericName => 'Kontroller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Xrest — tanlash yoki yurish';
+  String get settingsGamepadHelpNavigate => 'Navigatsiya';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Doira — orqaga yoki tanlovni olish';
+  String get settingsGamepadHelpConfirm => 'Tanlash';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menyu ichki oynalari';
+  String get settingsGamepadHelpBack => 'Orqaga';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Ichki oynalar';
 
   @override
   String get settingsGamepadHelpPlay => 'Doska va qo‘l kursori: shashka, x-nol, dengiz jangi, durak, uno, poker va nard';
 
   @override
-  String get settingsGamepadHelpCards => 'Kartalarda: xrest — qo‘l, A — yurish, X — tanlash / Uno, Y — olish yoki tortish';
+  String get settingsGamepadHelpCards => 'Kartalar';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Matn maydonida A geympad klaviaturasini ochadi; X — tartib, B — o‘chirish yoki yopish';
+  String get settingsGamepadHelpKeyboard => 'Klaviatura';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Balans';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Chiqish';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sahifa';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox joylashuvi';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation joylashuvi';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo joylashuvi';
 
   @override
   String get gamepadKeyboardTitle => 'Klaviatura';
@@ -776,6 +799,51 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Burchaklar';
 
   @override
+  String get gamesChess => 'Shaxmat';
+
+  @override
+  String get gamesChessModeClassic => 'Klassika';
+
+  @override
+  String get gamesChessModeRapid => 'Rapid';
+
+  @override
+  String get gamesChessModeBlitz => 'Blits';
+
+  @override
+  String get gamesChessModeBullet => 'O‘q';
+
+  @override
+  String get chessPieceQueen => 'Farzin';
+
+  @override
+  String get chessPieceRook => 'Rux';
+
+  @override
+  String get chessPieceBishop => 'Fil';
+
+  @override
+  String get chessPieceKnight => 'Ot';
+
+  @override
+  String get chessPromotionTitle => 'Piyodani almashtirish';
+
+  @override
+  String get chessDrawStalemate => 'Durrang: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Durrang: mat uchun material yetarli emas';
+
+  @override
+  String get chessDrawRepetition => 'Durrang: pozitsiyaning uch marta takrorlanishi';
+
+  @override
+  String get chessDrawFiftyMove => 'Durrang: 50 yurish qoidasi';
+
+  @override
+  String get chessCheck => 'Shoh';
+
+  @override
   String get rulesCheckersPlayers => 'O‘yinchilar: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Hali uydagi toshlar o‘yinchining dastlabki 25 yurishida uydan chiqishi kerak.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Durang: pozitsiya uch marta takrorlansa yoki har tomonning 15 yurishi ilgarilamasdan o‘tsa: olish, oddiy yurish va farzinga aylanish yo‘q.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Durang: pozitsiya uch marta takrorlansa, har tomonning 40 yurishida olish va oddiy yurish bo‘lmasa, yoki har tomonda bitta farzin qolsa.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Durang: pozitsiya uch marta takrorlansa yoki poddavkidagi har tomonning 15 yurishi ilgarilamasdan o‘tsa: olish, oddiy yurish va farzinga aylanish yo‘q.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Durang: pozitsiya uch marta takrorlansa yoki har tomonning 25 yurishi maqsad burchagiga tosh qo‘shmasa.';
+
+  @override
+  String get rulesChessPlayers => 'O‘yinchilar: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Rejim: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Doska 8×8. Har tomonda shoh, vazir, ikki rux, ikki fil, ikki ot va sakkiz piyoda. Oqlar boshlaydi. Oddiy yurishlar, o‘tishda olish, o‘girish va rokirovka bor. Mat yoki taslim — g‘alaba.';
+
+  @override
+  String get rulesChessDrawClassic => 'Durang: pat, uch marta takror, 50 yurish, mat uchun dona yetmasa yoki kelishuv.';
+
+  @override
+  String get rulesChessClockClassic => 'Partiya nazorati: 60+0 — butun o‘yinga 60 daqiqa, qo‘shimcha yo‘q.';
+
+  @override
+  String get rulesChessClockRapid => 'Partiya nazorati: 10+0 — butun o‘yinga 10 daqiqa, qo‘shimcha yo‘q.';
+
+  @override
+  String get rulesChessClockBlitz => 'Partiya nazorati: 5+0 — butun o‘yinga 5 daqiqa, qo‘shimcha yo‘q.';
+
+  @override
+  String get rulesChessClockBullet => 'Partiya nazorati: 3+2 — 3 daqiqa plus har yurishga 2 soniya.';
+
+  @override
+  String get checkersDrawRepetition => 'Durang — pozitsiya uch marta takrorlandi';
+
+  @override
+  String get checkersDrawNoProgress => 'Durang — yurishlar g‘alabaga olib kelmaydi';
+
+  @override
+  String get checkersDrawInsufficient => 'Durang — g‘alaba uchun kuch yetarli emas';
 
   @override
   String get rulesNardyTitle => 'Narda — qoidalar';
@@ -861,6 +976,9 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Barcha yurishlardan so‘ng navbat avtomatik o‘tadi';
+
+  @override
+  String get nardyLayoutToggle => 'Joylashuvni almashtirish';
 
   @override
   String get nardyNoMoves => 'Yurish yo‘q';
@@ -1344,7 +1462,13 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gameOpponent => 'Raqib';
 
   @override
+  String get gameYou => 'Siz';
+
+  @override
   String get gameYouWon => 'Siz yutdingiz!';
+
+  @override
+  String get gameYouWonShort => 'Siz yutdingiz';
 
   @override
   String get gameYouLost => 'Yutqazdingiz';
@@ -1381,6 +1505,21 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Durrang taklif qilish';
+
+  @override
+  String get gameFlipBoard => 'Taxtani aylantirish';
+
+  @override
+  String get gameReviewStart => 'O\'yin boshiga';
+
+  @override
+  String get gameReviewPrev => 'Bir yurish orqaga';
+
+  @override
+  String get gameReviewNext => 'Bir yurish oldinga';
+
+  @override
+  String get gameReviewEnd => 'Joriy holatga';
 
   @override
   String get gameOfferDrawTitle => 'Durrang taklif qilinsinmi?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Yuqori stavkalarni ochish';
+
+  @override
+  String get shopEmojisHelp => 'Chat uchun animatsion smayliklar. To‘plamni sotib oling va do‘stlaringizga yuboring.';
+
+  @override
+  String get shopCollectionsHelp => 'Faqat yangi yoki vintaj kolleksiyani sotish mumkin: yangi narxning 80%i, vintaj narxning 300%i. Yeyilgan, charchagan va eskisini sotib bo‘lmaydi.\n\nBuyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish mumkin. Har bir buyum har kuni tanga beradi, to‘liq to‘plam esa alohida bonus ham beradi.\n\nBuyumning kunlik daromadi holatiga bog‘liq va odatdagi summadan hisoblanadi. Yangi 100% beradi. Yeyilgan — 60%. Charchagan — 40%. Eski — 100%. Vintaj buyum 200% beradi, ya’ni odatdagi kunlik daromaddan ikki baravar ko‘p.\n\nTo‘liq to‘plam bonusi to‘plamning o‘zi vintaj bo‘lguncha o‘zgarmaydi. To‘plam vintaj, agar undagi har bir buyum vintaj bo‘lsa: bonus shunda 300%, odatdagidan uch baravar ko‘p.\n\nHolat buyum sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun. Yeyilgan — 8-kundan 2 oygacha. Charchagan — 2 oydan 6 oygacha. Eski — 6 oydan 1 yilgacha. Vintaj — 1 yildan keyin.';
+
+  @override
+  String get shopStakesHelp => 'O‘yinlarda yuqori stavkalarni oching. Stavka qanchalik yuqori bo‘lsa, bank va yutuq shunchalik katta.';
 
   @override
   String get inventoryTitle => 'Buyumlar';
@@ -1947,6 +2095,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopOwned => 'Sotib olingan';
 
   @override
+  String get shopHave => 'Bor';
+
+  @override
   String get shopEmpty => 'Hali bo‘sh';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopBuyOnce => 'Bir martalik xarid';
 
   @override
-  String get shopSellRefund => 'Sotish narxning 80%ini qaytaradi';
+  String get shopSellRefund => 'Sotish kolleksiya holatiga bog‘liq';
+
+  @override
+  String get collectionConditionNew => 'Yangi';
+
+  @override
+  String get collectionConditionWorn => 'Yeyilgan';
+
+  @override
+  String get collectionConditionTired => 'Charchagan';
+
+  @override
+  String get collectionConditionShabby => 'Eski';
+
+  @override
+  String get collectionConditionVintage => 'Vintaj';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsUz extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Siz $amount olasiz';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Faqat yangi yoki vintaj kolleksiyani sotish mumkin.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Sotib bo‘lmaydi';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Faqat yangi yoki vintaj buyumni sotish mumkin. Holatini o‘zgartirish uchun eliksirdan foydalaning.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 o‘yinchi: 4×4 doska, to‘rt o‘yinchi (X, O, △, □). O‘z belgilaringiz bilan chiziq yig‘ing.';
+
+  @override
+  String get adminUsersTab => 'Foydalanuvchilar';
+
+  @override
+  String get adminSupportTab => 'Yordam';
+
+  @override
+  String get adminSearchHint => 'Email yoki taxallus bo‘yicha qidirish';
+
+  @override
+  String get adminRoleAdmins => 'Adminlar';
+
+  @override
+  String get adminRoleUsers => 'Foydalanuvchilar';
+
+  @override
+  String get adminRoleAll => 'Barcha rollar';
+
+  @override
+  String get adminStatusFrozen => 'Muzlatilgan';
+
+  @override
+  String get adminStatusActive => 'Faol';
+
+  @override
+  String get adminStatusAny => 'Har qanday holat';
+
+  @override
+  String get adminOrderDesc => 'Kamayish bo‘yicha';
+
+  @override
+  String get adminOrderAsc => 'O‘sish bo‘yicha';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Yuklash xatosi: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Foydalanuvchilar topilmadi';
+
+  @override
+  String get adminSortLastSeen => 'Oxirgi tashrif bo‘yicha';
+
+  @override
+  String get adminSortEmail => 'Email bo‘yicha';
+
+  @override
+  String get adminSortCreated => 'Ro‘yxat sanasi bo‘yicha';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Adminni olish';
+
+  @override
+  String get adminGrantAdmin => 'Admin qilish';
+
+  @override
+  String get adminAdminRevoked => 'Admin huquqi olindi';
+
+  @override
+  String get adminAdminGranted => 'Admin huquqi berildi';
+
+  @override
+  String get adminGrantCoins => 'Tangalar qo‘shish';
+
+  @override
+  String get adminWriteSupport => 'Yordam nomidan yozish';
+
+  @override
+  String get adminUnfreeze => 'Muzdan tushirish';
+
+  @override
+  String get adminFreeze => 'Muzlatish';
+
+  @override
+  String get adminUnfrozen => 'Muzdan tushirildi';
+
+  @override
+  String get adminFrozenDone => 'Muzlatildi';
+
+  @override
+  String get adminResetPassword => 'Parolni tiklash';
+
+  @override
+  String get adminCoinsAmountHint => 'Miqdor (manfiy = yechish)';
+
+  @override
+  String get adminReasonOptional => 'Sabab (ixtiyoriy)';
+
+  @override
+  String get adminGrantSent => 'Kartochka yordam chatiga yuborildi';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount bronza yechildi';
+  }
+
+  @override
+  String get adminGrantVerb => 'Qo‘shish';
+
+  @override
+  String get adminNewPasswordHint => 'Yangi parol (kamida 6)';
+
+  @override
+  String get adminPasswordReset => 'Parol tiklandi';
+
+  @override
+  String get adminResetVerb => 'Tiklash';
+
+  @override
+  String adminShortError(String error) {
+    return 'Xato: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Yordam murojaatlari yo‘q';
+
+  @override
+  String get adminUserFallback => 'Foydalanuvchi';
+
+  @override
+  String get apiErrTooManyRequests => 'So‘rovlar juda ko‘p. Keyinroq urinib ko‘ring.';
+
+  @override
+  String get apiErrMoveConflict => 'Yurish to‘qnashdi. Qaytaring.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Yoshartirish';
+
+  @override
+  String get elixirGroupAge => 'Qaritish';
+
+  @override
+  String get elixirGroupAccelerate => 'Tezlashtirish';
+
+  @override
+  String get elixirEffectRejuvenate => 'yoshartirish';
+
+  @override
+  String get elixirEffectAge => 'qaritish';
+
+  @override
+  String get elixirEffectAccelerate => 'tezlashtirish';
+
+  @override
+  String get elixirAdjCelebration => 'Bayram';
+
+  @override
+  String get elixirAdjNature => 'Tabiat';
+
+  @override
+  String get elixirAdjLegends => 'Afsonaviy';
+
+  @override
+  String get elixirAdjCosmic => 'Kosmik';
+
+  @override
+  String get elixirAdjAdventure => 'Sarguzasht';
+
+  @override
+  String get elixirAdjJewels => 'Qimmatbaho';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect eliksiri';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Yoshartirish';
+
+  @override
+  String get elixirUseAge => 'Qaritish';
+
+  @override
+  String get elixirUseAccelerate => 'Tezlashtirish';
+
+  @override
+  String get elixirUse => 'Ishlatish';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kun',
+      one: '$count kun',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count soat',
+      one: '$count soat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count daqiqa',
+      one: '$count daqiqa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

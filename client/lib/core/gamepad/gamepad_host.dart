@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_arrows.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/settings_provider.dart';
-import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 
 /// Слушает геймпад, отдаёт ввод партии или фокусу оболочки.
 class GamepadHost extends ConsumerStatefulWidget {
@@ -24,22 +23,35 @@ class GamepadHost extends ConsumerStatefulWidget {
 
 class _GamepadHostState extends ConsumerState<GamepadHost> {
   StreamSubscription<GamepadActionEvent>? _sub;
-  final Set<String> _announced = {};
 
   GamepadService get _service => GamepadService.instance;
 
   @override
   void initState() {
     super.initState();
+    FocusManager.instance.addListener(_syncKeyboard);
+    _service.activityTick.addListener(_syncKeyboard);
+    _service.devices.addListener(_syncKeyboard);
+    // Слушаем и стартуем сразу: иначе первый кадр глотает LB/RB и крест.
+    _listen();
+    _service.start();
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncEnabled());
   }
 
   @override
   void dispose() {
+    FocusManager.instance.removeListener(_syncKeyboard);
+    _service.activityTick.removeListener(_syncKeyboard);
+    _service.devices.removeListener(_syncKeyboard);
     _sub?.cancel();
-    _service.devices.removeListener(_onDevices);
     _service.stop();
     super.dispose();
+  }
+
+  void _syncKeyboard() {
+    if (!mounted) return;
+    if (!ref.read(gamepadEnabledProvider)) return;
+    syncGamepadKeyboardForFocus();
   }
 
   void _syncEnabled() {
@@ -51,7 +63,6 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
     } else {
       _sub?.cancel();
       _sub = null;
-      _service.devices.removeListener(_onDevices);
       _service.stop();
       GamepadKeyboardController.instance.hide();
     }
@@ -59,31 +70,38 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
 
   void _listen() {
     _sub ??= _service.events.listen(_onEvent);
-    _service.devices.removeListener(_onDevices);
-    _service.devices.addListener(_onDevices);
   }
 
   void _onEvent(GamepadActionEvent event) {
     if (!mounted) return;
-    if (GamepadDispatcher.dispatch(event.action)) return;
-    handleGamepadUiAction(context, event.action);
-  }
-
-  void _onDevices() {
-    if (!mounted) return;
-    final pads = _service.devices.value;
-    for (final pad in pads) {
-      if (_announced.contains(pad.id)) continue;
-      _announced.add(pad.id);
-      final l10n = context.l10n;
-      showAppSnackBar(
-        context,
-        message: l10n.gamepadConnectedSnack(pad.name),
-        kind: AppSnackKind.success,
-        icon: Icons.sports_esports_outlined,
-      );
+    // Диалог забирает весь ввод: B не закрывает фон, LB/RB не листают вкладки.
+    if (GamepadDispatcher.hasExclusive) {
+      // Стик/крест только попапу: фон (вкладки друзей) не получает жест.
+      if (event.action.isScroll || event.action.isDirection) {
+        GamepadDispatcher.dispatch(event.action, exclusiveOnly: true);
+        return;
+      }
+      if (GamepadDispatcher.dispatch(event.action)) return;
+      // Exclusive без обработки не глушит LB/RB.
     }
-    _announced.removeWhere((id) => pads.every((p) => p.id != id));
+    // Любой попап без exclusive: стик/кнопка закрывает его, вкладки не листаем.
+    if (isGamepadPopupOpen(context)) {
+      if (event.action != GamepadAction.shoulderL &&
+          event.action != GamepadAction.shoulderR) {
+        dismissGamepadPopup(context);
+      }
+      return;
+    }
+    // LB/RB сразу листают вкладки — не ждут закрытия тоста/скоупа партии.
+    if (event.action == GamepadAction.shoulderL ||
+        event.action == GamepadAction.shoulderR) {
+      if (handleGamepadUiAction(context, event.action)) return;
+    }
+    if (GamepadDispatcher.dispatch(event.action)) return;
+    if (event.action.isScroll) {
+      if (handleGamepadUiAction(context, event.action)) return;
+    }
+    handleGamepadUiAction(context, event.action);
   }
 
   @override
@@ -95,15 +113,34 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
       listenable: GamepadKeyboardController.instance,
       builder: (context, _) {
         final kb = GamepadKeyboardController.instance.visible;
+        final media = MediaQuery.of(context);
+        final kbInset = kb
+            ? gamepadKeyboardPanelHeight(bottomSafeArea: media.padding.bottom)
+            : 0.0;
+        final childMedia = kbInset > 0
+            ? media.copyWith(
+                viewInsets: media.viewInsets.copyWith(
+                  bottom: media.viewInsets.bottom > kbInset
+                      ? media.viewInsets.bottom
+                      : kbInset,
+                ),
+              )
+            : media;
         return Stack(
           children: [
-            widget.child,
+            MediaQuery(
+              data: childMedia,
+              child: Shortcuts(
+                shortcuts: kb ? gamepadKeyboardTextShortcuts : const {},
+                child: widget.child,
+              ),
+            ),
             if (!kb) const GamepadHintsOverlay(),
             if (kb)
               Align(
                 alignment: Alignment.bottomCenter,
                 child: GamepadKeyboardPanel(
-                  onClose: GamepadKeyboardController.instance.hide,
+                  onClose: dismissGamepadKeyboard,
                 ),
               ),
           ],

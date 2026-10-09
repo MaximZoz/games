@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ingen gamepad. Koble til en kontroller og trykk på en knapp.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kors / spak — menyer og brettmarkør';
+  String get settingsGamepadGenericName => 'Kontroller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kors — bekreft eller trekk';
+  String get settingsGamepadHelpNavigate => 'Navigasjon';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Sirkel — tilbake eller fjern valg';
+  String get settingsGamepadHelpConfirm => 'Velg';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menyfaner';
+  String get settingsGamepadHelpBack => 'Tilbake';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Faner';
 
   @override
   String get settingsGamepadHelpPlay => 'Markør på brett og hånd: dam, tre på rad, senk skipene, durak, uno, poker og backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'I kort: kors flytter hånden, A spiller, X velger / Uno, Y tar, passer eller trekker';
+  String get settingsGamepadHelpCards => 'Kort';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'I et felt åpner A gamepad-tastaturet; X bytter oppsett, B sletter eller lukker';
+  String get settingsGamepadHelpKeyboard => 'Tastatur';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Logg ut';
+
+  @override
+  String get settingsGamepadHelpPage => 'Side';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-oppsett';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-oppsett';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-oppsett';
 
   @override
   String get gamepadKeyboardTitle => 'Tastatur';
@@ -776,6 +799,51 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Hjørner';
 
   @override
+  String get gamesChess => 'Sjakk';
+
+  @override
+  String get gamesChessModeClassic => 'Klassisk';
+
+  @override
+  String get gamesChessModeRapid => 'Hurtig';
+
+  @override
+  String get gamesChessModeBlitz => 'Lyn';
+
+  @override
+  String get gamesChessModeBullet => 'Kule';
+
+  @override
+  String get chessPieceQueen => 'Dronning';
+
+  @override
+  String get chessPieceRook => 'Tårn';
+
+  @override
+  String get chessPieceBishop => 'Løper';
+
+  @override
+  String get chessPieceKnight => 'Springer';
+
+  @override
+  String get chessPromotionTitle => 'Bondeforvandling';
+
+  @override
+  String get chessDrawStalemate => 'Remis: patt';
+
+  @override
+  String get chessDrawInsufficient => 'Remis: utilstrekkelig materiale';
+
+  @override
+  String get chessDrawRepetition => 'Remis: trippel stillingsgjentakelse';
+
+  @override
+  String get chessDrawFiftyMove => 'Remis: 50-trekksregelen';
+
+  @override
+  String get chessCheck => 'Sjakk';
+
+  @override
   String get rulesCheckersPlayers => 'Spillere: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Brikker som fortsatt er i hjemmet, må forlate det i spillerens 25 første trekk.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Remis hvis stillingen gjentas tre ganger, eller 15 trekk fra hver side ikke gir fremgang: ingen slag, bonde-trekk eller forvandling.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remis hvis stillingen gjentas tre ganger, hvis 40 trekk fra hver side går uten slag og bonde-trekk, eller det bare er én dame på hver side.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remis hvis stillingen gjentas tre ganger, eller 15 trekk fra hver side i giveaway ikke gir fremgang: ingen slag, bonde-trekk eller forvandling.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remis hvis stillingen gjentas tre ganger, eller 25 trekk fra hver side ikke legger en brikke i målhjørnet.';
+
+  @override
+  String get rulesChessPlayers => 'Spillere: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Brett 8×8. Hver side har konge, dronning, to tårn, to løpere, to springere og åtte bønder. Hvit starter. Vanlige trekk, en passant, forvandling og rokade. Seier ved matt eller oppgitt.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remis ved patt, tredobbelt gjentakelse, 50-trekksregelen, for lite materiell eller avtale.';
+
+  @override
+  String get rulesChessClockClassic => 'Klokke: 60+0 — 60 minutter for hele partiet, uten tillegg.';
+
+  @override
+  String get rulesChessClockRapid => 'Klokke: 10+0 — 10 minutter for hele partiet, uten tillegg.';
+
+  @override
+  String get rulesChessClockBlitz => 'Klokke: 5+0 — 5 minutter for hele partiet, uten tillegg.';
+
+  @override
+  String get rulesChessClockBullet => 'Klokke: 3+2 — 3 minutter pluss 2 sekunder per trekk.';
+
+  @override
+  String get checkersDrawRepetition => 'Remis — stillingen gjentatt tre ganger';
+
+  @override
+  String get checkersDrawNoProgress => 'Remis — trekkene fører ikke til seier';
+
+  @override
+  String get checkersDrawInsufficient => 'Remis — ikke nok materiale til seier';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regler';
@@ -861,6 +976,9 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Etter alle trekk går turen automatisk videre';
+
+  @override
+  String get nardyLayoutToggle => 'Bytt oppstilling';
 
   @override
   String get nardyNoMoves => 'Ingen trekk';
@@ -1344,7 +1462,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gameOpponent => 'Motstander';
 
   @override
+  String get gameYou => 'Du';
+
+  @override
   String get gameYouWon => 'Du vant!';
+
+  @override
+  String get gameYouWonShort => 'Du vant';
 
   @override
   String get gameYouLost => 'Du tapte';
@@ -1381,6 +1505,21 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Tilby remis';
+
+  @override
+  String get gameFlipBoard => 'Snu brettet';
+
+  @override
+  String get gameReviewStart => 'Til partiets start';
+
+  @override
+  String get gameReviewPrev => 'Ett trekk tilbake';
+
+  @override
+  String get gameReviewNext => 'Ett trekk frem';
+
+  @override
+  String get gameReviewEnd => 'Til nåværende stilling';
 
   @override
   String get gameOfferDrawTitle => 'Tilby remis?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Lås opp høyere innsatser';
+
+  @override
+  String get shopEmojisHelp => 'Animerte emojier for chatten. Kjøp et sett og send dem til venner.';
+
+  @override
+  String get shopCollectionsHelp => 'Bare en ny eller vintage samling kan selges: 80 % av prisen når den er ny og 300 % av prisen når den er vintage. Slitt, trett og falleferdig kan ikke selges.\n\nSamle et sett gjenstander: de vises i profilens monter og kan gis bort. Hver gjenstand gir mynter hver dag, og et komplett sett gir også en egen bonus.\n\nDen daglige inntekten til en gjenstand avhenger av tilstanden og er en andel av det vanlige beløpet. Ny gir 100 %. Slitt gir 60 %. Trett gir 40 %. Falleferdig gir 100 %. En vintagegjenstand gir 200 %, altså dobbelt så mye som den vanlige daglige inntekten.\n\nBonusen for et komplett sett er uendret til settet selv er vintage. Et sett er vintage når hver gjenstand i det er vintage: bonusen blir da 300 %, tre ganger det vanlige.\n\nTilstanden avhenger av hvor lenge du har hatt gjenstanden. Ny — de første 7 dagene. Slitt — fra dag 8 til 2 måneder. Trett — fra 2 til 6 måneder. Falleferdig — fra 6 måneder til 1 år. Vintage — fra 1 år.';
+
+  @override
+  String get shopStakesHelp => 'Lås opp høyere innsatser. Jo høyere innsats, desto større pott og gevinst.';
 
   @override
   String get inventoryTitle => 'Gjenstander';
@@ -1947,6 +2095,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get shopOwned => 'Kjøpt';
 
   @override
+  String get shopHave => 'Har';
+
+  @override
   String get shopEmpty => 'Tomt foreløpig';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsNb extends AppLocalizations {
   String get shopBuyOnce => 'Engangskjøp';
 
   @override
-  String get shopSellRefund => 'Salg returnerer 80% av kostnaden';
+  String get shopSellRefund => 'Salget avhenger av samlingens tilstand';
+
+  @override
+  String get collectionConditionNew => 'Ny';
+
+  @override
+  String get collectionConditionWorn => 'Slitt';
+
+  @override
+  String get collectionConditionTired => 'Trett';
+
+  @override
+  String get collectionConditionShabby => 'Falleferdig';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsNb extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Du får $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Bare en ny eller vintage samling kan selges.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Kan ikke selges';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Bare en ny eller vintage gjenstand kan selges. Bruk en eliksir for å endre tilstanden.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 spillere: 4×4-brett, fire spillere (X, O, △, □). Lag en linje med dine tegn for å vinne.';
+
+  @override
+  String get adminUsersTab => 'Brukere';
+
+  @override
+  String get adminSupportTab => 'Støtte';
+
+  @override
+  String get adminSearchHint => 'Søk på e-post eller navn';
+
+  @override
+  String get adminRoleAdmins => 'Admins';
+
+  @override
+  String get adminRoleUsers => 'Brukere';
+
+  @override
+  String get adminRoleAll => 'Alle roller';
+
+  @override
+  String get adminStatusFrozen => 'Frosset';
+
+  @override
+  String get adminStatusActive => 'Aktive';
+
+  @override
+  String get adminStatusAny => 'Alle statuser';
+
+  @override
+  String get adminOrderDesc => 'Synkende';
+
+  @override
+  String get adminOrderAsc => 'Stigende';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Kunne ikke laste: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Ingen brukere';
+
+  @override
+  String get adminSortLastSeen => 'Etter siste besøk';
+
+  @override
+  String get adminSortEmail => 'Etter e-post';
+
+  @override
+  String get adminSortCreated => 'Etter registrering';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Fjern admin';
+
+  @override
+  String get adminGrantAdmin => 'Gjør til admin';
+
+  @override
+  String get adminAdminRevoked => 'Adminrettigheter fjernet';
+
+  @override
+  String get adminAdminGranted => 'Adminrettigheter gitt';
+
+  @override
+  String get adminGrantCoins => 'Gi mynter';
+
+  @override
+  String get adminWriteSupport => 'Skriv som støtte';
+
+  @override
+  String get adminUnfreeze => 'Tin';
+
+  @override
+  String get adminFreeze => 'Frys';
+
+  @override
+  String get adminUnfrozen => 'Tint';
+
+  @override
+  String get adminFrozenDone => 'Frosset';
+
+  @override
+  String get adminResetPassword => 'Tilbakestill passord';
+
+  @override
+  String get adminCoinsAmountHint => 'Antall (negativt = trekk fra)';
+
+  @override
+  String get adminReasonOptional => 'Grunn (valgfritt)';
+
+  @override
+  String get adminGrantSent => 'Kortet ble sendt til støttechatten';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Trakk $amount bronse';
+  }
+
+  @override
+  String get adminGrantVerb => 'Gi';
+
+  @override
+  String get adminNewPasswordHint => 'Nytt passord (minst 6)';
+
+  @override
+  String get adminPasswordReset => 'Passordet er tilbakestilt';
+
+  @override
+  String get adminResetVerb => 'Tilbakestill';
+
+  @override
+  String adminShortError(String error) {
+    return 'Feil: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Ingen støttehenvendelser';
+
+  @override
+  String get adminUserFallback => 'Bruker';
+
+  @override
+  String get apiErrTooManyRequests => 'For mange forespørsler. Prøv igjen senere.';
+
+  @override
+  String get apiErrMoveConflict => 'Trekkkonflikt. Prøv igjen.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Foryngelse';
+
+  @override
+  String get elixirGroupAge => 'Aldring';
+
+  @override
+  String get elixirGroupAccelerate => 'Akselerasjon';
+
+  @override
+  String get elixirEffectRejuvenate => 'foryngelses';
+
+  @override
+  String get elixirEffectAge => 'aldrings';
+
+  @override
+  String get elixirEffectAccelerate => 'akselerasjons';
+
+  @override
+  String get elixirAdjCelebration => 'Festlig';
+
+  @override
+  String get elixirAdjNature => 'Naturlig';
+
+  @override
+  String get elixirAdjLegends => 'Legendarisk';
+
+  @override
+  String get elixirAdjCosmic => 'Kosmisk';
+
+  @override
+  String get elixirAdjAdventure => 'Eventyr';
+
+  @override
+  String get elixirAdjJewels => 'Edel';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective ${effect}eliksir';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Foryng';
+
+  @override
+  String get elixirUseAge => 'Eldr';
+
+  @override
+  String get elixirUseAccelerate => 'Sett opp farten';
+
+  @override
+  String get elixirUse => 'Bruk';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dager',
+      one: '$count dag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count timer',
+      one: '$count time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutter',
+      one: '$count minutt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

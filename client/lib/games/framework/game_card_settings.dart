@@ -100,6 +100,16 @@ UserGameSettings gameCardSettings({
         maxPlayers: 2,
         gameMode: gameMode,
       );
+    case 'chess':
+      return UserGameSettings(
+        gameType: 'chess',
+        turnTimeSec: turnTimeSec,
+        variant: gameMode,
+        gridSize: 8,
+        stakeBronze: stakeBronze,
+        maxPlayers: 2,
+        gameMode: gameMode,
+      );
     default:
       return UserGameSettings(
         gameType: gameType,

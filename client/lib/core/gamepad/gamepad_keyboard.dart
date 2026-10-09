@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_caret_guard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
@@ -10,22 +11,52 @@ import 'package:multigames_client/ui/responsive.dart';
 
 enum GamepadKeyboardLayout { latin, cyrillic, digits }
 
+/// Высота панели геймпада — как viewInsets у системной клавиатуры.
+double gamepadKeyboardPanelHeight({
+  required double bottomSafeArea,
+}) {
+  const title = 48.0;
+  const row = 40.0;
+  const rowGap = 4.0;
+  const rows = 4;
+  const padV = 16.0;
+  return padV + title + rows * row + (rows - 1) * rowGap + bottomSafeArea;
+}
+
 class GamepadKeyboardController extends ChangeNotifier {
   GamepadKeyboardController();
 
   static final GamepadKeyboardController instance = GamepadKeyboardController();
 
   bool _visible = false;
+  int _generation = 0;
   bool get visible => _visible;
 
+  /// Растёт при каждом `hide`, чтобы отменить отложенный `show`.
+  int get generation => _generation;
+
   void show() {
+    hideSoftKeyboard();
+    installGamepadCaretGuard();
+    setGamepadKeyboardBlocksTextArrows(true);
     if (_visible) return;
     _visible = true;
-    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     notifyListeners();
   }
 
+  /// Системная клавиатура не должна перекрывать панель геймпада.
+  static void hideSoftKeyboard() {
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (instance._visible) {
+        SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+      }
+    });
+  }
+
   void hide() {
+    _generation++;
+    setGamepadKeyboardBlocksTextArrows(false);
     if (!_visible) return;
     _visible = false;
     notifyListeners();
@@ -36,6 +67,8 @@ class GamepadKeyboardController extends ChangeNotifier {
   @visibleForTesting
   void reset() {
     _visible = false;
+    _generation++;
+    setGamepadKeyboardBlocksTextArrows(false);
   }
 }
 
@@ -134,7 +167,9 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
 
   bool _onAction(GamepadAction action) {
     if (action == GamepadAction.shoulderL ||
-        action == GamepadAction.shoulderR) {
+        action == GamepadAction.shoulderR ||
+        action == GamepadAction.triggerL ||
+        action == GamepadAction.triggerR) {
       return false;
     }
     if (action.isDirection) {
@@ -153,11 +188,18 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
       });
       return true;
     }
+    if (action.isScroll) {
+      return GamepadTextEditing.moveByScroll(action);
+    }
     if (action == GamepadAction.confirm) {
       _activate(_current);
       return true;
     }
-    if (action == GamepadAction.cancel || action == GamepadAction.actionY) {
+    if (action == GamepadAction.cancel) {
+      widget.onClose();
+      return true;
+    }
+    if (action == GamepadAction.actionY) {
       if (!GamepadTextEditing.backspace()) {
         widget.onClose();
       }
@@ -222,6 +264,7 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
     final narrow = isNarrow(context);
     final rows = _rows;
     return GamepadScope(
+      exclusive: true,
       onAction: _onAction,
       child: Material(
         color: AppColors.surfaceUnified.withValues(alpha: 0.97),
@@ -246,7 +289,6 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
                       ),
                     ),
                     IconButton(
-                      tooltip: l10n.commonClose,
                       onPressed: widget.onClose,
                       icon: const Icon(Icons.keyboard_hide_rounded),
                     ),
@@ -306,6 +348,7 @@ class _KbKeyTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
+        canRequestFocus: false,
         borderRadius: BorderRadius.circular(8),
         child: Container(
           height: 40,

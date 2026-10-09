@@ -7,6 +7,9 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/shop/elixir_icon.dart';
+import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 /// Хаб магазина — три раздела, как на экране монет.
@@ -28,6 +31,25 @@ class ShopScreen extends ConsumerWidget {
         subtitle: l10n.shopEmojisSubtitle,
         onTap: () => context.push('/shop/emojis'),
         dense: dense,
+        onInfoTap: () => showShopSectionHelp(
+          context: context,
+          title: l10n.shopEmojis,
+          body: l10n.shopEmojisHelp,
+        ),
+      ),
+      HomeActionCard(
+        icon: Icons.science_outlined,
+        leading:
+            const ElixirIcon(set: 'jewels', effect: 'rejuvenate', size: 36),
+        title: l10n.shopElixirs,
+        subtitle: l10n.shopElixirsSubtitle,
+        onTap: () => context.push('/shop/elixirs'),
+        dense: dense,
+        onInfoTap: () => showShopSectionHelp(
+          context: context,
+          title: l10n.shopElixirs,
+          body: l10n.shopElixirsHelp,
+        ),
       ),
       HomeActionCard(
         icon: Icons.auto_awesome_outlined,
@@ -35,6 +57,11 @@ class ShopScreen extends ConsumerWidget {
         subtitle: l10n.shopCollectionsSubtitle,
         onTap: () => context.push('/shop/collections'),
         dense: dense,
+        onInfoTap: () => showShopSectionHelp(
+          context: context,
+          title: l10n.shopCollections,
+          body: l10n.shopCollectionsHelp,
+        ),
       ),
       if (!isOffline)
         HomeActionCard(
@@ -43,27 +70,34 @@ class ShopScreen extends ConsumerWidget {
           subtitle: l10n.shopStakesSubtitle,
           onTap: () => context.push('/shop/stakes'),
           dense: dense,
+          onInfoTap: () => showShopSectionHelp(
+            context: context,
+            title: l10n.shopStakes,
+            body: l10n.shopStakesHelp,
+          ),
         ),
     ];
 
     Widget mobileList(BuildContext context) {
-      return Align(
-        alignment: Alignment.topCenter,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics(),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < cards.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 12),
-                  cards[i],
+      return FocusScope(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics(),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < cards.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 12),
+                    cards[i],
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -77,8 +111,7 @@ class ShopScreen extends ConsumerWidget {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: l10n.commonBack,
           ),
@@ -91,22 +124,24 @@ class ShopScreen extends ConsumerWidget {
           ),
         ),
         body: SafeArea(
-          child: tiles
-              ? DesktopTileGrid(
-                  itemCount: cards.length,
-                  maxCellWidth: dense ? 240 : 320,
-                  maxContentWidth: 1100,
-                  maxColumns: 3,
-                  padding: EdgeInsets.fromLTRB(
-                    dense ? 12 : 20,
-                    dense ? 8 : 16,
-                    dense ? 12 : 20,
-                    24,
-                  ),
-                  itemBuilder: (_, i) => cards[i],
-                  mobileBuilder: mobileList,
-                )
-              : mobileList(context),
+          child: FocusScope(
+            child: tiles
+                ? DesktopTileGrid(
+                    itemCount: cards.length,
+                    maxCellWidth: dense ? 240 : 320,
+                    maxContentWidth: 1100,
+                    maxColumns: 4,
+                    padding: EdgeInsets.fromLTRB(
+                      dense ? 12 : 20,
+                      dense ? 8 : 16,
+                      dense ? 12 : 20,
+                      24,
+                    ),
+                    itemBuilder: (_, i) => cards[i],
+                    mobileBuilder: mobileList,
+                  )
+                : mobileList(context),
+          ),
         ),
       ),
     );

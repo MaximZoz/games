@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chat_image_pick.dart';
 import 'package:multigames_client/chats/chat_image_widgets.dart';
+import 'package:multigames_client/chats/chat_room_gamepad.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/chats/coins_credit_message.dart';
@@ -16,10 +17,14 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
-import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/keep_soft_keyboard.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
@@ -158,6 +163,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
   String? _highlightedMessageID;
   int _gamepadMessageIndex = 0;
+  ChatRoomGamepadZone _gamepadZone = ChatRoomGamepadZone.messages;
   bool _jumpingToMessage = false;
 
   /// Всплывашка «Вставить» для скопированной invite-ссылки.
@@ -436,6 +442,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (_composerFocusNode.hasFocus) _scrollToBottom();
     });
     if (!_composerFocusNode.hasFocus) return;
+    if (gamepadConnected() && _gamepadZone != ChatRoomGamepadZone.composer) {
+      setState(() => _gamepadZone = ChatRoomGamepadZone.composer);
+    }
     unawaited(_loadCapabilities());
   }
 
@@ -489,32 +498,209 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     required String title,
     required String description,
     required String confirmText,
-    bool destructive = false,
   }) async {
-    final result = await showDialog<bool>(
+    return showGamepadChoiceDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(description),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(context.l10n.commonCancel),
+      title: title,
+      message: description,
+      confirmLabel: confirmText,
+    );
+  }
+
+  Future<void> _showRoomActionsMenu({
+    required ChatPreviewItem? chat,
+    required ChatUserItem? peerUser,
+  }) async {
+    if (_roomActionInFlight) return;
+    final isGroup = chat?.isGroup == true;
+    final peerId = (peerUser?.id ?? '').trim();
+    final isSupport = peerUser?.isSupport == true ||
+        peerUser?.displayName?.trim() == 'Поддержка';
+    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+    final isFriend = peerId.isNotEmpty &&
+        snapshot?.friends.any((f) => f.user.id == peerId) == true;
+    final hasOutgoing = peerId.isNotEmpty &&
+        snapshot?.outgoing.any((r) => r.user.id == peerId) == true;
+    final hasIncoming = peerId.isNotEmpty &&
+        snapshot?.incoming.any((r) => r.user.id == peerId) == true;
+    String? incomingRequestId;
+    if (snapshot != null && peerId.isNotEmpty) {
+      for (final r in snapshot.incoming) {
+        if (r.user.id == peerId) {
+          incomingRequestId = r.requestId;
+          break;
+        }
+      }
+    }
+
+    final entries = <({_RoomAction action, String label, bool enabled})>[];
+    if (isGroup) {
+      entries.add((
+        action: _RoomAction.sendFriendRequest,
+        label: context.l10n.friendsAdd,
+        enabled: true,
+      ));
+    } else {
+      if (!isSupport && isFriend) {
+        entries.add((
+          action: _RoomAction.removeFriend,
+          label: context.l10n.friendsRemove,
+          enabled: true,
+        ));
+      } else if (!isSupport && peerId.isNotEmpty && snapshot != null) {
+        if (hasIncoming) {
+          entries.add((
+            action: _RoomAction.acceptFriendRequest,
+            label: context.l10n.friendsAcceptRequest,
+            enabled: true,
+          ));
+        } else if (hasOutgoing) {
+          entries.add((
+            action: _RoomAction.sendFriendRequest,
+            label: context.l10n.friendsRequestAlreadySent,
+            enabled: false,
+          ));
+        } else {
+          entries.add((
+            action: _RoomAction.sendFriendRequest,
+            label: context.l10n.friendsSendRequest,
+            enabled: true,
+          ));
+        }
+      }
+      entries.add((
+        action: _RoomAction.clearChat,
+        label: context.l10n.chatsClearConfirm,
+        enabled: true,
+      ));
+      if (!isSupport) {
+        entries.add((
+          action: _RoomAction.blockUser,
+          label: context.l10n.chatsBlockConfirm,
+          enabled: peerId.isNotEmpty,
+        ));
+      }
+    }
+    if (entries.isEmpty) return;
+
+    const menuWidth = 260.0;
+    final future = showGeneralDialog<_RoomAction>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black26,
+      transitionDuration: const Duration(milliseconds: 120),
+      pageBuilder: (ctx, animation, secondaryAnimation) {
+        var closed = false;
+        void close([_RoomAction? value]) {
+          if (closed) return;
+          closed = true;
+          final nav = Navigator.of(ctx);
+          if (nav.canPop()) nav.pop(value);
+        }
+
+        return GamepadScope(
+          exclusive: true,
+          onAction: (pad) {
+            if (chatRoomActionMenuKeepsOpen(pad)) {
+              final nav = pad == GamepadAction.scrollUp
+                  ? GamepadAction.up
+                  : pad == GamepadAction.scrollDown
+                      ? GamepadAction.down
+                      : pad;
+              return handleGamepadUiAction(ctx, nav);
+            }
+            close();
+            return true;
+          },
+          child: GamepadNavGroup(
+            name: 'chat-room-actions',
+            exclusive: true,
+            child: Stack(
+              children: [
+                Positioned(
+                  right: 12,
+                  top: MediaQuery.paddingOf(ctx).top + 48,
+                  child: FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOut,
+                    ),
+                    child: Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.input),
+                      elevation: 8,
+                      clipBehavior: Clip.antiAlias,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          minWidth: 168,
+                          maxWidth: menuWidth,
+                        ),
+                        child: IntrinsicWidth(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (var i = 0; i < entries.length; i++)
+                                GamepadFocusBlock(
+                                  autofocus: i == 0,
+                                  focusable: entries[i].enabled,
+                                  radius: AppRadius.input,
+                                  onActivate: entries[i].enabled
+                                      ? () => close(entries[i].action)
+                                      : null,
+                                  child: InkWell(
+                                    onTap: entries[i].enabled
+                                        ? () => close(entries[i].action)
+                                        : null,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 12,
+                                      ),
+                                      child: Text(
+                                        entries[i].label,
+                                        style: TextStyle(
+                                          color: entries[i].enabled
+                                              ? (entries[i].action ==
+                                                      _RoomAction.blockUser
+                                                  ? Colors.red.shade700
+                                                  : AppColors.textPrimary)
+                                              : AppColors.textSecondary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            FilledButton(
-              style: AppButtonStyles.of(
-                foregroundColor:
-                    destructive ? Colors.red.shade800 : AppColors.textPrimary,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(confirmText),
-            ),
-          ],
+          ),
         );
       },
     );
-    return result == true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      focusFirstVisibleGamepadTarget();
+    });
+    final action = await future;
+    if (!mounted || action == null) return;
+    if (isGroup && action == _RoomAction.sendFriendRequest) {
+      unawaited(_showGroupMembersFriendSheet(chat));
+      return;
+    }
+    unawaited(_runRoomAction(
+      action,
+      peerUserID: peerUser?.id,
+      incomingRequestId: incomingRequestId,
+    ));
   }
 
   Future<void> _runRoomAction(
@@ -602,7 +788,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         title: context.l10n.friendsRemoveTitle,
         description: LocaleService.l10n.friendsRemoveConfirm(peerName),
         confirmText: LocaleService.l10n.friendsRemoveConfirmAction,
-        destructive: true,
       );
       if (!confirmed) return;
 
@@ -654,7 +839,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         title: context.l10n.chatsBlockTitle,
         description: context.l10n.chatsBlockDesc,
         confirmText: context.l10n.chatsBlockConfirm,
-        destructive: true,
       );
       if (!confirmed) return;
 
@@ -690,7 +874,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       title: context.l10n.chatsClearTitle,
       description: context.l10n.chatsClearDesc,
       confirmText: context.l10n.chatsClearConfirm,
-      destructive: true,
     );
     if (!confirmed) return;
 
@@ -871,6 +1054,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _editingMessage = null;
       _composerAlert = null;
       _pasteSuggestionVisible = false;
+      if (gamepadConnected()) {
+        _gamepadZone = ChatRoomGamepadZone.composer;
+      }
     });
     _composerFocusNode.requestFocus();
   }
@@ -1001,68 +1187,103 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       left = 16;
     }
 
-    final action = await showGeneralDialog<String>(
+    final future = showGeneralDialog<String>(
       context: context,
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.black26,
       transitionDuration: const Duration(milliseconds: 120),
       pageBuilder: (ctx, animation, secondaryAnimation) {
-        return Stack(
-          children: [
-            Positioned(
-              left: left,
-              right: right,
-              top: top,
-              child: FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOut,
-                ),
-                child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppRadius.input),
-                  elevation: 8,
-                  clipBehavior: Clip.antiAlias,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minWidth: 148,
-                      maxWidth: menuWidth,
+        var closed = false;
+        void close([String? value]) {
+          if (closed) return;
+          closed = true;
+          final nav = Navigator.of(ctx);
+          if (nav.canPop()) nav.pop(value);
+        }
+
+        return GamepadScope(
+          exclusive: true,
+          onAction: (pad) {
+            if (chatRoomActionMenuKeepsOpen(pad)) {
+              final nav = pad == GamepadAction.scrollUp
+                  ? GamepadAction.up
+                  : pad == GamepadAction.scrollDown
+                      ? GamepadAction.down
+                      : pad;
+              return handleGamepadUiAction(ctx, nav);
+            }
+            close();
+            return true;
+          },
+          child: GamepadNavGroup(
+            name: 'chat-msg-actions',
+            exclusive: true,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: left,
+                  right: right,
+                  top: top,
+                  child: FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOut,
                     ),
-                    child: IntrinsicWidth(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _messageActionTile(
-                            ctx,
-                            value: 'reply',
-                            label: context.l10n.commonReply,
+                    child: Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.input),
+                      elevation: 8,
+                      clipBehavior: Clip.antiAlias,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          minWidth: 148,
+                          maxWidth: menuWidth,
+                        ),
+                        child: IntrinsicWidth(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _messageActionTile(
+                                ctx,
+                                value: 'reply',
+                                label: context.l10n.commonReply,
+                                onSelect: close,
+                                autofocus: true,
+                              ),
+                              if (canEdit)
+                                _messageActionTile(
+                                  ctx,
+                                  value: 'edit',
+                                  label: context.l10n.commonEdit,
+                                  onSelect: close,
+                                ),
+                              if (mine)
+                                _messageActionTile(
+                                  ctx,
+                                  value: 'delete',
+                                  label: context.l10n.commonDelete,
+                                  danger: true,
+                                  onSelect: close,
+                                ),
+                            ],
                           ),
-                          if (canEdit)
-                            _messageActionTile(
-                              ctx,
-                              value: 'edit',
-                              label: context.l10n.commonEdit,
-                            ),
-                          if (mine)
-                            _messageActionTile(
-                              ctx,
-                              value: 'delete',
-                              label: context.l10n.commonDelete,
-                              danger: true,
-                            ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      focusFirstVisibleGamepadTarget();
+    });
+    final action = await future;
     if (!mounted || action == null) return;
     switch (action) {
       case 'reply':
@@ -1078,18 +1299,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     BuildContext ctx, {
     required String value,
     required String label,
+    required void Function([String? value]) onSelect,
     bool danger = false,
+    bool autofocus = false,
   }) {
-    return InkWell(
-      onTap: () => Navigator.of(ctx).pop(value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: danger ? Colors.red.shade700 : AppColors.textPrimary,
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
+    return GamepadFocusBlock(
+      autofocus: autofocus,
+      radius: AppRadius.input,
+      onActivate: () => onSelect(value),
+      child: InkWell(
+        onTap: () => onSelect(value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: danger ? Colors.red.shade700 : AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -1133,7 +1361,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     required AlignmentGeometry alignment,
     required Widget child,
   }) {
-    final gamepadHit = GamepadService.instance.isRecentlyActive &&
+    final gamepadHit = gamepadConnected() &&
+        _gamepadZone == ChatRoomGamepadZone.messages &&
         _messages.isNotEmpty &&
         _messages[_gamepadMessageIndex.clamp(0, _messages.length - 1)].id ==
             message.id;
@@ -1255,6 +1484,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (_loading || _error != null || changed) {
         setState(() {
           _messages = list;
+          if (initial && list.isNotEmpty) {
+            _gamepadMessageIndex = list.length - 1;
+          }
           _messageIDs
             ..clear()
             ..addAll(list.map((e) => e.id));
@@ -2123,105 +2355,169 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             : formatLastSeen(presence.lastSeenAt));
     final notifyCount = _shellNotificationCount();
     final notifyLabel = notifyCount > 99 ? '99+' : '$notifyCount';
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (widget.inSplitView && !widget.fromFriends && !widget.fromGames)
-            const SizedBox(width: 8)
-          else
-            Tooltip(
-              message: widget.fromGames
-                  ? context.l10n.chatBackToGame
-                  : context.l10n.chatBackToChats,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _leavingToChats ? null : _goBackToChats,
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      8,
-                      10,
-                      notifyCount > 0 ? 6 : 8,
-                      10,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.arrow_back_rounded,
-                          color: _leavingToChats
-                              ? AppColors.textSecondary.withValues(alpha: 0.4)
-                              : null,
-                        ),
-                        if (notifyCount > 0) ...[
-                          const SizedBox(width: 2),
-                          Text(
-                            '($notifyLabel)',
-                            style: TextStyle(
-                              color: _leavingToChats
-                                  ? AppColors.accentStart.withValues(alpha: 0.4)
-                                  : AppColors.accentStart,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              height: 1,
-                            ),
+    final inToolbar = _gamepadZone == ChatRoomGamepadZone.toolbar;
+    return ChatRoomGamepadLaneHint(
+      action: GamepadAction.actionY,
+      leading: false,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: GamepadNavGroup(
+          name: 'chat-toolbar',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.inSplitView &&
+                  !widget.fromFriends &&
+                  !widget.fromGames)
+                const SizedBox(width: 8)
+              else
+                GamepadFocusBlock(
+                  focusable: inToolbar,
+                  radius: 20,
+                  onActivate: _leavingToChats ? null : _goBackToChats,
+                  child: Tooltip(
+                    message: widget.fromGames
+                        ? context.l10n.chatBackToGame
+                        : context.l10n.chatBackToChats,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _leavingToChats ? null : _goBackToChats,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            8,
+                            10,
+                            notifyCount > 0 ? 6 : 8,
+                            10,
                           ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          isGroup
-              ? Tooltip(
-                  message: context.l10n.userInfoTitle,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => unawaited(_showGroupParticipantsSheet(chat)),
-                      behavior: HitTestBehavior.opaque,
-                      child: _buildGroupAvatarStack(chat, radius: 18),
-                    ),
-                  ),
-                )
-              : Tooltip(
-                  message: context.l10n.userInfoTitle,
-                  child: MouseRegion(
-                    cursor: infoUser == null
-                        ? SystemMouseCursors.basic
-                        : SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: infoUser == null
-                          ? null
-                          : () {
-                              final user = infoUser;
-                              unawaited(
-                                _showUserInfoDialog(user, presence: presence),
-                              );
-                            },
-                      behavior: HitTestBehavior.opaque,
-                      child: _buildPeerAvatar(
-                        user: peerUser,
-                        fallbackTitle: title,
-                        radius: 18,
-                        isOnline: presence?.online,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.arrow_back_rounded,
+                                color: _leavingToChats
+                                    ? AppColors.textSecondary
+                                        .withValues(alpha: 0.4)
+                                    : null,
+                              ),
+                              if (notifyCount > 0) ...[
+                                const SizedBox(width: 2),
+                                Text(
+                                  '($notifyLabel)',
+                                  style: TextStyle(
+                                    color: _leavingToChats
+                                        ? AppColors.accentStart
+                                            .withValues(alpha: 0.4)
+                                        : AppColors.accentStart,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    height: 1,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: isGroup
-                ? MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => unawaited(_showGroupParticipantsSheet(chat)),
-                      behavior: HitTestBehavior.opaque,
-                      child: Column(
+              GamepadFocusBlock(
+                focusable: inToolbar,
+                radius: 20,
+                shape: GamepadHighlightShape.circle,
+                onActivate: isGroup
+                    ? () => unawaited(_showGroupParticipantsSheet(chat))
+                    : (infoUser == null
+                        ? null
+                        : () {
+                            final user = infoUser;
+                            unawaited(
+                              _showUserInfoDialog(user, presence: presence),
+                            );
+                          }),
+                child: isGroup
+                    ? Tooltip(
+                        message: context.l10n.userInfoTitle,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () =>
+                                unawaited(_showGroupParticipantsSheet(chat)),
+                            behavior: HitTestBehavior.opaque,
+                            child: _buildGroupAvatarStack(chat, radius: 18),
+                          ),
+                        ),
+                      )
+                    : Tooltip(
+                        message: context.l10n.userInfoTitle,
+                        child: MouseRegion(
+                          cursor: infoUser == null
+                              ? SystemMouseCursors.basic
+                              : SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: infoUser == null
+                                ? null
+                                : () {
+                                    final user = infoUser;
+                                    unawaited(
+                                      _showUserInfoDialog(user,
+                                          presence: presence),
+                                    );
+                                  },
+                            behavior: HitTestBehavior.opaque,
+                            child: _buildPeerAvatar(
+                              user: peerUser,
+                              fallbackTitle: title,
+                              radius: 18,
+                              isOnline: presence?.online,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: isGroup
+                    ? MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () =>
+                              unawaited(_showGroupParticipantsSheet(chat)),
+                          behavior: HitTestBehavior.opaque,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              Text(
+                                context.l10n.chatsMembersShort(
+                                  chat?.members.length ?? 0,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -2237,156 +2533,81 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   fontWeight: FontWeight.w700,
                                 ),
                           ),
-                          Text(
-                            context.l10n.chatsMembersShort(
-                              chat?.members.length ?? 0,
+                          if (statusText != null && statusText.isNotEmpty)
+                            Text(
+                              statusText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
                         ],
                       ),
-                    ),
-                  )
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      if (statusText != null && statusText.isNotEmpty)
-                        Text(
-                          statusText,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  ),
-          ),
-          if (!widget.hidePeerActions)
-            PopupMenuButton<_RoomAction>(
-              enabled: !_roomActionInFlight,
-              tooltip: context.l10n.chatActions,
-              onSelected: (action) {
-                if (isGroup && action == _RoomAction.sendFriendRequest) {
-                  unawaited(_showGroupMembersFriendSheet(chat));
-                  return;
-                }
-                final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
-                final peerId = (peerUser?.id ?? '').trim();
-                String? incomingRequestId;
-                if (snapshot != null && peerId.isNotEmpty) {
-                  for (final r in snapshot.incoming) {
-                    if (r.user.id == peerId) {
-                      incomingRequestId = r.requestId;
-                      break;
-                    }
-                  }
-                }
-                unawaited(_runRoomAction(
-                  action,
-                  peerUserID: peerUser?.id,
-                  incomingRequestId: incomingRequestId,
-                ));
-              },
-              itemBuilder: (context) {
-                final peerId = (peerUser?.id ?? '').trim();
-                final isSupport = peerUser?.isSupport == true ||
-                    peerUser?.displayName?.trim() == 'Поддержка';
-                if (isGroup) {
-                  return <PopupMenuEntry<_RoomAction>>[
-                    PopupMenuItem<_RoomAction>(
-                      value: _RoomAction.sendFriendRequest,
-                      child: Text(context.l10n.friendsAdd),
-                    ),
-                  ];
-                }
-                final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
-                final isFriend = peerId.isNotEmpty &&
-                    snapshot?.friends.any((f) => f.user.id == peerId) == true;
-                final hasOutgoing = peerId.isNotEmpty &&
-                    snapshot?.outgoing.any((r) => r.user.id == peerId) == true;
-                final hasIncoming = peerId.isNotEmpty &&
-                    snapshot?.incoming.any((r) => r.user.id == peerId) == true;
-
-                return <PopupMenuEntry<_RoomAction>>[
-                  if (!isSupport && isFriend)
-                    PopupMenuItem<_RoomAction>(
-                      value: _RoomAction.removeFriend,
-                      child: Text(context.l10n.friendsRemove),
-                    )
-                  else if (!isSupport && peerId.isNotEmpty && snapshot != null)
-                    if (hasIncoming)
-                      PopupMenuItem<_RoomAction>(
-                        value: _RoomAction.acceptFriendRequest,
-                        child: Text(context.l10n.friendsAcceptRequest),
-                      )
-                    else if (hasOutgoing)
-                      PopupMenuItem<_RoomAction>(
-                        enabled: false,
-                        value: _RoomAction.sendFriendRequest,
-                        child: Text(context.l10n.friendsRequestAlreadySent),
-                      )
-                    else
-                      PopupMenuItem<_RoomAction>(
-                        value: _RoomAction.sendFriendRequest,
-                        child: Text(context.l10n.friendsSendRequest),
-                      ),
-                  PopupMenuItem<_RoomAction>(
-                    value: _RoomAction.clearChat,
-                    child: Text(context.l10n.chatsClearConfirm),
-                  ),
-                  if (!isSupport)
-                    PopupMenuItem<_RoomAction>(
-                      value: _RoomAction.blockUser,
-                      enabled: peerId.isNotEmpty,
-                      child: Text(context.l10n.chatsBlockConfirm),
-                    ),
-                ];
-              },
-              icon: const Icon(Icons.more_vert_rounded),
-            ),
-          if (_shouldShowAutoTranslate(peerUser))
-            Tooltip(
-              message: context.l10n.chatAutoTranslate,
-              child: IconButton(
-                onPressed: () => unawaited(_setAutoTranslate(!_autoTranslate)),
-                icon: Icon(
-                  Icons.translate_rounded,
-                  color: _autoTranslate
-                      ? AppColors.accentStart
-                      : AppColors.textPrimary,
-                  shadows: _autoTranslate
-                      ? const [
-                          Shadow(
-                            color: Color(0x996366F1),
-                            blurRadius: 10,
-                          ),
-                          Shadow(
-                            color: Color(0x668B5CF6),
-                            blurRadius: 16,
-                          ),
-                        ]
-                      : null,
-                ),
               ),
-            ),
-        ],
+              if (!widget.hidePeerActions)
+                GamepadFocusBlock(
+                  focusable: inToolbar,
+                  radius: 20,
+                  shape: GamepadHighlightShape.circle,
+                  onActivate: _roomActionInFlight
+                      ? null
+                      : () => unawaited(
+                            _showRoomActionsMenu(
+                              chat: chat,
+                              peerUser: peerUser,
+                            ),
+                          ),
+                  child: IconButton(
+                    tooltip: context.l10n.chatActions,
+                    onPressed: _roomActionInFlight
+                        ? null
+                        : () => unawaited(
+                              _showRoomActionsMenu(
+                                chat: chat,
+                                peerUser: peerUser,
+                              ),
+                            ),
+                    icon: const Icon(Icons.more_vert_rounded),
+                  ),
+                ),
+              if (_shouldShowAutoTranslate(peerUser))
+                GamepadFocusBlock(
+                  focusable: inToolbar,
+                  radius: 20,
+                  shape: GamepadHighlightShape.circle,
+                  onActivate: () =>
+                      unawaited(_setAutoTranslate(!_autoTranslate)),
+                  child: Tooltip(
+                    message: context.l10n.chatAutoTranslate,
+                    child: IconButton(
+                      onPressed: () =>
+                          unawaited(_setAutoTranslate(!_autoTranslate)),
+                      icon: Icon(
+                        Icons.translate_rounded,
+                        color: _autoTranslate
+                            ? AppColors.accentStart
+                            : AppColors.textPrimary,
+                        shadows: _autoTranslate
+                            ? const [
+                                Shadow(
+                                  color: Color(0x996366F1),
+                                  blurRadius: 10,
+                                ),
+                                Shadow(
+                                  color: Color(0x668B5CF6),
+                                  blurRadius: 16,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -3064,62 +3285,70 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
     return GamepadScope(
       onAction: _onGamepad,
-      child: Scaffold(
-      backgroundColor: Colors.transparent,
-      // Если клавиатуру уже вычел AppShell, второй раз нельзя: композер
-      // уезжает выше клавиатуры, а сообщения схлопываются в ноль.
-      resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
-      body: SafeArea(
-        child: SwipeBackScope(
-          enabled: canSwipeBack,
-          onBack: _goBackToChats,
-          // Композер слева (смайлик) не должен перекрываться edge-зоной свайпа.
-          bottomInset: 72,
-          child: Column(
-            children: [
-              if (!narrowLandscape)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                  child: _buildChatToolbar(
-                    peerUser: peerUser,
-                    chat: currentChat,
-                    title: title,
-                    presence: peerPresence,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          _handleChatBack();
+        },
+        child: Scaffold(
+        backgroundColor: Colors.transparent,
+        // Если клавиатуру уже вычел AppShell, второй раз нельзя: композер
+        // уезжает выше клавиатуры, а сообщения схлопываются в ноль.
+        resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
+        body: SafeArea(
+          child: SwipeBackScope(
+            enabled: canSwipeBack,
+            onBack: _handleChatBack,
+            // Композер слева (смайлик) не должен перекрываться edge-зоной свайпа.
+            bottomInset: 72,
+            child: Column(
+              children: [
+                if (!narrowLandscape)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                    child: _buildChatToolbar(
+                      peerUser: peerUser,
+                      chat: currentChat,
+                      title: title,
+                      presence: peerPresence,
+                    ),
                   ),
-                ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    messagesWidget,
-                    if (_showScrollToBottomButton && _messages.isNotEmpty)
-                      Positioned(
-                        bottom: 16,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Tooltip(
-                            message: context.l10n.chatScrollToEnd,
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: _scrollToBottom,
-                                borderRadius: BorderRadius.circular(28),
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    gradient: AppGradients.borderAt(0.22),
-                                    borderRadius: BorderRadius.circular(28),
-                                  ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      messagesWidget,
+                      if (_showScrollToBottomButton && _messages.isNotEmpty)
+                        Positioned(
+                          bottom: 16,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Tooltip(
+                              message: context.l10n.chatScrollToEnd,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: _scrollToBottom,
+                                  borderRadius: BorderRadius.circular(28),
                                   child: Container(
-                                    padding: const EdgeInsets.all(10),
+                                    padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(26),
+                                      gradient: AppGradients.borderAt(0.22),
+                                      borderRadius: BorderRadius.circular(28),
                                     ),
-                                    child: Icon(
-                                      Icons.keyboard_double_arrow_down_rounded,
-                                      color: AppColors.accentStart,
-                                      size: 28,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.circular(26),
+                                      ),
+                                      child: Icon(
+                                        Icons
+                                            .keyboard_double_arrow_down_rounded,
+                                        color: AppColors.accentStart,
+                                        size: 28,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -3127,389 +3356,476 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-              if (_composerAlert != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-                  child: Text(
-                    _composerAlert!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.red.shade700,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    ],
                   ),
                 ),
-              if (_pasteSuggestionVisible && _pasteInviteUrl != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(48, 0, 12, 6),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _applyPasteSuggestion,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceCard,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.borderCycle.first,
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
+                if (_composerAlert != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                    child: Text(
+                      _composerAlert!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                if (_pasteSuggestionVisible && _pasteInviteUrl != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(48, 0, 12, 6),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _applyPasteSuggestion,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceCard,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.borderCycle.first,
+                                width: 1.5,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.content_paste_rounded,
-                                size: 18,
-                                color: AppColors.accentStart,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.l10n.chatPaste,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              if (_pendingImages.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: [
-                        for (var i = 0; i < _pendingImages.length; i++)
-                          SizedBox(
-                            width: 64,
-                            height: 64,
-                            child: Stack(
-                              clipBehavior: Clip.none,
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Positioned.fill(
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: _pendingImages[i].image == null
-                                          ? null
-                                          : () => _previewPendingImage(
-                                                _pendingImages[i].image!,
-                                              ),
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: _pendingImages[i].image == null
-                                            ? ColoredBox(
-                                                color: const Color(0xFFE9E4F8),
-                                                child: Center(
-                                                  child: SizedBox(
-                                                    width: 28,
-                                                    height: 28,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      strokeWidth: 3,
-                                                      color:
-                                                          _composerIconPurple,
-                                                      backgroundColor: Colors
-                                                          .white
-                                                          .withValues(
-                                                        alpha: 0.85,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )
-                                            : Image.memory(
-                                                _pendingImages[i].image!.bytes,
-                                                fit: BoxFit.cover,
-                                              ),
-                                      ),
-                                    ),
-                                  ),
+                                Icon(
+                                  Icons.content_paste_rounded,
+                                  size: 18,
+                                  color: AppColors.accentStart,
                                 ),
-                                Positioned(
-                                  top: -4,
-                                  right: -4,
-                                  child: Material(
-                                    color: Colors.white,
-                                    shape: const CircleBorder(),
-                                    child: InkWell(
-                                      customBorder: const CircleBorder(),
-                                      onTap: () => _removePendingImage(i),
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(2),
-                                        child: Icon(
-                                          Icons.close_rounded,
-                                          size: 16,
-                                          color: _composerIconPurple,
-                                        ),
-                                      ),
-                                    ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  context.l10n.chatPaste,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                      ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      onPressed: (_sending ||
-                              _editingMessage != null ||
-                              _emojiOnly ||
-                              _pendingImages.length >= _maxPendingImages)
-                          ? null
-                          : _pickPhoto,
-                      tooltip: context.l10n.photo,
-                      padding: const EdgeInsets.all(10),
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
-                      ),
-                      icon: Icon(
-                        Icons.image_outlined,
-                        color: (_sending ||
-                                _editingMessage != null ||
-                                _emojiOnly ||
-                                _pendingImages.length >= _maxPendingImages)
-                            ? _composerIconPurple.withValues(alpha: 0.35)
-                            : _composerIconPurple,
-                        size: 28,
+                if (_pendingImages.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 10,
+                        runSpacing: 8,
+                        children: [
+                          for (var i = 0; i < _pendingImages.length; i++)
+                            SizedBox(
+                              width: 64,
+                              height: 64,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned.fill(
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: _pendingImages[i].image == null
+                                            ? null
+                                            : () => _previewPendingImage(
+                                                  _pendingImages[i].image!,
+                                                ),
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          child: _pendingImages[i].image == null
+                                              ? ColoredBox(
+                                                  color:
+                                                      const Color(0xFFE9E4F8),
+                                                  child: Center(
+                                                    child: SizedBox(
+                                                      width: 28,
+                                                      height: 28,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 3,
+                                                        color:
+                                                            _composerIconPurple,
+                                                        backgroundColor: Colors
+                                                            .white
+                                                            .withValues(
+                                                          alpha: 0.85,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                              : Image.memory(
+                                                  _pendingImages[i]
+                                                      .image!
+                                                      .bytes,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: -4,
+                                    right: -4,
+                                    child: Material(
+                                      color: Colors.white,
+                                      shape: const CircleBorder(),
+                                      child: InkWell(
+                                        customBorder: const CircleBorder(),
+                                        onTap: () => _removePendingImage(i),
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(2),
+                                          child: Icon(
+                                            Icons.close_rounded,
+                                            size: 16,
+                                            color: _composerIconPurple,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(26),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_replyTo != null || _editingMessage != null)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(12, 8, 4, 0),
-                                child: Row(
+                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                child: ChatRoomGamepadLaneHint(
+                  action: GamepadAction.actionX,
+                    child: GamepadNavGroup(
+                      name: 'chat-composer',
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          GamepadFocusBlock(
+                            focusable:
+                                _gamepadZone == ChatRoomGamepadZone.composer,
+                            radius: 20,
+                            shape: GamepadHighlightShape.circle,
+                            onActivate: (_sending ||
+                                    _editingMessage != null ||
+                                    _emojiOnly ||
+                                    _pendingImages.length >= _maxPendingImages)
+                                ? null
+                                : _pickPhoto,
+                            child: IconButton(
+                              onPressed: (_sending ||
+                                      _editingMessage != null ||
+                                      _emojiOnly ||
+                                      _pendingImages.length >=
+                                          _maxPendingImages)
+                                  ? null
+                                  : _pickPhoto,
+                              tooltip: context.l10n.photo,
+                              padding: const EdgeInsets.all(10),
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
+                              icon: Icon(
+                                Icons.image_outlined,
+                                color: (_sending ||
+                                        _editingMessage != null ||
+                                        _emojiOnly ||
+                                        _pendingImages.length >=
+                                            _maxPendingImages)
+                                    ? _composerIconPurple.withValues(
+                                        alpha: 0.35)
+                                    : _composerIconPurple,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GamepadFieldBlock(
+                              inputFocus: _composerFocusNode,
+                              openOnFocus: false,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(26),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    Container(
-                                      width: 3,
-                                      height: 34,
-                                      decoration: BoxDecoration(
-                                        color: _composerIconPurple,
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            _editingMessage != null
-                                                ? context.l10n.chatEditing
-                                                : context.l10n.chatReplyingTo(
-                                                    _replyAuthorLabel(
-                                                        _replyTo!)),
-                                            style: const TextStyle(
-                                              color: _composerIconPurple,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 12,
+                                    if (_replyTo != null ||
+                                        _editingMessage != null)
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            12, 8, 4, 0),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 3,
+                                              height: 34,
+                                              decoration: BoxDecoration(
+                                                color: _composerIconPurple,
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
                                             ),
-                                          ),
-                                          Text(
-                                            (_editingMessage ?? _replyTo)!
-                                                .previewText,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 12,
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    _editingMessage != null
+                                                        ? context
+                                                            .l10n.chatEditing
+                                                        : context.l10n
+                                                            .chatReplyingTo(
+                                                                _replyAuthorLabel(
+                                                                    _replyTo!)),
+                                                    style: const TextStyle(
+                                                      color:
+                                                          _composerIconPurple,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    (_editingMessage ??
+                                                            _replyTo)!
+                                                        .previewText,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                            IconButton(
+                                              onPressed: _cancelComposerContext,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              icon: const Icon(
+                                                Icons.close_rounded,
+                                                size: 18,
+                                                color: _composerIconPurple,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      onPressed: _cancelComposerContext,
-                                      visualDensity: VisualDensity.compact,
-                                      icon: const Icon(
-                                        Icons.close_rounded,
-                                        size: 18,
-                                        color: _composerIconPurple,
+                                    TextField(
+                                      controller: _textController,
+                                      focusNode: _composerFocusNode,
+                                      readOnly: gamepadConnected(),
+                                      showCursor: true,
+                                      contextMenuBuilder:
+                                          (ctx, editableTextState) {
+                                        return AdaptiveTextSelectionToolbar
+                                            .editableText(
+                                          editableTextState: editableTextState,
+                                        );
+                                      },
+                                      minLines: 1,
+                                      // В альбоме над клавиатурой остаётся полоска —
+                                      // 4 строки съели бы её целиком.
+                                      maxLines: narrowLandscape ? 1 : 4,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        height: 1.3,
+                                        color: AppColors.textPrimary,
                                       ),
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      // Тема приложения рисует OutlineInputBorder —
+                                      // явно гасим все границы и заливку.
+                                      decoration: InputDecoration(
+                                        hintText: context.l10n.chatMessageHint,
+                                        hintStyle: TextStyle(
+                                          fontSize: 16,
+                                          color: AppColors.textSecondary
+                                              .withValues(alpha: 0.85),
+                                        ),
+                                        filled: false,
+                                        isDense: true,
+                                        border: InputBorder.none,
+                                        enabledBorder: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        disabledBorder: InputBorder.none,
+                                        errorBorder: InputBorder.none,
+                                        focusedErrorBorder: InputBorder.none,
+                                        contentPadding:
+                                            const EdgeInsets.fromLTRB(
+                                          16,
+                                          14,
+                                          16,
+                                          14,
+                                        ),
+                                      ),
+                                      textInputAction: TextInputAction.send,
+                                      onTap: () {
+                                        _scrollToBottom();
+                                        if (gamepadConnected()) {
+                                          GamepadKeyboardController.instance
+                                              .show();
+                                        }
+                                      },
+                                      // Не снимать фокус при тапе по «Отправить»
+                                      // (снаружи поля). Иначе Flutter + WebKit
+                                      // моргают клавиатурой.
+                                      onTapOutside: (event) {
+                                        final sendCtx =
+                                            _sendButtonKey.currentContext;
+                                        if (sendCtx != null) {
+                                          final box = sendCtx.findRenderObject()
+                                              as RenderBox?;
+                                          if (box != null && box.hasSize) {
+                                            final local = box
+                                                .globalToLocal(event.position);
+                                            if (box.paintBounds
+                                                .inflate(8)
+                                                .contains(local)) {
+                                              return;
+                                            }
+                                          }
+                                        }
+                                        _composerFocusNode.unfocus();
+                                      },
+                                      // Перехват send с клавиатуры без unfocus.
+                                      onEditingComplete: () {
+                                        unawaited(_sendMessage());
+                                      },
                                     ),
                                   ],
                                 ),
                               ),
-                            TextField(
-                              controller: _textController,
-                              focusNode: _composerFocusNode,
-                              contextMenuBuilder: (ctx, editableTextState) {
-                                return AdaptiveTextSelectionToolbar.editableText(
-                                  editableTextState: editableTextState,
-                                );
-                              },
-                              minLines: 1,
-                              // В альбоме над клавиатурой остаётся полоска —
-                              // 4 строки съели бы её целиком.
-                              maxLines: narrowLandscape ? 1 : 4,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                height: 1.3,
-                                color: AppColors.textPrimary,
-                              ),
-                              textCapitalization: TextCapitalization.sentences,
-                              // Тема приложения рисует OutlineInputBorder —
-                              // явно гасим все границы и заливку.
-                              decoration: InputDecoration(
-                                hintText: context.l10n.chatMessageHint,
-                                hintStyle: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.textSecondary
-                                      .withValues(alpha: 0.85),
-                                ),
-                                filled: false,
-                                isDense: true,
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                                contentPadding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  14,
-                                  4,
-                                  14,
-                                ),
-                                suffixIcon: IconButton(
-                                  onPressed: _sending ? null : _openEmojiPicker,
-                                  tooltip: context.l10n.chatEmoji,
-                                  splashRadius: 22,
-                                  icon: const Icon(
-                                    Icons.emoji_emotions_outlined,
-                                    color: _composerIconPurple,
-                                    size: 28,
-                                  ),
-                                ),
-                                suffixIconConstraints: const BoxConstraints(
-                                  minWidth: 48,
-                                  minHeight: 48,
-                                ),
-                              ),
-                              textInputAction: TextInputAction.send,
-                              onTap: _scrollToBottom,
-                              // Не снимать фокус при тапе по «Отправить»
-                              // (снаружи поля). Иначе Flutter + WebKit
-                              // моргают клавиатурой.
-                              onTapOutside: (event) {
-                                final sendCtx = _sendButtonKey.currentContext;
-                                if (sendCtx != null) {
-                                  final box =
-                                      sendCtx.findRenderObject() as RenderBox?;
-                                  if (box != null && box.hasSize) {
-                                    final local =
-                                        box.globalToLocal(event.position);
-                                    if (box.paintBounds
-                                        .inflate(8)
-                                        .contains(local)) {
-                                      return;
-                                    }
-                                  }
-                                }
-                                _composerFocusNode.unfocus();
-                              },
-                              // Перехват send с клавиатуры без unfocus.
-                              onEditingComplete: () {
-                                unawaited(_sendMessage());
-                              },
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Focus(
-                      canRequestFocus: false,
-                      skipTraversal: true,
-                      descendantsAreFocusable: false,
-                      child: IconButton(
-                        key: _sendButtonKey,
-                        onPressed:
-                            (_sending || _pendingImages.any((e) => e.isLoading))
+                          ),
+                          GamepadFocusBlock(
+                            focusable:
+                                _gamepadZone == ChatRoomGamepadZone.composer,
+                            radius: 20,
+                            shape: GamepadHighlightShape.circle,
+                            onActivate: _sending
+                                ? null
+                                : () => unawaited(_openEmojiPicker()),
+                            child: IconButton(
+                              onPressed: _sending
+                                  ? null
+                                  : () => unawaited(_openEmojiPicker()),
+                              tooltip: context.l10n.chatEmoji,
+                              padding: const EdgeInsets.all(10),
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
+                              icon: const Icon(
+                                Icons.emoji_emotions_outlined,
+                                color: _composerIconPurple,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                          GamepadFocusBlock(
+                            focusable:
+                                _gamepadZone == ChatRoomGamepadZone.composer,
+                            radius: 20,
+                            shape: GamepadHighlightShape.circle,
+                            onActivate: (_sending ||
+                                    _pendingImages.any((e) => e.isLoading))
                                 ? null
                                 : () {
                                     _syncKeepSoftKeyboardRects();
                                     unawaited(_sendMessage());
                                   },
-                        tooltip: _editingMessage != null
-                            ? context.l10n.commonSave
-                            : context.l10n.commonSend,
-                        padding: const EdgeInsets.all(10),
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
-                        ),
-                        icon: _sending
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: _composerIconPurple,
+                            child: Focus(
+                              canRequestFocus: false,
+                              skipTraversal: true,
+                              descendantsAreFocusable: false,
+                              child: IconButton(
+                                key: _sendButtonKey,
+                                onPressed: (_sending ||
+                                        _pendingImages.any((e) => e.isLoading))
+                                    ? null
+                                    : () {
+                                        _syncKeepSoftKeyboardRects();
+                                        unawaited(_sendMessage());
+                                      },
+                                tooltip: _editingMessage != null
+                                    ? context.l10n.commonSave
+                                    : context.l10n.commonSend,
+                                padding: const EdgeInsets.all(10),
+                                constraints: const BoxConstraints(
+                                  minWidth: 48,
+                                  minHeight: 48,
                                 ),
-                              )
-                            : Icon(
-                                _editingMessage != null
-                                    ? Icons.check_rounded
-                                    : Icons.send_rounded,
-                                color: _composerIconPurple,
-                                size: 28,
+                                icon: _sending
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: _composerIconPurple,
+                                        ),
+                                      )
+                                    : Icon(
+                                        _editingMessage != null
+                                            ? Icons.check_rounded
+                                            : Icons.send_rounded,
+                                        color: _composerIconPurple,
+                                        size: 28,
+                                      ),
                               ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
+      ),
     );
+  }
+
+  bool _handleChatBack() {
+    if (_replyTo != null || _editingMessage != null) {
+      _cancelComposerContext();
+      return true;
+    }
+    _goBackToChats();
+    return true;
   }
 
   bool _onGamepad(GamepadAction action) {
@@ -3517,58 +3833,191 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         action == GamepadAction.shoulderR) {
       return false;
     }
-    if (isEditableTextFocused()) {
+    if (chatRoomGoesToToolbar(action)) {
+      _enterGamepadZone(ChatRoomGamepadZone.toolbar);
+      return true;
+    }
+    if (chatRoomGoesToComposer(action)) {
+      _enterGamepadZone(ChatRoomGamepadZone.composer);
+      return true;
+    }
+    if (GamepadKeyboardController.instance.visible || isEditableTextFocused()) {
+      if (action == GamepadAction.cancel &&
+          !GamepadKeyboardController.instance.visible) {
+        return _handleChatBack();
+      }
       if (action == GamepadAction.confirm &&
           !GamepadKeyboardController.instance.visible) {
         GamepadKeyboardController.instance.show();
         return true;
       }
+      if (chatRoomStickReturnsToMessages(
+            zone: ChatRoomGamepadZone.composer,
+            action: action,
+          ) &&
+          !GamepadKeyboardController.instance.visible) {
+        _enterGamepadZone(ChatRoomGamepadZone.messages);
+        return true;
+      }
       return false;
+    }
+    if (action == GamepadAction.cancel) {
+      return _handleChatBack();
     }
     if (_messages.isNotEmpty) {
       _gamepadMessageIndex =
           _gamepadMessageIndex.clamp(0, _messages.length - 1);
     }
+    if (chatRoomStickReturnsToMessages(zone: _gamepadZone, action: action)) {
+      _enterGamepadZone(ChatRoomGamepadZone.messages);
+      return true;
+    }
     if (action == GamepadAction.up || action == GamepadAction.down) {
-      if (_messages.isEmpty) return true;
-      setState(() {
-        // Список reverse: вверх — к более новым (конец массива).
-        _gamepadMessageIndex = cycleIndex(
-          _gamepadMessageIndex,
-          _messages.length,
-          action == GamepadAction.up
-              ? GamepadAction.right
-              : GamepadAction.left,
-        );
-      });
-      final id = _messages[_gamepadMessageIndex].id;
-      final ctx = _keyForMessage(id).currentContext;
-      if (ctx != null && ctx.mounted) {
-        unawaited(
-          Scrollable.ensureVisible(
-            ctx,
-            alignment: 0.35,
-            duration: const Duration(milliseconds: 140),
-          ),
-        );
+      if (_gamepadZone == ChatRoomGamepadZone.messages &&
+          _messages.isNotEmpty) {
+        setState(() {
+          _gamepadMessageIndex = chatRoomMessageIndexAfterMove(
+            index: _gamepadMessageIndex,
+            count: _messages.length,
+            action: action,
+          );
+        });
+        _ensureGamepadMessageVisible();
       }
       return true;
     }
-    if (action == GamepadAction.confirm) {
-      if (_messages.isEmpty) {
-        _composerFocusNode.requestFocus();
-        GamepadKeyboardController.instance.show();
+    if (_gamepadZone == ChatRoomGamepadZone.messages) {
+      if (chatRoomHorizontalIsReply(action) && _messages.isNotEmpty) {
+        _startReply(_messages[_gamepadMessageIndex]);
         return true;
       }
-      unawaited(_showMessageActions(_messages[_gamepadMessageIndex]));
+      if (action == GamepadAction.scrollUp ||
+          action == GamepadAction.scrollDown) {
+        unawaited(
+          _pageGamepadMessages(visualUp: action == GamepadAction.scrollUp),
+        );
+        return true;
+      }
+      if (action == GamepadAction.confirm) {
+        if (_messages.isEmpty) {
+          _enterGamepadZone(ChatRoomGamepadZone.composer);
+          return true;
+        }
+        unawaited(_showMessageActions(_messages[_gamepadMessageIndex]));
+        return true;
+      }
       return true;
     }
-    if (action == GamepadAction.actionY || action == GamepadAction.menu) {
-      _composerFocusNode.requestFocus();
-      GamepadKeyboardController.instance.show();
-      return true;
+    if (action == GamepadAction.left ||
+        action == GamepadAction.right ||
+        action == GamepadAction.confirm) {
+      return handleGamepadUiAction(context, action);
     }
-    return false;
+    return true;
+  }
+
+  void _enterGamepadZone(ChatRoomGamepadZone zone) {
+    setState(() => _gamepadZone = zone);
+    if (zone == ChatRoomGamepadZone.messages) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      if (_messages.isNotEmpty) {
+        _gamepadMessageIndex =
+            _gamepadMessageIndex.clamp(0, _messages.length - 1);
+        _ensureGamepadMessageVisible();
+      }
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _gamepadZone != zone) return;
+      focusFirstVisibleGamepadTarget();
+    });
+  }
+
+  void _ensureGamepadMessageVisible() {
+    if (_messages.isEmpty) return;
+    final id = _messages[_gamepadMessageIndex].id;
+    final ctx = _keyForMessage(id).currentContext;
+    if (ctx != null && ctx.mounted) {
+      unawaited(
+        Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.12,
+          duration: const Duration(milliseconds: 140),
+        ),
+      );
+    }
+  }
+
+  Future<void> _pageGamepadMessages({required bool visualUp}) async {
+    if (_messages.isEmpty || !_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    if (!pos.hasPixels || !pos.hasContentDimensions) return;
+    final viewport = pos.viewportDimension;
+    if (viewport <= 0) return;
+    // reverse ListView: вверх (старее) — больше pixels.
+    final delta = viewport * (visualUp ? 1.0 : -1.0);
+    final next = (pos.pixels + delta).clamp(
+      pos.minScrollExtent,
+      pos.maxScrollExtent,
+    );
+    if ((next - pos.pixels).abs() >= 1) {
+      await pos.animateTo(
+        next,
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+      );
+    } else {
+      final step = chatRoomPageStep(viewport: viewport, itemExtent: 72);
+      setState(() {
+        _gamepadMessageIndex = chatRoomPageIndex(
+          index: _gamepadMessageIndex,
+          count: _messages.length,
+          step: step,
+          visualUp: visualUp,
+        );
+      });
+      _ensureGamepadMessageVisible();
+      return;
+    }
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    _selectFirstVisibleGamepadMessage();
+  }
+
+  void _selectFirstVisibleGamepadMessage() {
+    if (_messages.isEmpty) return;
+    final scrollCtx = _scrollController.hasClients
+        ? _scrollController.position.context.notificationContext
+        : null;
+    final listBox = scrollCtx?.findRenderObject();
+    Rect? viewport;
+    if (listBox is RenderBox && listBox.hasSize && listBox.attached) {
+      final origin = listBox.localToGlobal(Offset.zero);
+      viewport = origin & listBox.size;
+    }
+    String? firstId;
+    var bestTop = double.infinity;
+    for (final message in _messages) {
+      final ctx = _keyForMessage(message.id).currentContext;
+      if (ctx == null || !ctx.mounted) continue;
+      final box = ctx.findRenderObject();
+      if (box is! RenderBox || !box.hasSize || !box.attached) continue;
+      final origin = box.localToGlobal(Offset.zero);
+      final rect = origin & box.size;
+      if (viewport != null && !rect.overlaps(viewport)) continue;
+      if (origin.dy < bestTop) {
+        bestTop = origin.dy;
+        firstId = message.id;
+      }
+    }
+    if (firstId == null) return;
+    final index = _messages.indexWhere((m) => m.id == firstId);
+    if (index < 0) return;
+    setState(() {
+      _gamepadZone = ChatRoomGamepadZone.messages;
+      _gamepadMessageIndex = index;
+    });
   }
 
   String _replyAuthorLabel(ChatMessageItem message) {
@@ -3634,10 +4083,60 @@ class _ChatEmojiPickerSheet extends StatefulWidget {
 }
 
 class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
-  static const _collapsedSize = 0.14;
+  static const _collapsedSize = kChatRoomEmojiSheetCollapsed;
   static const _expandedThreshold = 0.26;
 
+  final DraggableScrollableController _sheet = DraggableScrollableController();
   bool _expanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) focusFirstVisibleGamepadTarget();
+    });
+  }
+
+  @override
+  void dispose() {
+    _sheet.dispose();
+    super.dispose();
+  }
+
+  void _closeSheet() {
+    if (!mounted) return;
+    final nav = Navigator.of(context);
+    if (nav.canPop()) nav.pop();
+  }
+
+  void _resizeSheet({required bool expand}) {
+    if (!_sheet.isAttached) return;
+    final next = chatRoomEmojiSheetSizeAfterScroll(
+      current: _sheet.size,
+      expand: expand,
+    );
+    _sheet.animateTo(
+      next,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
+
+  bool _onEmojiGamepad(GamepadAction action) {
+    if (action == GamepadAction.cancel) {
+      _closeSheet();
+      return true;
+    }
+    if (action == GamepadAction.scrollUp ||
+        action == GamepadAction.scrollDown) {
+      _resizeSheet(expand: action == GamepadAction.scrollUp);
+      return true;
+    }
+    if (action == GamepadAction.confirm || action.isDirection) {
+      return handleGamepadUiAction(context, action);
+    }
+    return true;
+  }
 
   Map<String, String> get _groupTitles {
     final l10n = LocaleService.l10n;
@@ -3658,7 +4157,10 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
     required double emojiSize,
     required double qtySize,
   }) {
-    return InkWell(
+    return GamepadFocusBlock(
+      radius: 12,
+      onActivate: () => widget.onPick(it),
+      child: InkWell(
       onTap: () => widget.onPick(it),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
@@ -3683,6 +4185,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -3717,21 +4220,34 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
       ...grouped.keys.where((k) => !known.contains(k)),
     ];
 
-    return NotificationListener<DraggableScrollableNotification>(
+    return GamepadScope(
+      exclusive: true,
+      onAction: _onEmojiGamepad,
+      child: GamepadNavGroup(
+        name: 'chat-emoji',
+        exclusive: true,
+        child: NotificationListener<DraggableScrollableNotification>(
       onNotification: (n) {
         final next = n.extent >= _expandedThreshold;
         if (next != _expanded) {
           setState(() => _expanded = next);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) focusFirstVisibleGamepadTarget();
+          });
         }
         return false;
       },
       child: DraggableScrollableSheet(
+        controller: _sheet,
         expand: false,
         snap: true,
-        snapSizes: const [_collapsedSize, 0.55],
+        snapSizes: const [
+          kChatRoomEmojiSheetCollapsed,
+          kChatRoomEmojiSheetMid,
+        ],
         initialChildSize: _collapsedSize,
         minChildSize: _collapsedSize,
-        maxChildSize: 0.92,
+        maxChildSize: kChatRoomEmojiSheetMax,
         builder: (context, scrollController) {
           return Container(
             decoration: const BoxDecoration(
@@ -3868,6 +4384,8 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
           );
         },
       ),
+    ),
+    ),
     );
   }
 }

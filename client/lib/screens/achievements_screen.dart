@@ -15,6 +15,8 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 class AchievementsScreen extends ConsumerStatefulWidget {
@@ -167,8 +169,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: l10n.commonBack,
           ),
@@ -246,7 +247,7 @@ class _AchievementCard extends StatelessWidget {
     final l10n = context.l10n;
     final progressText = '${item.progress}/${item.target}';
     final frameCode = item.rewardItemCode;
-    return GradientCard(
+    final card = GradientCard(
       margin: EdgeInsets.zero,
       animate: false,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -344,38 +345,89 @@ class _AchievementCard extends StatelessWidget {
               ),
             ),
           ] else if (item.isClaimed)
-            Text(
+            _claimedLabel(
               item.hasFrameReward
                   ? l10n.achievementsFrameClaimed
                   : l10n.achievementsClaimed,
-              style: TextStyle(
-                color: Colors.green.shade700,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-              ),
             )
           else
-            FilledButton(
+            _actionButton(
+              label: item.hasFrameReward
+                  ? l10n.achievementsOpenFrame
+                  : l10n.inventoryClaim,
               onPressed: onClaim,
-              style: AppButtonStyles.of(
-                minimumSize: const Size(double.infinity, 44),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                alignment: Alignment.center,
-                textStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  height: 1.2,
-                  decoration: TextDecoration.none,
-                ),
-              ),
-              child: Text(
-                item.hasFrameReward
-                    ? l10n.achievementsOpenFrame
-                    : l10n.inventoryClaim,
-              ),
             ),
         ],
+      ),
+    );
+    if (item.isLocked) {
+      return GamepadFocusBlock(
+        radius: AppRadius.card + 2,
+        onActivate: onClaim,
+        child: card,
+      );
+    }
+    return card;
+  }
+
+  Widget _claimedLabel(String label) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+            color: Colors.green.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required String label,
+    Color? foreground,
+    VoidCallback? onPressed,
+  }) {
+    return GamepadFocusBlock(
+      outlined: false,
+      radius: AppRadius.button,
+      borderWidth: 2.2,
+      onActivate: onPressed,
+      child: Builder(
+        builder: (context) {
+          return FilledButton(
+            onPressed: onPressed ?? () {},
+            style: AppButtonStyles.of(
+              minimumSize: const Size(double.infinity, 44),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              radius: AppRadius.button,
+              alignment: Alignment.center,
+              foregroundColor: foreground,
+              textStyle: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+                decoration: TextDecoration.none,
+                color: foreground,
+              ),
+            ).copyWith(
+              side: WidgetStatePropertyAll(
+                GamepadFocusBlock.buttonSide(context),
+              ),
+            ),
+            child: Text(label),
+          );
+        },
       ),
     );
   }

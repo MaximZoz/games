@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:multigames_client/game_engine/game_engine.dart';
 
 /// Локальная партия крестики-нолики против бота(ов) (без API).
@@ -169,13 +167,33 @@ int pickBotCell({
     }
   }
 
-  // 3. Классика 3×3 — минимакс
+  // 3. Вилка: две угрозы сразу, затем блок чужой вилки.
+  if (resolved != variantUltimate) {
+    final fork = _bestFork(board, moves, turn, gridSize, winLen);
+    if (fork >= 0) return fork;
+    for (final opp in opponents) {
+      final block = _bestFork(board, moves, opp, gridSize, winLen);
+      if (block >= 0) return block;
+    }
+  }
+
+  // 4. Классика 3×3 — минимакс
   if (resolved == variantClassic && gridSize == 3 && cfg.marks.length == 2) {
     final cell = _minimaxBest(board, turn, turn);
     if (cell >= 0 && moves.contains(cell)) return cell;
   }
 
-  // 4. Своя угроза, затем блок чужой.
+  // 5. Поиск на больших досках.
+  if (resolved != variantUltimate &&
+      gridSize >= 4 &&
+      gridSize <= 8 &&
+      cfg.marks.length == 2) {
+    final opp = opponents.first;
+    final cell = _searchBoard(board, moves, turn, opp, gridSize, winLen);
+    if (cell >= 0 && moves.contains(cell)) return cell;
+  }
+
+  // 6. Своя угроза, затем блок чужой.
   if (resolved != variantUltimate) {
     final threat = _bestThreat(board, moves, turn, gridSize, winLen);
     if (threat >= 0) return threat;
@@ -199,7 +217,186 @@ int pickBotCell({
     return bestCell;
   }
 
-  return moves[Random().nextInt(moves.length)];
+  return _pickUltimateCell(board, metaBoard ?? const [], moves, turn);
+}
+
+int _bestFork(
+  List<String> board,
+  List<int> moves,
+  String mark,
+  int gridSize,
+  int winLen,
+) {
+  var best = -1;
+  var bestScore = 1;
+  for (final cell in moves) {
+    final next = List<String>.from(board);
+    next[cell] = mark;
+    final n = _countOpenThreats(next, mark, gridSize, winLen);
+    if (n > bestScore) {
+      bestScore = n;
+      best = cell;
+    }
+  }
+  return best;
+}
+
+int _searchBoard(
+  List<String> board,
+  List<int> moves,
+  String botMark,
+  String opponent,
+  int gridSize,
+  int winLen,
+) {
+  var depth = 2;
+  if (gridSize == 4) depth = 4;
+  if (gridSize == 5) depth = 3;
+  var bestCell = -1;
+  var bestScore = -1 << 30;
+  for (final cell in moves) {
+    final next = List<String>.from(board);
+    next[cell] = botMark;
+    final score = _boardMinimax(
+      next,
+      opponent,
+      botMark,
+      opponent,
+      gridSize,
+      winLen,
+      depth - 1,
+    );
+    if (score > bestScore) {
+      bestScore = score;
+      bestCell = cell;
+    }
+  }
+  return bestCell;
+}
+
+int _boardMinimax(
+  List<String> board,
+  String toMove,
+  String botMark,
+  String opponent,
+  int gridSize,
+  int winLen,
+  int depth,
+) {
+  if (findWinLine(board, botMark, gridSize, winLen).isNotEmpty) {
+    return 1000 + depth;
+  }
+  if (findWinLine(board, opponent, gridSize, winLen).isNotEmpty) {
+    return -1000 - depth;
+  }
+  if (board.every((c) => c.isNotEmpty) || depth <= 0) {
+    return _countOpenThreats(board, botMark, gridSize, winLen) * 30 -
+        _countOpenThreats(board, opponent, gridSize, winLen) * 40;
+  }
+  final moves = <int>[];
+  for (var i = 0; i < board.length; i++) {
+    if (board[i].isEmpty) moves.add(i);
+  }
+  if (moves.isEmpty) return 0;
+  final next = toMove == botMark ? opponent : botMark;
+  if (toMove == botMark) {
+    var best = -1 << 30;
+    for (final cell in moves) {
+      final cp = List<String>.from(board);
+      cp[cell] = toMove;
+      final s = _boardMinimax(
+        cp,
+        next,
+        botMark,
+        opponent,
+        gridSize,
+        winLen,
+        depth - 1,
+      );
+      if (s > best) best = s;
+    }
+    return best;
+  }
+  var best = 1 << 30;
+  for (final cell in moves) {
+    final cp = List<String>.from(board);
+    cp[cell] = toMove;
+    final s = _boardMinimax(
+      cp,
+      next,
+      botMark,
+      opponent,
+      gridSize,
+      winLen,
+      depth - 1,
+    );
+    if (s < best) best = s;
+  }
+  return best;
+}
+
+int _pickUltimateCell(
+  List<String> board,
+  List<String> meta,
+  List<int> moves,
+  String turn,
+) {
+  final opp = turn == 'x' ? 'o' : 'x';
+  var best = moves.first;
+  var bestScore = -1 << 30;
+  for (final cell in moves) {
+    final s = _ultimateScore(board, meta, cell, turn, opp);
+    if (s > bestScore) {
+      bestScore = s;
+      best = cell;
+    }
+  }
+  return best;
+}
+
+int _ultimateScore(
+  List<String> board,
+  List<String> meta,
+  int cell,
+  String bot,
+  String opp,
+) {
+  final nextBoard = List<String>.from(board);
+  nextBoard[cell] = bot;
+  final sub = cell ~/ 9;
+  final local = cell % 9;
+  final nextMeta = List<String>.filled(9, '');
+  for (var i = 0; i < 9; i++) {
+    nextMeta[i] = i < meta.length ? meta[i] : '';
+  }
+  final subBoard = List<String>.filled(9, '');
+  final base = sub * 9;
+  for (var i = 0; i < 9; i++) {
+    subBoard[i] = nextBoard[base + i];
+  }
+  final wonSub = findWinLine(subBoard, bot, 3, 3).length == 3;
+  if (wonSub) nextMeta[sub] = bot;
+  if (findWinLine(nextMeta, bot, 3, 3).length == 3) return 10000;
+  var score = 0;
+  if (wonSub) score += 400;
+  if (_ultimateWouldWin(board, meta, cell, opp)) score += 350;
+  if (local == 4) {
+    score += 18;
+  } else if (local.isEven) {
+    score += 8;
+  }
+  if (sub == 4) score += 12;
+  final forced = local;
+  final forcedClosed = forced < nextMeta.length &&
+      (nextMeta[forced].isNotEmpty ||
+          List.generate(9, (i) => nextBoard[forced * 9 + i])
+              .every((c) => c.isNotEmpty));
+  if (forcedClosed) {
+    score += 40;
+  } else if (forced == 4) {
+    score -= 15;
+  }
+  return score;
 }
 
 int _bestThreat(

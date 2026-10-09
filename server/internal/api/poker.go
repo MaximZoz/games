@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -71,18 +72,20 @@ func (h *GamesHandler) servePoker(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetPokerGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.PokerMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "show" && r.Method == http.MethodPost:
-			h.PokerShowCards(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitPokerGame(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetPokerGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.PokerMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "show" && r.Method == http.MethodPost:
+				h.PokerShowCards(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitPokerGame(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 	default:
 		WriteErr(w, r, http.StatusNotFound, "not found")
 	}
@@ -180,6 +183,7 @@ func (h *GamesHandler) CreatePokerLobby(w http.ResponseWriter, r *http.Request) 
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	status := lobbyStatusWaitingInvite
 	now := time.Now().UTC().Format(time.RFC3339Nano)
@@ -232,7 +236,7 @@ func pokerGroupChatTitle(n int) string {
 
 // findOpenPokerLobbyID — открытое poker-лобби тех же правил, куда можно войти.
 func (h *GamesHandler) findOpenPokerLobbyID(ctx context.Context, excludeUser uuid.UUID, turnTimeSec, maxPlayers, stakeBronze int) string {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
 	}
@@ -293,7 +297,7 @@ func (h *GamesHandler) ListPokerLobbies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	ctx := r.Context()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -819,6 +823,7 @@ func (h *GamesHandler) PokerRematch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	pipe := h.Rdb.Pipeline()
@@ -875,6 +880,7 @@ func (h *GamesHandler) PokerRematch(w http.ResponseWriter, r *http.Request) {
 		"creator_id":    userID.String(),
 		"creator_name":  creatorName,
 		"game_type":     pokerGameType,
+		"game_mode":     "holdem",
 		"turn_time_sec": turnT,
 		"max_players":   maxPlayers,
 		"stake_bronze":  stake,
@@ -977,48 +983,54 @@ func (h *GamesHandler) schedulePokerBotAct(gameID string) {
 	go func() {
 		for {
 			time.Sleep(pokerBotDelay)
-			ctx := context.Background()
 			lockKey := "poker_bot_lock:" + gameID
-			locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+			locked, _ := h.Rdb.SetNX(context.Background(), lockKey, "1", 5*time.Second).Result()
 			if !locked {
 				return
 			}
-			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-			if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			state, err := poker.Decode(m["state"])
-			if err != nil || state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			acting := state.Players[state.ActingIndex]
-			if !isBot(acting.UserID) {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			action := pokerBotAction(state)
-			if err := state.Apply(state.ActingIndex, action); err != nil {
-				// Фолбэк: если ход невалиден — фолд.
-				_ = state.Apply(state.ActingIndex, poker.Action{Type: poker.ActionFold})
-			}
-			h.savePokerState(ctx, gameID, m, state)
-			h.broadcastPokerState(gameID, m)
-			over := state.IsOver() || state.HandOver
-			if over {
-				h.onPokerHandOrTableOver(ctx, gameID, m, state, "normal")
-			}
-			h.Rdb.Del(ctx, lockKey)
-			if over {
-				return
-			}
-			if state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
-				return
-			}
-			nextID := state.Players[state.ActingIndex].UserID
-			if !isBot(nextID) {
-				h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+			var stop bool
+			err := h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+				m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+				if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+					stop = true
+					return nil
+				}
+				state, err := poker.Decode(m["state"])
+				if err != nil || state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
+					stop = true
+					return nil
+				}
+				acting := state.Players[state.ActingIndex]
+				if !isBot(acting.UserID) {
+					stop = true
+					return nil
+				}
+				action := pokerBotAction(state)
+				if err := state.Apply(state.ActingIndex, action); err != nil {
+					// Фолбэк: если ход невалиден — фолд.
+					_ = state.Apply(state.ActingIndex, poker.Action{Type: poker.ActionFold})
+				}
+				h.savePokerState(ctx, gameID, m, state)
+				h.broadcastPokerState(gameID, m)
+				over := state.IsOver() || state.HandOver
+				if over {
+					h.onPokerHandOrTableOver(ctx, gameID, m, state, "normal")
+					stop = true
+					return nil
+				}
+				if state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
+					stop = true
+					return nil
+				}
+				nextID := state.Players[state.ActingIndex].UserID
+				if !isBot(nextID) {
+					h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+					stop = true
+				}
+				return nil
+			})
+			h.Rdb.Del(context.Background(), lockKey)
+			if err != nil || stop {
 				return
 			}
 			// Следующий тоже бот — продолжаем цикл (с новой паузой).
@@ -1046,6 +1058,9 @@ func pokerBotHasCallStrength(state *poker.Game, idx int) bool {
 		if v, err := poker.EvaluateBest(cards); err == nil && v.Rank >= poker.OnePair {
 			return true
 		}
+		if pokerBotDrawScore(cards) >= 8 {
+			return true
+		}
 	}
 	return false
 }
@@ -1062,27 +1077,72 @@ func pokerBotStrength(state *poker.Game, idx int) int {
 			if len(v.Tie) > 0 {
 				kick = v.Tie[0]
 			}
-			return int(v.Rank)*16 + kick
+			return int(v.Rank)*20 + kick + pokerBotDrawScore(cards)
 		}
 	}
 	a, b := int(p.Hole[0].Rank), int(p.Hole[1].Rank)
 	if a < b {
 		a, b = b, a
 	}
-	score := a + b
+	score := a*2 + b
 	if a == b {
-		score += 42
+		score += 50
 	}
 	if p.Hole[0].Suit == p.Hole[1].Suit {
-		score += 8
+		score += 14
 	}
 	if a-b <= 2 {
-		score += 6
+		score += 10
+	}
+	if a >= 12 && b >= 10 {
+		score += 12
 	}
 	return score
 }
 
-// pokerBotAction — сила руки: чек/рейз, колл по силе, фолд мусора.
+func pokerBotDrawScore(cards []poker.Card) int {
+	if len(cards) < 4 {
+		return 0
+	}
+	suits := map[poker.Suit]int{}
+	ranks := map[int]int{}
+	for _, c := range cards {
+		suits[c.Suit]++
+		ranks[int(c.Rank)]++
+	}
+	score := 0
+	for _, n := range suits {
+		if n == 4 {
+			score += 10
+		}
+		if n >= 5 {
+			score += 18
+		}
+	}
+	uniq := make([]int, 0, len(ranks))
+	for r := range ranks {
+		uniq = append(uniq, r)
+		if r == 14 {
+			uniq = append(uniq, 1)
+		}
+	}
+	sort.Ints(uniq)
+	run, last := 1, -99
+	for _, r := range uniq {
+		if r == last+1 {
+			run++
+		} else if r != last {
+			run = 1
+		}
+		last = r
+		if run >= 4 {
+			score += 8
+		}
+	}
+	return score
+}
+
+// pokerBotAction — сильная рука: рейз/колл по силе и пот-оддсам, фолд мусора.
 func pokerBotAction(state *poker.Game) poker.Action {
 	idx := state.ActingIndex
 	legal := state.LegalActions(idx)
@@ -1109,11 +1169,15 @@ func pokerBotAction(state *poker.Game) poker.Action {
 			}
 		}
 	}
-	wantRaise := strength >= 58 && has(string(poker.ActionRaise)) && p.Chips > state.BigBlind*2
+	pot := state.Pot
+	if pot <= 0 {
+		pot = state.BigBlind * 3
+	}
+	wantRaise := strength >= 52 && has(string(poker.ActionRaise)) && p.Chips > state.BigBlind*2
 	if has(string(poker.ActionCheck)) {
-		if wantRaise && rand.Intn(3) != 0 {
+		if wantRaise {
 			to := state.CurrentBet + state.MinRaise
-			if strength >= 80 && p.Chips > state.MinRaise*3 {
+			if strength >= 78 && p.Chips > state.MinRaise*3 {
 				to = state.CurrentBet + state.MinRaise*2
 			}
 			if to <= p.Bet+p.Chips {
@@ -1122,9 +1186,10 @@ func pokerBotAction(state *poker.Game) poker.Action {
 		}
 		return poker.Action{Type: poker.ActionCheck}
 	}
-	cheapCall := callAmount > 0 && callAmount < p.Chips && callAmount <= p.Chips/3 && !facingAllIn
-	if has(string(poker.ActionCall)) && cheapCall && strength >= 24 {
-		if wantRaise && strength >= 70 && p.Chips > state.BigBlind*4 {
+	cheapCall := callAmount > 0 && callAmount < p.Chips &&
+		(callAmount*4 <= pot || callAmount <= p.Chips/4) && !facingAllIn
+	if has(string(poker.ActionCall)) && cheapCall && strength >= 20 {
+		if wantRaise && strength >= 64 && p.Chips > state.BigBlind*4 {
 			to := state.CurrentBet + state.MinRaise
 			if to <= p.Bet+p.Chips {
 				return poker.Action{Type: poker.ActionRaise, Amount: to}
@@ -1134,6 +1199,11 @@ func pokerBotAction(state *poker.Game) poker.Action {
 	}
 	if (has(string(poker.ActionCall)) || has(string(poker.ActionAllIn))) &&
 		callAmount > 0 && pokerBotHasCallStrength(state, idx) {
+		if facingAllIn && strength < 40 && callAmount*2 > p.Chips {
+			if has(string(poker.ActionFold)) {
+				return poker.Action{Type: poker.ActionFold}
+			}
+		}
 		if has(string(poker.ActionCall)) && callAmount < p.Chips {
 			return poker.Action{Type: poker.ActionCall}
 		}
@@ -1345,50 +1415,51 @@ func (h *GamesHandler) schedulePokerNextHand(gameID string) {
 	}
 	go func() {
 		time.Sleep(pokerNextHandDelay)
-		ctx := context.Background()
 		lockKey := "poker_next_hand_lock:" + gameID
-		locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 10*time.Second).Result()
+		locked, _ := h.Rdb.SetNX(context.Background(), lockKey, "1", 10*time.Second).Result()
 		if !locked {
 			return
 		}
-		defer h.Rdb.Del(ctx, lockKey)
-
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-		if err != nil || len(m) == 0 || m["game_type"] != pokerGameType {
-			return
-		}
-		state, err := poker.Decode(m["state"])
-		if err != nil || !state.HandOver || state.TableOver {
-			return
-		}
-		rng := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
-		if err := state.StartNextHand(rng); err != nil {
-			return
-		}
-		// Сбрасываем флаги прошлой раздачи.
-		h.Rdb.HDel(ctx, "game:"+gameID, "forfeit", "timeout")
-		delete(m, "forfeit")
-		delete(m, "timeout")
-		h.savePokerState(ctx, gameID, m, state)
-		// Active только у игроков с фишками; выбывшие остаются в observation.
-		for i := range state.Players {
-			pid := state.Players[i].UserID
-			if isBot(pid) || state.Players[i].Chips <= 0 {
-				continue
+		defer h.Rdb.Del(context.Background(), lockKey)
+		_ = h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || len(m) == 0 || m["game_type"] != pokerGameType {
+				return nil
 			}
-			if u, err := uuid.Parse(pid); err == nil {
-				setUserActiveGame(ctx, h.Rdb, u, gameID)
+			state, err := poker.Decode(m["state"])
+			if err != nil || !state.HandOver || state.TableOver {
+				return nil
 			}
-		}
-		h.broadcastPokerState(gameID, m)
-		if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
-			nextID := state.Players[state.ActingIndex].UserID
-			if isBot(nextID) {
-				h.schedulePokerBotAct(gameID)
-			} else {
-				h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+			rng := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+			if err := state.StartNextHand(rng); err != nil {
+				return nil
 			}
-		}
+			// Сбрасываем флаги прошлой раздачи.
+			h.Rdb.HDel(ctx, "game:"+gameID, "forfeit", "timeout")
+			delete(m, "forfeit")
+			delete(m, "timeout")
+			h.savePokerState(ctx, gameID, m, state)
+			// Active только у игроков с фишками; выбывшие остаются в observation.
+			for i := range state.Players {
+				pid := state.Players[i].UserID
+				if isBot(pid) || state.Players[i].Chips <= 0 {
+					continue
+				}
+				if u, err := uuid.Parse(pid); err == nil {
+					setUserActiveGame(ctx, h.Rdb, u, gameID)
+				}
+			}
+			h.broadcastPokerState(gameID, m)
+			if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
+				nextID := state.Players[state.ActingIndex].UserID
+				if isBot(nextID) {
+					h.schedulePokerBotAct(gameID)
+				} else {
+					h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+				}
+			}
+			return nil
+		})
 	}()
 }
 
@@ -1399,6 +1470,7 @@ func (h *GamesHandler) onPokerTableFinished(ctx context.Context, gameID string, 
 	lobbyID := strings.TrimSpace(m["lobby_id"])
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
+		h.forgetLobby(lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 		if strings.TrimSpace(m["chat_id"]) != "" {
 			_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)

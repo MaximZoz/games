@@ -16,13 +16,16 @@ import (
 
 // simple1v1 — общий каркас лобби/партии для 1×1 настолок (шашки, 4 в ряд).
 type simple1v1 struct {
-	gameType string
-	botID    string
+	gameType      string
+	botID         string
 	normalizeMode func(string) string
 	newState      func(mode string) (encoded string, turn int, err error)
 	isOver        func(encoded string) bool
 	winner        func(encoded string) int
 	isBotTurn     func(encoded string, players []string) bool
+	// extraFields — дополнительные поля игрового хеша при старте партии
+	// (например, шахматные часы). Может быть nil.
+	extraFields func(gameMode string) []any
 }
 
 func (s simple1v1) lockKey(mode string, turnTimeSec, stakeBronze int) string {
@@ -112,6 +115,7 @@ func (h *GamesHandler) createSimple1v1Lobby(s simple1v1, w http.ResponseWriter, 
 
 	if body.VsBot {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startSimple1v1Game(ctx, s, lobbyID, []string{userID.String(), s.botID}, []uuid.UUID{userID}, gameMode, body.TurnTimeSec, stakeBronze)
 		if err != nil {
 			h.writeSimple1v1StartError(w, r, err)
@@ -137,6 +141,7 @@ func (h *GamesHandler) createSimple1v1Lobby(s simple1v1, w http.ResponseWriter, 
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	status := lobbyStatusWaitingInvite
@@ -179,7 +184,7 @@ func (h *GamesHandler) findOpenSimple1v1Lobby(
 	gameMode string,
 	turnTimeSec, stakeBronze int,
 ) string {
-	keys, _ := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, _ := h.lobbyHashKeys(ctx)
 	for _, key := range keys {
 		if strings.HasSuffix(key, ":invited") {
 			continue
@@ -339,6 +344,9 @@ func (h *GamesHandler) startSimple1v1Game(
 		"turn_actor_idx", strconv.Itoa(turn),
 		"started_at", now.Format(time.RFC3339Nano),
 	}
+	if s.extraFields != nil {
+		fields = append(fields, s.extraFields(gameMode)...)
+	}
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, gameKey, fields...)
 	pipe.Expire(ctx, gameKey, 24*time.Hour)
@@ -410,6 +418,7 @@ func (h *GamesHandler) rematchSimple1v1(s simple1v1, w http.ResponseWriter, r *h
 	}
 	if len(invitees) == 0 && hasBot {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startSimple1v1Game(ctx, s, lobbyID, []string{userID.String(), s.botID}, []uuid.UUID{userID}, gameMode, turnTimeSec, stakeBronze)
 		if err != nil {
 			h.writeSimple1v1StartError(w, r, err)
@@ -447,6 +456,7 @@ func (h *GamesHandler) createSimple1v1InviteLobby(
 	turnTimeSec, stakeBronze int,
 ) (string, error) {
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, key,
@@ -591,6 +601,7 @@ func (h *GamesHandler) onSimple1v1Finished(ctx context.Context, s simple1v1, gam
 	lobbyID := strings.TrimSpace(m["lobby_id"])
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
+		h.forgetLobby(lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])

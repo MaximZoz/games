@@ -101,8 +101,7 @@ double durakActionButtonBottom({
 
 /// Горизонталь кнопки: 0 — центр, 1 — правый край.
 /// В альбоме правее, чтобы не накрывать карты стола.
-double durakActionButtonAlignX({required bool compact}) =>
-    compact ? 0.62 : 0.0;
+double durakActionButtonAlignX({required bool compact}) => compact ? 0.62 : 0.0;
 
 /// Сколько высоты отдать столу под слот кнопки в альбоме.
 double durakBoardBottomReserve({
@@ -147,9 +146,7 @@ double durakDeckTrumpVisibleWidth({
   required Size cardSize,
   required bool peekOffEdge,
 }) {
-  final stackRight = peekOffEdge
-      ? cardSize.width * (1 - 0.48)
-      : cardSize.width;
+  final stackRight = peekOffEdge ? cardSize.width * (1 - 0.48) : cardSize.width;
   final trumpRight = durakDeckTrumpLeft(
         cardSize: cardSize,
         peekOffEdge: peekOffEdge,
@@ -382,11 +379,7 @@ bool durakVisualLooksStuck({
   required bool hidingTable,
   bool remoteFlightActive = false,
 }) =>
-    busy ||
-    fxScheduled ||
-    flightActive ||
-    hidingTable ||
-    remoteFlightActive;
+    busy || fxScheduled || flightActive || hidingTable || remoteFlightActive;
 
 /// Мини-карта младшего козыря в баннере «кто ходит».
 ///
@@ -410,6 +403,40 @@ bool durakActionChromeVisible({
   required bool holdingFanCard,
 }) =>
     liveCanShow && !holdingFanCard;
+
+/// «Ваш ход» — только после паузы, пока карту не взяли из веера.
+const Duration kDurakMyTurnIdleHintDelay = Duration(seconds: 10);
+
+bool durakMyTurnIdleHintVisible({
+  required bool isMyTurn,
+  required bool holdingFanCard,
+  required bool idleElapsed,
+  required bool gameOver,
+}) {
+  if (gameOver || !isMyTurn || holdingFanCard) return false;
+  return idleElapsed;
+}
+
+/// Часы «ваш ход» привязаны только к смене хода, не к phase/attacker.
+bool durakMyTurnIdleClockActive({
+  required bool isMyTurn,
+  required bool gameOver,
+  required bool localPlayActive,
+}) =>
+    isMyTurn && !gameOver && !localPlayActive;
+
+bool durakFirstLeadBannerVisible({
+  required bool firstRound,
+  required bool tableEmpty,
+  required bool firstLeadArmed,
+  required bool holdingFanCard,
+  required bool gameOver,
+}) {
+  if (gameOver || !tableEmpty || !firstRound || !firstLeadArmed) {
+    return false;
+  }
+  return !holdingFanCard;
+}
 
 /// Overlay полёта на стол снимать после того, как лицо уже в слоте.
 bool durakRevealTableBeforeDismissOverlay({

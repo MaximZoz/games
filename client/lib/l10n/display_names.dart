@@ -92,6 +92,9 @@ String localizeChatTitle(String? title, [AppLocalizations? l10n]) {
     case 'Шашки':
     case 'Checkers':
       return t.gamesCheckers;
+    case 'Шахматы':
+    case 'Chess':
+      return t.gamesChess;
     case 'На троих':
       return t.gamesVariantMulti3;
     case 'На четверых':

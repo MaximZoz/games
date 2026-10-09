@@ -10,6 +10,10 @@ import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/shimmer_animation_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 /// Полный экран статистики игрока: победы/ничьи/поражения, win-rate,
@@ -48,8 +52,7 @@ class GameStatsScreen extends ConsumerWidget {
           backgroundColor: AppColors.surfaceUnified,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
+          leading: GamepadBackButton(
             tooltip: l10n.commonBack,
             onPressed: () => _goBack(context),
           ),
@@ -109,9 +112,20 @@ class GameStatsBody extends ConsumerWidget {
       ),
       data: (stats) => stats.isEmpty
           ? const _EmptyStats()
-          : ListView(
+          : GamepadScope(
+              onAction: (action) {
+                if (action.isDirection || action.isScroll) {
+                  final back = action == GamepadAction.up ||
+                      action == GamepadAction.left ||
+                      action == GamepadAction.scrollUp ||
+                      action == GamepadAction.scrollLeft;
+                  scrollGamepadByPage(back ? -1 : 1, context: context);
+                  return true;
+                }
+                return false;
+              },
+              child: ListView(
               padding: contentPadding,
-              shrinkWrap: true,
               children: [
                 _GameStatsBlock(
                   title: l10n.statsAllGames,
@@ -147,6 +161,7 @@ class GameStatsBody extends ConsumerWidget {
                   ),
                 ],
               ],
+            ),
             ),
     );
   }

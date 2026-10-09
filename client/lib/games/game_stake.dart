@@ -65,6 +65,39 @@ int stakeWinnerNetProfit({
   return (credit - stake).clamp(0, credit);
 }
 
+/// Списание ставки в UI: только поражение. Ничья — возврат, не проигрыш.
+int stakeLostOnFinish({
+  required int stakeBronze,
+  required bool isDraw,
+  required bool iWon,
+}) {
+  if (stakeBronze <= 0 || isDraw || iWon) return 0;
+  return stakeBronze;
+}
+
+/// Чип «+N» / «−N» после партии. Ничья — без чипа (ставка возвращается).
+int stakeFinishRewardChip({
+  required int stakeBronze,
+  required bool isDraw,
+  required bool iWon,
+  int netProfit = 0,
+}) {
+  if (stakeBronze <= 0 || isDraw) return 0;
+  if (iWon) return netProfit > 0 ? netProfit : stakeBronze;
+  return -stakeBronze;
+}
+
+/// Показывать чип награды только если партия кончилась не ничьей.
+bool stakeShowFinishReward({
+  required int stakeBronze,
+  required bool isOver,
+  required bool isDraw,
+  int rewardChip = 0,
+}) {
+  if (!isOver || stakeBronze <= 0 || isDraw) return false;
+  return rewardChip != 0;
+}
+
 /// Числители долей банка дурака по местам (знаменатель = playerCount).
 /// 3: 2/3 + 1/3; 4: 2/4 + 1/4 + 1/4; 2: весь банк.
 List<int> durakPlaceShareNumerators(int playerCount) {

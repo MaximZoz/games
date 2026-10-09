@@ -208,6 +208,9 @@ class UnoGameView {
   bool get iAmEliminated => me?.forfeited == true;
   bool get iWon => myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
 
+  /// Матч кончился без победителей — ничья, ставка возвращается.
+  bool get isDraw => isOver && winnerUserIds.isEmpty;
+
   /// Проиграл этот матч по своему таймауту, а не из‑за чужого.
   bool get iLostOnTimeout =>
       isTimeout && isOver && !iWon && (iAmEliminated || winnerUserIds.isNotEmpty);

@@ -91,6 +91,14 @@ bool durakKeepServerTablePair({
   return !optimistic && !flyingToTable && !remoteFlying;
 }
 
+/// Карта уже лежит на столе — не прятать как «новый remote».
+bool durakTableCardAlreadyVisible({
+  required bool seated,
+  required bool existedOnKnownTable,
+  bool alreadyShown = false,
+}) =>
+    seated || existedOnKnownTable || alreadyShown;
+
 /// Новую чужую атаку прячем, пока busy/replay не успели запустить полёт.
 bool durakHideDeferredRemoteAttack({
   required bool existedOnPrevTable,
@@ -98,10 +106,43 @@ bool durakHideDeferredRemoteAttack({
   required bool localFlying,
   required bool fxDeferred,
   bool seated = false,
+  bool alreadyShown = false,
 }) {
-  if (optimistic || localFlying || existedOnPrevTable || seated) return false;
+  if (optimistic ||
+      localFlying ||
+      durakTableCardAlreadyVisible(
+        seated: seated,
+        existedOnKnownTable: existedOnPrevTable,
+        alreadyShown: alreadyShown,
+      )) {
+    return false;
+  }
   return fxDeferred;
 }
+
+/// Пустой кадр сервера не сбрасывает seated, пока свой ход ещё на столе.
+bool durakShouldClearSeatedOnEmptyTable({
+  required bool hidingTable,
+  required bool takeHold,
+  required bool localPlayActive,
+}) =>
+    !hidingTable && !takeHold && !localPlayActive;
+
+/// В prev оставляем севшую карту, даже если id ещё в remote-наборе.
+bool durakKeepVisibleCardInPrevTable({
+  required bool remoteFlying,
+  required bool seated,
+  bool alreadyShown = false,
+}) =>
+    seated || alreadyShown || !remoteFlying;
+
+/// После hide/schedule сажаем всё, что уже не летит — иначе следующий
+/// кадр снова пометит карту remote и погасит слот в 0.
+bool durakSeatUnhiddenTableCard({
+  required bool remoteFlying,
+  required bool localFlying,
+}) =>
+    !remoteFlying && !localFlying;
 
 /// Remote-id не должен прятать уже севшую / свою / летящую локально карту.
 bool durakShouldHideRemoteTableCard({
@@ -109,9 +150,10 @@ bool durakShouldHideRemoteTableCard({
   required bool seated,
   required bool optimistic,
   required bool localFlying,
+  bool alreadyShown = false,
 }) {
   if (!markedRemoteFlying) return false;
-  if (seated || optimistic || localFlying) return false;
+  if (seated || optimistic || localFlying || alreadyShown) return false;
   return true;
 }
 
@@ -119,22 +161,48 @@ bool durakShouldHideRemoteTableCard({
 ///
 /// Иначе слот получает opacity 1, overlay ещё летит — вспышка на столе
 /// (подкид «появился, потом полетел»; карта мигает при переводе).
-bool durakShouldSeatPrevTableCard({required bool remoteFlying}) =>
-    !remoteFlying;
+bool durakShouldSeatPrevTableCard({
+  required bool remoteFlying,
+  bool alreadyShown = false,
+}) =>
+    alreadyShown || !remoteFlying;
 
-/// FX стола ждём: свой ход, overlay или карта вытянута из веера.
+/// Чужой полёт только для новой карты. Уже лежавшую при своём переводе
+/// не переигрываем — иначе слот гаснет и карта «пропадает, потом появляется».
+bool durakShouldScheduleRemoteTableFlight({
+  required bool existedOnPrevTable,
+  required bool seated,
+  required bool optimistic,
+  required bool localFlying,
+  bool alreadyShown = false,
+}) {
+  if (optimistic ||
+      localFlying ||
+      seated ||
+      alreadyShown ||
+      existedOnPrevTable) {
+    return false;
+  }
+  return true;
+}
+
+/// FX стола ждём только на свой ход / overlay.
+///
+/// Карта, вытянутая из веера, сюда не входит: иначе чужой подкид/перевод
+/// не виден, пока игрок держит карту.
 bool durakTableFxDeferred({
   required bool fxScheduled,
   required bool busy,
   required bool localAttackHold,
   required bool cardFlightActive,
-  required bool holdingFanCard,
 }) =>
-    fxScheduled ||
-    busy ||
-    localAttackHold ||
-    cardFlightActive ||
-    holdingFanCard;
+    fxScheduled || busy || localAttackHold || cardFlightActive;
+
+/// Подсказку перевода/атаки не кладём в ряд пар.
+///
+/// Иначе 2 карты + слот = 3 ячейки, на drop слот на кадр пропадает —
+/// лежащие карты едут влево-вправо, а при переводе ещё и моргают.
+bool durakDropHintOccupiesPairSlot() => false;
 
 /// Скрытую на время busy карту пора снова показать: она уже своя или сидит.
 ///
@@ -145,9 +213,10 @@ bool durakShouldRevealDeferredRemoteCard({
   required bool seated,
   required bool optimistic,
   required bool localFlying,
+  bool alreadyShown = false,
 }) {
   if (!hiddenAsRemote) return false;
-  return seated || optimistic || localFlying;
+  return seated || optimistic || localFlying || alreadyShown;
 }
 
 /// Чья рука кинула новую атаку: подкид — thrower, иначе attacker.
@@ -177,43 +246,48 @@ bool durakSeatedTablePairInLayout({
 }) =>
     seated || reserveForFlight || keepVisible;
 
-/// Одна севшая пара + новый слот (перевод/подкид): не центровать заново.
-/// Иначе лежащая карта прыгает влево и выглядит как моргание.
-bool durakPinExistingTablePair({
-  required int settledCount,
-  required int layoutCount,
-}) =>
-    settledCount == 1 && layoutCount == 2;
+/// Сдвиг уже лежащих пар в финальную сетку — один твин, без второго рывка.
+const Duration kDurakTablePairSlideDuration = Duration(milliseconds: 180);
 
-/// Левый край первой пары: как у одиночной карты по центру, со сдвигом
-/// только если вторая пара не влезает в [maxWidth].
-double durakPinnedFirstPairLeft({
+/// Зазор в ряду: если пары не влезают, наезжают, без scale.
+double durakTableEffectiveGap({
   required Size cardSize,
+  required int rowLen,
   required double maxWidth,
   double gap = 10,
 }) {
+  if (rowLen <= 1) return gap;
   final pairW = durakTablePairSlotWidth(cardSize);
-  final natural = (maxWidth - pairW) / 2;
-  final second = natural + pairW + gap;
-  if (second + pairW <= maxWidth) return natural;
-  final overflow = second + pairW - maxWidth;
-  return natural - overflow;
+  final neededW = rowLen * pairW + (rowLen - 1) * gap;
+  if (neededW <= maxWidth) return gap;
+  return ((maxWidth - rowLen * pairW) / (rowLen - 1))
+      .clamp(-(pairW * 0.55), gap);
 }
 
-/// Левый край второй пары при закреплённой первой.
-double durakPinnedSecondPairLeft({
-  required Size cardSize,
+/// Локальный origin слота пары в финальной сетке (как посадка overlay).
+Offset durakTablePairSlotOrigin({
   required double maxWidth,
+  required Size cardSize,
+  required int pairIndex,
+  required int pairCount,
+  required bool compact,
+  int cols = 2,
   double gap = 10,
 }) {
-  final pairW = durakTablePairSlotWidth(cardSize);
-  return durakPinnedFirstPairLeft(
-        cardSize: cardSize,
-        maxWidth: maxWidth,
-        gap: gap,
-      ) +
-      pairW +
-      gap;
+  final n = pairCount < 1 ? 1 : pairCount;
+  final rows = (n + cols - 1) ~/ cols;
+  final stackH = durakTableStackHeight(cardSize, rows, compact: compact);
+  final card = durakEstimateAttackLandRect(
+    tableCenter: Offset(maxWidth / 2, stackH / 2),
+    cardSize: cardSize,
+    pairIndex: pairIndex,
+    pairCount: n,
+    compact: compact,
+    cols: cols,
+    gap: gap,
+    maxWidth: maxWidth,
+  );
+  return Offset(card.left - 4, card.top);
 }
 
 /// Финальный rect атаки в сетке стола — тот же расчёт, что у рядов.
@@ -225,6 +299,7 @@ Rect durakEstimateAttackLandRect({
   required bool compact,
   int cols = 2,
   double gap = 10,
+  double? maxWidth,
 }) {
   final n = pairCount < 1 ? 1 : pairCount;
   final idx = pairIndex < 0 ? 0 : (pairIndex > n - 1 ? n - 1 : pairIndex);
@@ -233,9 +308,17 @@ Rect durakEstimateAttackLandRect({
   final row = idx ~/ cols;
   final rowLen =
       (row * cols + cols <= n) ? cols : (n - row * cols).clamp(1, cols);
-  final rowWidth = rowLen * pairW + (rowLen - 1) * gap;
+  final usedGap = maxWidth == null
+      ? gap
+      : durakTableEffectiveGap(
+          cardSize: cardSize,
+          rowLen: rowLen,
+          maxWidth: maxWidth,
+          gap: gap,
+        );
+  final rowWidth = rowLen * pairW + (rowLen - 1) * usedGap;
   final rowLeft = tableCenter.dx - rowWidth / 2;
-  final pairLeft = rowLeft + col * (pairW + gap);
+  final pairLeft = rowLeft + col * (pairW + usedGap);
   final rows = (n + cols - 1) ~/ cols;
   final colH = durakTableStackHeight(cardSize, rows, compact: compact);
   final pairTop = tableCenter.dy -

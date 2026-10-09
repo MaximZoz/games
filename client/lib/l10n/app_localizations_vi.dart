@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu và con trỏ trên bàn';
+  String get settingsGamepadGenericName => 'Tay cầm';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Chéo — xác nhận hoặc đi nước';
+  String get settingsGamepadHelpNavigate => 'Điều hướng';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Tròn — quay lại hoặc bỏ chọn';
+  String get settingsGamepadHelpConfirm => 'Chọn';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+  String get settingsGamepadHelpBack => 'Quay lại';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tab';
 
   @override
   String get settingsGamepadHelpPlay => 'Con trỏ bàn và bài trên tay: cờ đam, cờ caro, hải chiến, durak, uno, poker và cờ vua ngược';
 
   @override
-  String get settingsGamepadHelpCards => 'Trong bài: phím hướng chọn bài, A đánh, X chọn / Uno, Y lấy, bỏ qua hoặc bốc';
+  String get settingsGamepadHelpCards => 'Bài';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng';
+  String get settingsGamepadHelpKeyboard => 'Bàn phím';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Số dư';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Đăng xuất';
+
+  @override
+  String get settingsGamepadHelpPage => 'Trang';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Bố cục Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Bố cục PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Bố cục Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Bàn phím';
@@ -776,6 +799,51 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Góc';
 
   @override
+  String get gamesChess => 'Cờ vua';
+
+  @override
+  String get gamesChessModeClassic => 'Cổ điển';
+
+  @override
+  String get gamesChessModeRapid => 'Cờ nhanh';
+
+  @override
+  String get gamesChessModeBlitz => 'Chớp';
+
+  @override
+  String get gamesChessModeBullet => 'Đạn';
+
+  @override
+  String get chessPieceQueen => 'Hậu';
+
+  @override
+  String get chessPieceRook => 'Xe';
+
+  @override
+  String get chessPieceBishop => 'Tượng';
+
+  @override
+  String get chessPieceKnight => 'Mã';
+
+  @override
+  String get chessPromotionTitle => 'Phong cấp tốt';
+
+  @override
+  String get chessDrawStalemate => 'Hòa: hết nước đi';
+
+  @override
+  String get chessDrawInsufficient => 'Hòa: không đủ quân chiếu hết';
+
+  @override
+  String get chessDrawRepetition => 'Hòa: lặp lại ba lần';
+
+  @override
+  String get chessDrawFiftyMove => 'Hòa: luật 50 nước';
+
+  @override
+  String get chessCheck => 'Chiếu';
+
+  @override
   String get rulesCheckersPlayers => 'Người chơi: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Các quân còn trong nhà phải rời đi trong 25 nước đầu của người chơi.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Hòa nếu thế cờ lặp ba lần, hoặc 15 nước mỗi bên không tiến triển: không ăn, không đi tốt và không phong cấp.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Hòa nếu thế cờ lặp ba lần, nếu 40 nước mỗi bên không ăn và không đi tốt, hoặc mỗi bên còn một đam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Hòa nếu thế cờ lặp ba lần, hoặc 15 nước mỗi bên ở chế độ nhường không tiến triển: không ăn, không đi tốt và không phong cấp.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Hòa nếu thế cờ lặp ba lần, hoặc 25 nước mỗi bên không thêm quân vào góc đích.';
+
+  @override
+  String get rulesChessPlayers => 'Người chơi: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Bàn 8×8. Mỗi bên có vua, hậu, hai xe, hai tượng, hai mã và tám tốt. Trắng đi trước. Nước đi thường, bắt tốt qua đường, phong cấp và nhập thành. Thắng bằng chiếu hết hoặc đối thủ đầu hàng.';
+
+  @override
+  String get rulesChessDrawClassic => 'Hòa vì hết nước, lặp ba lần, luật 50 nước, thiếu quân hoặc thỏa thuận.';
+
+  @override
+  String get rulesChessClockClassic => 'Đồng hồ: 60+0 — 60 phút cho cả ván, không cộng thêm.';
+
+  @override
+  String get rulesChessClockRapid => 'Đồng hồ: 10+0 — 10 phút cho cả ván, không cộng thêm.';
+
+  @override
+  String get rulesChessClockBlitz => 'Đồng hồ: 5+0 — 5 phút cho cả ván, không cộng thêm.';
+
+  @override
+  String get rulesChessClockBullet => 'Đồng hồ: 3+2 — 3 phút cộng 2 giây mỗi nước.';
+
+  @override
+  String get checkersDrawRepetition => 'Hòa — thế cờ lặp ba lần';
+
+  @override
+  String get checkersDrawNoProgress => 'Hòa — nước đi không dẫn tới thắng';
+
+  @override
+  String get checkersDrawInsufficient => 'Hòa — không đủ quân để thắng';
 
   @override
   String get rulesNardyTitle => 'Cờ Backgammon — luật';
@@ -861,6 +976,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Sau mọi nước đi, lượt tự chuyển cho đối thủ';
+
+  @override
+  String get nardyLayoutToggle => 'Đổi cách xếp';
 
   @override
   String get nardyNoMoves => 'Không có nước đi';
@@ -1344,7 +1462,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gameOpponent => 'Đối thủ';
 
   @override
+  String get gameYou => 'Bạn';
+
+  @override
   String get gameYouWon => 'Bạn thắng!';
+
+  @override
+  String get gameYouWonShort => 'Bạn thắng';
 
   @override
   String get gameYouLost => 'Bạn thua';
@@ -1381,6 +1505,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Đề nghị hòa';
+
+  @override
+  String get gameFlipBoard => 'Lật bàn cờ';
+
+  @override
+  String get gameReviewStart => 'Về đầu ván';
+
+  @override
+  String get gameReviewPrev => 'Lùi một nước';
+
+  @override
+  String get gameReviewNext => 'Tiến một nước';
+
+  @override
+  String get gameReviewEnd => 'Về vị trí hiện tại';
 
   @override
   String get gameOfferDrawTitle => 'Đề nghị hòa?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Mở khóa cược cao hơn';
+
+  @override
+  String get shopEmojisHelp => 'Emoji động cho trò chuyện. Mua bộ và gửi cho bạn bè.';
+
+  @override
+  String get shopCollectionsHelp => 'Chỉ bán được bộ sưu tập mới hoặc cổ điển: 80% giá khi mới và 300% giá khi cổ điển. Sờn, mệt và cũ nát không bán được.\n\nThu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng. Mỗi vật phẩm mang xu mỗi ngày, và bộ đủ còn thêm một khoản thưởng riêng.\n\nThu nhập hằng ngày của vật phẩm phụ thuộc trạng thái và là một phần của mức thường. Mới mang 100%. Sờn mang 60%. Mệt mang 40%. Cũ nát mang 100%. Vật phẩm cổ điển mang 200%, gấp đôi thu nhập hằng ngày thường.\n\nThưởng của bộ đủ không đổi cho đến khi cả bộ trở thành cổ điển. Bộ là cổ điển khi mọi vật phẩm trong đó đều cổ điển: thưởng khi ấy là 300%, gấp ba mức thường.\n\nTrạng thái phụ thuộc bạn giữ vật phẩm bao lâu. Mới — 7 ngày đầu. Sờn — từ ngày 8 đến 2 tháng. Mệt — từ 2 đến 6 tháng. Cũ nát — từ 6 tháng đến 1 năm. Cổ điển — từ 1 năm.';
+
+  @override
+  String get shopStakesHelp => 'Mở khóa mức cược cao hơn. Cược càng cao, pot và phần thắng càng lớn.';
 
   @override
   String get inventoryTitle => 'Vật phẩm';
@@ -1947,6 +2095,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopOwned => 'Đã mua';
 
   @override
+  String get shopHave => 'Có';
+
+  @override
   String get shopEmpty => 'Vẫn trống';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopBuyOnce => 'Mua một lần';
 
   @override
-  String get shopSellRefund => 'Bán sẽ hoàn lại 80% chi phí';
+  String get shopSellRefund => 'Giá bán phụ thuộc trạng thái bộ sưu tập';
+
+  @override
+  String get collectionConditionNew => 'Mới';
+
+  @override
+  String get collectionConditionWorn => 'Sờn';
+
+  @override
+  String get collectionConditionTired => 'Mệt';
+
+  @override
+  String get collectionConditionShabby => 'Cũ nát';
+
+  @override
+  String get collectionConditionVintage => 'Cổ điển';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Bạn sẽ nhận $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Chỉ bán được bộ sưu tập mới hoặc cổ điển.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Không bán được';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Chỉ bán được vật phẩm mới hoặc cổ điển. Hãy dùng thuốc tiên để đổi trạng thái.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 người: bàn 4×4, bốn người (X, O, △, □). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn.';
+
+  @override
+  String get adminUsersTab => 'Người dùng';
+
+  @override
+  String get adminSupportTab => 'Hỗ trợ';
+
+  @override
+  String get adminSearchHint => 'Tìm theo email hoặc biệt danh';
+
+  @override
+  String get adminRoleAdmins => 'Quản trị';
+
+  @override
+  String get adminRoleUsers => 'Người dùng';
+
+  @override
+  String get adminRoleAll => 'Mọi vai trò';
+
+  @override
+  String get adminStatusFrozen => 'Đã đóng băng';
+
+  @override
+  String get adminStatusActive => 'Đang hoạt động';
+
+  @override
+  String get adminStatusAny => 'Mọi trạng thái';
+
+  @override
+  String get adminOrderDesc => 'Giảm dần';
+
+  @override
+  String get adminOrderAsc => 'Tăng dần';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Không tải được: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Không có người dùng';
+
+  @override
+  String get adminSortLastSeen => 'Theo lần vào gần nhất';
+
+  @override
+  String get adminSortEmail => 'Theo email';
+
+  @override
+  String get adminSortCreated => 'Theo ngày đăng ký';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount đồng';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Gỡ quản trị';
+
+  @override
+  String get adminGrantAdmin => 'Đặt làm quản trị';
+
+  @override
+  String get adminAdminRevoked => 'Đã gỡ quyền quản trị';
+
+  @override
+  String get adminAdminGranted => 'Đã cấp quyền quản trị';
+
+  @override
+  String get adminGrantCoins => 'Cấp xu';
+
+  @override
+  String get adminWriteSupport => 'Viết với tư cách hỗ trợ';
+
+  @override
+  String get adminUnfreeze => 'Bỏ đóng băng';
+
+  @override
+  String get adminFreeze => 'Đóng băng';
+
+  @override
+  String get adminUnfrozen => 'Đã bỏ đóng băng';
+
+  @override
+  String get adminFrozenDone => 'Đã đóng băng';
+
+  @override
+  String get adminResetPassword => 'Đặt lại mật khẩu';
+
+  @override
+  String get adminCoinsAmountHint => 'Số lượng (âm = trừ)';
+
+  @override
+  String get adminReasonOptional => 'Lý do (không bắt buộc)';
+
+  @override
+  String get adminGrantSent => 'Đã gửi thẻ vào chat hỗ trợ';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Đã trừ $amount đồng';
+  }
+
+  @override
+  String get adminGrantVerb => 'Cấp';
+
+  @override
+  String get adminNewPasswordHint => 'Mật khẩu mới (tối thiểu 6)';
+
+  @override
+  String get adminPasswordReset => 'Đã đặt lại mật khẩu';
+
+  @override
+  String get adminResetVerb => 'Đặt lại';
+
+  @override
+  String adminShortError(String error) {
+    return 'Lỗi: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Không có yêu cầu hỗ trợ';
+
+  @override
+  String get adminUserFallback => 'Người dùng';
+
+  @override
+  String get apiErrTooManyRequests => 'Quá nhiều yêu cầu. Hãy thử lại sau.';
+
+  @override
+  String get apiErrMoveConflict => 'Nước đi bị xung đột. Hãy thử lại.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Trẻ hóa';
+
+  @override
+  String get elixirGroupAge => 'Lão hóa';
+
+  @override
+  String get elixirGroupAccelerate => 'Tăng tốc';
+
+  @override
+  String get elixirEffectRejuvenate => 'trẻ hóa';
+
+  @override
+  String get elixirEffectAge => 'lão hóa';
+
+  @override
+  String get elixirEffectAccelerate => 'tăng tốc';
+
+  @override
+  String get elixirAdjCelebration => 'lễ hội';
+
+  @override
+  String get elixirAdjNature => 'thiên nhiên';
+
+  @override
+  String get elixirAdjLegends => 'huyền thoại';
+
+  @override
+  String get elixirAdjCosmic => 'vũ trụ';
+
+  @override
+  String get elixirAdjAdventure => 'phiêu lưu';
+
+  @override
+  String get elixirAdjJewels => 'quý';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return 'Thuốc $effect $adjective';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Trẻ hóa';
+
+  @override
+  String get elixirUseAge => 'Lão hóa';
+
+  @override
+  String get elixirUseAccelerate => 'Tăng tốc';
+
+  @override
+  String get elixirUse => 'Dùng';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ngày',
+      one: '$count ngày',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count giờ',
+      one: '$count giờ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phút',
+      one: '$count phút',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Yön tuşları / çubuk — menü ve tahta imleci';
+  String get settingsGamepadGenericName => 'Kontrolcü';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Çarpı — onayla veya hamle yap';
+  String get settingsGamepadHelpNavigate => 'Gezinme';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Daire — geri veya seçimi kaldır';
+  String get settingsGamepadHelpConfirm => 'Seç';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menü sekmeleri';
+  String get settingsGamepadHelpBack => 'Geri';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Sekmeler';
 
   @override
   String get settingsGamepadHelpPlay => 'Tahta ve el imleci: dama, xox, amiral battı, durak, uno, poker ve tavla';
 
   @override
-  String get settingsGamepadHelpCards => 'Kartlarda: yön tuşları eli gezer, A oynar, X seçer / Uno, Y alır, geçer veya çeker';
+  String get settingsGamepadHelpCards => 'Kartlar';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Metin alanında A oyun kolu klavyesini açar; X düzeni değiştirir, B siler veya kapatır';
+  String get settingsGamepadHelpKeyboard => 'Klavye';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Bakiye';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Çıkış';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sayfa';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox düzeni';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation düzeni';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo düzeni';
 
   @override
   String get gamepadKeyboardTitle => 'Klavye';
@@ -776,6 +799,51 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Köşeler';
 
   @override
+  String get gamesChess => 'Satranç';
+
+  @override
+  String get gamesChessModeClassic => 'Klasik';
+
+  @override
+  String get gamesChessModeRapid => 'Rapid';
+
+  @override
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
+
+  @override
+  String get chessPieceQueen => 'Vezir';
+
+  @override
+  String get chessPieceRook => 'Kale';
+
+  @override
+  String get chessPieceBishop => 'Fil';
+
+  @override
+  String get chessPieceKnight => 'At';
+
+  @override
+  String get chessPromotionTitle => 'Piyon terfisi';
+
+  @override
+  String get chessDrawStalemate => 'Beraberlik: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Beraberlik: yetersiz materyal';
+
+  @override
+  String get chessDrawRepetition => 'Beraberlik: üç kez tekrar';
+
+  @override
+  String get chessDrawFiftyMove => 'Beraberlik: 50 hamle kuralı';
+
+  @override
+  String get chessCheck => 'Şah';
+
+  @override
   String get rulesCheckersPlayers => 'Oyuncular: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Hâlâ evde olan taşlar, oyuncunun ilk 25 hamlesinde evden çıkmalıdır.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Pozisyon üç kez tekrarlanırsa veya her tarafın 15 hamlesi ilerleme getirmezse beraberlik: yeme, piyon hamlesi ve dama olma yok.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Pozisyon üç kez tekrarlanırsa, her tarafın 40 hamlesi yemesiz ve piyonsuz geçerse veya her tarafta bir dama kalırsa beraberlik.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Pozisyon üç kez tekrarlanırsa veya teslim modunda her tarafın 15 hamlesi ilerleme getirmezse beraberlik: yeme, piyon hamlesi ve dama olma yok.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Pozisyon üç kez tekrarlanırsa veya her tarafın 25 hamlesi hedef köşeye taş eklemezse beraberlik.';
+
+  @override
+  String get rulesChessPlayers => 'Oyuncular: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Mod: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Tahta 8×8. Her tarafta şah, vezir, iki kale, iki fil, iki at ve sekiz piyon. Beyaz başlar. Normal hamleler, geçerken alma, terfi ve rok var. Mat veya terk — kazanç.';
+
+  @override
+  String get rulesChessDrawClassic => 'Beraberlik: pat, üç kez tekrar, 50 hamle, yetersiz taş veya anlaşma.';
+
+  @override
+  String get rulesChessClockClassic => 'Tempo: 60+0 — tüm oyun için 60 dakika, ek yok.';
+
+  @override
+  String get rulesChessClockRapid => 'Tempo: 10+0 — tüm oyun için 10 dakika, ek yok.';
+
+  @override
+  String get rulesChessClockBlitz => 'Tempo: 5+0 — tüm oyun için 5 dakika, ek yok.';
+
+  @override
+  String get rulesChessClockBullet => 'Tempo: 3+2 — 3 dakika artı her hamlede 2 saniye.';
+
+  @override
+  String get checkersDrawRepetition => 'Beraberlik — pozisyon üç kez tekrarlandı';
+
+  @override
+  String get checkersDrawNoProgress => 'Beraberlik — hamleler zafere götürmüyor';
+
+  @override
+  String get checkersDrawInsufficient => 'Beraberlik — kazanacak güç yok';
 
   @override
   String get rulesNardyTitle => 'Tavla — kurallar';
@@ -861,6 +976,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Tüm hamlelerden sonra sıra otomatik geçer';
+
+  @override
+  String get nardyLayoutToggle => 'Dizilimi değiştir';
 
   @override
   String get nardyNoMoves => 'Hamle yok';
@@ -1344,7 +1462,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gameOpponent => 'Rakip';
 
   @override
+  String get gameYou => 'Sen';
+
+  @override
   String get gameYouWon => 'Kazandınız!';
+
+  @override
+  String get gameYouWonShort => 'Kazandınız';
 
   @override
   String get gameYouLost => 'Kaybettiniz';
@@ -1381,6 +1505,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Beraberlik teklif et';
+
+  @override
+  String get gameFlipBoard => 'Tahtayı çevir';
+
+  @override
+  String get gameReviewStart => 'Oyunun başına';
+
+  @override
+  String get gameReviewPrev => 'Bir hamle geri';
+
+  @override
+  String get gameReviewNext => 'Bir hamle ileri';
+
+  @override
+  String get gameReviewEnd => 'Mevcut konuma';
 
   @override
   String get gameOfferDrawTitle => 'Beraberlik teklif edilsin mi?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Daha yüksek bahisleri açın';
+
+  @override
+  String get shopEmojisHelp => 'Sohbet için animasyonlu emojiler. Bir set alın ve arkadaşlarınıza gönderin.';
+
+  @override
+  String get shopCollectionsHelp => 'Yalnızca yeni veya vintage bir koleksiyon satılabilir: yeni fiyatın %80’i, vintage fiyatın %300’ü. Yıpranmış, yorgun ve eskimiş satılamaz.\n\nBir eşya seti toplayın: profil vitrininde görünür, hediye edilebilir. Her eşya her gün jeton getirir, tam set ayrıca ayrı bir bonus verir.\n\nBir eşyanın günlük geliri duruma bağlıdır ve olağan tutarın payıdır. Yeni %100 getirir. Yıpranmış %60 getirir. Yorgun %40 getirir. Eskimiş %100 getirir. Vintage bir eşya %200 getirir, yani olağan günlük gelirin iki katı.\n\nTam set bonusu, setin kendisi vintage olana kadar değişmez. Set, içindeki her eşya vintage olduğunda vintage sayılır: bonus o zaman %300 olur, olağanın üç katı.\n\nDurum, eşyanın sende ne kadar süredir olduğuna bağlıdır. Yeni — ilk 7 gün. Yıpranmış — 8. günden 2 aya kadar. Yorgun — 2 aydan 6 aya kadar. Eskimiş — 6 aydan 1 yıla kadar. Vintage — 1 yıldan sonra.';
+
+  @override
+  String get shopStakesHelp => 'Daha yüksek bahislerin kilidini açın. Bahis ne kadar yüksekse pot ve kazanç o kadar büyük olur.';
 
   @override
   String get inventoryTitle => 'Eşyalar';
@@ -1947,6 +2095,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopOwned => 'Satın alındı';
 
   @override
+  String get shopHave => 'Var';
+
+  @override
   String get shopEmpty => 'Henüz boş';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopBuyOnce => 'Tek seferlik satın alma';
 
   @override
-  String get shopSellRefund => 'Satış maliyetin %80\'ini iade eder';
+  String get shopSellRefund => 'Satış koleksiyonun durumuna bağlıdır';
+
+  @override
+  String get collectionConditionNew => 'Yeni';
+
+  @override
+  String get collectionConditionWorn => 'Yıpranmış';
+
+  @override
+  String get collectionConditionTired => 'Yorgun';
+
+  @override
+  String get collectionConditionShabby => 'Eskimiş';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return '$amount alacaksınız';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Yalnızca yeni veya vintage bir koleksiyon satılabilir.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Satılamaz';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Yalnızca yeni veya vintage bir eşya satılabilir. Durumunu değiştirmek için iksir kullanın.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,296 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 oyuncu: 4×4 tahta, dört oyuncu (X, O, △, □). Kendi işaretlerinizle çizgi tamamlayın.';
+
+  @override
+  String get adminUsersTab => 'Kullanıcılar';
+
+  @override
+  String get adminSupportTab => 'Destek';
+
+  @override
+  String get adminSearchHint => 'E-posta veya takma ada göre ara';
+
+  @override
+  String get adminRoleAdmins => 'Yöneticiler';
+
+  @override
+  String get adminRoleUsers => 'Kullanıcılar';
+
+  @override
+  String get adminRoleAll => 'Tüm roller';
+
+  @override
+  String get adminStatusFrozen => 'Dondurulmuş';
+
+  @override
+  String get adminStatusActive => 'Aktif';
+
+  @override
+  String get adminStatusAny => 'Her durum';
+
+  @override
+  String get adminOrderDesc => 'Azalan';
+
+  @override
+  String get adminOrderAsc => 'Artan';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Yüklenemedi: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Kullanıcı yok';
+
+  @override
+  String get adminSortLastSeen => 'Son ziyarete göre';
+
+  @override
+  String get adminSortEmail => 'E-postaya göre';
+
+  @override
+  String get adminSortCreated => 'Kayıt tarihine göre';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Yöneticiliği kaldır';
+
+  @override
+  String get adminGrantAdmin => 'Yönetici yap';
+
+  @override
+  String get adminAdminRevoked => 'Yönetici yetkisi alındı';
+
+  @override
+  String get adminAdminGranted => 'Yönetici yetkisi verildi';
+
+  @override
+  String get adminGrantCoins => 'Jeton ekle';
+
+  @override
+  String get adminWriteSupport => 'Destek olarak yaz';
+
+  @override
+  String get adminUnfreeze => 'Çöz';
+
+  @override
+  String get adminFreeze => 'Dondur';
+
+  @override
+  String get adminUnfrozen => 'Çözüldü';
+
+  @override
+  String get adminFrozenDone => 'Donduruldu';
+
+  @override
+  String get adminResetPassword => 'Parolayı sıfırla';
+
+  @override
+  String get adminCoinsAmountHint => 'Miktar (negatif = düş)';
+
+  @override
+  String get adminReasonOptional => 'Sebep (isteğe bağlı)';
+
+  @override
+  String get adminGrantSent => 'Kart destek sohbetine gönderildi';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount bronz düşüldü';
+  }
+
+  @override
+  String get adminGrantVerb => 'Ekle';
+
+  @override
+  String get adminNewPasswordHint => 'Yeni parola (en az 6)';
+
+  @override
+  String get adminPasswordReset => 'Parola sıfırlandı';
+
+  @override
+  String get adminResetVerb => 'Sıfırla';
+
+  @override
+  String adminShortError(String error) {
+    return 'Hata: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Destek talebi yok';
+
+  @override
+  String get adminUserFallback => 'Kullanıcı';
+
+  @override
+  String get apiErrTooManyRequests => 'Çok fazla istek. Daha sonra deneyin.';
+
+  @override
+  String get apiErrMoveConflict => 'Hamle çakıştı. Tekrar deneyin.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Gençleştirme';
+
+  @override
+  String get elixirGroupAge => 'Yaşlandırma';
+
+  @override
+  String get elixirGroupAccelerate => 'Hızlandırma';
+
+  @override
+  String get elixirEffectRejuvenate => 'gençleştirme';
+
+  @override
+  String get elixirEffectAge => 'yaşlandırma';
+
+  @override
+  String get elixirEffectAccelerate => 'hızlandırma';
+
+  @override
+  String get elixirAdjCelebration => 'Şenlik';
+
+  @override
+  String get elixirAdjNature => 'Doğa';
+
+  @override
+  String get elixirAdjLegends => 'Efsane';
+
+  @override
+  String get elixirAdjCosmic => 'Kozmik';
+
+  @override
+  String get elixirAdjAdventure => 'Macera';
+
+  @override
+  String get elixirAdjJewels => 'Değerli';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect iksiri';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Gençleştir';
+
+  @override
+  String get elixirUseAge => 'Yaşlandır';
+
+  @override
+  String get elixirUseAccelerate => 'Hızlandır';
+
+  @override
+  String get elixirUse => 'Kullan';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gün',
+      one: '$count gün',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saat',
+      one: '$count saat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dakika',
+      one: '$count dakika',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

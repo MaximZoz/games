@@ -42,10 +42,16 @@ class NardyBoard extends StatefulWidget {
     required this.onDragEnd,
     this.dragCancel,
     this.cursorTrack,
+    this.homeOnRight = false,
+    this.highlightBar = false,
   });
 
   final NardyGameView game;
   final NardyCheckerTracker tracker;
+
+  /// Моя шашка сбита и стоит на баре в мой ход — подсветить бар, чтобы было
+  /// понятно, что сначала надо ввести её в игру.
+  final bool highlightBar;
 
   /// Выбранный пункт дорожки или [nardyBarTrack]; `null` — ничего не выбрано.
   final int? selectedTrack;
@@ -79,27 +85,69 @@ class NardyBoard extends StatefulWidget {
   /// Пункт под курсором геймпада: дорожка, [nardyBarTrack] или [nardyPoints].
   final int? cursorTrack;
 
+  /// Дом справа внизу — зеркальная раскладка в коротких и длинных.
+  final bool homeOnRight;
+
   static const Duration moveDuration = Duration(milliseconds: 420);
 
   @override
   State<NardyBoard> createState() => _NardyBoardState();
 }
 
-class _NardyBoardState extends State<NardyBoard> {
+class _NardyBoardState extends State<NardyBoard>
+    with SingleTickerProviderStateMixin {
   /// Пункт, с которого сейчас тащат шашку.
   int? _dragTrack;
   Offset? _dragPosition;
+
+  late final AnimationController _barPulse;
 
   NardyGameView get game => widget.game;
 
   bool get _showBar => !game.isLong;
 
   @override
+  void initState() {
+    super.initState();
+    _barPulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 820),
+    );
+    _syncBarPulse();
+  }
+
+  @override
+  void didUpdateWidget(covariant NardyBoard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.highlightBar != widget.highlightBar) _syncBarPulse();
+  }
+
+  void _syncBarPulse() {
+    if (widget.highlightBar) {
+      if (!_barPulse.isAnimating) _barPulse.repeat(reverse: true);
+    } else {
+      _barPulse
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _barPulse.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
-        final geometry = NardyBoardGeometry(size: size, showBar: _showBar);
+        final geometry = NardyBoardGeometry(
+          size: size,
+          showBar: _showBar,
+          homeOnRight: widget.homeOnRight,
+        );
         final mySeat = game.myIndex < 0 ? 0 : game.myIndex;
         final oppSeat = game.myIndex < 0 ? 1 : game.opponentIndex;
         final diameter = geometry.checkerSize;
@@ -129,15 +177,21 @@ class _NardyBoardState extends State<NardyBoard> {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: CustomPaint(
-                    painter: _BoardPainter(
-                      geometry: geometry,
-                      selectedTrack: widget.selectedTrack,
-                      cursorTrack: widget.cursorTrack,
-                      targetTracks: widget.targetTracks,
-                      undoTracks: widget.undoTracks,
-                      canBearOff: widget.canBearOff,
-                      showBar: _showBar,
+                  child: AnimatedBuilder(
+                    animation: _barPulse,
+                    builder: (context, _) => CustomPaint(
+                      painter: _BoardPainter(
+                        geometry: geometry,
+                        selectedTrack: widget.selectedTrack,
+                        cursorTrack: widget.cursorTrack,
+                        targetTracks: widget.targetTracks,
+                        undoTracks: widget.undoTracks,
+                        canBearOff: widget.canBearOff,
+                        showBar: _showBar,
+                        barHighlight: widget.highlightBar
+                            ? 0.35 + 0.45 * _barPulse.value
+                            : 0.0,
+                      ),
                     ),
                   ),
                 ),
@@ -297,7 +351,8 @@ class _NardyBoardState extends State<NardyBoard> {
 
   int _toMyTrack(int oppTrack, {required bool mine}) {
     if (mine || game.myIndex < 0) return oppTrack;
-    final point = nardyTrackToBoard(game.gameMode, game.opponentIndex, oppTrack);
+    final point =
+        nardyTrackToBoard(game.gameMode, game.opponentIndex, oppTrack);
     final track = nardyBoardToTrack(game.gameMode, game.myIndex, point);
     return track < 0 ? oppTrack : track;
   }
@@ -357,6 +412,7 @@ class _BoardPainter extends CustomPainter {
     required this.undoTracks,
     required this.canBearOff,
     required this.showBar,
+    this.barHighlight = 0.0,
   });
 
   final NardyBoardGeometry geometry;
@@ -366,6 +422,9 @@ class _BoardPainter extends CustomPainter {
   final Set<int> undoTracks;
   final bool canBearOff;
   final bool showBar;
+
+  /// Непрозрачность подсветки бара (0 — выкл), когда надо ввести сбитую шашку.
+  final double barHighlight;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -380,7 +439,10 @@ class _BoardPainter extends CustomPainter {
     final rect = geometry.trackRect(track);
     if (rect.isEmpty) return;
     final top = NardyBoardLayout.isTopRow(track);
-    final column = NardyBoardLayout.columnOf(track);
+    final column = nardyVisualColumn(
+      track,
+      homeOnRight: geometry.homeOnRight,
+    );
     final base = column.isEven ? _kPointLight : _kPointDark;
     var fill = NardyBoardLayout.isHome(track)
         ? Color.alphaBlend(_kHomeTint.withValues(alpha: 0.22), base)
@@ -452,6 +514,20 @@ class _BoardPainter extends CustomPainter {
       paint,
     );
     if (!showBar) return;
+    if (barHighlight > 0) {
+      final rr = RRect.fromRectAndRadius(rect, const Radius.circular(4));
+      canvas.drawRRect(
+        rr,
+        Paint()..color = _kSelected.withValues(alpha: 0.28 * barHighlight),
+      );
+      canvas.drawRRect(
+        rr,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..color = _kSelected.withValues(alpha: barHighlight.clamp(0.0, 1.0)),
+      );
+    }
     final selected = selectedTrack == nardyBarTrack;
     if (selected) {
       canvas.drawRRect(
@@ -505,6 +581,7 @@ class _BoardPainter extends CustomPainter {
       old.cursorTrack != cursorTrack ||
       old.canBearOff != canBearOff ||
       old.showBar != showBar ||
+      old.barHighlight != barHighlight ||
       !setEquals(old.targetTracks, targetTracks) ||
       !setEquals(old.undoTracks, undoTracks) ||
       old.geometry.size != geometry.size;

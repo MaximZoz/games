@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -72,25 +74,46 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kříž / páčka — menu a kurzor na desce';
+  String get settingsGamepadGenericName => 'Ovladač';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Křížek — potvrdit nebo táhnout';
+  String get settingsGamepadHelpNavigate => 'Navigace';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Kroužek — zpět nebo zrušit výběr';
+  String get settingsGamepadHelpConfirm => 'Vybrat';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — záložky menu';
+  String get settingsGamepadHelpBack => 'Zpět';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Karty';
 
   @override
   String get settingsGamepadHelpPlay => 'Kurzor na desce a v ruce: dáma, piškvorky, lodě, durak, uno, poker a vrhcáby';
 
   @override
-  String get settingsGamepadHelpCards => 'V kartách: křížek posouvá ruku, A hraje, X vybere / Uno, Y vezme, přenechá nebo lízne';
+  String get settingsGamepadHelpCards => 'Karty';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'V poli A otevře klávesnici gamepadu; X změní rozložení, B smaže nebo zavře';
+  String get settingsGamepadHelpKeyboard => 'Klávesnice';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Zůstatek';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Odhlásit';
+
+  @override
+  String get settingsGamepadHelpPage => 'Stránka';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Rozložení Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Rozložení PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Rozložení Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Klávesnice';
@@ -776,6 +799,51 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Rohy';
 
   @override
+  String get gamesChess => 'Šachy';
+
+  @override
+  String get gamesChessModeClassic => 'Klasika';
+
+  @override
+  String get gamesChessModeRapid => 'Rapid';
+
+  @override
+  String get gamesChessModeBlitz => 'Bleskovka';
+
+  @override
+  String get gamesChessModeBullet => 'Kulka';
+
+  @override
+  String get chessPieceQueen => 'Dáma';
+
+  @override
+  String get chessPieceRook => 'Věž';
+
+  @override
+  String get chessPieceBishop => 'Střelec';
+
+  @override
+  String get chessPieceKnight => 'Jezdec';
+
+  @override
+  String get chessPromotionTitle => 'Proměna pěšce';
+
+  @override
+  String get chessDrawStalemate => 'Remíza: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Remíza: nedostatek materiálu';
+
+  @override
+  String get chessDrawRepetition => 'Remíza: trojí opakování pozice';
+
+  @override
+  String get chessDrawFiftyMove => 'Remíza: pravidlo 50 tahů';
+
+  @override
+  String get chessCheck => 'Šach';
+
+  @override
   String get rulesCheckersPlayers => 'Hráči: 2.';
 
   @override
@@ -817,6 +885,53 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCornersLeaveHome => 'Kameny, které ještě neopustily dům, musí z něj odejít během prvních 25 tahů hráče.';
+
+  @override
+  String get rulesCheckersDrawRussian => 'Remíza, pokud se pozice třikrát zopakuje, nebo 15 tahů každé strany nepřinese postup: žádné braní, tah kamenem ani povýšení.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remíza, pokud se pozice třikrát zopakuje, pokud 40 tahů každé strany mine bez braní a tahu kamenem, nebo zbude jen jedna dáma na každé straně.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remíza, pokud se pozice třikrát zopakuje, nebo 15 tahů každé strany ve hře na odevzdání nepřinese postup: žádné braní, tah kamenem ani povýšení.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remíza, pokud se pozice třikrát zopakuje, nebo 25 tahů každé strany nepřidá kámen do cílového rohu.';
+
+  @override
+  String get rulesChessPlayers => 'Hráči: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Režim: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Šachovnice 8×8. Každá strana má krále, dámu, dvě věže, dva střelce, dva jezdce a osm pěšců. Bílý začíná. Běžné tahy, braní mimochodem, proměna a rošáda. Výhra matem nebo vzdáním.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remíza patem, trojím opakováním, pravidlem 50 tahů, nedostatkem materiálu nebo dohodou.';
+
+  @override
+  String get rulesChessClockClassic => 'Čas: 60+0 — 60 minut na celou partii, bez přídavku.';
+
+  @override
+  String get rulesChessClockRapid => 'Čas: 10+0 — 10 minut na celou partii, bez přídavku.';
+
+  @override
+  String get rulesChessClockBlitz => 'Čas: 5+0 — 5 minut na celou partii, bez přídavku.';
+
+  @override
+  String get rulesChessClockBullet => 'Čas: 3+2 — 3 minuty plus 2 sekundy za tah.';
+
+  @override
+  String get checkersDrawRepetition => 'Remíza — pozice se třikrát opakovala';
+
+  @override
+  String get checkersDrawNoProgress => 'Remíza — tahy nevedou k výhře';
+
+  @override
+  String get checkersDrawInsufficient => 'Remíza — málo materiálu k výhře';
 
   @override
   String get rulesNardyTitle => 'Vrhcáby — pravidla';
@@ -861,6 +976,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Po všech tazích ihned předat tah soupeři';
+
+  @override
+  String get nardyLayoutToggle => 'Změnit rozložení';
 
   @override
   String get nardyNoMoves => 'Žádné tahy';
@@ -1344,7 +1462,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gameOpponent => 'Soupeř';
 
   @override
+  String get gameYou => 'Vy';
+
+  @override
   String get gameYouWon => 'Vyhráli jste!';
+
+  @override
+  String get gameYouWonShort => 'Vyhráli jste';
 
   @override
   String get gameYouLost => 'Prohráli jste';
@@ -1381,6 +1505,21 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Nabídnout remízu';
+
+  @override
+  String get gameFlipBoard => 'Otočit šachovnici';
+
+  @override
+  String get gameReviewStart => 'Na začátek partie';
+
+  @override
+  String get gameReviewPrev => 'O tah zpět';
+
+  @override
+  String get gameReviewNext => 'O tah vpřed';
+
+  @override
+  String get gameReviewEnd => 'Na aktuální pozici';
 
   @override
   String get gameOfferDrawTitle => 'Nabídnout remízu?';
@@ -1636,6 +1775,15 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get shopStakesSubtitle => 'Odemknutí vyšších sázek';
+
+  @override
+  String get shopEmojisHelp => 'Animované smajlíky do chatu. Kupte sadu a posílejte je přátelům.';
+
+  @override
+  String get shopCollectionsHelp => 'Prodat lze jen novou nebo vintage kolekci: 80 % ceny, když je nová, a 300 % ceny, když je vintage. Ohmatanou, unavenou a zchátralou prodat nelze.\n\nSesbírejte sadu předmětů: objeví se ve výloze profilu, lze je darovat. Každý předmět denně přináší mince a kompletní sada ještě samostatný bonus.\n\nDenní příjem předmětu záleží na stavu a počítá se z obvyklé částky. Nová přináší 100 %. Ohmataná 60 %. Unavená 40 %. Zchátralá 100 %. Vintage předmět přináší 200 %, tedy dvojnásobek obvyklého příjmu.\n\nBonus kompletní sady se nemění, dokud se sada sama nestane vintage. Sada je vintage, když je vintage každý její předmět: bonus je pak 300 %, trojnásobek obvyklého.\n\nStav záleží na tom, jak dlouho předmět máte. Nová — prvních 7 dní. Ohmataná — od 8. dne do 2 měsíců. Unavená — od 2 do 6 měsíců. Zchátralá — od 6 měsíců do roku. Vintage — od roku.';
+
+  @override
+  String get shopStakesHelp => 'Odemkněte vyšší sázky. Čím vyšší sázka, tím větší pot a výhra.';
 
   @override
   String get inventoryTitle => 'Předměty';
@@ -1947,6 +2095,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopOwned => 'Zakoupeno';
 
   @override
+  String get shopHave => 'Máš';
+
+  @override
   String get shopEmpty => 'Zatím prázdné';
 
   @override
@@ -1979,7 +2130,22 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopBuyOnce => 'Jednorázový nákup';
 
   @override
-  String get shopSellRefund => 'Prodej vrátí 80% ceny';
+  String get shopSellRefund => 'Prodej závisí na stavu kolekce';
+
+  @override
+  String get collectionConditionNew => 'Nová';
+
+  @override
+  String get collectionConditionWorn => 'Ohmataná';
+
+  @override
+  String get collectionConditionTired => 'Unavená';
+
+  @override
+  String get collectionConditionShabby => 'Zchátralá';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
 
   @override
   String shopCollectionAdded(String title) {
@@ -2006,6 +2172,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Získáte $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Prodat lze jen novou nebo vintage kolekci.';
+
+  @override
+  String get inventoryCollectionNotSellableTitle => 'Nelze prodat';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Prodat lze jen nový nebo vintage předmět. Použijte elixír a změňte stav.';
 
   @override
   String inventorySold(String amount) {
@@ -2721,4 +2896,299 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 hráči: plán 4×4, čtyři hráči (X, O, △, □). Vyhrajte řadou vlastních znaků.';
+
+  @override
+  String get adminUsersTab => 'Uživatelé';
+
+  @override
+  String get adminSupportTab => 'Podpora';
+
+  @override
+  String get adminSearchHint => 'Hledat podle e-mailu nebo jména';
+
+  @override
+  String get adminRoleAdmins => 'Admini';
+
+  @override
+  String get adminRoleUsers => 'Uživatelé';
+
+  @override
+  String get adminRoleAll => 'Všechny role';
+
+  @override
+  String get adminStatusFrozen => 'Zmrazení';
+
+  @override
+  String get adminStatusActive => 'Aktivní';
+
+  @override
+  String get adminStatusAny => 'Libovolný stav';
+
+  @override
+  String get adminOrderDesc => 'Sestupně';
+
+  @override
+  String get adminOrderAsc => 'Vzestupně';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Načtení selhalo: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Žádní uživatelé';
+
+  @override
+  String get adminSortLastSeen => 'Podle poslední návštěvy';
+
+  @override
+  String get adminSortEmail => 'Podle e-mailu';
+
+  @override
+  String get adminSortCreated => 'Podle data registrace';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Odebrat admina';
+
+  @override
+  String get adminGrantAdmin => 'Udělat adminem';
+
+  @override
+  String get adminAdminRevoked => 'Práva admina odebrána';
+
+  @override
+  String get adminAdminGranted => 'Práva admina udělena';
+
+  @override
+  String get adminGrantCoins => 'Připsat mince';
+
+  @override
+  String get adminWriteSupport => 'Psát jako podpora';
+
+  @override
+  String get adminUnfreeze => 'Odmrazit';
+
+  @override
+  String get adminFreeze => 'Zmrazit';
+
+  @override
+  String get adminUnfrozen => 'Odmrazeno';
+
+  @override
+  String get adminFrozenDone => 'Zmrazeno';
+
+  @override
+  String get adminResetPassword => 'Obnovit heslo';
+
+  @override
+  String get adminCoinsAmountHint => 'Částka (záporná = odečet)';
+
+  @override
+  String get adminReasonOptional => 'Důvod (volitelné)';
+
+  @override
+  String get adminGrantSent => 'Karta odeslána do chatu podpory';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Odečteno $amount bronzu';
+  }
+
+  @override
+  String get adminGrantVerb => 'Připsat';
+
+  @override
+  String get adminNewPasswordHint => 'Nové heslo (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Heslo obnoveno';
+
+  @override
+  String get adminResetVerb => 'Obnovit';
+
+  @override
+  String adminShortError(String error) {
+    return 'Chyba: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Žádné požadavky podpory';
+
+  @override
+  String get adminUserFallback => 'Uživatel';
+
+  @override
+  String get apiErrTooManyRequests => 'Příliš mnoho požadavků. Zkuste to později.';
+
+  @override
+  String get apiErrMoveConflict => 'Konflikt tahu. Zkuste to znovu.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'Omlazení';
+
+  @override
+  String get elixirGroupAge => 'Stárnutí';
+
+  @override
+  String get elixirGroupAccelerate => 'Zrychlení';
+
+  @override
+  String get elixirEffectRejuvenate => 'omlazení';
+
+  @override
+  String get elixirEffectAge => 'stárnutí';
+
+  @override
+  String get elixirEffectAccelerate => 'zrychlení';
+
+  @override
+  String get elixirAdjCelebration => 'Slavnostní';
+
+  @override
+  String get elixirAdjNature => 'Přírodní';
+
+  @override
+  String get elixirAdjLegends => 'Legendární';
+
+  @override
+  String get elixirAdjCosmic => 'Kosmický';
+
+  @override
+  String get elixirAdjAdventure => 'Dobrodružný';
+
+  @override
+  String get elixirAdjJewels => 'Drahocenný';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective elixír $effect';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'Omladit';
+
+  @override
+  String get elixirUseAge => 'Zestárnout';
+
+  @override
+  String get elixirUseAccelerate => 'Zrychlit';
+
+  @override
+  String get elixirUse => 'Použít';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dní',
+      few: '$count dny',
+      one: '$count den',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hodin',
+      few: '$count hodiny',
+      one: '$count hodina',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minut',
+      few: '$count minuty',
+      one: '$count minuta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

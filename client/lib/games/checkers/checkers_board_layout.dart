@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show Rect;
 
 import 'package:flutter/foundation.dart';
@@ -58,6 +59,20 @@ CheckersSquare? checkersSquareAtLocal({
 
 /// Диаметр точки хода — внутри клетки, не ломает границы.
 double checkersTargetDotSize(double cellSide) => cellSide * 0.28;
+
+/// Длительность переезда: короткая для шага, длиннее для полёта дамки.
+Duration checkersMoveDuration({
+  required int fromR,
+  required int fromC,
+  required int toR,
+  required int toC,
+}) {
+  if (fromR < 0 || toR < 0) {
+    return const Duration(milliseconds: 420);
+  }
+  final dist = math.max((toR - fromR).abs(), (toC - fromC).abs());
+  return Duration(milliseconds: (280 + 80 * dist).clamp(360, 640));
+}
 
 /// Соседние клетки стыкуются без щели и не наезжают друг на друга.
 bool checkersCellsTileWithoutGaps(double side) {
