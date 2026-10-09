@@ -33,7 +33,7 @@ void main() {
     await _pumpSettings(tester);
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
-    expect(_focusedKey(tester, 'settings-language-card'), isTrue);
+    expect(_blockFocused(tester, find.text('Язык')), isTrue);
     expect(
       tester
           .widgetList<CustomPaint>(find.byType(CustomPaint))
@@ -41,10 +41,10 @@ void main() {
       isTrue,
     );
 
-    GamepadService.instance.emit(GamepadAction.down);
+    _pad(tester, GamepadAction.down);
     await tester.pump();
-    expect(_focusedKey(tester, 'settings-sound-card'), isTrue);
-    expect(_focusedKey(tester, 'settings-sound-switch'), isFalse);
+    expect(_blockFocused(tester, find.text('Звук')), isTrue);
+    expect(_blockFocused(tester, find.byType(Switch).first), isFalse);
   });
 
   testWidgets('вправо с карточки звука — тумблер, затем чекбокс',
@@ -52,42 +52,65 @@ void main() {
     await _pumpSettings(tester);
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
-    GamepadService.instance.emit(GamepadAction.down);
+    _pad(tester, GamepadAction.down);
     await tester.pump();
-    expect(_focusedKey(tester, 'settings-sound-card'), isTrue);
+    expect(_blockFocused(tester, find.text('Звук')), isTrue);
 
-    GamepadService.instance.emit(GamepadAction.right);
-    await tester.pump();
-    expect(_focusedKey(tester, 'settings-sound-switch'), isTrue);
-
-    GamepadService.instance.emit(GamepadAction.right);
-    await tester.pump();
-    expect(_focusedKey(tester, 'settings-sound-games'), isTrue);
-
-    GamepadService.instance.emit(GamepadAction.confirm);
+    _pad(tester, GamepadAction.right);
     await tester.pump();
     expect(
-      tester
-          .widget<Checkbox>(
-            find.descendant(
-              of: find.byKey(const ValueKey('settings-sound-games')),
-              matching: find.byType(Checkbox),
-            ),
-          )
-          .value,
-      isFalse,
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-sound-switch')),
+          matching: find.byType(Switch),
+        ),
+      ),
+      isTrue,
     );
+
+    _pad(tester, GamepadAction.right);
+    await tester.pump();
+    expect(
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-sound-games')),
+          matching: find.byType(Checkbox),
+        ),
+      ),
+      isTrue,
+    );
+
+    final gamesBox = find.descendant(
+      of: find.byKey(const ValueKey('settings-sound-games')),
+      matching: find.byType(Checkbox),
+    );
+    final before = tester.widget<Checkbox>(gamesBox).value;
+    _pad(tester, GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(tester.widget<Checkbox>(gamesBox).value, isNot(before));
   });
 
   testWidgets('вправо с языка не прыгает на тумблер звука', (tester) async {
     await _pumpSettings(tester);
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
-    expect(_focusedKey(tester, 'settings-language-card'), isTrue);
-    GamepadService.instance.emit(GamepadAction.right);
+    expect(_blockFocused(tester, find.text('Язык')), isTrue);
+    _pad(tester, GamepadAction.right);
     await tester.pump();
-    expect(_focusedKey(tester, 'settings-language-card'), isTrue);
-    expect(_focusedKey(tester, 'settings-sound-switch'), isFalse);
+    expect(_blockFocused(tester, find.text('Язык')), isTrue);
+    expect(
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-sound-switch')),
+          matching: find.byType(Switch),
+        ),
+      ),
+      isFalse,
+    );
   });
 
   testWidgets('A на языке открывает список, A выбирает, B закрывает',
@@ -95,30 +118,31 @@ void main() {
     await _pumpSettings(tester);
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
-    GamepadService.instance.emit(GamepadAction.confirm);
+    _pad(tester, GamepadAction.confirm);
     await tester.pump();
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('lang-system')), findsOneWidget);
-    expect(find.byKey(const ValueKey('lang-en')), findsOneWidget);
+    expect(find.text('Arabic'), findsOneWidget);
 
-    GamepadService.instance.emit(GamepadAction.cancel);
-    await tester.pumpAndSettle();
+    _pad(tester, GamepadAction.cancel);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byKey(const ValueKey('lang-system')), findsNothing);
-    expect(find.text('Как в системе'), findsOneWidget);
+    expect(find.textContaining('Как в системе'), findsOneWidget);
 
-    GamepadService.instance.emit(GamepadAction.confirm);
+    _pad(tester, GamepadAction.confirm);
     await tester.pump();
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('lang-en')), findsOneWidget);
-    final english = GamepadFocusBlock.maybeOf(
-      tester.element(find.byKey(const ValueKey('lang-en'))),
-    );
-    english!.focusNode.requestFocus();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Arabic'), findsOneWidget);
+    GamepadFocusBlock.maybeOf(tester.element(find.text('Arabic')))!
+        .focusNode
+        .requestFocus();
     await tester.pump();
-    GamepadService.instance.emit(GamepadAction.confirm);
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('lang-en')), findsNothing);
-    expect(find.text('English'), findsOneWidget);
+    _pad(tester, GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const ValueKey('lang-ar')), findsNothing);
+    expect(find.text('العربية'), findsOneWidget);
   });
 
   testWidgets(
@@ -132,28 +156,41 @@ void main() {
     await _pumpSettings(tester);
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
-    GamepadService.instance.emit(GamepadAction.confirm);
+    _pad(tester, GamepadAction.confirm);
     await tester.pump();
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('lang-system')), findsOneWidget);
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
     expect(
-      GamepadFocusBlock.maybeOf(
-        tester.element(find.byKey(const ValueKey('lang-system'))),
-      )?.focusNode.hasFocus,
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('lang-system')),
+          matching: find.byType(ListTile),
+        ),
+      ),
       isTrue,
     );
 
-    GamepadService.instance.emit(GamepadAction.scrollDown);
+    scrollGamepadByPage(
+      1,
+      context: tester.element(find.byKey(const ValueKey('lang-system'))),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 280));
+    await tester.pump(const Duration(milliseconds: 20));
     await tester.pump();
-    await tester.pump();
-    final system = GamepadFocusBlock.maybeOf(
-      tester.element(find.byKey(const ValueKey('lang-system'))),
+    expect(
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('lang-system')),
+          matching: find.byType(ListTile),
+        ),
+      ),
+      isFalse,
     );
-    expect(system?.focusNode.hasFocus, isFalse);
     final focused = FocusManager.instance.primaryFocus;
     expect(focused?.debugLabel, 'GamepadFocusBlock');
     expect(
@@ -267,9 +304,12 @@ Future<void> _pumpSettings(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 50));
 }
 
-bool _focusedKey(WidgetTester tester, String key) {
-  final found = find.byKey(ValueKey(key));
-  if (found.evaluate().isEmpty) return false;
-  return GamepadFocusBlock.maybeOf(tester.element(found))?.focusNode.hasFocus ==
+bool _blockFocused(WidgetTester tester, Finder inner) {
+  if (inner.evaluate().isEmpty) return false;
+  return GamepadFocusBlock.maybeOf(tester.element(inner))?.focusNode.hasFocus ==
       true;
+}
+
+void _pad(WidgetTester tester, GamepadAction action) {
+  handleGamepadUiAction(tester.element(find.byType(SettingsScreen)), action);
 }

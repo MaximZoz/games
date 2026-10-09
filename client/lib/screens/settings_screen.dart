@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -632,9 +634,9 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref, {
     required Locale? selected,
   }) async {
-    // Прогрев флагов языков в memory-кэш — нужно для офлайна на Web.
-    await Future.wait(
-      appLanguages.map((l) => FlagAssetCache.loadIso(l.flagIso)),
+    // Прогрев флагов не блокирует открытие — геймпад должен сразу видеть список.
+    unawaited(
+      Future.wait(appLanguages.map((l) => FlagAssetCache.loadIso(l.flagIso))),
     );
     if (!context.mounted) return;
     final future = showModalBottomSheet<Object>(
@@ -682,6 +684,7 @@ class _PadSettingsCard extends StatelessWidget {
       child: GamepadFocusBlock(
         key: debugKey,
         radius: AppRadius.card,
+        descendantsFocusable: true,
         onActivate: onActivate,
         child: _SettingsCard(child: child),
       ),

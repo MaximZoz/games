@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
@@ -41,6 +42,12 @@ class _GamepadScrollPagerState extends State<GamepadScrollPager>
   @override
   bool page(int delta) {
     if (!mounted || !isGamepadContextOnscreen(context)) return false;
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return false;
+    // Попап забирает правый стик: фон (настройки, список) не листается.
+    if (route is! PopupRoute && GamepadDispatcher.hasExclusive) {
+      return false;
+    }
     if (_busy) return true;
     if (!_controller.hasClients) return false;
     final position = _controller.position;
