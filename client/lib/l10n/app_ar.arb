@@ -560,6 +560,7 @@
   "gameOpponent": "المنافس",
   "gameYou": "أنت",
   "gameYouWon": "لقد فزت!",
+  "gameYouWonShort": "لقد فزت",
   "gameYouLost": "لقد خسرت",
   "gameYouWonOpponentLeft": "لقد فزت — غادر المنافس",
   "gameYouWonOpponentTimeout": "لقد فزت — انتهى وقت المنافس",

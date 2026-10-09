@@ -560,6 +560,7 @@
   "gameOpponent": "יריב",
   "gameYou": "אתה",
   "gameYouWon": "ניצחתם!",
+  "gameYouWonShort": "ניצחתם",
   "gameYouLost": "הפסדת",
   "gameYouWonOpponentLeft": "ניצחתם — היריב עזב",
   "gameYouWonOpponentTimeout": "ניצחתם — ליריב נגמר הזמן",

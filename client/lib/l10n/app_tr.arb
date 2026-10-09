@@ -560,6 +560,7 @@
   "gameOpponent": "Rakip",
   "gameYou": "Sen",
   "gameYouWon": "Kazandınız!",
+  "gameYouWonShort": "Kazandınız",
   "gameYouLost": "Kaybettiniz",
   "gameYouWonOpponentLeft": "Kazandınız — rakip ayrıldı",
   "gameYouWonOpponentTimeout": "Kazandınız — rakibin süresi doldu",

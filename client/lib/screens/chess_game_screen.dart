@@ -129,6 +129,31 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant ChessGameScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId == widget.gameId) return;
+    // Страница партии одна на все gameId: без сброса «ожидание соперника»
+    // с прошлого реванша остаётся на новой доске.
+    _rematchPollTimer?.cancel();
+    _history.clear();
+    _reviewIndex = null;
+    _selected = null;
+    _optimistic = null;
+    _flipOverride = null;
+    _busy = false;
+    _turnAction.release();
+    setState(() {
+      _rematchLobbyId = null;
+      _rematchDeclined = false;
+      _iDeclinedRematch = false;
+      _isRematching = false;
+      _isAcceptingRematch = false;
+      _isFindingGame = false;
+    });
+    ref.invalidate(chessGameProvider(widget.gameId));
+  }
+
+  @override
   void dispose() {
     _rematchPollTimer?.cancel();
     _realtimeSubscription?.close();
@@ -359,23 +384,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         }
       }
       if (game.myIndex < 0) return l10n.gameOverNeutral;
-      if (game.isTimeout) {
-        if (game.iWon) return l10n.gameYouWonOpponentTimeout;
-        final name = game.opponent?.displayName.trim() ?? '';
-        if (name.isNotEmpty) return l10n.gameOpponentWonTimeout(name);
-      }
-      if (game.iWon) {
-        if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
-        if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
-        return l10n.gameYouWon;
-      }
+      if (game.iWon) return l10n.gameYouWonShort;
       return l10n.gameYouLost;
-    }
-    final me = ref.read(authStateProvider).valueOrNull?.id;
-    final offer = game.drawOfferBy;
-    if (offer != null && offer.isNotEmpty) {
-      if (offer == me) return l10n.gameDrawOffered;
-      return l10n.gameAcceptDrawTitle;
     }
     if (game.inCheck) return l10n.chessCheck;
     return game.isMyTurn ? l10n.gamesMyTurn : l10n.gamesOpponentTurn;
@@ -881,6 +891,12 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                 ? _buildLandscape(live, display, me)
                 : _buildPortrait(live, display, me),
           ),
+          if (live.isOver && live.iWon)
+            Positioned.fill(
+              child: GameConfettiOverlay(
+                key: ValueKey('chess-confetti-${widget.gameId}'),
+              ),
+            ),
           MyTurnAlert.stackLeaf(isMyTurn: myTurn),
         ],
       ),
@@ -896,11 +912,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       children: [
         _buildOpponentCard(live, me),
         const SizedBox(height: 4),
-        Expanded(child: _buildBoardColumn(live, display)),
-        if (live.isOver) ...[
-          const SizedBox(height: 8),
-          _buildFinishRow(live, me),
-        ],
+        Expanded(child: _buildBoardColumn(live, display, me)),
       ],
     );
   }
@@ -915,7 +927,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       children: [
         Expanded(
           flex: 7,
-          child: _buildBoardColumn(live, display),
+          child: _buildBoardColumn(live, display, me),
         ),
         const SizedBox(width: 10),
         SizedBox(
@@ -926,10 +938,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildOpponentCard(live, me),
-                if (live.isOver) ...[
-                  const SizedBox(height: 10),
-                  _buildFinishRow(live, me),
-                ],
               ],
             ),
           ),
@@ -959,7 +967,21 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
 
   /// Доска на всю ширину. Сверху: фигуры соперника, статус и его часы.
   /// Снизу: мои фигуры слева, перемотка у правого края рядом с моими часами.
-  Widget _buildBoardColumn(ChessGameView live, ChessGameView display) {
+  /// После партии итог и кнопки — над доской, доска ужимается под них.
+  Widget _buildBoardColumn(
+    ChessGameView live,
+    ChessGameView display,
+    String? me,
+  ) {
+    return Column(
+      children: [
+        if (live.isOver) _buildResultHeader(live, me),
+        Expanded(child: _buildBoardArea(live, display)),
+      ],
+    );
+  }
+
+  Widget _buildBoardArea(ChessGameView live, ChessGameView display) {
     final myTurn = live.isMyTurn && !live.isOver && !_isReviewing;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -986,11 +1008,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         return Column(
           children: [
             _topChrome(
-              live,
               material: mine
                   ? _materialLine(chessMaterialFor(display.board, oppSeat))
                   : const SizedBox.shrink(),
               clock: mine ? _clock(live, oppSeat) : null,
+              status: live.isOver ? null : _buildStatusInline(live),
             ),
             if (hasTurnTimer)
               SizedBox(
@@ -1025,10 +1047,10 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
 
   /// Фигуры слева, статус по центру, часы соперника справа — одна линия.
   /// Небольшой отступ сверху, слева и справа.
-  Widget _topChrome(
-    ChessGameView live, {
+  Widget _topChrome({
     required Widget material,
     required Widget? clock,
+    required Widget? status,
   }) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
@@ -1055,10 +1077,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                     if (clock != null) clock,
                   ],
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: side),
-                  child: _buildStatusInline(live),
-                ),
+                if (status != null)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: side),
+                    child: status,
+                  ),
               ],
             );
           },
@@ -1102,8 +1125,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       remainingMs: _clockMsFor(game, seat),
       running: !game.isOver && game.clockRunning == seat,
       prominent: true,
-      // Щелчок блица — от часов партии, даже если лимита на ход нет.
-      tickSound: mine && chessBlitzClockAudible(game.gameMode),
+      // Щелчок часов партии на своём ходу, даже если лимита на ход нет.
+      tickSound: mine && chessOwnClockTicks(game.gameMode),
+      tickOnStart: mine && chessOwnClockTicks(game.gameMode),
     );
   }
 
@@ -1147,7 +1171,26 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     );
   }
 
-  Widget _buildStatusInline(ChessGameView game) {
+  /// Итог партии целиком, без ужатия в строку часов. Доска ниже становится меньше.
+  Widget _buildResultHeader(ChessGameView game, String? me) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildStatusInline(game, fontSize: 16, maxLines: 2),
+          const SizedBox(height: 8),
+          _buildFinishRow(game, me),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusInline(
+    ChessGameView game, {
+    double fontSize = 14,
+    int maxLines = 1,
+  }) {
     final rewardChip = stakeFinishRewardChip(
       stakeBronze: game.stakeBronze,
       isDraw: game.isDraw,
@@ -1163,7 +1206,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       ),
       rewardBronze: rewardChip,
       rewardKey: _rewardKey,
-      fontSize: 14,
+      fontSize: fontSize,
+      maxLines: maxLines,
       wrap: false,
     );
   }

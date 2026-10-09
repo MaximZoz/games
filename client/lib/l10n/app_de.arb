@@ -560,6 +560,7 @@
   "gameOpponent": "Gegner",
   "gameYou": "Du",
   "gameYouWon": "Du hast gewonnen!",
+  "gameYouWonShort": "Du hast gewonnen",
   "gameYouLost": "Du hast verloren",
   "gameYouWonOpponentLeft": "Du hast gewonnen — Gegner hat verlassen",
   "gameYouWonOpponentTimeout": "Du hast gewonnen — Zeit des Gegners ist abgelaufen",

@@ -560,6 +560,7 @@
   "gameOpponent": "प्रतिद्वंद्वी",
   "gameYou": "आप",
   "gameYouWon": "आप जीत गए!",
+  "gameYouWonShort": "आप जीत गए",
   "gameYouLost": "आप हारे",
   "gameYouWonOpponentLeft": "आप जीत गए — प्रतिद्वंद्वी चला गया",
   "gameYouWonOpponentTimeout": "आप जीत गए — प्रतिद्वंद्वी का समय समाप्त",

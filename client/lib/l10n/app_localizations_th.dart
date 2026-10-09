@@ -1468,6 +1468,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gameYouWon => 'คุณชนะ!';
 
   @override
+  String get gameYouWonShort => 'คุณชนะ';
+
+  @override
   String get gameYouLost => 'คุณแพ้';
 
   @override

@@ -560,6 +560,7 @@
   "gameOpponent": "คู่แข่ง",
   "gameYou": "คุณ",
   "gameYouWon": "คุณชนะ!",
+  "gameYouWonShort": "คุณชนะ",
   "gameYouLost": "คุณแพ้",
   "gameYouWonOpponentLeft": "คุณชนะ — คู่แข่งออกไปแล้ว",
   "gameYouWonOpponentTimeout": "คุณชนะ — คู่แข่งหมดเวลา",

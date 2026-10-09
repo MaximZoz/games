@@ -1537,6 +1537,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                     ),
                   ),
                 ),
+                if (gameAsync.valueOrNull case final won?)
+                  if (won.isOver && !won.isDraw && _isWinner(won, me))
+                    Positioned.fill(
+                      child: GameConfettiOverlay(
+                        key: ValueKey('battleship-confetti-${widget.gameId}'),
+                      ),
+                    ),
                 if (gameAsync.valueOrNull != null &&
                     !gameAsync.valueOrNull!.isOver)
                   Builder(

@@ -1468,6 +1468,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gameYouWon => 'Вы перамаглі!';
 
   @override
+  String get gameYouWonShort => 'Вы выйгралі';
+
+  @override
   String get gameYouLost => 'Вы прайгралі';
 
   @override

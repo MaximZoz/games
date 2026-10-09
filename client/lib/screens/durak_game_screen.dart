@@ -4971,6 +4971,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           !view.isTableReveal) {
         _lockMidFinishOutcome(view);
       }
+      if (view.isOver &&
+          !_confettiArmed &&
+          !view.isDraw &&
+          view.myPlace == 1) {
+        _confettiArmed = true;
+      }
       _balanceGainPlayed = true;
       _prevGameStatus = view.status;
       return;

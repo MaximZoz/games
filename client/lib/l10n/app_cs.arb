@@ -560,6 +560,7 @@
   "gameOpponent": "Soupeř",
   "gameYou": "Vy",
   "gameYouWon": "Vyhráli jste!",
+  "gameYouWonShort": "Vyhráli jste",
   "gameYouLost": "Prohráli jste",
   "gameYouWonOpponentLeft": "Vyhráli jste — soupeř odešel",
   "gameYouWonOpponentTimeout": "Vyhráli jste — soupeři vypršel čas",

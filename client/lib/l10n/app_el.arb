@@ -560,6 +560,7 @@
   "gameOpponent": "Αντίπαλος",
   "gameYou": "Εσείς",
   "gameYouWon": "Κερδίσατε!",
+  "gameYouWonShort": "Κερδίσατε",
   "gameYouLost": "Χάσατε",
   "gameYouWonOpponentLeft": "Κερδίσατε — ο αντίπαλος αποχώρησε",
   "gameYouWonOpponentTimeout": "Κερδίσατε — έληξε ο χρόνος του αντιπάλου",

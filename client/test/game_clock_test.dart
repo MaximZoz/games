@@ -91,6 +91,15 @@ void main() {
     );
     expect(armed.play, isFalse);
     expect(armed.sec, 300);
+    final started = nextGameClockTick(
+      enabled: true,
+      running: true,
+      displayedSec: 300,
+      lastSec: null,
+      playOnArm: true,
+    );
+    expect(started.play, isTrue);
+    expect(started.sec, 300);
     final same = nextGameClockTick(
       enabled: true,
       running: true,
@@ -175,5 +184,31 @@ void main() {
     elapsed = 3000;
     await tester.pump(const Duration(seconds: 1));
     expect(ticks, 2);
+  });
+
+  testWidgets('tickOnStart щёлкает сразу, когда часы начали идти',
+      (tester) async {
+    var ticks = 0;
+    GameClock.debugOnTick = () => ticks++;
+    GameClock.debugElapsedMs = () => 0;
+    addTearDown(() {
+      GameClock.debugOnTick = null;
+      GameClock.debugElapsedMs = null;
+    });
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: GameClock(
+          remainingMs: 300000,
+          running: true,
+          prominent: true,
+          tickSound: true,
+          tickOnStart: true,
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(ticks, 1);
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(ticks, 1);
   });
 }

@@ -560,6 +560,7 @@
   "gameOpponent": "Modstander",
   "gameYou": "Dig",
   "gameYouWon": "Du vandt!",
+  "gameYouWonShort": "Du vandt",
   "gameYouLost": "Du tabte",
   "gameYouWonOpponentLeft": "Du vandt — modstanderen forlod",
   "gameYouWonOpponentTimeout": "Du vandt — modstanderen løb tør for tid",

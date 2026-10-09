@@ -1310,6 +1310,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 bottom: 0,
                 child: _buildBottomBar(game, narrow, tight: tight),
               ),
+            if (isOver && game.iWon)
+              Positioned.fill(
+                child: GameConfettiOverlay(
+                  key: ValueKey('poker-confetti-${widget.gameId}'),
+                ),
+              ),
           ],
         );
       },

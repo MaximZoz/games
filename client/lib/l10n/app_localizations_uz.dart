@@ -1468,6 +1468,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gameYouWon => 'Siz yutdingiz!';
 
   @override
+  String get gameYouWonShort => 'Siz yutdingiz';
+
+  @override
   String get gameYouLost => 'Yutqazdingiz';
 
   @override
