@@ -53,11 +53,18 @@ void main() {
 
   testWidgets('открытая коллекция показывает срок до следующего состояния',
       (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final acquired = DateTime.now().toUtc().subtract(const Duration(days: 1));
     await open(tester, acquired: acquired);
 
     expect(find.text('Природа'), findsOneWidget);
-    expect(find.text('Новое'), findsOneWidget);
+    expect(find.text('Новое'), findsNWidgets(2));
+    expect(find.text('Потрепанное'), findsOneWidget);
+    expect(find.text('Уставшее'), findsOneWidget);
+    expect(find.text('Ветхое'), findsOneWidget);
+    expect(find.text('Винтаж'), findsOneWidget);
+    expect(find.byKey(const Key('condition-scale-marker')), findsOneWidget);
     expect(find.textContaining(RegExp(r'До потрепанного \d+')), findsOneWidget);
   });
 
@@ -76,7 +83,7 @@ void main() {
       ],
     );
 
-    expect(find.text('Винтаж'), findsOneWidget);
+    expect(find.text('Винтаж'), findsNWidgets(2));
     expect(find.textContaining('До '), findsNothing);
     expect(find.widgetWithText(GamepadBuyButton, 'Омолодить'), findsOneWidget);
   });

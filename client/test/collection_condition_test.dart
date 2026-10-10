@@ -190,4 +190,42 @@ void main() {
       contains('новый предмет или винтажный'),
     );
   });
+
+  test('шкала стоит внутри текущего состояния', () {
+    final bought = DateTime.utc(2024, 3, 1);
+    double at(DateTime now, {int shift = 0, DateTime? vintageAt}) {
+      final condition = collectionConditionEffective(
+        acquired: bought,
+        now: now,
+        shift: shift,
+        vintageAt: vintageAt,
+      );
+      return collectionConditionScaleT(
+        condition: condition,
+        acquired: bought,
+        now: now,
+        shift: shift,
+        vintageAt: vintageAt,
+      );
+    }
+
+    expect(at(bought), closeTo(0, 0.001));
+    expect(
+        at(bought.add(const Duration(days: 3, hours: 12))), closeTo(0.1, 0.02));
+    final worn = at(bought.add(const Duration(days: 20)));
+    expect(worn, greaterThan(0.2));
+    expect(worn, lessThan(0.4));
+    final shifted = at(DateTime.utc(2024, 6, 1), shift: -1);
+    expect(shifted, greaterThan(0.2));
+    expect(shifted, lessThan(0.4));
+    expect(at(DateTime.utc(2025, 4, 1)), 1);
+    expect(
+      collectionConditionScaleT(
+        condition: CollectionCondition.fresh,
+        acquired: null,
+        now: bought,
+      ),
+      0,
+    );
+  });
 }
