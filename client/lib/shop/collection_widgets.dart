@@ -7,6 +7,7 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_condition.dart';
+import 'package:multigames_client/shop/collection_condition_scale.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
@@ -475,6 +476,20 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
                                   color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 14,
                                 ),
+                              ),
+                            ],
+                            if (condition != null) ...[
+                              const SizedBox(height: 12),
+                              CollectionConditionScale(
+                                current: condition,
+                                marker: collectionConditionScaleT(
+                                  condition: condition,
+                                  acquired: widget.acquiredAt,
+                                  now: now,
+                                  shift: _shift,
+                                  vintageAt: _vintageAt,
+                                ),
+                                onDark: true,
                               ),
                             ],
                             if (_actions.isNotEmpty) ...[

@@ -816,6 +816,7 @@ class _CollectionsBlock extends StatelessWidget {
             ShopSectionHelpButton(
               title: context.l10n.shopCollections,
               body: context.l10n.shopCollectionsHelp,
+              showConditionScale: true,
             ),
           ],
         ),

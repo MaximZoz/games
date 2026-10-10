@@ -131,6 +131,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
             ShopSectionHelpButton(
               title: context.l10n.shopCollections,
               body: context.l10n.shopCollectionsHelp,
+              showConditionScale: true,
             ),
           ],
         ),
@@ -288,6 +289,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                     ShopSectionHelpButton(
                       title: collectionSetTitle(set),
                       body: context.l10n.shopCollectionsHelp,
+                      showConditionScale: true,
                     ),
                     const Icon(
                       Icons.chevron_right_rounded,
@@ -470,6 +472,7 @@ class _ShopCollectionGroupScreenState
             ShopSectionHelpButton(
               title: collectionSetTitle(widget.set),
               body: context.l10n.shopCollectionsHelp,
+              showConditionScale: true,
             ),
           ],
         ),

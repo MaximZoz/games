@@ -61,6 +61,7 @@ class ShopScreen extends ConsumerWidget {
           context: context,
           title: l10n.shopCollections,
           body: l10n.shopCollectionsHelp,
+          showConditionScale: true,
         ),
       ),
       if (!isOffline)
