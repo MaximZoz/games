@@ -1804,12 +1804,17 @@ class _GameClockState extends State<GameClock> {
     _reset();
   }
 
+  /// Откуда считать прошедшее время. В тестах [GameClock.debugElapsedMs]
+  /// не обнуляется вместе со [Stopwatch], поэтому запоминаем точку сброса.
+  int _elapsedOrigin = 0;
+
   void _reset({bool keepTickArm = false}) {
     _baseMs = widget.remainingMs;
     if (!keepTickArm) _lastTickSec = null;
     _sw
       ..reset()
       ..stop();
+    _elapsedOrigin = GameClock.debugElapsedMs?.call() ?? 0;
     _timer?.cancel();
     if (widget.running) {
       _sw.start();
@@ -1842,14 +1847,29 @@ class _GameClockState extends State<GameClock> {
   @override
   void didUpdateWidget(covariant GameClock oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final stillTicking = widget.running &&
-        widget.tickSound &&
-        oldWidget.running == widget.running &&
-        oldWidget.tickSound == widget.tickSound;
-    if (oldWidget.remainingMs != widget.remainingMs ||
-        oldWidget.running != widget.running ||
-        oldWidget.tickSound != widget.tickSound) {
-      _reset(keepTickArm: stillTicking);
+    final soundChanged = oldWidget.tickSound != widget.tickSound;
+    if (oldWidget.running != widget.running || soundChanged) {
+      _reset(
+        keepTickArm: widget.running &&
+            oldWidget.running &&
+            widget.tickSound &&
+            oldWidget.tickSound,
+      );
+      return;
+    }
+    if (!widget.running) {
+      if (oldWidget.remainingMs != widget.remainingMs) {
+        _baseMs = widget.remainingMs;
+      }
+      return;
+    }
+    if (oldWidget.remainingMs == widget.remainingMs) return;
+    // Родитель часто присылает тот же банк или снимок на пару сотен мс.
+    // Сброс секундомера в этот момент замораживает чужие часы: цифра
+    // прыгает назад к старому остатку и не успевает тикать.
+    final drift = (widget.remainingMs - _currentMs).abs();
+    if (drift > 1200) {
+      _reset(keepTickArm: widget.tickSound);
     }
   }
 
@@ -1859,8 +1879,11 @@ class _GameClockState extends State<GameClock> {
     super.dispose();
   }
 
-  int get _elapsedMs =>
-      GameClock.debugElapsedMs?.call() ?? _sw.elapsedMilliseconds;
+  int get _elapsedMs {
+    final raw = GameClock.debugElapsedMs?.call() ?? _sw.elapsedMilliseconds;
+    final d = raw - _elapsedOrigin;
+    return d < 0 ? 0 : d;
+  }
 
   int get _currentMs {
     final ms = widget.running ? _baseMs - _elapsedMs : _baseMs;
@@ -2577,10 +2600,34 @@ class GameRematchSection extends StatelessWidget {
   }
 
   Widget _buildRematchButtons(BuildContext context, {bool waiting = false}) {
+    if (waiting) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.hourglass_empty_rounded,
+              size: 16, color: AppColors.accentStart),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              context.l10n.gameWaitingOpponent,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          if (onCancelWait != null)
+            TextButton(
+              onPressed: onCancelWait,
+              child: Text(context.l10n.commonCancel),
+            ),
+        ],
+      );
+    }
     const pad = EdgeInsets.symmetric(horizontal: 8, vertical: 8);
-    final waitingFor = waiting;
     final rematch = FramedButton(
-      onPressed: (isRematching || waitingFor) ? null : onRematch,
+      onPressed: isRematching ? null : onRematch,
       icon: Icons.replay_rounded,
       label: isRematching
           ? context.l10n.commonCreating
@@ -2605,42 +2652,11 @@ class GameRematchSection extends StatelessWidget {
       fontSize: 13,
       iconSize: 16,
     );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
       children: [
-        if (waitingFor) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.hourglass_empty_rounded,
-                  size: 16, color: AppColors.accentStart),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  context.l10n.gameWaitingOpponent,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              if (onCancelWait != null)
-                TextButton(
-                  onPressed: onCancelWait,
-                  child: Text(context.l10n.commonCancel),
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-        ],
-        Row(
-          children: [
-            Expanded(child: rematch),
-            const SizedBox(width: 8),
-            Expanded(child: other),
-          ],
-        ),
+        Expanded(child: rematch),
+        const SizedBox(width: 8),
+        Expanded(child: other),
       ],
     );
   }

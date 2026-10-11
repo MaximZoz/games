@@ -34,6 +34,8 @@ class OfflineChessSession extends ChangeNotifier {
 
   Timer? _botTimer;
   Timer? _clockTimer;
+  Timer? _clockUi;
+  int _botGen = 0;
   bool _disposed = false;
   bool _forfeited = false;
   bool _timeout = false;
@@ -67,6 +69,8 @@ class OfflineChessSession extends ChangeNotifier {
   void _startFresh() {
     _botTimer?.cancel();
     _clockTimer?.cancel();
+    _stopClockPublish();
+    _botGen++;
     _forfeited = false;
     _timeout = false;
     _engine = ChessEngine.newGame(gameMode);
@@ -165,17 +169,25 @@ class OfflineChessSession extends ChangeNotifier {
     if (_engine.isOver) {
       _running = -1;
       _clockTimer?.cancel();
+      _stopClockPublish();
       return;
     }
     _running = 1 - mover;
     _anchor = _now();
     _armTimeout();
+    if (_running == 1) {
+      _armClockPublish();
+    } else {
+      _stopClockPublish();
+    }
   }
 
   void _loseOnTime(int seat) {
     if (_engine.isOver) return;
     _clockTimer?.cancel();
     _botTimer?.cancel();
+    _stopClockPublish();
+    _botGen++;
     if (seat == 0) {
       _clock0 = 0;
     } else {
@@ -201,6 +213,31 @@ class OfflineChessSession extends ChangeNotifier {
     });
   }
 
+  /// Пока думает бот, публикуем остаток часов. Иначе снимок замирает
+  /// на момент прошлого хода, и цифра на экране не уменьшается.
+  void _armClockPublish() {
+    _clockUi?.cancel();
+    if (_disposed || _engine.isOver || _running != 1) return;
+    _clockUi = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      if (_disposed || _engine.isOver || _running != 1) {
+        _stopClockPublish();
+        return;
+      }
+      notifyListeners();
+    });
+  }
+
+  void _stopClockPublish() {
+    _clockUi?.cancel();
+    _clockUi = null;
+  }
+
+  @visibleForTesting
+  void debugPublishRunningClock() {
+    if (_disposed || _engine.isOver || _running != 1) return;
+    notifyListeners();
+  }
+
   void move(ChessMove mv) {
     if (_disposed) throw GamesException(404, 'offline game not found');
     if (_engine.isOver) throw GamesException(400, 'game is over');
@@ -223,6 +260,8 @@ class OfflineChessSession extends ChangeNotifier {
     if (_disposed || _engine.isOver) return;
     _botTimer?.cancel();
     _clockTimer?.cancel();
+    _stopClockPublish();
+    _botGen++;
     _running = -1;
     _forfeited = true;
     _engine.forfeit(0);
@@ -232,17 +271,30 @@ class OfflineChessSession extends ChangeNotifier {
   void _maybeScheduleBot() {
     _botTimer?.cancel();
     if (_disposed || _engine.isOver || _engine.turn != 1) return;
-    _botTimer = Timer(botStepDelay, _runBotStep);
+    _armClockPublish();
+    _botTimer = Timer(botStepDelay, () {
+      unawaited(_runBotStep());
+    });
   }
 
-  void _runBotStep() {
+  Future<void> _runBotStep() async {
     if (_disposed || _engine.isOver || _engine.turn != 1) return;
     if (_flagged(1)) {
       _loseOnTime(1);
       notifyListeners();
       return;
     }
-    final mv = chessPickMove(_engine);
+    final gen = ++_botGen;
+    final snapshot = _engine.clone();
+    final mv = await chessPickMoveAsync(snapshot);
+    if (_disposed || gen != _botGen || _engine.isOver || _engine.turn != 1) {
+      return;
+    }
+    if (_flagged(1)) {
+      _loseOnTime(1);
+      notifyListeners();
+      return;
+    }
     if (mv == null) return;
     try {
       _engine.apply(1, mv);
@@ -257,6 +309,8 @@ class OfflineChessSession extends ChangeNotifier {
   @visibleForTesting
   void debugRunBotTurn() {
     _botTimer?.cancel();
+    _stopClockPublish();
+    _botGen++;
     while (!_engine.isOver && _engine.turn == 1) {
       if (_flagged(1)) {
         _loseOnTime(1);
@@ -274,8 +328,10 @@ class OfflineChessSession extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _botGen++;
     _botTimer?.cancel();
     _clockTimer?.cancel();
+    _stopClockPublish();
     OfflineChessRegistry.instance.remove(gameId);
     super.dispose();
   }

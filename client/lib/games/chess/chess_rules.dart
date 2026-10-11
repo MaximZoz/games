@@ -83,6 +83,18 @@ String chessClockNotation(String mode) {
 /// Лимит на один ход не нужен: звук идёт от часов игрока, когда они пошли.
 bool chessOwnClockTicks(String? mode) => chessNormalizeMode(mode).isNotEmpty;
 
+/// Звук часов партии. Если на экране ещё и таймер на ход, щёлкает только он.
+bool chessGameClockAudible({
+  required bool mine,
+  required String? mode,
+  required int turnTimeSec,
+  required int turnDeadline,
+}) {
+  if (!mine || !chessOwnClockTicks(mode)) return false;
+  if (turnTimeSec > 0 && turnDeadline > 0) return false;
+  return true;
+}
+
 /// База и прибавка на ход, мс. classic 60+0, rapid 10+0, blitz 5+0, bullet 3+2.
 (int, int) chessClockBudgetMs(String? mode) {
   switch (chessNormalizeMode(mode)) {

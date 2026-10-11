@@ -46,6 +46,21 @@ void main() {
     expect(s.view.clockRunning, 0);
   });
 
+  test('пока бот думает, его часы уменьшаются каждую секунду', () {
+    final s = session = open(chessModeBlitz);
+    var notices = 0;
+    s.addListener(() => notices++);
+    s.move(e4);
+    expect(s.view.clockRunning, 1);
+    final bank = s.view.clockMs1;
+    now = now.add(const Duration(seconds: 3));
+    s.debugPublishRunningClock();
+    expect(notices, greaterThan(0));
+    expect(s.view.clockMs1, bank - 3000);
+    expect(s.view.clockRunning, 1);
+    expect(s.view.clockMs0, 5 * 60 * 1000);
+  });
+
   test('блиц 5+0 без прибавки', () {
     final s = session = open(chessModeBlitz);
     expect(s.view.clockMs0, 5 * 60 * 1000);

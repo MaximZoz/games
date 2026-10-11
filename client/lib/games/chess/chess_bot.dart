@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:multigames_client/games/chess/chess_engine.dart';
 
 const int _botWinScore = 1000000;
@@ -95,6 +96,108 @@ int _pstFor(int k, int index, int seat) {
       return _kingPST[i];
   }
   return 0;
+}
+
+/// Снимок движка, который можно отдать в изолят.
+Map<String, dynamic> chessEnginePayload(ChessEngine g) => {
+      'mode': g.mode,
+      'board': List<int>.from(g.board),
+      'turn': g.turn,
+      'winner': g.winner,
+      'seq': g.seq,
+      'castle': List<bool>.from(g.castle),
+      'enPassant': g.enPassant,
+      'halfMove': g.halfMove,
+      'lastFromR': g.lastFromR,
+      'lastFromC': g.lastFromC,
+      'lastToR': g.lastToR,
+      'lastToC': g.lastToC,
+      'posCounts': Map<String, int>.from(g.posCounts),
+      'drawReason': g.drawReason,
+    };
+
+/// Восстанавливает движок из [chessEnginePayload].
+ChessEngine chessEngineFromPayload(Map<String, dynamic> payload) {
+  final countsRaw = payload['posCounts'];
+  final counts = <String, int>{};
+  if (countsRaw is Map) {
+    countsRaw.forEach((key, value) {
+      counts['$key'] = (value as num).toInt();
+    });
+  }
+  final castleRaw = payload['castle'];
+  final castle = castleRaw is List
+      ? castleRaw.map((e) => e == true).toList()
+      : const [true, true, true, true];
+  return ChessEngine(
+    mode: '${payload['mode']}',
+    board: (payload['board'] as List).map((e) => (e as num).toInt()).toList(),
+    turn: (payload['turn'] as num).toInt(),
+    winner: (payload['winner'] as num).toInt(),
+    seq: (payload['seq'] as num).toInt(),
+    castle: castle,
+    enPassant: (payload['enPassant'] as num).toInt(),
+    halfMove: (payload['halfMove'] as num).toInt(),
+    lastFromR: (payload['lastFromR'] as num).toInt(),
+    lastFromC: (payload['lastFromC'] as num).toInt(),
+    lastToR: (payload['lastToR'] as num).toInt(),
+    lastToC: (payload['lastToC'] as num).toInt(),
+    posCounts: counts,
+    drawReason: '${payload['drawReason']}',
+  );
+}
+
+/// Точка входа изолята. Пустой map — хода нет.
+Map<String, dynamic> chessPickMovePayload(Map<String, dynamic> payload) {
+  final mv = chessPickMove(chessEngineFromPayload(payload));
+  if (mv == null) return const {};
+  return mv.toJson();
+}
+
+/// Поиск хода вне UI-изолята, чтобы часы бота тикали каждую секунду.
+/// На web изолят недоступен — между ходами корня отдаём кадр таймерам.
+Future<ChessMove?> chessPickMoveAsync(ChessEngine g) async {
+  if (kIsWeb) return _chessPickMoveYielding(g);
+  try {
+    final raw = await compute(chessPickMovePayload, chessEnginePayload(g));
+    if (raw.isEmpty) return null;
+    return ChessMove.fromJson(Map<String, dynamic>.from(raw));
+  } catch (_) {
+    return _chessPickMoveYielding(g);
+  }
+}
+
+Future<ChessMove?> _chessPickMoveYielding(ChessEngine g) async {
+  final legal = g.legalMoves();
+  if (legal.isEmpty) return null;
+  if (legal.length == 1) return legal.first;
+  final rng = Random(1);
+  final rootSeat = g.turn;
+  var depth = _botSearchDepth;
+  if (legal.length > 34) depth = 2;
+  var best = legal.first;
+  var bestScore = -_inf;
+  var ties = 0;
+  const wide = _inf;
+  for (final mv in _orderMoves(g, legal)) {
+    await Future<void>.delayed(Duration.zero);
+    final child = g.clone();
+    try {
+      child.apply(g.turn, mv);
+    } catch (_) {
+      continue;
+    }
+    final score = -_alphabeta(child, depth - 1, -wide, wide, rootSeat);
+    if (score > bestScore) {
+      bestScore = score;
+      best = mv;
+      ties = 1;
+    } else if (score == bestScore) {
+      ties++;
+      if (rng.nextInt(ties) == 0) best = mv;
+    }
+  }
+  return best;
 }
 
 /// Лучший ход бота: alpha-beta с квиесценцией и позиционной оценкой.
