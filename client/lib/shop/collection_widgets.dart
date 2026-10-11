@@ -156,9 +156,15 @@ class CollectionElixirButton {
   final String effect;
   final String label;
 
-  /// null — отмена. Иначе новое старение и сколько флаконов осталось.
-  final Future<({int shift, DateTime? vintageAt, int quantity})?> Function()
-      onPressed;
+  /// null — отмена. Иначе новый возраст, срок и сколько флаконов осталось.
+  final Future<
+          ({
+            int shift,
+            DateTime? vintageAt,
+            DateTime? acquiredAt,
+            int quantity
+          })?>
+      Function() onPressed;
 }
 
 /// Полноэкранный просмотр: тап вне кнопок закрывает; крестика нет.
@@ -169,6 +175,7 @@ Future<void> showCollectionFullscreen(
   required String animatedName,
   String? fallback,
   String? subtitle,
+  ValueNotifier<String>? subtitleListenable,
   Widget? bottomAction,
   VoidCallback? onBuy,
   String? buyLabel,
@@ -188,6 +195,7 @@ Future<void> showCollectionFullscreen(
         animatedName: animatedName,
         fallback: fallback,
         subtitle: subtitle,
+        subtitleListenable: subtitleListenable,
         bottomAction: bottomAction,
         onBuy: onBuy,
         buyLabel: buyLabel,
@@ -208,6 +216,7 @@ class _CollectionFullscreen extends StatefulWidget {
     required this.animatedName,
     this.fallback,
     this.subtitle,
+    this.subtitleListenable,
     this.bottomAction,
     this.onBuy,
     this.buyLabel,
@@ -223,6 +232,7 @@ class _CollectionFullscreen extends StatefulWidget {
   final String animatedName;
   final String? fallback;
   final String? subtitle;
+  final ValueNotifier<String>? subtitleListenable;
   final Widget? bottomAction;
   final VoidCallback? onBuy;
   final String? buyLabel;
@@ -240,6 +250,8 @@ class _CollectionFullscreen extends StatefulWidget {
 class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   late int _shift;
   DateTime? _vintageAt;
+  DateTime? _acquired;
+  late String? _subtitle;
   late List<CollectionElixirButton> _actions;
   Timer? _tick;
   bool _closed = false;
@@ -249,20 +261,30 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
     super.initState();
     _shift = widget.conditionShift;
     _vintageAt = widget.vintageAt;
+    _acquired = widget.acquiredAt;
+    _subtitle = widget.subtitle;
     _actions = [...widget.elixirActions];
+    widget.subtitleListenable?.addListener(_syncSubtitle);
     _tick = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
     });
   }
 
+  void _syncSubtitle() {
+    final next = widget.subtitleListenable?.value;
+    if (!mounted || next == _subtitle) return;
+    setState(() => _subtitle = next);
+  }
+
   @override
   void dispose() {
+    widget.subtitleListenable?.removeListener(_syncSubtitle);
     _tick?.cancel();
     super.dispose();
   }
 
   CollectionCondition? _condition(DateTime now) {
-    final acquired = widget.acquiredAt;
+    final acquired = _acquired;
     if (acquired == null) return widget.condition;
     return collectionConditionEffective(
       acquired: acquired,
@@ -275,11 +297,11 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   Future<void> _useElixir(CollectionElixirButton button) async {
     final next = await button.onPressed();
     if (!mounted || next == null) return;
-    final acquired = widget.acquiredAt;
     setState(() {
       _shift = next.shift;
       _vintageAt = next.vintageAt;
-      final acquiredAt = acquired;
+      _acquired = next.acquiredAt ?? _acquired;
+      final acquiredAt = _acquired;
       if (acquiredAt == null) {
         _actions = _actions.where((b) => b.effect != button.effect).toList();
         return;
@@ -307,7 +329,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   }
 
   String? _until(DateTime now, CollectionCondition? condition) {
-    final acquired = widget.acquiredAt;
+    final acquired = _acquired;
     if (acquired == null || condition == null) return null;
     final next = nextCollectionCondition(
       acquired: acquired,
@@ -423,13 +445,13 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          if ((widget.subtitle ?? '').trim().isNotEmpty) ...[
+                          if ((_subtitle ?? '').trim().isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 24),
                               child: Text(
-                                widget.subtitle!,
+                                _subtitle!,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.75),
@@ -484,7 +506,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
                                 current: condition,
                                 marker: collectionConditionScaleT(
                                   condition: condition,
-                                  acquired: widget.acquiredAt,
+                                  acquired: _acquired,
                                   now: now,
                                   shift: _shift,
                                   vintageAt: _vintageAt,

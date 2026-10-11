@@ -255,3 +255,52 @@ func PlanElixirApply(effect string, acquired, now time.Time, shift int, vintageA
 		return 0, nil, ErrElixirNotApplicable
 	}
 }
+
+// conditionJustStarted — момент покупки, при котором состояние только что наступило.
+// Дальше отсчёт до следующего состояния идёт полным сроком этого состояния.
+func conditionJustStarted(cond string, now time.Time) time.Time {
+	now = now.UTC()
+	if cond == CollectionCondNew || cond == "" {
+		return now
+	}
+	var start time.Time
+	switch cond {
+	case CollectionCondWorn:
+		start = now.AddDate(0, 0, -7)
+	case CollectionCondTired:
+		start = now.AddDate(0, -2, -2)
+	case CollectionCondShabby:
+		start = now.AddDate(0, -6, -2)
+	default:
+		start = now.AddDate(-1, 0, -2)
+	}
+	for i := 0; i < 8 && CollectionConditionAt(start, now) != cond; i++ {
+		start = start.AddDate(0, 0, -1)
+	}
+	for {
+		next := start.AddDate(0, 0, 1)
+		if !next.Before(now) {
+			break
+		}
+		if CollectionConditionAt(next, now) != cond {
+			break
+		}
+		start = next
+	}
+	return start
+}
+
+// ResetElixirClock применяет эликсир и заново запускает отсчёт состояния.
+// Омоложение и старение ставят возраст на начало нового состояния.
+// Ускорение оставляет возраст и ставит винтаж через 3 месяца.
+func ResetElixirClock(effect string, acquired, now time.Time, shift int, vintageAt *time.Time) (time.Time, int, *time.Time, error) {
+	newShift, newVintage, err := PlanElixirApply(effect, acquired, now, shift, vintageAt)
+	if err != nil {
+		return time.Time{}, 0, nil, err
+	}
+	if effect == ElixirAccelerate {
+		return acquired.UTC(), newShift, newVintage, nil
+	}
+	cond := CollectionConditionEffective(acquired, now, newShift, newVintage)
+	return conditionJustStarted(cond, now), 0, nil, nil
+}

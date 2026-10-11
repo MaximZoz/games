@@ -166,6 +166,59 @@ func TestPlanElixirApply(t *testing.T) {
 	}
 }
 
+func TestResetElixirClockRestartsCountdown(t *testing.T) {
+	acquired := time.Date(2024, 3, 1, 12, 0, 0, 0, time.UTC)
+	wornAt := acquired.AddDate(0, 0, 20)
+	newAcq, shift, vintage, err := ResetElixirClock(ElixirRejuvenate, acquired, wornAt, 0, nil)
+	if err != nil || shift != 0 || vintage != nil {
+		t.Fatalf("омоложение: acquired %s shift %d vintage %v err %v", newAcq, shift, vintage, err)
+	}
+	if got := CollectionConditionEffective(newAcq, wornAt, shift, vintage); got != CollectionCondNew {
+		t.Fatalf("после омоложения: %s", got)
+	}
+	cond, at, ok := NextCollectionCondition(newAcq, wornAt, shift, vintage)
+	if !ok || cond != CollectionCondWorn || !at.Equal(wornAt.AddDate(0, 0, 7)) {
+		t.Fatalf("счётчик нового: %s %s %v", cond, at, ok)
+	}
+
+	freshAt := acquired.AddDate(0, 0, 2)
+	agedAcq, shift, vintage, err := ResetElixirClock(ElixirAge, acquired, freshAt, 0, nil)
+	if err != nil || shift != 0 || vintage != nil {
+		t.Fatalf("старение: %v", err)
+	}
+	if got := CollectionConditionEffective(agedAcq, freshAt, shift, vintage); got != CollectionCondWorn {
+		t.Fatalf("после старения: %s", got)
+	}
+	cond, at, ok = NextCollectionCondition(agedAcq, freshAt, shift, vintage)
+	wantTired := agedAcq.AddDate(0, 2, 0)
+	if !ok || cond != CollectionCondTired || !at.Equal(wantTired) {
+		t.Fatalf("счётчик потрепанного: %s %s хотели %s ok %v", cond, at, wantTired, ok)
+	}
+
+	// Конец месяца не должен оставлять состояние на день старше.
+	may31 := time.Date(2024, 5, 31, 15, 0, 0, 0, time.UTC)
+	shabbyAcq := may31.AddDate(0, -8, 0)
+	resetAcq, shift, vintage, err := ResetElixirClock(ElixirRejuvenate, shabbyAcq, may31, 0, nil)
+	if err != nil {
+		t.Fatalf("омоложение 31 мая: %v", err)
+	}
+	if got := CollectionConditionEffective(resetAcq, may31, shift, vintage); got != CollectionCondTired {
+		t.Fatalf("31 мая после омоложения ветхого: %s", got)
+	}
+	if _, at, ok = NextCollectionCondition(resetAcq, may31, shift, vintage); !ok || at.Sub(may31) < 100*24*time.Hour {
+		t.Fatalf("счётчик после 31 мая слишком короткий: %s", at)
+	}
+
+	shabby := acquired.AddDate(0, 8, 0)
+	accAcq, shift, vintage, err := ResetElixirClock(ElixirAccelerate, acquired, shabby, 0, nil)
+	if err != nil || !accAcq.Equal(acquired.UTC()) || shift != 0 || vintage == nil {
+		t.Fatalf("ускорение не двигает возраст: %s %d %v %v", accAcq, shift, vintage, err)
+	}
+	if !vintage.Equal(shabby.AddDate(0, 3, 0)) {
+		t.Fatalf("счётчик ускорения: %s", vintage)
+	}
+}
+
 func TestNextCollectionCondition(t *testing.T) {
 	acquired := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC)
 	now := acquired.AddDate(0, 0, 1)

@@ -87,4 +87,44 @@ void main() {
     expect(find.textContaining('До '), findsNothing);
     expect(find.widgetWithText(GamepadBuyButton, 'Омолодить'), findsOneWidget);
   });
+
+  testWidgets('счётчик открытого эликсира обновляется без закрытия',
+      (tester) async {
+    final subtitle = ValueNotifier<String>('Осталось 3');
+    addTearDown(subtitle.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () {
+                  showCollectionFullscreen(
+                    context,
+                    title: 'Эликсир',
+                    animatedName: 'sparkles',
+                    artwork: const SizedBox(width: 24, height: 24),
+                    subtitle: subtitle.value,
+                    subtitleListenable: subtitle,
+                  );
+                },
+                child: const Text('open'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Осталось 3'), findsOneWidget);
+    subtitle.value = 'Осталось 2';
+    await tester.pump();
+
+    expect(find.text('Осталось 2'), findsOneWidget);
+    expect(find.text('Осталось 3'), findsNothing);
+    expect(find.text('Эликсир'), findsOneWidget);
+  });
 }
