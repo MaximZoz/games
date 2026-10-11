@@ -186,6 +186,35 @@ void main() {
     expect(ticks, 2);
   });
 
+  testWidgets('чужие часы не откатываются, если снимок остался прежним',
+      (tester) async {
+    var elapsed = 0;
+    GameClock.debugElapsedMs = () => elapsed;
+    addTearDown(() => GameClock.debugElapsedMs = null);
+    Future<void> pumpClock(int remainingMs) {
+      return tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: GameClock(
+            remainingMs: remainingMs,
+            running: true,
+            prominent: true,
+          ),
+        ),
+      ));
+    }
+
+    await pumpClock(10000);
+    elapsed = 2000;
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('0:08'), findsOneWidget);
+    await pumpClock(10000);
+    await tester.pump();
+    expect(find.text('0:08'), findsOneWidget);
+    elapsed = 3000;
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('0:07'), findsOneWidget);
+  });
+
   testWidgets('tickOnStart щёлкает сразу, когда часы начали идти',
       (tester) async {
     var ticks = 0;

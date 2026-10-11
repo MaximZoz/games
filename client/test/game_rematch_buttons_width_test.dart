@@ -69,16 +69,37 @@ void main() {
     }
   });
 
-  testWidgets('ожидание соперника не прячет кнопки', (tester) async {
+  testWidgets('ожидание соперника прячет кнопки повтора', (tester) async {
     await tester.pumpWidget(_wrap(_section(rematchLobbyId: 'lobby')));
-    expect(find.text('Повторить'), findsOneWidget);
-    expect(find.text('Другой соперник'), findsOneWidget);
+    expect(find.text('Повторить'), findsNothing);
+    expect(find.text('Другой соперник'), findsNothing);
     expect(find.text('Ожидание соперника'), findsOneWidget);
-    final rematch =
-        tester.getRect(find.widgetWithText(FramedButton, 'Повторить'));
-    final other =
-        tester.getRect(find.widgetWithText(FramedButton, 'Другой соперник'));
-    expect((rematch.center.dy - other.center.dy).abs(), lessThan(8));
+    expect(find.text('Отмена'), findsOneWidget);
+  });
+
+  testWidgets('входящий реванш — только принять или отклонить', (tester) async {
+    final invite = GameInvite(
+      lobbyId: 'l',
+      creatorId: 'opp',
+      creatorName: 'Opp',
+      gameType: 'chess',
+      stakeBronze: 0,
+      durakMode: 'blitz',
+    );
+    await tester.pumpWidget(_wrap(_section(
+      peerIds: const ['opp'],
+      invites: [invite],
+      table: const RematchTable(
+        gameType: 'chess',
+        stakeBronze: 0,
+        gameMode: 'blitz',
+      ),
+    )));
+    expect(find.text('Соперник предлагает реванш'), findsOneWidget);
+    expect(find.text('Принять'), findsOneWidget);
+    expect(find.text('Отклонить'), findsOneWidget);
+    expect(find.text('Повторить'), findsNothing);
+    expect(find.text('Другой соперник'), findsNothing);
   });
 
   testWidgets('приглашение в другую игру не считается реваншем',

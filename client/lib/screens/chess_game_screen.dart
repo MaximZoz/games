@@ -387,7 +387,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       if (game.iWon) return l10n.gameYouWonShort;
       return l10n.gameYouLost;
     }
-    if (game.inCheck) return l10n.chessCheck;
     return game.isMyTurn ? l10n.gamesMyTurn : l10n.gamesOpponentTurn;
   }
 
@@ -787,7 +786,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     }
     final narrow = isNarrow(context);
     final game = gameAsync.valueOrNull;
-    final draw = drawOfferFlags(game?.drawOfferBy, me);
+    final draw = (game != null && !game.isOver)
+        ? drawOfferFlags(game.drawOfferBy, me)
+        : const DrawOfferFlags();
     final canDraw = game != null && !game.isOver && !game.hasBotOpponent;
 
     return SwipeBackScope.gameBoard(
@@ -1121,13 +1122,19 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   Widget? _clock(ChessGameView game, int seat) {
     if (!game.hasClock || seat < 0) return null;
     final mine = seat == game.myIndex;
+    // Таймер на ход и часы партии вместе: звук только у таймера на ход.
+    final audible = chessGameClockAudible(
+      mine: mine,
+      mode: game.gameMode,
+      turnTimeSec: game.turnTimeSec,
+      turnDeadline: game.turnDeadline,
+    );
     return GameClock(
       remainingMs: _clockMsFor(game, seat),
       running: !game.isOver && game.clockRunning == seat,
       prominent: true,
-      // Щелчок часов партии на своём ходу, даже если лимита на ход нет.
-      tickSound: mine && chessOwnClockTicks(game.gameMode),
-      tickOnStart: mine && chessOwnClockTicks(game.gameMode),
+      tickSound: audible,
+      tickOnStart: audible,
     );
   }
 
