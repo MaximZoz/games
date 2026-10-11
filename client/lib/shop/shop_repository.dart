@@ -278,11 +278,13 @@ class ElixirApplyResult {
     required this.conditionShift,
     required this.elixirQuantity,
     this.vintageAt,
+    this.acquiredAt,
   });
 
   final int conditionShift;
   final int elixirQuantity;
   final String? vintageAt;
+  final String? acquiredAt;
 }
 
 class ShopBuyResult {
@@ -527,6 +529,7 @@ class ShopRepository {
     return ElixirApplyResult(
       conditionShift: (body['condition_shift'] as num?)?.toInt() ?? 0,
       vintageAt: body['vintage_at'] as String?,
+      acquiredAt: body['acquired_at'] as String?,
       elixirQuantity: (body['elixir_quantity'] as num?)?.toInt() ?? 0,
     );
   }

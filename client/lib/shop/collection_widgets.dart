@@ -156,9 +156,15 @@ class CollectionElixirButton {
   final String effect;
   final String label;
 
-  /// null — отмена. Иначе новое старение и сколько флаконов осталось.
-  final Future<({int shift, DateTime? vintageAt, int quantity})?> Function()
-      onPressed;
+  /// null — отмена. Иначе новый возраст, срок и сколько флаконов осталось.
+  final Future<
+          ({
+            int shift,
+            DateTime? vintageAt,
+            DateTime? acquiredAt,
+            int quantity
+          })?>
+      Function() onPressed;
 }
 
 /// Полноэкранный просмотр: тап вне кнопок закрывает; крестика нет.
@@ -240,6 +246,7 @@ class _CollectionFullscreen extends StatefulWidget {
 class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   late int _shift;
   DateTime? _vintageAt;
+  DateTime? _acquired;
   late List<CollectionElixirButton> _actions;
   Timer? _tick;
   bool _closed = false;
@@ -249,6 +256,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
     super.initState();
     _shift = widget.conditionShift;
     _vintageAt = widget.vintageAt;
+    _acquired = widget.acquiredAt;
     _actions = [...widget.elixirActions];
     _tick = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
@@ -262,7 +270,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   }
 
   CollectionCondition? _condition(DateTime now) {
-    final acquired = widget.acquiredAt;
+    final acquired = _acquired;
     if (acquired == null) return widget.condition;
     return collectionConditionEffective(
       acquired: acquired,
@@ -275,11 +283,11 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   Future<void> _useElixir(CollectionElixirButton button) async {
     final next = await button.onPressed();
     if (!mounted || next == null) return;
-    final acquired = widget.acquiredAt;
     setState(() {
       _shift = next.shift;
       _vintageAt = next.vintageAt;
-      final acquiredAt = acquired;
+      _acquired = next.acquiredAt ?? _acquired;
+      final acquiredAt = _acquired;
       if (acquiredAt == null) {
         _actions = _actions.where((b) => b.effect != button.effect).toList();
         return;
@@ -307,7 +315,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   }
 
   String? _until(DateTime now, CollectionCondition? condition) {
-    final acquired = widget.acquiredAt;
+    final acquired = _acquired;
     if (acquired == null || condition == null) return null;
     final next = nextCollectionCondition(
       acquired: acquired,
@@ -484,7 +492,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
                                 current: condition,
                                 marker: collectionConditionScaleT(
                                   condition: condition,
-                                  acquired: widget.acquiredAt,
+                                  acquired: _acquired,
                                   now: now,
                                   shift: _shift,
                                   vintageAt: _vintageAt,

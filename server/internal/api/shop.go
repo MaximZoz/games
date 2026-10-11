@@ -318,6 +318,7 @@ func (h *ShopHandler) ApplyElixir(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]any{
 		"condition_shift": result.ConditionShift,
 		"elixir_quantity": result.ElixirQuantity,
+		"acquired_at":     result.Acquired.UTC().Format(time.RFC3339),
 	}
 	if result.VintageAt != nil {
 		resp["vintage_at"] = result.VintageAt.UTC().Format(time.RFC3339)

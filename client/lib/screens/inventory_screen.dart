@@ -297,7 +297,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     );
   }
 
-  Future<({int shift, DateTime? vintageAt, int quantity})?> _applyElixir(
+  Future<
+      ({
+        int shift,
+        DateTime? vintageAt,
+        DateTime? acquiredAt,
+        int quantity
+      })?> _applyElixir(
     BuildContext dialogContext,
     InventoryItem elixir,
     InventoryItem collection,
@@ -329,6 +335,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       return (
         shift: result.conditionShift,
         vintageAt: parseCollectionAcquiredAt(result.vintageAt),
+        acquiredAt: parseCollectionAcquiredAt(result.acquiredAt),
         quantity: result.elixirQuantity,
       );
     } catch (e) {

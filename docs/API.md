@@ -466,7 +466,7 @@ GET  /api/inventory                     // инвентарь пользоват
 GET  /api/inventory/capabilities        // доступные ставки/возможности
 POST /api/inventory/consume             // { "item_code": "..." }
 POST /api/inventory/sell                // продажа только новой (80%) или винтажной (300%) коллекции
-POST /api/inventory/elixir              // {"elixir_code","collection_code"} — применить эликсир
+POST /api/inventory/elixir              // {"elixir_code","collection_code"} — применить эликсир; ответ acquired_at заново запускает отсчёт состояния (ускорение — винтаж через 3 месяца)
 POST /api/inventory/gift                // подарок другу (создаёт системное сообщение в чате)
 
 GET  /api/inventory/collections?user_id=<uuid>      // витрина коллекций
