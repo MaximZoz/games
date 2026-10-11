@@ -132,12 +132,34 @@ int _battleshipHuntCell(
     }
   }
   if (best.isNotEmpty) {
-    return best[rng.nextInt(best.length)];
+    final picked = _battleshipMinLen(remaining) >= 2
+        ? _battleshipPreferEvenParity(best)
+        : best;
+    return picked[rng.nextInt(picked.length)];
   }
   if (free.isEmpty) {
     throw GamesException(400, 'no cells left');
   }
   return free[rng.nextInt(free.length)];
+}
+
+int _battleshipMinLen(List<int> lens) {
+  var minLen = 0;
+  for (final n in lens) {
+    if (n <= 0) continue;
+    if (minLen == 0 || n < minLen) minLen = n;
+  }
+  return minLen == 0 ? 1 : minLen;
+}
+
+List<int> _battleshipPreferEvenParity(List<int> cells) {
+  final even = <int>[
+    for (final cell in cells)
+      if ((cell ~/ kBattleshipBoardSize + cell % kBattleshipBoardSize) % 2 ==
+          0)
+        cell,
+  ];
+  return even.isEmpty ? cells : even;
 }
 
 List<int> _battleshipRemainingLens(List<List<int>> ships, List<int> shots) {

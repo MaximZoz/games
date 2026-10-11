@@ -69,7 +69,7 @@ class DurakBot {
     final defenderCards = game.hands[game.defenderIndex].length;
     final dumpingOnTake = game.turn == DurakTurn.takeFollowUp;
     final endgame = deckLeft == 0 || (defenderCards <= 1 && deckLeft <= 4);
-    hand.sort((a, b) => _cardCost(a, game.trump).compareTo(_cardCost(b, game.trump)));
+    hand.sort((a, b) => _tossScore(a, game).compareTo(_tossScore(b, game)));
     final maxToss = game.maxAttacksThisRound - game.table.length;
     if (maxToss <= 0) return false;
     for (final c in hand) {
@@ -151,8 +151,8 @@ class DurakBot {
     final defenderCards = game.hands[game.defenderIndex].length;
     final ranked = List<PlayingCard>.from(hand)
       ..sort((a, b) {
-        final ac = _attackScore(a, game.trump, counts, deckLeft, defenderCards);
-        final bc = _attackScore(b, game.trump, counts, deckLeft, defenderCards);
+        final ac = _attackScore(a, game, counts, deckLeft, defenderCards);
+        final bc = _attackScore(b, game, counts, deckLeft, defenderCards);
         return ac.compareTo(bc);
       });
     return ranked.first;
@@ -160,11 +160,12 @@ class DurakBot {
 
   int _attackScore(
     PlayingCard card,
-    Suit trump,
+    DurakGame game,
     Map<int, int> counts,
     int deckLeft,
     int defenderCards,
   ) {
+    final trump = game.trump;
     var score = _cardCost(card, trump);
     score -= (counts[card.rank.value] ?? 0) * 6;
     if (card.suit == trump && deckLeft > 4 && defenderCards > 2) {
@@ -173,7 +174,66 @@ class DurakBot {
     if (defenderCards <= 1) {
       score -= card.rank.value;
     }
+    // Карта, которую уже нечем побить по известным (стол, бита, своя рука,
+    // открытый козырь), стоит атаки. Чужие руки не подсматриваем.
+    if (!_mightBeBeaten(card, game) &&
+        (card.suit != trump || deckLeft == 0)) {
+      score -= 70;
+    }
     return score;
+  }
+
+  int _tossScore(PlayingCard card, DurakGame game) {
+    var score = _cardCost(card, game.trump);
+    if (card.suit != game.trump && !_mightBeBeaten(card, game)) {
+      score -= 50;
+    }
+    return score;
+  }
+
+  /// Есть ли среди ещё не виденных карт та, что бьёт [attack] прямо сейчас.
+  ///
+  /// Известны своя рука, стол, бита и открытый козырь. Остальное может лежать
+  /// у соперника; если битка среди этого нет — карту не побить.
+  bool _mightBeBeaten(PlayingCard attack, DurakGame game) {
+    final known = <String>{};
+    void mark(PlayingCard card) {
+      known.add('${card.suit.index}:${card.rank.value}');
+    }
+
+    for (final card in game.hands[index]) {
+      mark(card);
+    }
+    for (final pair in game.table) {
+      mark(pair.attack);
+      final defense = pair.defense;
+      if (defense != null) mark(defense);
+    }
+    for (final card in game.bito) {
+      mark(card);
+    }
+    final open = game.openTrumpCard;
+    if (open != null) mark(open);
+
+    var total = game.deck.cards.length + game.bito.length;
+    for (final hand in game.hands) {
+      total += hand.length;
+    }
+    for (final pair in game.table) {
+      total++;
+      if (pair.defense != null) total++;
+    }
+    final minRank = total > 36 ? 2 : (total > 24 ? 6 : 9);
+    for (final suit in Suit.values) {
+      for (var value = minRank; value <= 14; value++) {
+        final key = '${suit.index}:$value';
+        if (known.contains(key)) continue;
+        if (PlayingCard(Rank(value), suit).beats(attack, game.trump)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   int _cardCost(PlayingCard card, Suit trump) {

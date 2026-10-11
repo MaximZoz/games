@@ -30,6 +30,9 @@ func PickMove(g *Game, rng *rand.Rand) (Move, bool) {
 	depth := botSearchDepth
 	if g.Mode == ModeCorners {
 		depth = botCornersDepth
+	} else if len(legal) <= 6 {
+		// Эндшпиль: мало ходов, имеет смысл видеть дамку на ход дальше.
+		depth = 8
 	}
 	if len(legal) > 28 {
 		depth = 4
@@ -240,6 +243,7 @@ func evaluate(g *Game, seat int) int {
 
 func evalDraughts(g *Game, seat int) int {
 	score := 0
+	oppKing := [2]bool{sideHasKing(g, 0), sideHasKing(g, 1)}
 	for r := 0; r < Size; r++ {
 		for c := 0; c < Size; c++ {
 			p := g.at(r, c)
@@ -272,6 +276,9 @@ func evalDraughts(g *Game, seat int) int {
 				if own == 1 && r == Size-1 {
 					val += 18
 				}
+				if !oppKing[1-own] {
+					val += runnerClear(g, r, own)
+				}
 			}
 			if own == seat {
 				score += val
@@ -282,6 +289,53 @@ func evalDraughts(g *Game, seat int) int {
 	}
 	score += maxCapture(g, seat)*28 - maxCapture(g, 1-seat)*55
 	return score
+}
+
+func sideHasKing(g *Game, seat int) bool {
+	if g == nil {
+		return false
+	}
+	for r := 0; r < Size; r++ {
+		for c := 0; c < Size; c++ {
+			p := g.at(r, c)
+			if owner(p) == seat && isKing(p) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// runnerClear — простая шашка, перед которой нет чужих на две-три горизонтали.
+func runnerClear(g *Game, rank, own int) int {
+	dir := 1
+	if own == 1 {
+		dir = -1
+	}
+	enemy := 1 - own
+	clear := 0
+	for step := 1; step <= 3; step++ {
+		rr := rank + dir*step
+		if rr < 0 || rr >= Size {
+			clear += 2
+			break
+		}
+		blocked := false
+		for c := 0; c < Size; c++ {
+			if owner(g.at(rr, c)) == enemy {
+				blocked = true
+				break
+			}
+		}
+		if blocked {
+			break
+		}
+		clear++
+	}
+	if clear >= 2 {
+		return 10 + clear*6
+	}
+	return 0
 }
 
 func maxCapture(g *Game, attacker int) int {
@@ -303,7 +357,7 @@ func evalCorners(g *Game, seat int) int {
 	if g.cornersFilled(seat) {
 		return botWinScore
 	}
-	if g.cornersFilled(1-seat) {
+	if g.cornersFilled(1 - seat) {
 		return -botWinScore
 	}
 	score := 0

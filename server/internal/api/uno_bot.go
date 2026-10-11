@@ -252,7 +252,82 @@ func unoCardScore(state *uno.Game, playerIndex int, card uno.Card) int {
 			score += 8
 		}
 	}
+	score += unoFeedPenalty(state, playerIndex, card)
 	return score
+}
+
+// unoFeedPenalty — не отдавать ход игроку с одной картой, если можно ударить его.
+func unoFeedPenalty(state *uno.Game, playerIndex int, card uno.Card) int {
+	if state == nil || len(state.Players) == 0 {
+		return 0
+	}
+	dir := state.Direction
+	if dir == 0 {
+		dir = 1
+	}
+	nextHand := unoHandSteps(state, playerIndex, 1, dir)
+	twoAway := unoHandSteps(state, playerIndex, 2, dir)
+	switch card.Kind {
+	case uno.KindNumber, uno.KindWild:
+		if nextHand == 1 {
+			return -40
+		}
+	case uno.KindSkip, uno.KindDrawTwo:
+		if twoAway == 1 && nextHand > 1 {
+			return -28
+		}
+	case uno.KindReverse:
+		alive := 0
+		for _, p := range state.Players {
+			if !p.Forfeited {
+				alive++
+			}
+		}
+		if alive <= 2 {
+			if twoAway == 1 && nextHand > 1 {
+				return -28
+			}
+			return 0
+		}
+		flip := -dir
+		if unoHandSteps(state, playerIndex, 1, flip) == 1 {
+			return -28
+		}
+	case uno.KindWildDrawFour:
+		if twoAway == 1 && nextHand > 1 {
+			return -20
+		}
+	}
+	return 0
+}
+
+func unoHandSteps(state *uno.Game, index, steps, direction int) int {
+	if state == nil || len(state.Players) == 0 || steps <= 0 {
+		return 7
+	}
+	if direction == 0 {
+		direction = 1
+	}
+	n := len(state.Players)
+	cursor := index
+	for s := 0; s < steps; s++ {
+		found := false
+		for step := 1; step <= n; step++ {
+			next := (cursor + direction*step) % n
+			if next < 0 {
+				next += n
+			}
+			if !state.Players[next].Forfeited {
+				cursor = next
+				found = true
+				break
+			}
+		}
+		if !found {
+			return 7
+		}
+	}
+	return len(state.Players[cursor].Hand)
 }
 
 func unoBotColor(state *uno.Game, playerIndex int) string {

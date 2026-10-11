@@ -424,12 +424,47 @@ func botHuntCell(ships Ships, shots []int, hitSet map[int]struct{}, rng *rand.Ra
 		}
 	}
 	if len(best) > 0 {
+		if botMinLen(remaining) >= 2 {
+			best = botPreferEvenParity(best)
+		}
 		return best[rng.Intn(len(best))], nil
 	}
 	if len(free) == 0 {
 		return 0, ErrInvalidCell
 	}
 	return free[rng.Intn(len(free))], nil
+}
+
+func botMinLen(lens []int) int {
+	minLen := 0
+	for _, n := range lens {
+		if n <= 0 {
+			continue
+		}
+		if minLen == 0 || n < minLen {
+			minLen = n
+		}
+	}
+	if minLen == 0 {
+		return 1
+	}
+	return minLen
+}
+
+// botPreferEvenParity — при равной плотности клетки шахматной раскраски
+// покрывают все корабли длиной от двух.
+func botPreferEvenParity(cells []int) []int {
+	even := make([]int, 0, len(cells))
+	for _, cell := range cells {
+		r, c := cell/BoardSize, cell%BoardSize
+		if (r+c)%2 == 0 {
+			even = append(even, cell)
+		}
+	}
+	if len(even) == 0 {
+		return cells
+	}
+	return even
 }
 
 func botRemainingLens(ships Ships, shots []int) []int {
