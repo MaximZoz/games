@@ -306,8 +306,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       })?> _applyElixir(
     BuildContext dialogContext,
     InventoryItem elixir,
-    InventoryItem collection,
-  ) async {
+    InventoryItem collection, {
+    bool notify = true,
+  }) async {
     final l10n = dialogContext.l10n;
     final ok = await showGamepadConfirmDialog(
       context: dialogContext,
@@ -327,11 +328,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       ref.invalidate(inventoryListProvider);
       ref.invalidate(shopCatalogProvider);
       if (!mounted) return null;
-      showAppSnackBar(
-        context,
-        message: context.l10n.elixirApplied,
-        kind: AppSnackKind.success,
-      );
+      if (notify) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.elixirApplied,
+          kind: AppSnackKind.success,
+        );
+      }
       return (
         shift: result.conditionShift,
         vintageAt: parseCollectionAcquiredAt(result.vintageAt),
@@ -447,32 +450,78 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   ) async {
     final l10n = context.l10n;
     final set = elixir.collectionSet ?? '';
-    final targets = collections
-        .where((c) => _elixirFits(elixir, c))
-        .toList(growable: false);
-    await showCollectionFullscreen(
-      context,
-      title: elixirTitle(l10n, set, elixir.elixirEffect),
-      animatedName: 'sparkles',
-      artwork: ElixirIcon(
-        set: set,
-        effect: elixir.elixirEffect ?? 'rejuvenate',
-        size: 180,
-      ),
-      subtitle:
-          '${elixirEffectHelp(l10n, elixir.elixirEffect)}\n${l10n.elixirSetOnly(collectionSetTitle(set))}\n${l10n.inventoryEmojiLeft(elixir.quantity)}',
-      onBuy: targets.isEmpty
-          ? null
-          : () async {
-              final picked = await _pickCollection(context, targets);
-              if (picked == null || !mounted) return;
-              final applied = await _applyElixir(context, elixir, picked);
-              if (applied != null && mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-      buyLabel: targets.isEmpty ? null : l10n.elixirUse,
-    );
+    final targets = collections.where((c) => _elixirFits(elixir, c)).toList();
+    String subtitleFor(int count) =>
+        '${elixirEffectHelp(l10n, elixir.elixirEffect)}\n'
+        '${l10n.elixirSetOnly(collectionSetTitle(set))}\n'
+        '${l10n.inventoryEmojiLeft(count)}';
+    final subtitle = ValueNotifier<String>(subtitleFor(elixir.quantity));
+    try {
+      await showCollectionFullscreen(
+        context,
+        title: elixirTitle(l10n, set, elixir.elixirEffect),
+        animatedName: 'sparkles',
+        artwork: ElixirIcon(
+          set: set,
+          effect: elixir.elixirEffect ?? 'rejuvenate',
+          size: 180,
+        ),
+        subtitle: subtitle.value,
+        subtitleListenable: subtitle,
+        onBuy: targets.isEmpty
+            ? null
+            : () async {
+                if (targets.isEmpty) {
+                  showAppSnackBar(
+                    context,
+                    message: l10n.elixirNoTarget,
+                  );
+                  return;
+                }
+                final picked = await _pickCollection(context, targets);
+                if (picked == null || !mounted) return;
+                final applied = await _applyElixir(
+                  context,
+                  elixir,
+                  picked,
+                  notify: false,
+                );
+                if (applied == null || !mounted) return;
+                if (applied.quantity <= 0) {
+                  Navigator.of(context).pop();
+                  showAppSnackBar(
+                    context,
+                    message: l10n.elixirApplied,
+                    kind: AppSnackKind.success,
+                  );
+                  return;
+                }
+                subtitle.value = subtitleFor(applied.quantity);
+                final index = targets.indexWhere((c) => c.code == picked.code);
+                if (index < 0) return;
+                final updated = InventoryItem(
+                  code: picked.code,
+                  kind: picked.kind,
+                  title: picked.title,
+                  description: picked.description,
+                  payload: picked.payload,
+                  acquiredAt: applied.acquiredAt?.toUtc().toIso8601String() ??
+                      picked.acquiredAt,
+                  quantity: picked.quantity,
+                  conditionShift: applied.shift,
+                  vintageAt: applied.vintageAt?.toUtc().toIso8601String(),
+                );
+                if (_elixirFits(elixir, updated)) {
+                  targets[index] = updated;
+                } else {
+                  targets.removeAt(index);
+                }
+              },
+        buyLabel: targets.isEmpty ? null : l10n.elixirUse,
+      );
+    } finally {
+      subtitle.dispose();
+    }
   }
 
   @override

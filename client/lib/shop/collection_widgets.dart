@@ -175,6 +175,7 @@ Future<void> showCollectionFullscreen(
   required String animatedName,
   String? fallback,
   String? subtitle,
+  ValueNotifier<String>? subtitleListenable,
   Widget? bottomAction,
   VoidCallback? onBuy,
   String? buyLabel,
@@ -194,6 +195,7 @@ Future<void> showCollectionFullscreen(
         animatedName: animatedName,
         fallback: fallback,
         subtitle: subtitle,
+        subtitleListenable: subtitleListenable,
         bottomAction: bottomAction,
         onBuy: onBuy,
         buyLabel: buyLabel,
@@ -214,6 +216,7 @@ class _CollectionFullscreen extends StatefulWidget {
     required this.animatedName,
     this.fallback,
     this.subtitle,
+    this.subtitleListenable,
     this.bottomAction,
     this.onBuy,
     this.buyLabel,
@@ -229,6 +232,7 @@ class _CollectionFullscreen extends StatefulWidget {
   final String animatedName;
   final String? fallback;
   final String? subtitle;
+  final ValueNotifier<String>? subtitleListenable;
   final Widget? bottomAction;
   final VoidCallback? onBuy;
   final String? buyLabel;
@@ -247,6 +251,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   late int _shift;
   DateTime? _vintageAt;
   DateTime? _acquired;
+  late String? _subtitle;
   late List<CollectionElixirButton> _actions;
   Timer? _tick;
   bool _closed = false;
@@ -257,14 +262,23 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
     _shift = widget.conditionShift;
     _vintageAt = widget.vintageAt;
     _acquired = widget.acquiredAt;
+    _subtitle = widget.subtitle;
     _actions = [...widget.elixirActions];
+    widget.subtitleListenable?.addListener(_syncSubtitle);
     _tick = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
     });
   }
 
+  void _syncSubtitle() {
+    final next = widget.subtitleListenable?.value;
+    if (!mounted || next == _subtitle) return;
+    setState(() => _subtitle = next);
+  }
+
   @override
   void dispose() {
+    widget.subtitleListenable?.removeListener(_syncSubtitle);
     _tick?.cancel();
     super.dispose();
   }
@@ -431,13 +445,13 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          if ((widget.subtitle ?? '').trim().isNotEmpty) ...[
+                          if ((_subtitle ?? '').trim().isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 24),
                               child: Text(
-                                widget.subtitle!,
+                                _subtitle!,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.75),
