@@ -1050,8 +1050,9 @@ func pokerBotHasCallStrength(state *poker.Game, idx int) bool {
 	if a == b {
 		return true
 	}
-	if a >= 11 || b >= 11 {
-		return true
+	suited := p.Hole[0].Suit == p.Hole[1].Suit
+	if len(state.Community) < 3 {
+		return pokerBotPreflopContinues(a, b, suited)
 	}
 	if len(state.Community) >= 3 {
 		cards := append([]poker.Card{p.Hole[0], p.Hole[1]}, state.Community...)
@@ -1063,6 +1064,30 @@ func pokerBotHasCallStrength(state *poker.Game, idx int) bool {
 		}
 	}
 	return false
+}
+
+// pokerBotPreflopContinues — колл до флопа только с парой, тузом от десятки,
+// бродвеем и одномасстными коннекторами. Валет-мусор больше не уравнивает.
+func pokerBotPreflopContinues(a, b int, suited bool) bool {
+	if a < b {
+		a, b = b, a
+	}
+	if a == b {
+		return true
+	}
+	if a >= 14 && b >= 10 {
+		return true
+	}
+	if a >= 13 && b >= 12 {
+		return true
+	}
+	if suited && a >= 12 && b >= 10 {
+		return true
+	}
+	if suited && a-b == 1 && b >= 7 {
+		return true
+	}
+	return a >= 11 && b >= 10 && a-b <= 2
 }
 
 func pokerBotStrength(state *poker.Game, idx int) int {
@@ -1188,7 +1213,7 @@ func pokerBotAction(state *poker.Game) poker.Action {
 	}
 	cheapCall := callAmount > 0 && callAmount < p.Chips &&
 		(callAmount*4 <= pot || callAmount <= p.Chips/4) && !facingAllIn
-	if has(string(poker.ActionCall)) && cheapCall && strength >= 20 {
+	if has(string(poker.ActionCall)) && cheapCall && strength >= 28 {
 		if wantRaise && strength >= 64 && p.Chips > state.BigBlind*4 {
 			to := state.CurrentBet + state.MinRaise
 			if to <= p.Bet+p.Chips {

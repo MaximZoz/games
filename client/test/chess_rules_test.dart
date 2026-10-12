@@ -34,6 +34,33 @@ void main() {
     expect(chessOwnClockTicks(chessModeBullet), isTrue);
     expect(chessOwnClockTicks(chessModeClassic), isTrue);
     expect(chessOwnClockTicks(null), isTrue);
+    expect(
+      chessGameClockAudible(
+        mine: true,
+        mode: chessModeBlitz,
+        turnTimeSec: 0,
+        turnDeadline: 0,
+      ),
+      isTrue,
+    );
+    expect(
+      chessGameClockAudible(
+        mine: true,
+        mode: chessModeBlitz,
+        turnTimeSec: 30,
+        turnDeadline: 1,
+      ),
+      isFalse,
+    );
+    expect(
+      chessGameClockAudible(
+        mine: false,
+        mode: chessModeBlitz,
+        turnTimeSec: 0,
+        turnDeadline: 0,
+      ),
+      isFalse,
+    );
     expect(t.gameYouWonShort, 'Вы выиграли');
     expect(t.gameYouLost, 'Вы проиграли');
     expect(t.gamesChess, 'Шахматы');

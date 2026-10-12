@@ -14,6 +14,7 @@ CheckersMove? checkersPickMove(CheckersEngine g, [Random? rng]) {
   rng ??= Random(1);
   final rootSeat = g.turn;
   var depth = g.isCorners ? _botCornersDepth : _botSearchDepth;
+  if (!g.isCorners && legal.length <= 6) depth = 8;
   if (legal.length > 28) depth = 4;
   if (legal.length > 40) depth = 3;
   var best = legal.first;
@@ -134,6 +135,7 @@ int checkersEvaluate(CheckersEngine g, int seat) {
 
 int _evalDraughts(CheckersEngine g, int seat) {
   var score = 0;
+  final oppKing = [_sideHasKing(g, 0), _sideHasKing(g, 1)];
   for (var r = 0; r < CheckersEngine.size; r++) {
     for (var c = 0; c < CheckersEngine.size; c++) {
       final p = g.at(r, c);
@@ -156,6 +158,7 @@ int _evalDraughts(CheckersEngine g, int seat) {
       if (!CheckersEngine.isKing(p)) {
         if (own == 0 && r == 0) val += 18;
         if (own == 1 && r == CheckersEngine.size - 1) val += 18;
+        if (!oppKing[1 - own]) val += _runnerClear(g, r, own);
       }
       score += own == seat ? val : -val;
     }
@@ -206,6 +209,43 @@ int _alphabetaCaptures(
     if (alpha >= beta) break;
   }
   return best;
+}
+
+bool _sideHasKing(CheckersEngine g, int seat) {
+  for (var r = 0; r < CheckersEngine.size; r++) {
+    for (var c = 0; c < CheckersEngine.size; c++) {
+      final p = g.at(r, c);
+      if (CheckersEngine.owner(p) == seat && CheckersEngine.isKing(p)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/// Простая шашка, перед которой нет чужих на две-три горизонтали.
+int _runnerClear(CheckersEngine g, int rank, int own) {
+  final dir = own == 1 ? -1 : 1;
+  final enemy = 1 - own;
+  var clear = 0;
+  for (var step = 1; step <= 3; step++) {
+    final rr = rank + dir * step;
+    if (rr < 0 || rr >= CheckersEngine.size) {
+      clear += 2;
+      break;
+    }
+    var blocked = false;
+    for (var c = 0; c < CheckersEngine.size; c++) {
+      if (CheckersEngine.owner(g.at(rr, c)) == enemy) {
+        blocked = true;
+        break;
+      }
+    }
+    if (blocked) break;
+    clear++;
+  }
+  if (clear >= 2) return 10 + clear * 6;
+  return 0;
 }
 
 int _maxCapture(CheckersEngine g, int attacker) {

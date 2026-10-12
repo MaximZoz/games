@@ -53,11 +53,18 @@ void main() {
 
   testWidgets('открытая коллекция показывает срок до следующего состояния',
       (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final acquired = DateTime.now().toUtc().subtract(const Duration(days: 1));
     await open(tester, acquired: acquired);
 
     expect(find.text('Природа'), findsOneWidget);
-    expect(find.text('Новое'), findsOneWidget);
+    expect(find.text('Новое'), findsNWidgets(2));
+    expect(find.text('Потрепанное'), findsOneWidget);
+    expect(find.text('Уставшее'), findsOneWidget);
+    expect(find.text('Ветхое'), findsOneWidget);
+    expect(find.text('Винтаж'), findsOneWidget);
+    expect(find.byKey(const Key('condition-scale-marker')), findsOneWidget);
     expect(find.textContaining(RegExp(r'До потрепанного \d+')), findsOneWidget);
   });
 
@@ -76,8 +83,48 @@ void main() {
       ],
     );
 
-    expect(find.text('Винтаж'), findsOneWidget);
+    expect(find.text('Винтаж'), findsNWidgets(2));
     expect(find.textContaining('До '), findsNothing);
     expect(find.widgetWithText(GamepadBuyButton, 'Омолодить'), findsOneWidget);
+  });
+
+  testWidgets('счётчик открытого эликсира обновляется без закрытия',
+      (tester) async {
+    final subtitle = ValueNotifier<String>('Осталось 3');
+    addTearDown(subtitle.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () {
+                  showCollectionFullscreen(
+                    context,
+                    title: 'Эликсир',
+                    animatedName: 'sparkles',
+                    artwork: const SizedBox(width: 24, height: 24),
+                    subtitle: subtitle.value,
+                    subtitleListenable: subtitle,
+                  );
+                },
+                child: const Text('open'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Осталось 3'), findsOneWidget);
+    subtitle.value = 'Осталось 2';
+    await tester.pump();
+
+    expect(find.text('Осталось 2'), findsOneWidget);
+    expect(find.text('Осталось 3'), findsNothing);
+    expect(find.text('Эликсир'), findsOneWidget);
   });
 }

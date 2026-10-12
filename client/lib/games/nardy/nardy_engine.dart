@@ -732,4 +732,60 @@ class NardyEngine {
     }
     return total;
   }
+
+  /// Ход для поиска бота: без истории и без закрытия партии.
+  ///
+  /// Откатывается [undoForSearch], чтобы не клонировать доску на каждый узел.
+  NardySearchUndo? applyForSearch(NardyMove mv) {
+    final headBefore = headMoved;
+    final tracked = _applyMoveTracked(mv);
+    if (tracked == null) return null;
+    return NardySearchUndo(
+      hit: tracked.hit,
+      boreOff: tracked.boreOff,
+      headBefore: headBefore,
+    );
+  }
+
+  /// Откат [applyForSearch].
+  void undoForSearch(NardyMove mv, NardySearchUndo undo) {
+    final seat = turn;
+    var to = mv.from + mv.die;
+    if (mv.from == nardyBarTrack) to = mv.die - 1;
+    if (undo.boreOff) {
+      _off[seat]--;
+    } else {
+      _addAt(seat, to, -1);
+      if (undo.hit) {
+        final opp = nardyOpponent(seat);
+        final oppTrack = nardyBoardToTrack(
+          mode,
+          opp,
+          nardyTrackToBoard(mode, seat, to),
+        );
+        _addAt(opp, oppTrack, 1);
+        _bar[opp]--;
+      }
+    }
+    if (mv.from == nardyBarTrack) {
+      _bar[seat]++;
+    } else {
+      _addAt(seat, mv.from, 1);
+    }
+    _dice.add(mv.die);
+    headMoved = undo.headBefore;
+  }
+}
+
+/// Снимок хода поиска: что откатить вместе с кубиком.
+class NardySearchUndo {
+  const NardySearchUndo({
+    required this.hit,
+    required this.boreOff,
+    required this.headBefore,
+  });
+
+  final bool hit;
+  final bool boreOff;
+  final int headBefore;
 }

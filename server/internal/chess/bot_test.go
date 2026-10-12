@@ -37,6 +37,20 @@ func TestBotCapturesHangingQueen(t *testing.T) {
 	}
 }
 
+func TestPassedPawnOutranksBlockedPawn(t *testing.T) {
+	passed := NewGame(ModeBlitz)
+	clearBoard(passed)
+	passed.set(0, 4, WhiteKing)
+	passed.set(7, 4, BlackKing)
+	passed.set(4, 0, WhitePawn) // a5, проходная
+	blocked := passed.Clone()
+	blocked.set(5, 0, BlackPawn) // a6 стопорит пешку
+	if pawnStructure(passed, 0) <= pawnStructure(blocked, 0) {
+		t.Fatalf("passed pawn structure %d, blocked %d",
+			pawnStructure(passed, 0), pawnStructure(blocked, 0))
+	}
+}
+
 func TestBotFindsMateInOne(t *testing.T) {
 	g := NewGame(ModeBlitz)
 	clearBoard(g)

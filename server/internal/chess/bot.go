@@ -276,5 +276,64 @@ func evaluateSide(g *Game, seat int) int {
 	mine := len(g.pseudoMoves(seat))
 	theirs := len(g.pseudoMoves(1 - seat))
 	score += (mine - theirs) * 2
+	score += pawnStructure(g, seat) - pawnStructure(g, 1-seat)
 	return score
+}
+
+// pawnStructure — проходные, связанные и сдвоенные пешки [seat].
+func pawnStructure(g *Game, seat int) int {
+	var files [8]int
+	for i, p := range g.Board {
+		if p == Empty || kind(p) != 1 || colorOf(p) != seat {
+			continue
+		}
+		files[i%8]++
+	}
+	score := 0
+	for i, p := range g.Board {
+		if p == Empty || kind(p) != 1 || colorOf(p) != seat {
+			continue
+		}
+		file, rank := i%8, i/8
+		adv := rank
+		if seat == 1 {
+			adv = 7 - rank
+		}
+		if pawnIsPassed(g, seat, file, rank) {
+			score += 16 + adv*12
+		}
+		friendly := (file > 0 && files[file-1] > 0) || (file < 7 && files[file+1] > 0)
+		if friendly {
+			score += 6
+		} else {
+			score -= 10
+		}
+		if files[file] > 1 {
+			score -= 8
+		}
+	}
+	return score
+}
+
+func pawnIsPassed(g *Game, seat, file, rank int) bool {
+	enemy := 1 - seat
+	for df := -1; df <= 1; df++ {
+		f := file + df
+		if f < 0 || f >= 8 {
+			continue
+		}
+		for r := 0; r < 8; r++ {
+			if seat == 0 && r <= rank {
+				continue
+			}
+			if seat == 1 && r >= rank {
+				continue
+			}
+			p := g.at(r, f)
+			if p != Empty && kind(p) == 1 && colorOf(p) == enemy {
+				return false
+			}
+		}
+	}
+	return true
 }

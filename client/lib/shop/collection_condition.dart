@@ -246,6 +246,73 @@ List<DateTime> collectionConditionBoundaries(DateTime acquired) {
   return (condition: bestCond, at: best);
 }
 
+DateTime _conditionSegmentStart({
+  required DateTime acquired,
+  required DateTime now,
+  int shift = 0,
+  DateTime? vintageAt,
+  required CollectionCondition current,
+}) {
+  final atNow = now.toUtc();
+  final marks = <DateTime>[
+    acquired.toUtc(),
+    ...collectionConditionBoundaries(acquired),
+  ];
+  final boost = vintageAt?.toUtc();
+  if (boost != null) marks.add(boost);
+  marks.sort();
+  var start = acquired.toUtc();
+  for (final t in marks) {
+    if (t.isAfter(atNow)) break;
+    final cond = collectionConditionEffective(
+      acquired: acquired,
+      now: t,
+      shift: shift,
+      vintageAt: vintageAt,
+    );
+    if (cond == current) start = t;
+  }
+  return start;
+}
+
+/// Доля шкалы от 0 до 1: пять равных отрезков, маркер внутри текущего.
+/// У винтажа маркер в конце. Без даты покупки — у левого края своего отрезка.
+double collectionConditionScaleT({
+  required CollectionCondition condition,
+  DateTime? acquired,
+  required DateTime now,
+  int shift = 0,
+  DateTime? vintageAt,
+}) {
+  final index = _conditionIndex(condition);
+  if (condition == CollectionCondition.vintage) return 1;
+  if (acquired == null) return index / 5;
+  final start = _conditionSegmentStart(
+    acquired: acquired,
+    now: now,
+    shift: shift,
+    vintageAt: vintageAt,
+    current: condition,
+  );
+  final next = nextCollectionCondition(
+    acquired: acquired,
+    now: now,
+    shift: shift,
+    vintageAt: vintageAt,
+  );
+  var frac = 1.0;
+  if (next != null) {
+    final span = next.at.difference(start).inMicroseconds;
+    final gone = now.toUtc().difference(start).inMicroseconds;
+    if (span <= 0 || gone <= 0) {
+      frac = 0;
+    } else {
+      frac = (gone / span).clamp(0.0, 1.0);
+    }
+  }
+  return ((index + frac) / 5).clamp(0.0, 1.0);
+}
+
 /// Можно ли применить эффект к текущему состоянию.
 bool elixirCanApply({
   required String effect,
@@ -328,6 +395,22 @@ Color collectionConditionBackground(CollectionCondition condition) {
       return const Color(0xFF1A1210);
     case CollectionCondition.vintage:
       return const Color(0xFF140E1C);
+  }
+}
+
+/// Цвет отрезка на шкале состояний. Читается и на тёмном, и на светлом фоне.
+Color collectionConditionColor(CollectionCondition condition) {
+  switch (condition) {
+    case CollectionCondition.fresh:
+      return const Color(0xFF2FBF7A);
+    case CollectionCondition.worn:
+      return const Color(0xFFE0A020);
+    case CollectionCondition.tired:
+      return const Color(0xFF6E86C9);
+    case CollectionCondition.shabby:
+      return const Color(0xFFD06A52);
+    case CollectionCondition.vintage:
+      return const Color(0xFFA078E0);
   }
 }
 

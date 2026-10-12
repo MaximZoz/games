@@ -250,8 +250,8 @@ int _searchBoard(
   int winLen,
 ) {
   var depth = 2;
-  if (gridSize == 4) depth = 4;
-  if (gridSize == 5) depth = 3;
+  if (gridSize == 4 || gridSize == 5) depth = 4;
+  if (gridSize == 6) depth = 3;
   var bestCell = -1;
   var bestScore = -1 << 30;
   for (final cell in moves) {
@@ -291,7 +291,9 @@ int _boardMinimax(
   }
   if (board.every((c) => c.isNotEmpty) || depth <= 0) {
     return _countOpenThreats(board, botMark, gridSize, winLen) * 30 -
-        _countOpenThreats(board, opponent, gridSize, winLen) * 40;
+        _countOpenThreats(board, opponent, gridSize, winLen) * 40 +
+        _countBuild(board, botMark, gridSize, winLen) * 8 -
+        _countBuild(board, opponent, gridSize, winLen) * 8;
   }
   final moves = <int>[];
   for (var i = 0; i < board.length; i++) {
@@ -457,6 +459,50 @@ int _countOpenThreats(
           }
         }
         if (ok && own == winLen - 1 && empty == 1) n++;
+      }
+    }
+  }
+  return n;
+}
+
+int _countBuild(
+  List<String> board,
+  String mark,
+  int gridSize,
+  int winLen,
+) {
+  if (winLen < 2) return 0;
+  var n = 0;
+  const dirs = [
+    [0, 1],
+    [1, 0],
+    [1, 1],
+    [1, -1],
+  ];
+  for (var r = 0; r < gridSize; r++) {
+    for (var c = 0; c < gridSize; c++) {
+      for (final d in dirs) {
+        var own = 0;
+        var empty = 0;
+        var ok = true;
+        for (var k = 0; k < winLen; k++) {
+          final rr = r + d[0] * k;
+          final cc = c + d[1] * k;
+          if (rr < 0 || cc < 0 || rr >= gridSize || cc >= gridSize) {
+            ok = false;
+            break;
+          }
+          final v = board[rr * gridSize + cc];
+          if (v == mark) {
+            own++;
+          } else if (v.isEmpty) {
+            empty++;
+          } else {
+            ok = false;
+            break;
+          }
+        }
+        if (ok && own >= 2 && own + empty == winLen) n += own * own;
       }
     }
   }

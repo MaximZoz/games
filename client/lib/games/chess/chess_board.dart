@@ -6,9 +6,66 @@ import 'package:multigames_client/ui/app_theme.dart';
 
 const Color _kLightSquare = Color(0xFFEBECD0);
 const Color _kDarkSquare = Color(0xFF739552);
-const Color _kLastMove = Color(0xFFF6EB72);
+
+/// Клетки последнего хода — как на lichess: сама клетка становится
+/// жёлто-зелёной, светлая и тёмная чуть разными.
+const Color _kLastLight = Color(0xFFCDD26A);
+const Color _kLastDark = Color(0xFFAAA23A);
 const Color _kSelect = Color(0xFF8BC34A);
-const Color _kCheck = Color(0xFFE57373);
+const Color _kCheck = Color(0xFFE53935);
+
+/// Как долго фигура едет на новую клетку. Близко к анимации lichess.
+const Duration _kMoveDuration = Duration(milliseconds: 200);
+
+@visibleForTesting
+Color chessLastMoveSquare({required bool dark}) =>
+    dark ? _kLastDark : _kLastLight;
+
+/// Слайды фигур, если [next] — ровно следующий ход после [prev].
+/// Рокировка двигает и короля, и ладью. Иначе null — прыжок без анимации.
+@visibleForTesting
+List<ChessMoveSlide>? chessMoveSlides(ChessGameView prev, ChessGameView next) {
+  if (prev.id != next.id || next.seq != prev.seq + 1) return null;
+  if (next.lastFromR < 0 || next.lastToR < 0) return null;
+  final to = ChessSquare(next.lastToR, next.lastToC);
+  final piece = next.board[to.r * ChessEngine.size + to.c];
+  if (piece == ChessEngine.empty) return null;
+  final slides = <ChessMoveSlide>[
+    ChessMoveSlide(
+      from: ChessSquare(next.lastFromR, next.lastFromC),
+      to: to,
+      piece: piece,
+    ),
+  ];
+  if (ChessEngine.kind(piece) == 6 && (next.lastToC - next.lastFromC).abs() == 2) {
+    final home = next.lastToR;
+    final kingSide = next.lastToC == 6;
+    final rookToC = kingSide ? 5 : 3;
+    final rook = next.board[home * ChessEngine.size + rookToC];
+    if (rook != ChessEngine.empty) {
+      slides.add(ChessMoveSlide(
+        from: ChessSquare(home, kingSide ? 7 : 0),
+        to: ChessSquare(home, rookToC),
+        piece: rook,
+      ));
+    }
+  }
+  return slides;
+}
+
+/// Одна фигура, которая едет с клетки на клетку.
+@visibleForTesting
+class ChessMoveSlide {
+  const ChessMoveSlide({
+    required this.from,
+    required this.to,
+    required this.piece,
+  });
+
+  final ChessSquare from;
+  final ChessSquare to;
+  final int piece;
+}
 
 /// Отображение клетки доски на экранные координаты и обратно.
 class ChessBoardGeometry {
@@ -38,7 +95,7 @@ class ChessBoardGeometry {
 }
 
 /// Шахматная доска 8×8 с подсветкой, легальными ходами и координатами.
-class ChessBoard extends StatelessWidget {
+class ChessBoard extends StatefulWidget {
   const ChessBoard({
     super.key,
     required this.game,
@@ -55,7 +112,63 @@ class ChessBoard extends StatelessWidget {
   final ChessSquare? cursor;
 
   @override
+  State<ChessBoard> createState() => _ChessBoardState();
+}
+
+class _ChessBoardState extends State<ChessBoard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _moveAnim;
+  List<ChessMoveSlide>? _slides;
+
+  @override
+  void initState() {
+    super.initState();
+    _moveAnim = AnimationController(vsync: this, duration: _kMoveDuration)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed && mounted) {
+          setState(() => _slides = null);
+        }
+      });
+  }
+
+  @override
+  void didUpdateWidget(covariant ChessBoard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.game == widget.game) return;
+    final slides = chessMoveSlides(oldWidget.game, widget.game);
+    if (slides == null) {
+      if (oldWidget.game.id != widget.game.id ||
+          oldWidget.game.seq != widget.game.seq) {
+        _moveAnim.stop();
+        _slides = null;
+      }
+      return;
+    }
+    _slides = slides;
+    _moveAnim.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _moveAnim.dispose();
+    super.dispose();
+  }
+
+  bool _destHidden(int r, int c) {
+    final slides = _slides;
+    if (slides == null) return false;
+    for (final leg in slides) {
+      if (leg.to.r == r && leg.to.c == c) return true;
+    }
+    return false;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final game = widget.game;
+    final selected = widget.selected;
+    final flip = widget.flip;
+    final cursor = widget.cursor;
     final targets = <ChessSquare>{
       if (selected != null)
         for (final m in game.legalMoves)
@@ -91,6 +204,7 @@ class ChessBoard extends StatelessWidget {
           if (piece == ChessEngine.empty) continue;
           final r = i ~/ ChessEngine.size;
           final c = i % ChessEngine.size;
+          if (_destHidden(r, c)) continue;
           final rect = geo.rectOf(r, c);
           pieces.add(Positioned(
             left: rect.left,
@@ -100,6 +214,7 @@ class ChessBoard extends StatelessWidget {
             child: IgnorePointer(child: ChessPieceGlyph(piece: piece)),
           ));
         }
+        final slides = _slides;
         return Center(
           child: SizedBox(
             width: side,
@@ -136,16 +251,46 @@ class ChessBoard extends StatelessWidget {
                           details.localPosition.dx,
                           details.localPosition.dy,
                         );
-                        if (sq != null) onSquareTap(sq.r, sq.c);
+                        if (sq != null) widget.onSquareTap(sq.r, sq.c);
                       },
                     ),
                   ),
+                  if (slides != null)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: AnimatedBuilder(
+                          animation: _moveAnim,
+                          builder: (context, _) {
+                            final t = Curves.easeInOut
+                                .transform(_moveAnim.value.clamp(0.0, 1.0));
+                            return Stack(
+                              children: [
+                                for (final leg in slides)
+                                  _flyingPiece(geo, leg, t),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _flyingPiece(ChessBoardGeometry geo, ChessMoveSlide leg, double t) {
+    final from = geo.rectOf(leg.from.r, leg.from.c);
+    final to = geo.rectOf(leg.to.r, leg.to.c);
+    return Positioned(
+      left: from.left + (to.left - from.left) * t,
+      top: from.top + (to.top - from.top) * t,
+      width: from.width,
+      height: from.height,
+      child: ChessPieceGlyph(piece: leg.piece),
     );
   }
 }
@@ -183,17 +328,16 @@ class _ChessBoardPainter extends CustomPainter {
       for (var c = 0; c < ChessEngine.size; c++) {
         final rect = geo.rectOf(r, c);
         final dark = (r + c) % 2 == 0;
-        fill.color = dark ? _kDarkSquare : _kLightSquare;
-        canvas.drawRect(rect, fill);
         final sq = ChessSquare(r, c);
+        fill.color = (sq == lastFrom || sq == lastTo)
+            ? chessLastMoveSquare(dark: dark)
+            : (dark ? _kDarkSquare : _kLightSquare);
+        canvas.drawRect(rect, fill);
         if (sq == checkSquare) {
-          fill.color = _kCheck.withValues(alpha: 0.72);
+          fill.color = _kCheck.withValues(alpha: 0.82);
           canvas.drawRect(rect, fill);
         } else if (sq == selected) {
           fill.color = _kSelect.withValues(alpha: 0.5);
-          canvas.drawRect(rect, fill);
-        } else if (sq == lastFrom || sq == lastTo) {
-          fill.color = _kLastMove.withValues(alpha: 0.5);
           canvas.drawRect(rect, fill);
         }
         if (sq == cursor) {

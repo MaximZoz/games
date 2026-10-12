@@ -19,6 +19,7 @@ var errInventoryMissing = errors.New("inventory item missing")
 type ElixirApplyResult struct {
 	ConditionShift int
 	VintageAt      *time.Time
+	Acquired       time.Time
 	ElixirQuantity int
 }
 
@@ -76,15 +77,15 @@ func ApplyElixir(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, elix
 	}
 
 	now := time.Now().UTC()
-	shift, vintageAt, err := PlanElixirApply(elixirEffect, collection.acquired, now, collection.shift, collection.vintage)
+	acquired, shift, vintageAt, err := ResetElixirClock(elixirEffect, collection.acquired, now, collection.shift, collection.vintage)
 	if err != nil {
 		return nil, err
 	}
 	if _, err := tx.Exec(ctx, `
 		UPDATE user_inventory
-		SET condition_shift = $3, vintage_at = $4
+		SET acquired_at = $3, condition_shift = $4, vintage_at = $5
 		WHERE user_id = $1 AND item_code = $2`,
-		userID, collectionCode, shift, vintageAt); err != nil {
+		userID, collectionCode, acquired, shift, vintageAt); err != nil {
 		return nil, err
 	}
 
@@ -109,6 +110,7 @@ func ApplyElixir(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, elix
 	return &ElixirApplyResult{
 		ConditionShift: shift,
 		VintageAt:      vintageAt,
+		Acquired:       acquired,
 		ElixirQuantity: qty,
 	}, nil
 }

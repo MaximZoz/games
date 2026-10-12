@@ -929,13 +929,20 @@ class PokerEngine {
   }
 }
 
-/// Есть ли у бота «сильная» карта: карманная пара, валет+, пара+ по борду или дро.
+/// Есть ли рука для колла: пара, сильный префлоп, пара на борде или дро.
 bool pokerBotHasCallStrength(PokerEngine g, PokerEnginePlayer p) {
   if (p.hole.length < 2) return false;
   final first = p.hole[0];
   final second = p.hole[1];
   if (first.rank.value == second.rank.value) return true;
-  if (first.rank.value >= 11 || second.rank.value >= 11) return true;
+  final suited = first.suit == second.suit;
+  if (g.community.length < 3) {
+    return _pokerBotPreflopContinues(
+      first.rank.value,
+      second.rank.value,
+      suited,
+    );
+  }
   if (g.community.length >= 3) {
     final cards = [...p.hole, ...g.community];
     final best = evaluateBestHand(cards);
@@ -943,6 +950,21 @@ bool pokerBotHasCallStrength(PokerEngine g, PokerEnginePlayer p) {
     if (_pokerBotDrawScore(cards) >= 8) return true;
   }
   return false;
+}
+
+/// Колл до флопа: пара, туз от десятки, бродвей и одномасстные коннекторы.
+bool _pokerBotPreflopContinues(int a, int b, bool suited) {
+  if (a < b) {
+    final t = a;
+    a = b;
+    b = t;
+  }
+  if (a == b) return true;
+  if (a >= 14 && b >= 10) return true;
+  if (a >= 13 && b >= 12) return true;
+  if (suited && a >= 12 && b >= 10) return true;
+  if (suited && a - b == 1 && b >= 7) return true;
+  return a >= 11 && b >= 10 && a - b <= 2;
 }
 
 int pokerBotStrength(PokerEngine g, PokerEnginePlayer p) {
@@ -1031,7 +1053,7 @@ PokerAction pokerBotAction(PokerEngine g) {
       callAmount < p.chips &&
       (callAmount * 4 <= pot || callAmount <= p.chips ~/ 4) &&
       !facingAllIn;
-  if (has(PokerActionType.call) && cheapCall && strength >= 20) {
+  if (has(PokerActionType.call) && cheapCall && strength >= 28) {
     if (wantRaise && strength >= 64 && p.chips > g.bigBlind * 4) {
       final to = g.currentBet + g.minRaise;
       if (to <= p.bet + p.chips) {

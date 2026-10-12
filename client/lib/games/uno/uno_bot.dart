@@ -136,5 +136,53 @@ int _unoCardScore(UnoEngine game, int index, UnoCard card) {
       score += (counts[card.color] ?? 0) * 14;
       if (card.color == game.currentColor) score += 8;
   }
+  score += _unoFeedPenalty(game, index, card);
   return score;
+}
+
+/// Не отдавать ход игроку с одной картой, если можно ударить его.
+int _unoFeedPenalty(UnoEngine game, int index, UnoCard card) {
+  final dir = game.direction == 0 ? 1 : game.direction;
+  final nextHand = _handSteps(game, index, 1, dir);
+  final twoAway = _handSteps(game, index, 2, dir);
+  switch (card.kind) {
+    case UnoCardKind.number:
+    case UnoCardKind.wild:
+      if (nextHand == 1) return -40;
+    case UnoCardKind.skip:
+    case UnoCardKind.drawTwo:
+      if (twoAway == 1 && nextHand > 1) return -28;
+    case UnoCardKind.reverse:
+      final alive = game.players.where((p) => !p.forfeited).length;
+      if (alive <= 2) {
+        if (twoAway == 1 && nextHand > 1) return -28;
+        return 0;
+      }
+      final recv = _handSteps(game, index, 1, -dir);
+      if (recv == 1) return -28;
+    case UnoCardKind.wildDrawFour:
+      if (twoAway == 1 && nextHand > 1) return -20;
+  }
+  return 0;
+}
+
+int _handSteps(UnoEngine game, int index, int steps, int direction) {
+  if (steps <= 0) return 7;
+  final dir = direction == 0 ? 1 : direction;
+  final n = game.players.length;
+  var cursor = index;
+  for (var s = 0; s < steps; s++) {
+    var found = false;
+    for (var step = 1; step <= n; step++) {
+      var next = (cursor + dir * step) % n;
+      if (next < 0) next += n;
+      if (!game.players[next].forfeited) {
+        cursor = next;
+        found = true;
+        break;
+      }
+    }
+    if (!found) return 7;
+  }
+  return game.players[cursor].hand.length;
 }

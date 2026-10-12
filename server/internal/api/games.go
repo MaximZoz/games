@@ -1439,9 +1439,9 @@ func botBestFork(board []string, moves []int, mark string, gridSize, winLen int)
 func botSearchBoard(board []string, moves []int, botMark, opponent string, gridSize, winLen int, firstMoveRestriction bool) int {
 	depth := 2
 	switch gridSize {
-	case 4:
+	case 4, 5:
 		depth = 4
-	case 5:
+	case 6:
 		depth = 3
 	}
 	bestCell, bestScore := -1, -1<<30
@@ -1514,7 +1514,46 @@ func botNegamax(board []string, toMove, botMark, opponent string, gridSize, winL
 
 func botBoardEval(board []string, botMark, opponent string, gridSize, winLen int) int {
 	return countOpenThreats(board, botMark, gridSize, winLen)*30 -
-		countOpenThreats(board, opponent, gridSize, winLen)*40
+		countOpenThreats(board, opponent, gridSize, winLen)*40 +
+		countBuild(board, botMark, gridSize, winLen)*8 -
+		countBuild(board, opponent, gridSize, winLen)*8
+}
+
+// countBuild — окна, где уже две и больше своих клеток и нет чужих.
+func countBuild(board []string, mark string, gridSize, winLen int) int {
+	if winLen < 2 || gridSize <= 0 {
+		return 0
+	}
+	n := 0
+	dirs := [][2]int{{0, 1}, {1, 0}, {1, 1}, {1, -1}}
+	for r := 0; r < gridSize; r++ {
+		for c := 0; c < gridSize; c++ {
+			for _, d := range dirs {
+				own, empty := 0, 0
+				ok := true
+				for k := 0; k < winLen; k++ {
+					rr, cc := r+d[0]*k, c+d[1]*k
+					if rr < 0 || cc < 0 || rr >= gridSize || cc >= gridSize {
+						ok = false
+						break
+					}
+					v := board[rr*gridSize+cc]
+					if v == mark {
+						own++
+					} else if v == "" {
+						empty++
+					} else {
+						ok = false
+						break
+					}
+				}
+				if ok && own >= 2 && own+empty == winLen {
+					n += own * own
+				}
+			}
+		}
+	}
+	return n
 }
 
 func botPickUltimate(st gameengine.State, legal []int) int {

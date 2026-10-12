@@ -3,6 +3,7 @@ import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/shop/collection_condition_scale.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Справка раздела магазина: стик листает текст, кнопки закрывают.
@@ -10,12 +11,14 @@ Future<void> showShopSectionHelp({
   required BuildContext context,
   required String title,
   required String body,
+  bool showConditionScale = false,
 }) {
   return showDialog<void>(
     context: context,
     builder: (dialogContext) => _ShopSectionHelpDialog(
       title: title,
       body: body,
+      showConditionScale: showConditionScale,
     ),
   );
 }
@@ -24,10 +27,12 @@ class _ShopSectionHelpDialog extends StatefulWidget {
   const _ShopSectionHelpDialog({
     required this.title,
     required this.body,
+    required this.showConditionScale,
   });
 
   final String title;
   final String body;
+  final bool showConditionScale;
 
   @override
   State<_ShopSectionHelpDialog> createState() => _ShopSectionHelpDialogState();
@@ -83,16 +88,7 @@ class _ShopSectionHelpDialogState extends State<_ShopSectionHelpDialog> {
       },
       child: AlertDialog(
         title: Text(widget.title),
-        content: SingleChildScrollView(
-          controller: _scroll,
-          child: Text(
-            widget.body,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
-          ),
-        ),
+        content: _helpBody(),
         actions: [
           GamepadFocusBlock(
             autofocus: true,
@@ -107,6 +103,30 @@ class _ShopSectionHelpDialogState extends State<_ShopSectionHelpDialog> {
       ),
     );
   }
+
+  Widget _helpBody() {
+    final scroll = SingleChildScrollView(
+      controller: _scroll,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.showConditionScale) ...[
+            const CollectionConditionScale(),
+            const SizedBox(height: 16),
+          ],
+          Text(
+            widget.body,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!widget.showConditionScale) return scroll;
+    return SizedBox(width: double.maxFinite, child: scroll);
+  }
 }
 
 /// Кнопка «i» в шапке коллекции или набора.
@@ -115,10 +135,12 @@ class ShopSectionHelpButton extends StatelessWidget {
     super.key,
     required this.title,
     required this.body,
+    this.showConditionScale = false,
   });
 
   final String title;
   final String body;
+  final bool showConditionScale;
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +157,7 @@ class ShopSectionHelpButton extends StatelessWidget {
           context: context,
           title: title,
           body: body,
+          showConditionScale: showConditionScale,
         ),
         child: IconButton(
           icon: const Icon(Icons.info_outline_rounded),
@@ -145,6 +168,7 @@ class ShopSectionHelpButton extends StatelessWidget {
             context: context,
             title: title,
             body: body,
+            showConditionScale: showConditionScale,
           ),
         ),
       ),

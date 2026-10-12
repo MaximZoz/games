@@ -4,6 +4,17 @@ import 'package:multigames_client/games/chess/chess_bot.dart';
 import 'package:multigames_client/games/chess/chess_engine.dart';
 
 void main() {
+  test('payload движка сохраняет позицию для изолята', () {
+    final g = ChessEngine.newGame(ChessEngine.modeClassic);
+    g.apply(0, const ChessMove(from: ChessSquare(1, 4), to: ChessSquare(3, 4)));
+    final back = chessEngineFromPayload(chessEnginePayload(g));
+    expect(back.board, g.board);
+    expect(back.turn, 1);
+    expect(back.lastToR, 3);
+    expect(back.lastToC, 4);
+    expect(back.posCounts, g.posCounts);
+  });
+
   test('bot develops pieces instead of marching the a-pawn', () {
     final g = ChessEngine.newGame(ChessEngine.modeClassic);
     final white = <ChessMove>[
