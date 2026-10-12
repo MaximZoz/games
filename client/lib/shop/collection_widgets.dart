@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/locale_provider.dart';
@@ -587,8 +586,9 @@ class PeerCollectionsSection extends ConsumerWidget {
   }
 }
 
-/// Горизонтальная полоса картинок коллекций (без карточек и подписей).
-class CollectionShowcaseGrid extends StatefulWidget {
+/// Картинки коллекций в карточке: переносятся на следующую строку,
+/// чтобы последняя не обрезалась краем карточки.
+class CollectionShowcaseGrid extends StatelessWidget {
   const CollectionShowcaseGrid({
     super.key,
     required this.items,
@@ -601,103 +601,55 @@ class CollectionShowcaseGrid extends StatefulWidget {
   final bool titleOnlyOnTap;
 
   @override
-  State<CollectionShowcaseGrid> createState() => _CollectionShowcaseGridState();
-}
-
-class _CollectionShowcaseGridState extends State<CollectionShowcaseGrid> {
-  final ScrollController _controller = ScrollController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onPointerSignal(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent || !_controller.hasClients) return;
-    // Колесо мыши / трекпад → горизонтальный скролл полосы.
-    final delta =
-        event.scrollDelta.dy != 0 ? event.scrollDelta.dy : event.scrollDelta.dx;
-    if (delta == 0) return;
-    final pos = _controller.position;
-    final next = (_controller.offset + delta).clamp(0.0, pos.maxScrollExtent);
-    if (next == _controller.offset) return;
-    _controller.jumpTo(next);
-    // Не отдаём скролл родителю (карточка профиля).
-    GestureBinding.instance.pointerSignalResolver.register(event, (_) {});
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final items = widget.items;
     if (items.isEmpty) {
       return Text(
-        widget.emptyText ?? context.l10n.shopEmpty,
+        emptyText ?? context.l10n.shopEmpty,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
       );
     }
-    return SizedBox(
-      height: 64,
-      width: double.infinity,
-      child: Listener(
-        onPointerSignal: _onPointerSignal,
-        child: ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            dragDevices: const {
-              PointerDeviceKind.touch,
-              PointerDeviceKind.mouse,
-              PointerDeviceKind.trackpad,
-              PointerDeviceKind.stylus,
-              PointerDeviceKind.unknown,
-            },
-          ),
-          child: GamepadNavGroup(
-            name: 'collection-showcase',
-            child: ListView.separated(
-              clipBehavior: Clip.none,
-              controller: _controller,
-              scrollDirection: Axis.horizontal,
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final it = items[index];
-                void open() => showCollectionFullscreen(
-                      context,
-                      title: it.title,
+    return GamepadNavGroup(
+      name: 'collection-showcase',
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 8,
+        children: [
+          for (final it in items)
+            GamepadFocusBlock(
+              radius: 14,
+              borderWidth: 2.4,
+              onActivate: () => _openShowcaseItem(context, it),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _openShowcaseItem(context, it),
+                child: SizedBox(
+                  width: 56,
+                  height: 64,
+                  child: Center(
+                    child: ShopAnimatedEmoji(
                       animatedName: it.animatedName ?? 'sparkles',
+                      size: 44,
                       fallback: it.emoji,
-                      subtitle: widget.titleOnlyOnTap
-                          ? null
-                          : collectionItemSubtitle(it.dailyBronze),
-                      acquiredAt: parseCollectionAcquiredAt(it.acquiredAt),
-                      conditionShift: it.conditionShift,
-                      vintageAt: parseCollectionAcquiredAt(it.vintageAt),
-                    );
-                return GamepadFocusBlock(
-                  radius: 14,
-                  borderWidth: 2.4,
-                  onActivate: open,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: open,
-                    child: SizedBox(
-                      width: 56,
-                      height: 64,
-                      child: Center(
-                        child: ShopAnimatedEmoji(
-                          animatedName: it.animatedName ?? 'sparkles',
-                          size: 44,
-                          fallback: it.emoji,
-                        ),
-                      ),
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
-          ),
-        ),
+        ],
       ),
+    );
+  }
+
+  void _openShowcaseItem(BuildContext context, InventoryItem it) {
+    showCollectionFullscreen(
+      context,
+      title: it.title,
+      animatedName: it.animatedName ?? 'sparkles',
+      fallback: it.emoji,
+      subtitle: titleOnlyOnTap ? null : collectionItemSubtitle(it.dailyBronze),
+      acquiredAt: parseCollectionAcquiredAt(it.acquiredAt),
+      conditionShift: it.conditionShift,
+      vintageAt: parseCollectionAcquiredAt(it.vintageAt),
     );
   }
 }

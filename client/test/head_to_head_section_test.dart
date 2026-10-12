@@ -53,6 +53,85 @@ void main() {
     expect(list.scrollDirection, Axis.horizontal);
   });
 
+  testWidgets('коллекции в узкой карточке переносятся и не обрезаются',
+      (tester) async {
+    const cardWidth = 330.0;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('ru'),
+        home: const Scaffold(
+          body: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: cardWidth,
+              child: CollectionShowcaseGrid(
+                items: [
+                  InventoryItem(
+                    code: 'coll_a',
+                    kind: 'collection',
+                    title: 'А',
+                    description: '',
+                    payload: {'emoji': '🤖', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_b',
+                    kind: 'collection',
+                    title: 'Б',
+                    description: '',
+                    payload: {'emoji': '🚀', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_c',
+                    kind: 'collection',
+                    title: 'В',
+                    description: '',
+                    payload: {'emoji': '🦋', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_d',
+                    kind: 'collection',
+                    title: 'Г',
+                    description: '',
+                    payload: {'emoji': '🦅', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_e',
+                    kind: 'collection',
+                    title: 'Д',
+                    description: '',
+                    payload: {'emoji': '🐙', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_f',
+                    kind: 'collection',
+                    title: 'Е',
+                    description: '',
+                    payload: {'emoji': '⛵', 'animated_name': 'sparkles'},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(ListView), findsNothing);
+    final tiles = find.byType(GamepadFocusBlock);
+    expect(tiles, findsNWidgets(6));
+    final wrapBox = tester.getRect(find.byType(Wrap));
+    expect(wrapBox.width, lessThanOrEqualTo(cardWidth));
+    final first = tester.getRect(tiles.first);
+    final last = tester.getRect(tiles.last);
+    expect(last.top, greaterThan(first.bottom - 1));
+    expect(last.right, lessThanOrEqualTo(wrapBox.right + 0.1));
+    expect(first.left, greaterThanOrEqualTo(wrapBox.left - 0.1));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('коллекции в витрине получают рамку геймпада', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -212,7 +291,8 @@ void main() {
     expect(closed, isTrue);
   });
 
-  testWidgets('диалог статистики: крестик без рамки, стик скроллит, B закрывает',
+  testWidgets(
+      'диалог статистики: крестик без рамки, стик скроллит, B закрывает',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     const stats = GameStats(
@@ -285,8 +365,7 @@ void main() {
     expect(find.byType(Dialog), findsNothing);
   });
 
-  testWidgets(
-      'стик в карточке профиля листает счёт, не вкладки друзей',
+  testWidgets('стик в карточке профиля листает счёт, не вкладки друзей',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(400, 800);
