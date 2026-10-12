@@ -24,7 +24,7 @@ int gameTitleLineCount({
   return lines < 1 ? 1 : lines;
 }
 
-/// Ширина текста названия внутри карточки хаба (иконка, ставка, «i»).
+/// Ширина текста названия внутри карточки хаба (иконка и кнопка справки).
 double gamesHubTitleMaxWidth({
   required double tileWidth,
   required bool isDesktop,
@@ -34,9 +34,7 @@ double gamesHubTitleMaxWidth({
   final icon = isDesktop ? 52.0 : 44.0;
   final iconGap = isDesktop ? 20.0 : 12.0;
   const infoButton = 32.0;
-  const stakeBlock = 48.0;
-  final stakeGap = isMedium ? 8.0 : (isDesktop ? 16.0 : 12.0);
-  return (tileWidth - padH * 2 - icon - iconGap - infoButton - stakeBlock - stakeGap)
+  return (tileWidth - padH * 2 - icon - iconGap - infoButton)
       .clamp(0.0, tileWidth);
 }
 
@@ -102,8 +100,9 @@ double gamesHubTileWidth({
 /// Кнопки «Создать» / «Найти» всегда в один ряд.
 bool gamesHubStackActions(double cardWidth) => cardWidth < 360;
 
-/// Сетка карточек: все плитки одной высоты (как у самой высокой),
-/// кнопки прижаты к нижнему краю каждой карточки.
+/// Сетка карточек: в одном ряду плитки одной высоты (как самая высокая
+/// в этом ряду), кнопки прижаты к нижнему краю. Следующий ряд ниже,
+/// если его карточкам хватает меньшей высоты.
 Widget gamesHubEqualHeightGrid({
   required int cols,
   required double gap,
@@ -160,8 +159,8 @@ class _GamesHubEqualHeightGrid extends MultiChildRenderObjectWidget {
 
 class _GamesHubTileParentData extends ContainerBoxParentData<RenderBox> {}
 
-/// Сначала меряет каждую плитку по ширине, затем перекладывает все
-/// в высоту самой высокой — перенос чипов больше не выпирает одну карточку.
+/// Сначала меряет каждую плитку по ширине, затем выравнивает высоту
+/// внутри ряда. Перенос чипов растягивает только соседние карточки.
 class _RenderGamesHubEqualHeightGrid extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _GamesHubTileParentData>,
@@ -229,19 +228,26 @@ class _RenderGamesHubEqualHeightGrid extends RenderBox
       minWidth: width,
       maxWidth: width,
     );
-    var tileHeight = 0.0;
+    final measured = <double>[];
     for (final child in children) {
       child.layout(loose, parentUsesSize: true);
-      tileHeight = math.max(tileHeight, child.size.height);
-    }
-
-    final tight = BoxConstraints.tightFor(width: width, height: tileHeight);
-    for (final child in children) {
-      child.layout(tight, parentUsesSize: true);
+      measured.add(child.size.height);
     }
 
     final columns = cols < 1 ? 1 : cols;
     final rows = ((children.length + columns - 1) / columns).floor();
+    final rowHeights = List<double>.filled(rows, 0);
+    for (var i = 0; i < children.length; i++) {
+      final row = i ~/ columns;
+      rowHeights[row] = math.max(rowHeights[row], measured[i]);
+    }
+    for (var i = 0; i < children.length; i++) {
+      children[i].layout(
+        BoxConstraints.tightFor(width: width, height: rowHeights[i ~/ columns]),
+        parentUsesSize: true,
+      );
+    }
+
     final gridWidth = columns == 1
         ? width
         : width * columns + gap * (columns - 1);
@@ -257,7 +263,7 @@ class _RenderGamesHubEqualHeightGrid extends RenderBox
         parentData.offset = Offset(x, y);
         x += width + gap;
       }
-      y += tileHeight;
+      y += rowHeights[r];
       if (r != rows - 1) y += gap;
     }
     size = constraints.constrain(Size(gridWidth, y));
@@ -290,16 +296,23 @@ class _RenderGamesHubEqualHeightGrid extends RenderBox
     if (childCount == 0) return 0;
     final columns = cols < 1 ? 1 : cols;
     final rows = ((childCount + columns - 1) / columns).floor();
-    var tileHeight = 0.0;
+    final heights = <double>[];
     var child = firstChild;
     while (child != null) {
-      tileHeight = math.max(
-        tileHeight,
-        child.getMinIntrinsicHeight(tileWidth),
-      );
+      heights.add(child.getMinIntrinsicHeight(tileWidth));
       child = childAfter(child);
     }
-    return tileHeight * rows + gap * (rows - 1);
+    var total = 0.0;
+    for (var r = 0; r < rows; r++) {
+      var rowHeight = 0.0;
+      final start = r * columns;
+      final end = math.min(start + columns, heights.length);
+      for (var i = start; i < end; i++) {
+        rowHeight = math.max(rowHeight, heights[i]);
+      }
+      total += rowHeight;
+    }
+    return total + gap * (rows - 1);
   }
 
   @override

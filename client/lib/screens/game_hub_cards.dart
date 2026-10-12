@@ -295,16 +295,19 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesDurak,
         icon: DurakGameIcon.iconData,
         iconChild: const DurakGameIcon(size: 26, color: Colors.white),
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: busy ? null : _cycleStake,
         onInfoTap: () => _showRules(context),
-        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -584,15 +587,18 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesBattleship,
         icon: Icons.directions_boat_filled_rounded,
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: busy || widget.isOffline ? null : _cycleStake,
         onInfoTap: () => _showRules(context),
-        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -891,16 +897,19 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesPoker,
         icon: PokerGameIcon.iconData,
         iconChild: const PokerGameIcon(size: 26, color: Colors.white),
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: busy || widget.isOffline ? null : _cycleStake,
         onInfoTap: () => _showRules(context),
-        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -1162,16 +1171,19 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesUno,
         icon: Icons.style_rounded,
         iconChild: const UnoGameIcon(size: 26),
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: busy || widget.isOffline ? null : _cycleStake,
         onInfoTap: () => _showRules(context),
-        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -1333,15 +1345,18 @@ class _TictactoeGameCard extends StatelessWidget {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: isOffline || stakeBronze <= 0
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: stakeBronze,
+              onTap: isCreating || isFinding ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesTicTacToe,
         icon: Icons.grid_3x3_rounded,
-        stakeBronze: !isOffline && stakeBronze > 0 ? stakeBronze : null,
-        stakeLabel: formatStakeAmount(stakeBronze),
-        stakeCoinType: stakeCoinType(stakeBronze),
-        onStakeTap: isCreating || isFinding ? null : _cycleStake,
         onInfoTap: () => _showRulesInfo(context),
-        busy: isCreating || isFinding,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -1969,16 +1984,19 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesNardy,
         icon: NardyGameIcon.iconData,
         iconChild: const NardyGameIcon(size: 26, color: Colors.white),
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline || busy ? null : _cycleStake,
         onInfoTap: () => _showRules(context),
-        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -2221,16 +2239,19 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesCheckers,
         icon: CheckersGameIcon.iconData,
         iconChild: const CheckersGameIcon(size: 26, color: Colors.white),
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline || busy ? null : _cycleStake,
         onInfoTap: busy ? null : () => _showRules(context),
-        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -2467,16 +2488,19 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
     return GameCardShell(
       isDesktop: isDesktop,
       isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
       header: GameCardHeader(
         title: context.l10n.gamesChess,
         icon: ChessGameIcon.iconData,
         iconChild: const ChessGameIcon(size: 26, color: Colors.white),
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline || busy ? null : _cycleStake,
         onInfoTap: busy ? null : () => _showRules(context),
-        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
