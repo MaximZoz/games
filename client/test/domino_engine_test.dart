@@ -66,6 +66,24 @@ void main() {
     expect(DominoGame.newGame(['a', 'b', 'c', 'd'], 11).boneyard, isEmpty);
   });
 
+  test('deal matches server uint64 splitmix', () {
+    final seed7 = DominoGame.newGame(['a', 'b'], 7);
+    expect(seed7.players[0].hand, [17, 6, 26, 13, 20, 19, 2]);
+    expect(seed7.players[1].hand, [27, 21, 11, 16, 7, 18, 15]);
+    expect(
+      seed7.boneyard,
+      [4, 14, 8, 1, 9, 5, 25, 12, 0, 10, 3, 22, 24, 23],
+    );
+
+    final seed42 = DominoGame.newGame(['a', 'b'], 42);
+    expect(seed42.players[0].hand, [22, 1, 16, 24, 15, 3, 12]);
+    expect(seed42.players[1].hand, [8, 18, 21, 9, 26, 4, 0]);
+    expect(
+      seed42.boneyard,
+      [23, 6, 11, 17, 13, 27, 20, 7, 2, 25, 14, 10, 19, 5],
+    );
+  });
+
   test('double keeps the end and the round continues', () {
     final game = freshGame([
       [dominoTileId(3, 5), dominoTileId(3, 3)],
@@ -225,7 +243,9 @@ void main() {
     final game = DominoGame.newGame(['a', 'b', 'c'], 42);
     final back = DominoGame.decode(game.encode());
     expect(back.forcedTile, game.forcedTile);
-    expect(back.boneyard, hasLength(game.boneyard.length));
+    expect(back.boneyard, game.boneyard);
+    expect(back.players[0].hand, game.players[0].hand);
+    expect(back.rng, game.rng);
     expect(back.players[1].userId, 'b');
   });
 
