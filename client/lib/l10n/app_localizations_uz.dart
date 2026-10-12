@@ -3188,4 +3188,24 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'So‘nggi partiyalar';
+
+  @override
+  String get statsOutcomeWin => 'G‘alaba';
+
+  @override
+  String get statsOutcomeLoss => 'Mag‘lubiyat';
+
+  @override
+  String get statsOutcomeDraw => 'Durang';
+
+  @override
+  String get statsAllModes => 'Barcha rejimlar';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
 }

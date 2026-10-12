@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Son partiler",
+  "statsOutcomeWin": "Galibiyet",
+  "statsOutcomeLoss": "Mağlubiyet",
+  "statsOutcomeDraw": "Beraberlik",
+  "statsAllModes": "Tüm modlar",
+  "statsDurakChip": "{players} · {deck}"
 }

@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "हाल की बाज़ियाँ",
+  "statsOutcomeWin": "जीत",
+  "statsOutcomeLoss": "हार",
+  "statsOutcomeDraw": "ड्रॉ",
+  "statsAllModes": "सभी मोड",
+  "statsDurakChip": "{players} · {deck}"
 }

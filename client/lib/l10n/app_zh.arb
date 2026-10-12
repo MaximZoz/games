@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "最近的对局",
+  "statsOutcomeWin": "胜利",
+  "statsOutcomeLoss": "失败",
+  "statsOutcomeDraw": "平局",
+  "statsAllModes": "全部模式",
+  "statsDurakChip": "{players} · {deck}"
 }

@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Seneste partier",
+  "statsOutcomeWin": "Sejr",
+  "statsOutcomeLoss": "Nederlag",
+  "statsOutcomeDraw": "Uafgjort",
+  "statsAllModes": "Alle tilstande",
+  "statsDurakChip": "{players} · {deck}"
 }

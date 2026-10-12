@@ -1827,5 +1827,17 @@
   "collectionCondGenWorn": "потрепанного",
   "collectionCondGenTired": "уставшего",
   "collectionCondGenShabby": "ветхого",
-  "collectionCondGenVintage": "винтажа"
+  "collectionCondGenVintage": "винтажа",
+  "statsRecentTitle": "Последние партии",
+  "statsOutcomeWin": "Победа",
+  "statsOutcomeLoss": "Поражение",
+  "statsOutcomeDraw": "Ничья",
+  "statsAllModes": "Все режимы",
+  "statsDurakChip": "{players} · {deck}",
+  "@statsDurakChip": {
+    "placeholders": {
+      "players": {"type": "int"},
+      "deck": {"type": "String"}
+    }
+  }
 }

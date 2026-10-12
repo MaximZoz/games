@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Viime pelit",
+  "statsOutcomeWin": "Voitto",
+  "statsOutcomeLoss": "Tappio",
+  "statsOutcomeDraw": "Tasapeli",
+  "statsAllModes": "Kaikki tilat",
+  "statsDurakChip": "{players} · {deck}"
 }

@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Апошнія партыі",
+  "statsOutcomeWin": "Перамога",
+  "statsOutcomeLoss": "Параза",
+  "statsOutcomeDraw": "Нічыя",
+  "statsAllModes": "Усе рэжымы",
+  "statsDurakChip": "{players} · {deck}"
 }

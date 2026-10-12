@@ -3188,4 +3188,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => '최근 대국';
+
+  @override
+  String get statsOutcomeWin => '승';
+
+  @override
+  String get statsOutcomeLoss => '패';
+
+  @override
+  String get statsOutcomeDraw => '무승부';
+
+  @override
+  String get statsAllModes => '모든 모드';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
 }
