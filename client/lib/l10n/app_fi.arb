@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Tappio",
   "statsOutcomeDraw": "Tasapeli",
   "statsAllModes": "Kaikki tilat",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Peli",
+  "statsSelectMode": "Tila",
+  "statsRecentEmpty": "Ei pelejä vielä"
 }

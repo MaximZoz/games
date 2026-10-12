@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Derrota",
   "statsOutcomeDraw": "Empate",
   "statsAllModes": "Todos os modos",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Jogo",
+  "statsSelectMode": "Modo",
+  "statsRecentEmpty": "Ainda não há partidas"
 }

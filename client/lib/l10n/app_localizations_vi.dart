@@ -3208,4 +3208,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String statsDurakChip(int players, String deck) {
     return '$players · $deck';
   }
+
+  @override
+  String get statsSelectGame => 'Trò chơi';
+
+  @override
+  String get statsSelectMode => 'Chế độ';
+
+  @override
+  String get statsRecentEmpty => 'Chưa có ván nào';
 }

@@ -3208,4 +3208,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String statsDurakChip(int players, String deck) {
     return '$players · $deck';
   }
+
+  @override
+  String get statsSelectGame => '게임';
+
+  @override
+  String get statsSelectMode => '모드';
+
+  @override
+  String get statsRecentEmpty => '아직 대국이 없습니다';
 }

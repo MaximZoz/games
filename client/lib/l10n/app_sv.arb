@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Förlust",
   "statsOutcomeDraw": "Oavgjort",
   "statsAllModes": "Alla lägen",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spel",
+  "statsSelectMode": "Läge",
+  "statsRecentEmpty": "Inga partier än"
 }

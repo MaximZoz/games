@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Mağlubiyet",
   "statsOutcomeDraw": "Beraberlik",
   "statsAllModes": "Tüm modlar",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Oyun",
+  "statsSelectMode": "Mod",
+  "statsRecentEmpty": "Henüz parti yok"
 }

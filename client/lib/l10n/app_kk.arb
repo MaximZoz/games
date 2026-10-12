@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Жеңіліс",
   "statsOutcomeDraw": "Тең",
   "statsAllModes": "Барлық режимдер",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Ойын",
+  "statsSelectMode": "Режим",
+  "statsRecentEmpty": "Әзірге партия жоқ"
 }

@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Kalah",
   "statsOutcomeDraw": "Seri",
   "statsAllModes": "Semua mode",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Permainan",
+  "statsSelectMode": "Mode",
+  "statsRecentEmpty": "Belum ada permainan"
 }

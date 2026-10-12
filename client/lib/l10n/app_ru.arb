@@ -1839,5 +1839,8 @@
       "players": {"type": "int"},
       "deck": {"type": "String"}
     }
-  }
+  },
+  "statsSelectGame": "Игра",
+  "statsSelectMode": "Режим",
+  "statsRecentEmpty": "Пока нет партий"
 }

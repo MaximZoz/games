@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Verlies",
   "statsOutcomeDraw": "Gelijkspel",
   "statsAllModes": "Alle modi",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spel",
+  "statsSelectMode": "Modus",
+  "statsRecentEmpty": "Nog geen partijen"
 }

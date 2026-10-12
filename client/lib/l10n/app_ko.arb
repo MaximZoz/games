@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "패",
   "statsOutcomeDraw": "무승부",
   "statsAllModes": "모든 모드",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "게임",
+  "statsSelectMode": "모드",
+  "statsRecentEmpty": "아직 대국이 없습니다"
 }

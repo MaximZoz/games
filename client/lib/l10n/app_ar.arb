@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "خسارة",
   "statsOutcomeDraw": "تعادل",
   "statsAllModes": "كل الأوضاع",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "لعبة",
+  "statsSelectMode": "الوضع",
+  "statsRecentEmpty": "لا توجد مباريات بعد"
 }

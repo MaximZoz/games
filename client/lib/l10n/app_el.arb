@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Ήττα",
   "statsOutcomeDraw": "Ισοπαλία",
   "statsAllModes": "Όλες οι λειτουργίες",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Παιχνίδι",
+  "statsSelectMode": "Λειτουργία",
+  "statsRecentEmpty": "Δεν υπάρχουν παρτίδες ακόμα"
 }

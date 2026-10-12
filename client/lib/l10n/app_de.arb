@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Niederlage",
   "statsOutcomeDraw": "Remis",
   "statsAllModes": "Alle Modi",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spiel",
+  "statsSelectMode": "Modus",
+  "statsRecentEmpty": "Noch keine Partien"
 }

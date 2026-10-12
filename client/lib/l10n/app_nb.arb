@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Tap",
   "statsOutcomeDraw": "Uavgjort",
   "statsAllModes": "Alle moduser",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spill",
+  "statsSelectMode": "Modus",
+  "statsRecentEmpty": "Ingen partier ennå"
 }

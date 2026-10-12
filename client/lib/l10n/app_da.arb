@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "Nederlag",
   "statsOutcomeDraw": "Uafgjort",
   "statsAllModes": "Alle tilstande",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spil",
+  "statsSelectMode": "Tilstand",
+  "statsRecentEmpty": "Ingen partier endnu"
 }

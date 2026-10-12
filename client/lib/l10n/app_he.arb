@@ -1573,5 +1573,8 @@
   "statsOutcomeLoss": "הפסד",
   "statsOutcomeDraw": "תיקו",
   "statsAllModes": "כל המצבים",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "משחק",
+  "statsSelectMode": "מצב",
+  "statsRecentEmpty": "אין משחקים עדיין"
 }
