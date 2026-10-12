@@ -802,6 +802,56 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesChess => 'Xadrez';
 
   @override
+  String get gamesDomino => 'O Bode';
+
+  @override
+  String get rulesDominoDeal => 'Cada um recebe 7 peças. Com 2 ou 3 jogadores o resto fica no monte; com 4 o monte fica vazio.';
+
+  @override
+  String get rulesDominoOpen => 'A primeira mão começa pelo dobro mais baixo, de 1-1 a 6-6, depois 0-0. Sem dobros, começa a peça mais alta, e ela tem de ser jogada.';
+
+  @override
+  String get rulesDominoPlay => 'Joga-se uma peça numa ponta com o mesmo número. Um dobro na ponta não muda esse número.';
+
+  @override
+  String get rulesDominoDraw => 'Se não puder jogar, compre uma a uma até poder ou até o monte acabar. A última peça pode ser comprada. Se ainda não houver jogada, passe.';
+
+  @override
+  String get rulesDominoScore => 'No fim da mão cada um marca a soma das peças que restam. Quem sai marca 0. A partida vai a 101: quem chega é o bode e perde.';
+
+  @override
+  String get rulesDominoFish => 'Peixe: monte vazio e ninguém pode jogar. A soma estritamente menor marca 0; os outros marcam a sua. Se o mínimo for de todos, todos marcam.';
+
+  @override
+  String get rulesDominoMatch => 'Se vários passarem de 101 na mesma mão, o bode é a pontuação mais alta. Vencem os de pontuação mais baixa. Se todos empatarem, é empate.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: você e bots. O bot conta os números e não olha as mãos escondidas.';
+
+  @override
+  String get dominoBoneyard => 'Monte';
+
+  @override
+  String get dominoChooseEnd => 'Escolha uma ponta';
+
+  @override
+  String get dominoFish => 'Peixe';
+
+  @override
+  String get dominoYouGoat => 'Você é o bode';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'O bode — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Esquerda';
+
+  @override
+  String get dominoRight => 'Direita';
+
+  @override
   String get gamesChessModeClassic => 'Clássico';
 
   @override

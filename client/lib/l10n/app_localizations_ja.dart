@@ -802,6 +802,56 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesChess => 'チェス';
 
   @override
+  String get gamesDomino => 'ゴート';
+
+  @override
+  String get rulesDominoDeal => '各自 7 枚。2・3 人は残りが山札、4 人は山札なし。';
+
+  @override
+  String get rulesDominoOpen => '最初のラウンドは 1-1 から 6-6 の小さいダブル、次に 0-0。ダブルがなければ最高の牌で始め、その牌を出します。';
+
+  @override
+  String get rulesDominoPlay => '開いている端と同じ数字につなぎます。端のダブルはその数字を変えません。';
+
+  @override
+  String get rulesDominoDraw => '出せなければ、出せるか山札が尽きるまで 1 枚ずつ引きます。最後の 1 枚も取れます。それでも出せなければパス。';
+
+  @override
+  String get rulesDominoScore => 'ラウンドの終わりに残りの目を記録します。上がりは 0。101 に達した人がゴートで負けです。';
+
+  @override
+  String get rulesDominoFish => 'フィッシュ: 山札が空で誰も出せないとき。唯一の最少だけ 0、ほかは自分の合計。最少が全員同じなら全員が記録します。';
+
+  @override
+  String get rulesDominoMatch => '同じラウンドで複数が 101 を超えたら、最高点がゴート。最低点が勝者。全員同点なら引き分け。';
+
+  @override
+  String get rulesDominoOffline => 'オフライン: あなたとボット。ボットは数字を数え、隠れた手牌は見ません。';
+
+  @override
+  String get dominoBoneyard => '山札';
+
+  @override
+  String get dominoChooseEnd => '端を選ぶ';
+
+  @override
+  String get dominoFish => 'フィッシュ';
+
+  @override
+  String get dominoYouGoat => 'あなたがゴート';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'ゴート — $name';
+  }
+
+  @override
+  String get dominoLeft => '左';
+
+  @override
+  String get dominoRight => '右';
+
+  @override
   String get gamesChessModeClassic => 'クラシック';
 
   @override

@@ -802,6 +802,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesChess => 'Chess';
 
   @override
+  String get gamesDomino => 'Goat';
+
+  @override
+  String get rulesDominoDeal => 'Each player gets 7 tiles. With 2 or 3 players the rest form the boneyard; with 4 the boneyard is empty.';
+
+  @override
+  String get rulesDominoOpen => 'The first round starts with the lowest double from 1-1 through 6-6, then 0-0. If there is no double, the highest tile starts, and it must be played.';
+
+  @override
+  String get rulesDominoPlay => 'Play a tile that matches an open end. A double on an end keeps that number.';
+
+  @override
+  String get rulesDominoDraw => 'If you cannot play, draw one tile at a time until you can or the boneyard is empty. The last tile may be taken. If you still cannot play, pass.';
+
+  @override
+  String get rulesDominoScore => 'At the end of a round each player scores the pips left in hand. Going out scores 0. The match goes to 101: whoever reaches it is the goat and loses.';
+
+  @override
+  String get rulesDominoFish => 'Fish: the boneyard is empty and nobody can play. The unique lowest pip sum scores 0; everyone else scores their own sum. If the lowest sum is shared, everyone scores it.';
+
+  @override
+  String get rulesDominoMatch => 'If several players cross 101 in one round, the highest score is the goat. Winners are those with the lowest score. If everyone ties, the match is a draw.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: you and bots. The bot counts suits and does not look at hidden hands.';
+
+  @override
+  String get dominoBoneyard => 'Boneyard';
+
+  @override
+  String get dominoChooseEnd => 'Choose an end';
+
+  @override
+  String get dominoFish => 'Fish';
+
+  @override
+  String get dominoYouGoat => 'You are the goat';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Goat — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Left';
+
+  @override
+  String get dominoRight => 'Right';
+
+  @override
   String get gamesChessModeClassic => 'Classic';
 
   @override

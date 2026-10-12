@@ -72,6 +72,16 @@ UserGameSettings gameCardSettings({
         maxPlayers: maxPlayers,
         gameMode: 'classic',
       );
+    case 'domino':
+      return UserGameSettings(
+        gameType: 'domino',
+        turnTimeSec: turnTimeSec,
+        variant: 'kozel',
+        stakeBronze: stakeBronze,
+        deckSize: 28,
+        maxPlayers: maxPlayers,
+        gameMode: 'kozel',
+      );
     case 'battleship':
       return UserGameSettings(
         gameType: 'battleship',

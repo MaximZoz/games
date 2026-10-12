@@ -179,6 +179,36 @@ func TestNormalizeUnoGameSettings(t *testing.T) {
 	}
 }
 
+func TestNormalizeDominoGameSettings(t *testing.T) {
+	s, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeDomino,
+		TurnTimeSec: 60,
+		StakeBronze: 10,
+		MaxPlayers:  4,
+		GameMode:    "unknown",
+	})
+	if errMsg != "" {
+		t.Fatalf("err=%s", errMsg)
+	}
+	if s.GameType != store.GameTypeDomino || s.MaxPlayers != 4 ||
+		s.GameMode != "kozel" || s.Variant != "kozel" ||
+		s.DeckSize != 28 || s.StakeBronze != 10 {
+		t.Fatalf("unexpected %+v", s)
+	}
+	s2, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeDomino,
+		TurnTimeSec: 20,
+		StakeBronze: 2,
+		MaxPlayers:  5,
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s2.MaxPlayers != 2 {
+		t.Fatalf("max_players=%d want 2 (clamp)", s2.MaxPlayers)
+	}
+}
+
 func TestNormalizeNardyGameSettings(t *testing.T) {
 	s, errMsg := normalizeGameSettings(gameSettingsBody{
 		GameType:    store.GameTypeNardy,

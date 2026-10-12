@@ -802,6 +802,56 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesChess => 'Szachy';
 
   @override
+  String get gamesDomino => 'Kozioł';
+
+  @override
+  String get rulesDominoDeal => 'Każdy dostaje 7 kamieni. Przy 2 i 3 reszta leży na kupce, przy 4 kupka jest pusta.';
+
+  @override
+  String get rulesDominoOpen => 'Pierwszą kolejkę zaczyna najmniejszy dubel od 1-1 do 6-6, potem 0-0. Bez dubli zaczyna najwyższy kamień i trzeba go położyć.';
+
+  @override
+  String get rulesDominoPlay => 'Kamień dokłada się do otwartego końca z tą samą liczbą. Dubel na końcu nie zmienia tej liczby.';
+
+  @override
+  String get rulesDominoDraw => 'Jeśli nie możesz zagrać, dobieraj po jednym, aż będzie ruch albo kupka się skończy. Ostatni kamień można wziąć. Jeśli nadal nie ma ruchu — pas.';
+
+  @override
+  String get rulesDominoScore => 'Na końcu kolejki każdy zapisuje sumę swoich kamieni. Kto wyszedł — 0. Partia do 101: kto osiągnie, jest kozłem i przegrywa.';
+
+  @override
+  String get rulesDominoFish => 'Ryba: kupka pusta i nikt nie może dołożyć. Jedyna najmniejsza suma to 0, reszta zapisuje swoją. Jeśli minimum jest wspólne, zapisują wszyscy.';
+
+  @override
+  String get rulesDominoMatch => 'Jeśli kilku przekroczy 101 w jednej kolejce, kozłem jest najwyższy wynik. Wygrywają z najniższym. Jeśli wszyscy są równi — remis.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: ty i boty. Bot liczy oczka i nie zagląda w cudze ręce.';
+
+  @override
+  String get dominoBoneyard => 'Kupka';
+
+  @override
+  String get dominoChooseEnd => 'Wybierz koniec';
+
+  @override
+  String get dominoFish => 'Ryba';
+
+  @override
+  String get dominoYouGoat => 'Jesteś kozłem';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Kozioł — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Lewo';
+
+  @override
+  String get dominoRight => 'Prawo';
+
+  @override
   String get gamesChessModeClassic => 'Klasyka';
 
   @override

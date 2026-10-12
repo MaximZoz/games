@@ -41,4 +41,9 @@ func TestDefaultUserGameSettings(t *testing.T) {
 		ch.GameMode != "classic" || ch.Variant != "classic" || ch.GridSize != 8 {
 		t.Fatalf("chess defaults: %+v", ch)
 	}
+	dom := DefaultUserGameSettings(GameTypeDomino)
+	if dom.GameType != GameTypeDomino || dom.TurnTimeSec != 60 || dom.MaxPlayers != 2 ||
+		dom.GameMode != "kozel" || dom.Variant != "kozel" {
+		t.Fatalf("domino defaults: %+v", dom)
+	}
 }

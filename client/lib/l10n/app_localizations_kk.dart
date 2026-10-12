@@ -802,6 +802,56 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesChess => 'Шахмат';
 
   @override
+  String get gamesDomino => 'Козёл';
+
+  @override
+  String get rulesDominoDeal => 'Әркімге 7 сүйек. Екеу мен үшеуде қалғаны базарда, төртеуде базар бос.';
+
+  @override
+  String get rulesDominoOpen => 'Бірінші конды 1-1-ден 6-6-ға дейінгі кіші дубль, содан кейін 0-0 бастайды. Дубль болмаса — ең үлкен сүйек. Соны қою керек.';
+
+  @override
+  String get rulesDominoPlay => 'Сүйекті ашық ұшындағы санға қояды. Ұштағы дубль сол санды өзгертпейді.';
+
+  @override
+  String get rulesDominoDraw => 'Жүре алмасаңыз, базардан бір-бірлеп алыңыз, қойылатын сүйек шыққанша немесе базар біткенше. Соңғы сүйекті алуға болады. Сонда да жүріс болмаса — пас.';
+
+  @override
+  String get rulesDominoScore => 'Кон соңында әркім өз сүйектерінің қосындысын жазады. Шыққан адам — 0. 101-ге дейін: кім жетсе, сол козёл және жеңіледі.';
+
+  @override
+  String get rulesDominoFish => 'Балық: базар бос және ешкім қоя алмайды. Ұпайы бәрінен аз біреу — 0, қалғаны өз сомасын жазады. Минимум бәрінде бірдей болса, бәрі жазады.';
+
+  @override
+  String get rulesDominoMatch => 'Бір конда бірнешеу 101-ден өтсе, козёл — ең жоғары ұпай. Жеңімпаздар — ең төмен ұпай. Бәрі тең болса — тең ойын.';
+
+  @override
+  String get rulesDominoOffline => 'Офлайн: сіз және боттар. Бот масть санайды және бөтен қолды қарамайды.';
+
+  @override
+  String get dominoBoneyard => 'Базар';
+
+  @override
+  String get dominoChooseEnd => 'Ұшын таңдаңыз';
+
+  @override
+  String get dominoFish => 'Балық';
+
+  @override
+  String get dominoYouGoat => 'Сіз козёлсыз';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Козёл — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Сол жақ';
+
+  @override
+  String get dominoRight => 'Оң жақ';
+
+  @override
   String get gamesChessModeClassic => 'Классика';
 
   @override

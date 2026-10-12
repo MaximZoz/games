@@ -802,6 +802,56 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesChess => 'หมากรุก';
 
   @override
+  String get gamesDomino => 'แพะ';
+
+  @override
+  String get rulesDominoDeal => 'แต่ละคนได้ 7 ตัว ถ้า 2 หรือ 3 คน ที่เหลืออยู่ในกอง ถ้า 4 คน กองว่าง';
+
+  @override
+  String get rulesDominoOpen => 'ตาแรกเริ่มด้วยคู่ที่น้อยสุดจาก 1-1 ถึง 6-6 แล้วจึง 0-0 ถ้าไม่มีคู่ ให้เริ่มด้วยตัวที่มากสุด และต้องลงตัวนั้น';
+
+  @override
+  String get rulesDominoPlay => 'วางตัวที่ปลายเปิดที่มีเลขเดียวกัน คู่ที่ปลายไม่เปลี่ยนเลขนั้น';
+
+  @override
+  String get rulesDominoDraw => 'ถ้าลงไม่ได้ จั่วทีละใบจนกว่าจะลงได้หรือกองหมด ใบสุดท้ายจั่วได้ ถ้ายังลงไม่ได้ ให้ผ่าน';
+
+  @override
+  String get rulesDominoScore => 'จบตา แต่ละคนจดผลรวมของตัวที่เหลือ คนที่หมดจด 0 เล่นถึง 101 คนที่ถึงคือแพะและแพ้';
+
+  @override
+  String get rulesDominoFish => 'ปลา: กองว่างและไม่มีใครลงได้ ผลรวมน้อยสุดเพียงคนเดียวได้ 0 ที่เหลือจดของตน ถ้าน้อยสุดเท่ากันทุกคนจด';
+
+  @override
+  String get rulesDominoMatch => 'ถ้าหลายคนข้าม 101 ในตาเดียวกัน แพะคือคะแนนสูงสุด ผู้ชนะคือคะแนนต่ำสุด ถ้าเท่ากันทั้งหมดคือเสมอ';
+
+  @override
+  String get rulesDominoOffline => 'ออฟไลน์: คุณกับบอต บอตนับเลขและไม่แอบดูมือที่ซ่อน';
+
+  @override
+  String get dominoBoneyard => 'กอง';
+
+  @override
+  String get dominoChooseEnd => 'เลือกปลาย';
+
+  @override
+  String get dominoFish => 'ปลา';
+
+  @override
+  String get dominoYouGoat => 'คุณคือแพะ';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'แพะ — $name';
+  }
+
+  @override
+  String get dominoLeft => 'ซ้าย';
+
+  @override
+  String get dominoRight => 'ขวา';
+
+  @override
   String get gamesChessModeClassic => 'คลาสสิก';
 
   @override

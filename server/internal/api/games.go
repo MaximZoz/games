@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"multigames/server/internal/chess"
+	"multigames/server/internal/domino"
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/gameregistry"
@@ -345,6 +346,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/chess/") {
 		h.serveChess(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/domino/") {
+		h.serveDomino(w, r)
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
@@ -2315,6 +2320,9 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	} else if gameType == unoGameType {
 		inviteData["variant"] = "classic"
 		inviteData["game_mode"] = "classic"
+	} else if gameType == dominoGameType {
+		inviteData["variant"] = "kozel"
+		inviteData["game_mode"] = "kozel"
 	} else if gameType == pokerGameType {
 		inviteData["game_mode"] = "holdem"
 	} else if gameType == nardyGameType {
@@ -3170,6 +3178,9 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 		} else if gt == unoGameType {
 			item["variant"] = "classic"
 			item["game_mode"] = "classic"
+		} else if gt == dominoGameType {
+			item["variant"] = "kozel"
+			item["game_mode"] = "kozel"
 		} else if gt == pokerGameType {
 			item["game_mode"] = "holdem"
 		} else if gt == nardyGameType {
@@ -3278,7 +3289,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	}
 	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType ||
 		m["game_type"] == pokerGameType || m["game_type"] == unoGameType ||
-		m["game_type"] == nardyGameType {
+		m["game_type"] == nardyGameType || m["game_type"] == dominoGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -4355,6 +4366,21 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		}
 		return gid
 	}
+	if gm["game_type"] == dominoGameType {
+		players := parsePlayerIDsCSV(gm["player_ids"])
+		if !stringSliceContains(players, userID.String()) {
+			clearUserActiveGame(ctx, h.Rdb, userID)
+			return ""
+		}
+		if state, err := domino.Decode(gm["state"]); err == nil {
+			index := state.PlayerIndex(userID.String())
+			if index >= 0 && state.Players[index].Forfeited && !state.IsOver() {
+				moveActiveToObserving(ctx, h.Rdb, userID, gid)
+				return ""
+			}
+		}
+		return gid
+	}
 	// Durak / Poker / Nardy: участие определяется по player_ids CSV.
 	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType ||
 		gm["game_type"] == nardyGameType {
@@ -4759,7 +4785,7 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 	}
 	inGame := false
 	if gt == durakGameType || gt == pokerGameType || gt == unoGameType ||
-		gt == nardyGameType {
+		gt == nardyGameType || gt == dominoGameType {
 		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
 			if p == userID.String() {
 				inGame = true
@@ -4829,6 +4855,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyPokerTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == unoGameType {
 				h.applyUnoTurnTimeout(ctx, gameID, m)
+			} else if m["game_type"] == dominoGameType {
+				h.applyDominoTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == nardyGameType {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == store.GameTypeChess {
@@ -4954,6 +4982,35 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":   gameID,
 						"lobby_id":  m["lobby_id"],
 						"game_type": unoGameType,
+					}
+				}
+			} else if m["game_type"] == dominoGameType {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				if !stringSliceContains(players, userID.String()) {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if state, decodeErr := domino.Decode(m["state"]); decodeErr == nil {
+					index := state.PlayerIndex(userID.String())
+					if index >= 0 && state.Players[index].Forfeited && !state.IsOver() {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+					} else {
+						active = map[string]any{
+							"type":      "game",
+							"game_id":   gameID,
+							"lobby_id":  m["lobby_id"],
+							"game_type": dominoGameType,
+							"is_my_turn": index >= 0 &&
+								index == state.Turn &&
+								state.Status == domino.StatusPlaying &&
+								!state.Players[index].Forfeited &&
+								!state.IsOver(),
+						}
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": dominoGameType,
 					}
 				}
 			} else if m["game_type"] == nardyGameType {

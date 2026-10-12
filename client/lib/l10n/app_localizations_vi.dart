@@ -802,6 +802,56 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesChess => 'Cờ vua';
 
   @override
+  String get gamesDomino => 'Dê';
+
+  @override
+  String get rulesDominoDeal => 'Mỗi người 7 quân. 2 hoặc 3 người thì phần còn lại ở nọc, 4 người thì nọc trống.';
+
+  @override
+  String get rulesDominoOpen => 'Ván đầu bắt đầu bằng đôi nhỏ nhất từ 1-1 đến 6-6, rồi 0-0. Không có đôi thì quân lớn nhất, và phải đánh quân đó.';
+
+  @override
+  String get rulesDominoPlay => 'Đặt quân vào đầu mở cùng số. Đôi ở đầu không đổi số đó.';
+
+  @override
+  String get rulesDominoDraw => 'Không đánh được thì bốc từng quân cho đến khi đánh được hoặc hết nọc. Quân cuối vẫn bốc được. Vẫn không có nước thì bỏ lượt.';
+
+  @override
+  String get rulesDominoScore => 'Hết ván mỗi người ghi tổng quân còn lại. Ai hết quân ghi 0. Đến 101: ai chạm là dê và thua.';
+
+  @override
+  String get rulesDominoFish => 'Cá: nọc trống và không ai đặt được. Tổng nhỏ nhất duy nhất ghi 0, người khác ghi tổng của mình. Nếu mức nhỏ nhất bằng nhau thì tất cả đều ghi.';
+
+  @override
+  String get rulesDominoMatch => 'Nếu nhiều người vượt 101 trong một ván, dê là điểm cao nhất. Người điểm thấp nhất thắng. Tất cả hòa nhau thì hòa.';
+
+  @override
+  String get rulesDominoOffline => 'Ngoại tuyến: bạn và bot. Bot đếm số và không nhìn bài úp.';
+
+  @override
+  String get dominoBoneyard => 'Nọc';
+
+  @override
+  String get dominoChooseEnd => 'Chọn một đầu';
+
+  @override
+  String get dominoFish => 'Cá';
+
+  @override
+  String get dominoYouGoat => 'Bạn là dê';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Dê — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Trái';
+
+  @override
+  String get dominoRight => 'Phải';
+
+  @override
   String get gamesChessModeClassic => 'Cổ điển';
 
   @override

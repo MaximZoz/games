@@ -802,6 +802,56 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesChess => 'Ajedrez';
 
   @override
+  String get gamesDomino => 'El Chivo';
+
+  @override
+  String get rulesDominoDeal => 'Cada uno recibe 7 fichas. Con 2 o 3 jugadores el resto es el pozo; con 4 el pozo está vacío.';
+
+  @override
+  String get rulesDominoOpen => 'La primera mano la abre el doble más bajo, de 1-1 a 6-6, y luego 0-0. Si no hay dobles, abre la ficha más alta y hay que jugarla.';
+
+  @override
+  String get rulesDominoPlay => 'Se coloca una ficha en un extremo con el mismo número. Un doble en el extremo no cambia ese número.';
+
+  @override
+  String get rulesDominoDraw => 'Si no puedes jugar, roba de una en una hasta poder o hasta vaciar el pozo. Se puede tomar la última ficha. Si aún no hay jugada, pasas.';
+
+  @override
+  String get rulesDominoScore => 'Al final de la mano cada uno anota la suma de sus fichas. Quien se queda sin fichas anota 0. La partida llega a 101: quien lo alcanza es el chivo y pierde.';
+
+  @override
+  String get rulesDominoFish => 'Pescado: el pozo está vacío y nadie puede colocar. La suma estrictamente menor anota 0; los demás anotan la suya. Si el mínimo es de todos, anotan todos.';
+
+  @override
+  String get rulesDominoMatch => 'Si varios pasan de 101 en la misma mano, el chivo es la puntuación más alta. Ganan quienes tienen la más baja. Si todos empatan, es empate.';
+
+  @override
+  String get rulesDominoOffline => 'Sin conexión: tú y bots. El bot cuenta los números y no mira las manos ocultas.';
+
+  @override
+  String get dominoBoneyard => 'Pozo';
+
+  @override
+  String get dominoChooseEnd => 'Elige un extremo';
+
+  @override
+  String get dominoFish => 'Pescado';
+
+  @override
+  String get dominoYouGoat => 'Eres el chivo';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'El chivo — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Izquierda';
+
+  @override
+  String get dominoRight => 'Derecha';
+
+  @override
   String get gamesChessModeClassic => 'Clásico';
 
   @override

@@ -802,6 +802,56 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesChess => 'Shakki';
 
   @override
+  String get gamesDomino => 'Pukki';
+
+  @override
+  String get rulesDominoDeal => 'Jokainen saa 7 laattaa. Kahdella ja kolmella loput ovat pakassa, neljällä pakka on tyhjä.';
+
+  @override
+  String get rulesDominoOpen => 'Ensimmäinen kierros alkaa pienimmästä parista 1-1:stä 6-6:een, sitten 0-0. Ilman paria aloittaa suurin laatta, ja se on pelattava.';
+
+  @override
+  String get rulesDominoPlay => 'Laatta laitetaan avoimeen päähän samalla numerolla. Päässä oleva pari ei vaihda numeroa.';
+
+  @override
+  String get rulesDominoDraw => 'Jos et voi pelata, nosta yksi kerrallaan kunnes voit tai pakka loppuu. Viimeisen saa nostaa. Jos vuoroa ei silti ole, passaa.';
+
+  @override
+  String get rulesDominoScore => 'Kierroksen lopussa jokainen kirjaa jäljellä olevien summan. Ulos mennyt saa 0. Peliin 101: sen saavuttanut on pukki ja häviää.';
+
+  @override
+  String get rulesDominoFish => 'Kala: pakka on tyhjä eikä kukaan voi laittaa. Ainoa pienin summa on 0, muut kirjaavat omansa. Jos minimi on kaikilla sama, kaikki kirjaavat.';
+
+  @override
+  String get rulesDominoMatch => 'Jos usea ylittää 101 samalla kierroksella, pukki on suurin pistemäärä. Voittajat ovat pienimmällä. Jos kaikki ovat tasan, peli on tasapeli.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: sinä ja botit. Botti laskee numerot eikä katso piilotettuja käsiä.';
+
+  @override
+  String get dominoBoneyard => 'Pakka';
+
+  @override
+  String get dominoChooseEnd => 'Valitse pää';
+
+  @override
+  String get dominoFish => 'Kala';
+
+  @override
+  String get dominoYouGoat => 'Olet pukki';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Pukki — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Vasen';
+
+  @override
+  String get dominoRight => 'Oikea';
+
+  @override
   String get gamesChessModeClassic => 'Klassinen';
 
   @override

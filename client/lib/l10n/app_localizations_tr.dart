@@ -802,6 +802,56 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesChess => 'Satranç';
 
   @override
+  String get gamesDomino => 'Keçi';
+
+  @override
+  String get rulesDominoDeal => 'Herkes 7 taş alır. 2 ve 3 kişide kalanlar destededir, 4 kişide deste boştur.';
+
+  @override
+  String get rulesDominoOpen => 'İlk eli 1-1’den 6-6’ya en küçük çift, sonra 0-0 açar. Çift yoksa en yüksek taş açar ve o taş oynanır.';
+
+  @override
+  String get rulesDominoPlay => 'Taş, aynı sayıdaki açık uca konur. Uçtaki çift o sayıyı değiştirmez.';
+
+  @override
+  String get rulesDominoDraw => 'Oynayamazsan, uygun taş çıkana ya da deste bitene kadar birer birer çek. Son taş alınabilir. Yine oynayamazsan pas geç.';
+
+  @override
+  String get rulesDominoScore => 'El sonunda herkes kalan taşlarının toplamını yazar. Çıkan 0 yazar. 101’e kadar: ulaşan keçi olur ve kaybeder.';
+
+  @override
+  String get rulesDominoFish => 'Balık: deste boş ve kimse koyamıyor. En düşük toplam tek kişideyse 0, diğerleri kendi toplamını yazar. En düşük herkeste aynıysa herkes yazar.';
+
+  @override
+  String get rulesDominoMatch => 'Bir elde birkaçı 101’i geçerse keçi en yüksek puandır. Kazananlar en düşük puandır. Herkes eşitse berabere.';
+
+  @override
+  String get rulesDominoOffline => 'Çevrimdışı: sen ve botlar. Bot sayıları sayar ve gizli ellere bakmaz.';
+
+  @override
+  String get dominoBoneyard => 'Deste';
+
+  @override
+  String get dominoChooseEnd => 'Uç seçin';
+
+  @override
+  String get dominoFish => 'Balık';
+
+  @override
+  String get dominoYouGoat => 'Keçi sensin';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Keçi — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Sol';
+
+  @override
+  String get dominoRight => 'Sağ';
+
+  @override
   String get gamesChessModeClassic => 'Klasik';
 
   @override

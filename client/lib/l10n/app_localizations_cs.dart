@@ -802,6 +802,56 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesChess => 'Šachy';
 
   @override
+  String get gamesDomino => 'Kozel';
+
+  @override
+  String get rulesDominoDeal => 'Každý dostane 7 kamenů. Při 2 a 3 hráčích je zbytek v talonu, při 4 je talon prázdný.';
+
+  @override
+  String get rulesDominoOpen => 'První kolo začíná nejnižším dubletem od 1-1 do 6-6, pak 0-0. Bez dubletu začíná nejvyšší kámen a ten se musí zahrát.';
+
+  @override
+  String get rulesDominoPlay => 'Kámen se přikládá k otevřenému konci se stejným číslem. Dublet na konci to číslo nemění.';
+
+  @override
+  String get rulesDominoDraw => 'Když nelze hrát, berte po jednom, dokud to nepůjde nebo talon neskončí. Poslední kámen se smí vzít. Když tah pořád není, pas.';
+
+  @override
+  String get rulesDominoScore => 'Na konci kola každý zapíše součet svých kamenů. Kdo vyšel, má 0. Do 101: kdo dosáhne, je kozel a prohrál.';
+
+  @override
+  String get rulesDominoFish => 'Ryba: talon je prázdný a nikdo nemůže přiložit. Jediné nejnižší skóre je 0, ostatní píšou svůj součet. Je-li minimum společné, píšou všichni.';
+
+  @override
+  String get rulesDominoMatch => 'Překročí-li jich v kole víc 101, kozel je nejvyšší skóre. Vítězí nejnižší. Jsou-li všichni stejně, je remíza.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: vy a boti. Bot počítá čísla a nedívá se do skrytých rukou.';
+
+  @override
+  String get dominoBoneyard => 'Talon';
+
+  @override
+  String get dominoChooseEnd => 'Vyberte konec';
+
+  @override
+  String get dominoFish => 'Ryba';
+
+  @override
+  String get dominoYouGoat => 'Jste kozel';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Kozel — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Vlevo';
+
+  @override
+  String get dominoRight => 'Vpravo';
+
+  @override
   String get gamesChessModeClassic => 'Klasika';
 
   @override

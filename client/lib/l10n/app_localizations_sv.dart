@@ -802,6 +802,56 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesChess => 'Schack';
 
   @override
+  String get gamesDomino => 'Geten';
+
+  @override
+  String get rulesDominoDeal => 'Alla får 7 brickor. Vid 2 eller 3 ligger resten i högen; vid 4 är högen tom.';
+
+  @override
+  String get rulesDominoOpen => 'Första given börjar med lägsta dubbel från 1-1 till 6-6, sedan 0-0. Utan dubbel börjar högsta brickan och den måste läggas.';
+
+  @override
+  String get rulesDominoPlay => 'Lägg en bricka mot en öppen ände med samma tal. En dubbel i änden ändrar inte talet.';
+
+  @override
+  String get rulesDominoDraw => 'Kan du inte lägga, dra en i taget tills du kan eller högen är slut. Sista brickan får tas. Går det ändå inte, passa.';
+
+  @override
+  String get rulesDominoScore => 'I slutet av given skriver var och en summan av kvarvarande brickor. Den som går ut skriver 0. Till 101: den som når dit är geten och förlorar.';
+
+  @override
+  String get rulesDominoFish => 'Fisk: högen är tom och ingen kan lägga. Den unikt lägsta summan är 0, övriga skriver sin. Är minimum gemensamt skriver alla.';
+
+  @override
+  String get rulesDominoMatch => 'Passerar flera 101 i samma giv är högsta poängen geten. Vinnare är lägsta poängen. Är alla lika är det oavgjort.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: du och bottar. Botten räknar tal och tittar inte på dolda händer.';
+
+  @override
+  String get dominoBoneyard => 'Hög';
+
+  @override
+  String get dominoChooseEnd => 'Välj en ände';
+
+  @override
+  String get dominoFish => 'Fisk';
+
+  @override
+  String get dominoYouGoat => 'Du är geten';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Geten — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Vänster';
+
+  @override
+  String get dominoRight => 'Höger';
+
+  @override
   String get gamesChessModeClassic => 'Klassiskt';
 
   @override

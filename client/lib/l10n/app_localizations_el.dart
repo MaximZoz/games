@@ -802,6 +802,56 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesChess => 'Σκάκι';
 
   @override
+  String get gamesDomino => 'Ο Τράγος';
+
+  @override
+  String get rulesDominoDeal => 'Ο καθένας παίρνει 7 πούλια. Με 2 ή 3 οι υπόλοιπες είναι στη στοίβα· με 4 η στοίβα είναι άδεια.';
+
+  @override
+  String get rulesDominoOpen => 'Ο πρώτος γύρος ανοίγει με το μικρότερο διπλό από 1-1 ως 6-6, μετά 0-0. Χωρίς διπλό ανοίγει το μεγαλύτερο πούλι και πρέπει να παιχτεί.';
+
+  @override
+  String get rulesDominoPlay => 'Το πούλι μπαίνει σε ανοιχτή άκρη με τον ίδιο αριθμό. Διπλό στην άκρη δεν αλλάζει τον αριθμό.';
+
+  @override
+  String get rulesDominoDraw => 'Αν δεν μπορείτε να παίξετε, τραβάτε ένα-ένα ώσπου να μπορείτε ή να αδειάσει η στοίβα. Το τελευταίο επιτρέπεται. Αλλιώς πάσο.';
+
+  @override
+  String get rulesDominoScore => 'Στο τέλος του γύρου ο καθένας γράφει το άθροισμα των πουλιών του. Όποιος βγει γράφει 0. Ως το 101: όποιος το φτάσει είναι ο τράγος και χάνει.';
+
+  @override
+  String get rulesDominoFish => 'Ψάρι: άδεια στοίβα και κανείς δεν μπορεί να βάλει. Το μοναδικό μικρότερο άθροισμα είναι 0, οι άλλοι το δικό τους. Αν το ελάχιστο είναι κοινό, γράφουν όλοι.';
+
+  @override
+  String get rulesDominoMatch => 'Αν αρκετοί περάσουν το 101 στον ίδιο γύρο, τράγος είναι το υψηλότερο σκορ. Νικητές είναι το χαμηλότερο. Αν όλοι είναι ίσοι, ισοπαλία.';
+
+  @override
+  String get rulesDominoOffline => 'Εκτός σύνδεσης: εσείς και μποτ. Το μποτ μετρά αριθμούς και δεν κοιτά κρυφά χέρια.';
+
+  @override
+  String get dominoBoneyard => 'Στοίβα';
+
+  @override
+  String get dominoChooseEnd => 'Διαλέξτε άκρη';
+
+  @override
+  String get dominoFish => 'Ψάρι';
+
+  @override
+  String get dominoYouGoat => 'Είστε ο τράγος';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Ο τράγος — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Αριστερά';
+
+  @override
+  String get dominoRight => 'Δεξιά';
+
+  @override
   String get gamesChessModeClassic => 'Κλασικό';
 
   @override

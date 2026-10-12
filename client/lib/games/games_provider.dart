@@ -65,6 +65,8 @@ class GameInvite {
 
   bool get isUno => gameType == 'uno';
 
+  bool get isDomino => gameType == 'domino';
+
   bool get isNardy => gameType == 'nardy';
 
   bool get isCheckers => gameType == 'checkers';

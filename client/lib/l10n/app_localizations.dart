@@ -1679,6 +1679,102 @@ abstract class AppLocalizations {
   /// **'Шахматы'**
   String get gamesChess;
 
+  /// No description provided for @gamesDomino.
+  ///
+  /// In ru, this message translates to:
+  /// **'Козёл'**
+  String get gamesDomino;
+
+  /// No description provided for @rulesDominoDeal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раздают по 7 костей. При двоих и троих остальные лежат в базаре, при четверых базар пуст.'**
+  String get rulesDominoDeal;
+
+  /// No description provided for @rulesDominoOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Первый кон начинает младший дубль от 1-1 до 6-6, затем 0-0. Если дублей нет — старшая кость. Её и надо поставить.'**
+  String get rulesDominoOpen;
+
+  /// No description provided for @rulesDominoPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кость кладут к открытому концу с тем же числом. Дубль на конце не меняет это число.'**
+  String get rulesDominoPlay;
+
+  /// No description provided for @rulesDominoDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если ходить нечем, берут из базара по одной, пока не появится подходящая или базар не кончится. Последнюю кость можно взять. Если ходов всё равно нет — пас.'**
+  String get rulesDominoDraw;
+
+  /// No description provided for @rulesDominoScore.
+  ///
+  /// In ru, this message translates to:
+  /// **'В конце кона каждый записывает сумму своих костей. Кто вышел — 0. Партия до 101: кто набрал, тот козёл и проиграл.'**
+  String get rulesDominoScore;
+
+  /// No description provided for @rulesDominoFish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рыба: базар пуст и никто не может приставить. У кого очков строго меньше всех — 0, остальные пишут свою сумму. Если минимум у всех одинаковый, пишут все.'**
+  String get rulesDominoFish;
+
+  /// No description provided for @rulesDominoMatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если несколько перешли 101 за один кон, козёл — у кого больше. Победители — с наименьшим счётом. Если все сравнялись — ничья.'**
+  String get rulesDominoMatch;
+
+  /// No description provided for @rulesDominoOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: вы и боты. Бот считает масти и не подглядывает в чужие руки.'**
+  String get rulesDominoOffline;
+
+  /// No description provided for @dominoBoneyard.
+  ///
+  /// In ru, this message translates to:
+  /// **'Базар'**
+  String get dominoBoneyard;
+
+  /// No description provided for @dominoChooseEnd.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите конец'**
+  String get dominoChooseEnd;
+
+  /// No description provided for @dominoFish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рыба'**
+  String get dominoFish;
+
+  /// No description provided for @dominoYouGoat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы козёл'**
+  String get dominoYouGoat;
+
+  /// No description provided for @dominoGoatNamed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Козёл — {name}'**
+  String dominoGoatNamed(String name);
+
+  /// No description provided for @dominoLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слева'**
+  String get dominoLeft;
+
+  /// No description provided for @dominoRight.
+  ///
+  /// In ru, this message translates to:
+  /// **'Справа'**
+  String get dominoRight;
+
   /// No description provided for @gamesChessModeClassic.
   ///
   /// In ru, this message translates to:

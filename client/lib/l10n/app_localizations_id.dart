@@ -802,6 +802,56 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesChess => 'Catur';
 
   @override
+  String get gamesDomino => 'Kambing';
+
+  @override
+  String get rulesDominoDeal => 'Setiap pemain mendapat 7 kartu. Untuk 2 atau 3 pemain sisanya di tumpukan; untuk 4 tumpukan kosong.';
+
+  @override
+  String get rulesDominoOpen => 'Ronde pertama dibuka dobel terkecil dari 1-1 sampai 6-6, lalu 0-0. Jika tidak ada dobel, kartu tertinggi yang membuka dan harus dimainkan.';
+
+  @override
+  String get rulesDominoPlay => 'Letakkan kartu di ujung terbuka dengan angka yang sama. Dobel di ujung tidak mengubah angka itu.';
+
+  @override
+  String get rulesDominoDraw => 'Jika tidak bisa main, ambil satu per satu sampai bisa atau tumpukan habis. Kartu terakhir boleh diambil. Jika tetap tidak bisa, lewat.';
+
+  @override
+  String get rulesDominoScore => 'Akhir ronde setiap orang mencatat jumlah mata kartunya. Yang habis mencatat 0. Sampai 101: yang mencapai adalah kambing dan kalah.';
+
+  @override
+  String get rulesDominoFish => 'Ikan: tumpukan kosong dan tidak ada yang bisa meletakkan. Jumlah terendah yang unik mencatat 0, yang lain mencatat jumlahnya. Jika minimum sama, semua mencatat.';
+
+  @override
+  String get rulesDominoMatch => 'Jika beberapa orang melewati 101 dalam satu ronde, kambing adalah skor tertinggi. Pemenang adalah skor terendah. Jika semua seri, hasilnya seri.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: kamu dan bot. Bot menghitung angka dan tidak mengintip kartu tersembunyi.';
+
+  @override
+  String get dominoBoneyard => 'Tumpukan';
+
+  @override
+  String get dominoChooseEnd => 'Pilih ujung';
+
+  @override
+  String get dominoFish => 'Ikan';
+
+  @override
+  String get dominoYouGoat => 'Kamu kambingnya';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Kambing — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Kiri';
+
+  @override
+  String get dominoRight => 'Kanan';
+
+  @override
   String get gamesChessModeClassic => 'Klasik';
 
   @override

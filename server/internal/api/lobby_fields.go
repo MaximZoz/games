@@ -67,6 +67,10 @@ func applyLobbyTypeFields(item *LobbyItem, m map[string]string) {
 		item.Variant = ""
 		item.GridSize = 0
 		item.GameMode = "classic"
+	case dominoGameType:
+		item.Variant = ""
+		item.GridSize = 0
+		item.GameMode = "kozel"
 	case nardyGameType:
 		raw := strings.TrimSpace(m["game_mode"])
 		if raw == "" {

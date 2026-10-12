@@ -137,6 +137,16 @@ class UserGameSettings {
     gameMode: 'classic',
   );
 
+  static const dominoDefaults = UserGameSettings(
+    gameType: 'domino',
+    turnTimeSec: 60,
+    variant: 'kozel',
+    stakeBronze: 2,
+    deckSize: 28,
+    maxPlayers: 2,
+    gameMode: 'kozel',
+  );
+
   static const nardyDefaults = UserGameSettings(
     gameType: 'nardy',
     turnTimeSec: 60,
@@ -163,6 +173,8 @@ class UserGameSettings {
         return pokerDefaults;
       case 'uno':
         return unoDefaults;
+      case 'domino':
+        return dominoDefaults;
       case 'nardy':
         return nardyDefaults;
       case 'checkers':
@@ -252,6 +264,18 @@ class UserGameSettings {
         gameMode: 'classic',
       );
     }
+    if (gameType == 'domino') {
+      return UserGameSettings(
+        gameType: 'domino',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: 'kozel',
+        gridSize: 3,
+        stakeBronze: stake < 2 ? 2 : stake,
+        deckSize: 28,
+        maxPlayers: maxP.clamp(1, 4),
+        gameMode: 'kozel',
+      );
+    }
     if (gameType == 'nardy') {
       final mode = gameMode == 'long' ? 'long' : 'short';
       return UserGameSettings(
@@ -333,6 +357,12 @@ class UserGameSettings {
       out['deck_size'] = 108;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
+    } else if (gameType == 'domino') {
+      out['variant'] = 'kozel';
+      out['grid_size'] = 3;
+      out['deck_size'] = 28;
+      out['max_players'] = maxPlayers;
+      out['game_mode'] = 'kozel';
     } else if (gameType == 'nardy' ||
         gameType == 'checkers' ||
         gameType == 'chess') {
@@ -702,6 +732,8 @@ class LobbyItem {
   bool get isPoker => gameType == 'poker';
 
   bool get isUno => gameType == 'uno';
+
+  bool get isDomino => gameType == 'domino';
 
   bool get isNardy => gameType == 'nardy';
 
