@@ -128,7 +128,7 @@ void main() {
     expect(find.widgetWithText(FramedButton, 'Создать игру'), findsNWidgets(2));
   });
 
-  testWidgets('все плитки сетки одной высоты, даже в разных рядах',
+  testWidgets('в одном ряду плитки одной высоты, следующий ряд по контенту',
       (tester) async {
     tester.view.physicalSize = const Size(1200, 1100);
     tester.view.devicePixelRatio = 1;
@@ -169,7 +169,7 @@ void main() {
     final b = tester.getSize(find.byType(GameCardShell).at(1));
     final c = tester.getSize(find.byType(GameCardShell).at(2));
     expect(a.height, b.height);
-    expect(a.height, c.height);
+    expect(c.height, lessThan(a.height));
   });
 
   testWidgets('крестики и дурак одного размера на десктопе', (tester) async {
@@ -274,4 +274,65 @@ void main() {
     final durak = tester.getSize(find.byType(GradientCard).at(1));
     expect(ttt.height, durak.height);
   });
+
+  testWidgets('ставка стоит первой среди переключателей, не в шапке',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _app(
+        const SizedBox(
+          width: 640,
+          child: GameCardShell(
+            header: GameCardHeader(
+              title: 'Крестики-нолики',
+              icon: Icons.grid_3x3_rounded,
+              onInfoTap: _noop,
+            ),
+            stakeChip: GameCardStakeChip(
+              stakeBronze: 2,
+              onTap: _noop,
+            ),
+            chips: [
+              GameCardChip(
+                label: '2',
+                icon: Icons.groups_rounded,
+                onTap: _noop,
+              ),
+              GameCardChip(
+                label: '20 с',
+                icon: Icons.timer_outlined,
+                onTap: _noop,
+              ),
+              GameCardChip(
+                label: 'Классика',
+                icon: Icons.close_rounded,
+                onTap: _noop,
+              ),
+            ],
+            actions: SizedBox(height: 46),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(GameCardHeader),
+        matching: find.byType(GameCardStakeChip),
+      ),
+      findsNothing,
+    );
+    final title = tester.getRect(find.textContaining('Крестики'));
+    final stake = tester.getRect(find.byType(GameCardStakeChip));
+    final time = tester.getRect(find.widgetWithText(GameCardChip, '20 с'));
+    expect(stake.top, greaterThan(title.bottom - 1));
+    expect(stake.left, lessThan(time.left));
+    expect((stake.top - time.top).abs(), lessThan(2));
+  });
 }
+
+void _noop() {}
