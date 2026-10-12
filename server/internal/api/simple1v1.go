@@ -666,6 +666,7 @@ func (h *GamesHandler) recordSimple1v1Result(
 		StakeBronze:  stakeBronze,
 		DurationSec:  durationSec,
 		AgainstBot:   isBot(xID) || isBot(oID),
+		GameMode:     statsGameMode(s.gameType, m),
 	}
 	if userID, err := uuid.Parse(xID); err == nil {
 		gameResult.XUserID = userID

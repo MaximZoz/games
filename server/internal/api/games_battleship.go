@@ -1420,6 +1420,7 @@ func (h *GamesHandler) recordBattleshipResult(ctx context.Context, gameID string
 		GridSize:     battleship.BoardSize,
 		StakeBronze:  stakeBronze,
 		AgainstBot:   isBot(p1) || isBot(p2),
+		GameMode:     statsGameMode(battleshipGameType, m),
 	}
 	if u, err := uuid.Parse(p1); err == nil {
 		gr.XUserID = u
