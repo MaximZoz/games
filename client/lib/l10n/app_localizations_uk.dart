@@ -3264,4 +3264,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String statsDurakChip(int players, String deck) {
     return '$players · $deck';
   }
+
+  @override
+  String get statsSelectGame => 'Гра';
+
+  @override
+  String get statsSelectMode => 'Режим';
+
+  @override
+  String get statsRecentEmpty => 'Поки немає партій';
 }

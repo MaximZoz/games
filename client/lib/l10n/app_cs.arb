@@ -1589,5 +1589,8 @@
   "statsOutcomeLoss": "Prohra",
   "statsOutcomeDraw": "Remíza",
   "statsAllModes": "Všechny režimy",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Hra",
+  "statsSelectMode": "Režim",
+  "statsRecentEmpty": "Zatím žádné partie"
 }

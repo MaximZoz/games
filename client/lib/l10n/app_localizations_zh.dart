@@ -3258,4 +3258,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String statsDurakChip(int players, String deck) {
     return '$players · $deck';
   }
+
+  @override
+  String get statsSelectGame => '游戏';
+
+  @override
+  String get statsSelectMode => '模式';
+
+  @override
+  String get statsRecentEmpty => '还没有对局';
 }

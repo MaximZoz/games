@@ -1589,5 +1589,8 @@
   "statsOutcomeLoss": "हार",
   "statsOutcomeDraw": "ड्रॉ",
   "statsAllModes": "सभी मोड",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "खेल",
+  "statsSelectMode": "मोड",
+  "statsRecentEmpty": "अभी कोई खेल नहीं"
 }

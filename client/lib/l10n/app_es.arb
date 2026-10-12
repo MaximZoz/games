@@ -1589,5 +1589,8 @@
   "statsOutcomeLoss": "Derrota",
   "statsOutcomeDraw": "Tablas",
   "statsAllModes": "Todos los modos",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Juego",
+  "statsSelectMode": "Modo",
+  "statsRecentEmpty": "Aún no hay partidas"
 }

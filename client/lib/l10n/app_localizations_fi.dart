@@ -3258,4 +3258,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String statsDurakChip(int players, String deck) {
     return '$players · $deck';
   }
+
+  @override
+  String get statsSelectGame => 'Peli';
+
+  @override
+  String get statsSelectMode => 'Tila';
+
+  @override
+  String get statsRecentEmpty => 'Ei pelejä vielä';
 }

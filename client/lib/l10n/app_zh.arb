@@ -1589,5 +1589,8 @@
   "statsOutcomeLoss": "失败",
   "statsOutcomeDraw": "平局",
   "statsAllModes": "全部模式",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "游戏",
+  "statsSelectMode": "模式",
+  "statsRecentEmpty": "还没有对局"
 }

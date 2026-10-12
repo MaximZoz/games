@@ -63,3 +63,35 @@ func TestGroupRecentGamesLimit(t *testing.T) {
 		t.Fatalf("len %d", len(got))
 	}
 }
+
+func TestPickRecentBucketsKeepsEachMode(t *testing.T) {
+	games := make([]RecentGame, 0, 15)
+	for i := 0; i < 12; i++ {
+		games = append(games, RecentGame{GameType: "chess", Mode: "classic", Outcome: "win"})
+	}
+	games = append(games,
+		RecentGame{GameType: "chess", Mode: "blitz", Outcome: "loss"},
+		RecentGame{GameType: "chess", Mode: "blitz", Outcome: "draw"},
+		RecentGame{GameType: "uno", Outcome: "win"},
+	)
+	got := pickRecentBuckets(games, 10)
+	if len(got) != 13 {
+		t.Fatalf("len %d", len(got))
+	}
+	blitz := 0
+	uno := 0
+	classic := 0
+	for _, g := range got {
+		switch {
+		case g.GameType == "uno":
+			uno++
+		case g.Mode == "blitz":
+			blitz++
+		case g.Mode == "classic":
+			classic++
+		}
+	}
+	if classic != 10 || blitz != 2 || uno != 1 {
+		t.Fatalf("classic %d blitz %d uno %d", classic, blitz, uno)
+	}
+}

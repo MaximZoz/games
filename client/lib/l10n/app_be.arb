@@ -1589,5 +1589,8 @@
   "statsOutcomeLoss": "Параза",
   "statsOutcomeDraw": "Нічыя",
   "statsAllModes": "Усе рэжымы",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Гульня",
+  "statsSelectMode": "Рэжым",
+  "statsRecentEmpty": "Пакуль няма партый"
 }

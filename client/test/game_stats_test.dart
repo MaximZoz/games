@@ -141,6 +141,27 @@ void _unit() {
     expect(statsModeOptions('uno', const []), isEmpty);
   });
 
+  test('statsRecentSlice filters by game and mode', () {
+    const recent = [
+      RecentGame(gameType: 'chess', mode: 'classic', outcome: 'win'),
+      RecentGame(gameType: 'chess', mode: 'blitz', outcome: 'loss'),
+      RecentGame(gameType: 'uno', outcome: 'draw'),
+    ];
+    expect(
+      statsRecentSlice(recent, game: '', mode: '').map((g) => g.gameType),
+      ['chess', 'chess', 'uno'],
+    );
+    expect(
+      statsRecentSlice(recent, game: 'chess', mode: '').length,
+      2,
+    );
+    expect(
+      statsRecentSlice(recent, game: 'chess', mode: 'blitz').single.outcome,
+      'loss',
+    );
+    expect(statsRecentSlice(recent, game: 'durak', mode: ''), isEmpty);
+  });
+
   test('statsModeLabel uses players and deck', () {
     final l10n = lookupAppLocalizations(const Locale('ru'));
     expect(statsModeLabel('durak', '3:52', l10n), '3 · 52');
@@ -222,7 +243,7 @@ void main() {
 
   _unit();
 
-  testWidgets('лента исходов и чип режима на одной карточке', (tester) async {
+  testWidgets('два переключателя и лента внутри карточки', (tester) async {
     const stats = GameStats(
       wins: 2,
       draws: 1,
@@ -248,16 +269,19 @@ void main() {
       recent: [
         RecentGame(
           gameType: 'chess',
+          mode: 'classic',
           outcome: 'win',
           opponents: [RecentOpponent(displayName: 'Анна')],
         ),
         RecentGame(
           gameType: 'chess',
+          mode: 'blitz',
           outcome: 'loss',
           opponents: [RecentOpponent(displayName: 'Бот', bot: true)],
         ),
         RecentGame(
           gameType: 'chess',
+          mode: 'rapid',
           outcome: 'draw',
           opponents: [RecentOpponent(displayName: 'Илья')],
         ),
@@ -279,18 +303,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Последние партии'), findsOneWidget);
+    expect(find.text('Игра'), findsOneWidget);
+    expect(find.text('Режим'), findsOneWidget);
     expect(find.text('Победа'), findsOneWidget);
     expect(find.text('Поражение'), findsOneWidget);
     expect(find.text('Ничья'), findsOneWidget);
-    expect(find.text('Все режимы'), findsNothing);
+    expect(find.text('Анна'), findsOneWidget);
+    expect(find.text('Блиц'), findsNothing);
 
+    await tester.tap(find.byKey(const Key('stats-mode-select')));
+    await tester.pumpAndSettle();
+    expect(find.text('Блиц'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('stats-game-select')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Шахматы'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Все режимы'), findsOneWidget);
+    expect(find.text('Анна'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('stats-mode-select')));
+    await tester.pumpAndSettle();
     expect(find.text('Блиц'), findsOneWidget);
     await tester.tap(find.text('Блиц'));
     await tester.pumpAndSettle();
+
     expect(find.text('1'), findsWidgets);
+    expect(find.text('Поражение'), findsOneWidget);
+    expect(find.text('Анна'), findsNothing);
+    expect(find.text('Илья'), findsNothing);
   });
 }

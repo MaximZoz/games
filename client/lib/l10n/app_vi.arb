@@ -1589,5 +1589,8 @@
   "statsOutcomeLoss": "Thua",
   "statsOutcomeDraw": "Hòa",
   "statsAllModes": "Mọi chế độ",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Trò chơi",
+  "statsSelectMode": "Chế độ",
+  "statsRecentEmpty": "Chưa có ván nào"
 }

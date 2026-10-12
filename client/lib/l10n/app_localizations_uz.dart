@@ -3258,4 +3258,13 @@ class AppLocalizationsUz extends AppLocalizations {
   String statsDurakChip(int players, String deck) {
     return '$players · $deck';
   }
+
+  @override
+  String get statsSelectGame => 'O\'yin';
+
+  @override
+  String get statsSelectMode => 'Rejim';
+
+  @override
+  String get statsRecentEmpty => 'Hali partiyalar yo\'q';
 }

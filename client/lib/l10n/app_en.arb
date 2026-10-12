@@ -1616,5 +1616,8 @@
   "statsOutcomeLoss": "Loss",
   "statsOutcomeDraw": "Draw",
   "statsAllModes": "All modes",
-  "statsDurakChip": "{players} · {deck}"
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Game",
+  "statsSelectMode": "Mode",
+  "statsRecentEmpty": "No games yet"
 }

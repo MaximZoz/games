@@ -165,7 +165,7 @@ class _Slice {
   final List<OpponentStat> topLost;
 }
 
-/// Последние партии, переключатель игры и режима, одна карточка счёта.
+/// Два переключателя — игра и режим — и одна карточка счёта.
 class _StatsDeck extends StatefulWidget {
   const _StatsDeck({
     required this.stats,
@@ -256,79 +256,83 @@ class _StatsDeckState extends State<_StatsDeck> {
           );
     final mode = modes.contains(_mode) ? _mode : '';
     final slice = _slice(l10n);
+    final recent = statsRecentSlice(
+      widget.stats.recent,
+      game: _game,
+      mode: mode,
+    );
+    final gameValue = _game.isEmpty
+        ? l10n.statsAllGames
+        : localizedGameTypeName(_game, l10n);
+    final modeValue =
+        mode.isEmpty ? l10n.statsAllModes : statsModeLabel(_game, mode, l10n);
     return ListView(
       padding: widget.padding,
       children: [
-        if (widget.stats.recent.isNotEmpty) ...[
-          Text(
-            l10n.statsRecentTitle,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _RecentGames(games: widget.stats.recent),
-          const SizedBox(height: 16),
-        ],
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _StatsChip(
-              selected: _game.isEmpty,
+        _StatsSelect(
+          selectKey: const Key('stats-game-select'),
+          caption: l10n.statsSelectGame,
+          value: gameValue,
+          icon: _game.isEmpty
+              ? const Icon(
+                  Icons.sports_esports_rounded,
+                  size: 20,
+                  color: AppColors.accentStart,
+                )
+              : GameTypeIcon(
+                  gameType: _game,
+                  size: 20,
+                  color: AppColors.accentStart,
+                ),
+          options: [
+            _StatsOption(
+              id: '',
               label: l10n.statsAllGames,
-              icon: Icon(
+              icon: const Icon(
                 Icons.sports_esports_rounded,
-                size: 16,
-                color: _game.isEmpty
-                    ? AppColors.accentStart
-                    : AppColors.textSecondary,
+                size: 18,
+                color: AppColors.textSecondary,
               ),
-              onTap: () => setState(() {
-                _game = '';
-                _mode = '';
-              }),
             ),
             for (final id in types)
-              _StatsChip(
-                selected: _game == id,
+              _StatsOption(
+                id: id,
                 label: localizedGameTypeName(id, l10n),
                 icon: GameTypeIcon(
                   gameType: id,
-                  size: 16,
-                  color: _game == id
-                      ? AppColors.accentStart
-                      : AppColors.textSecondary,
+                  size: 18,
+                  color: AppColors.textSecondary,
                 ),
-                onTap: () => setState(() {
-                  _game = id;
-                  _mode = '';
-                }),
               ),
           ],
+          selectedId: _game,
+          onSelected: (id) => setState(() {
+            _game = id;
+            _mode = '';
+          }),
         ),
-        if (modes.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _StatsChip(
-                selected: mode.isEmpty,
-                label: l10n.statsAllModes,
-                onTap: () => setState(() => _mode = ''),
-              ),
-              for (final item in modes)
-                _StatsChip(
-                  selected: mode == item,
-                  label: statsModeLabel(_game, item, l10n),
-                  onTap: () => setState(() => _mode = item),
-                ),
-            ],
+        const SizedBox(height: 8),
+        _StatsSelect(
+          selectKey: const Key('stats-mode-select'),
+          caption: l10n.statsSelectMode,
+          value: modeValue,
+          enabled: modes.isNotEmpty,
+          icon: const Icon(
+            Icons.tune_rounded,
+            size: 20,
+            color: AppColors.accentStart,
           ),
-        ],
+          options: [
+            _StatsOption(id: '', label: l10n.statsAllModes),
+            for (final item in modes)
+              _StatsOption(
+                id: item,
+                label: statsModeLabel(_game, item, l10n),
+              ),
+          ],
+          selectedId: mode,
+          onSelected: (id) => setState(() => _mode = id),
+        ),
         const SizedBox(height: 12),
         _GameStatsBlock(
           title: slice.title,
@@ -341,6 +345,7 @@ class _StatsDeckState extends State<_StatsDeck> {
           topWon: slice.topWon,
           topDrawn: slice.topDrawn,
           topLost: slice.topLost,
+          recent: recent,
           narrow: widget.narrow,
         ),
       ],
@@ -348,80 +353,179 @@ class _StatsDeckState extends State<_StatsDeck> {
   }
 }
 
-class _StatsChip extends StatelessWidget {
-  const _StatsChip({
-    required this.selected,
-    required this.label,
-    required this.onTap,
+class _StatsOption {
+  const _StatsOption({required this.id, required this.label, this.icon});
+
+  final String id;
+  final String label;
+  final Widget? icon;
+}
+
+/// Белая полоска-переключатель: подпись и текущее значение, по нажатию список.
+class _StatsSelect extends StatelessWidget {
+  const _StatsSelect({
+    required this.selectKey,
+    required this.caption,
+    required this.value,
+    required this.options,
+    required this.selectedId,
+    required this.onSelected,
     this.icon,
+    this.enabled = true,
   });
 
-  final bool selected;
-  final String label;
-  final VoidCallback onTap;
+  final Key selectKey;
+  final String caption;
+  final String value;
   final Widget? icon;
+  final bool enabled;
+  final List<_StatsOption> options;
+  final String selectedId;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.accentStart : AppColors.textSecondary;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-        highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.buttonFill,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected
-                  ? AppColors.accentStart.withValues(alpha: 0.45)
-                  : AppColors.textSecondary.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                icon!,
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: color,
-                ),
-              ),
-            ],
+    if (!enabled) {
+      return _StatsSelectBar(
+        barKey: selectKey,
+        caption: caption,
+        value: value,
+        icon: icon,
+        enabled: false,
+        onTap: null,
+      );
+    }
+    return MenuAnchor(
+      style: const MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(Colors.white),
+        surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+        elevation: WidgetStatePropertyAll(8),
+        maximumSize: WidgetStatePropertyAll(Size(360, 320)),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
         ),
       ),
+      alignmentOffset: const Offset(0, 6),
+      menuChildren: [
+        for (final option in options)
+          MenuItemButton(
+            onPressed: () => onSelected(option.id),
+            style: ButtonStyle(
+              backgroundColor: WidgetStatePropertyAll(
+                option.id == selectedId
+                    ? AppColors.accentSoft
+                    : Colors.transparent,
+              ),
+            ),
+            leadingIcon: option.icon,
+            child: Text(
+              option.label,
+              style: TextStyle(
+                fontWeight: option.id == selectedId
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: option.id == selectedId
+                    ? AppColors.accentStart
+                    : AppColors.textPrimary,
+              ),
+            ),
+          ),
+      ],
+      builder: (context, controller, _) {
+        return _StatsSelectBar(
+          barKey: selectKey,
+          caption: caption,
+          value: value,
+          icon: icon,
+          enabled: true,
+          onTap: () {
+            if (controller.isOpen) {
+              controller.close();
+            } else {
+              controller.open();
+            }
+          },
+        );
+      },
     );
   }
 }
 
-class _RecentGames extends StatelessWidget {
-  const _RecentGames({required this.games});
+class _StatsSelectBar extends StatelessWidget {
+  const _StatsSelectBar({
+    required this.barKey,
+    required this.caption,
+    required this.value,
+    required this.enabled,
+    required this.onTap,
+    this.icon,
+  });
 
-  final List<RecentGame> games;
+  final Key barKey;
+  final String caption;
+  final String value;
+  final Widget? icon;
+  final bool enabled;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GradientCard(
-      animate: false,
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        children: [
-          for (var i = 0; i < games.length; i++) ...[
-            if (i > 0) const SizedBox(height: 6),
-            _RecentRow(game: games[i]),
-          ],
-        ],
+    return Material(
+      key: barKey,
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: 56,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                if (icon != null) ...[
+                  icon!,
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        caption,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: enabled
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (enabled)
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    color: AppColors.textSecondary,
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -559,6 +663,7 @@ class _GameStatsBlock extends StatelessWidget {
     required this.topWon,
     required this.topDrawn,
     required this.topLost,
+    required this.recent,
     required this.narrow,
   });
 
@@ -572,6 +677,7 @@ class _GameStatsBlock extends StatelessWidget {
   final List<OpponentStat> topWon;
   final List<OpponentStat> topDrawn;
   final List<OpponentStat> topLost;
+  final List<RecentGame> recent;
   final bool narrow;
 
   @override
@@ -710,6 +816,29 @@ class _GameStatsBlock extends StatelessWidget {
               nested: true,
             ),
           ],
+          const SizedBox(height: 14),
+          Text(
+            l10n.statsRecentTitle,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (recent.isEmpty)
+            Text(
+              l10n.statsRecentEmpty,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else
+            for (var i = 0; i < recent.length; i++) ...[
+              if (i > 0) const SizedBox(height: 6),
+              _RecentRow(game: recent[i]),
+            ],
         ],
       ),
     );
@@ -1000,16 +1129,19 @@ class _StatsSkeleton extends StatelessWidget {
     return ShimmerAnimationScope(
       child: Column(
         children: [
-          Container(
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.card),
+          for (var i = 0; i < 2; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+          ],
+          const SizedBox(height: 12),
           Container(
-            height: 72,
+            height: 180,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(AppRadius.card),

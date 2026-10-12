@@ -6118,6 +6118,24 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{players} · {deck}'**
   String statsDurakChip(int players, String deck);
+
+  /// No description provided for @statsSelectGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра'**
+  String get statsSelectGame;
+
+  /// No description provided for @statsSelectMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим'**
+  String get statsSelectMode;
+
+  /// No description provided for @statsRecentEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока нет партий'**
+  String get statsRecentEmpty;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

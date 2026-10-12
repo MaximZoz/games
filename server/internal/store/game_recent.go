@@ -39,7 +39,12 @@ type recentRow struct {
 	CreatedAt  time.Time
 }
 
-// ListRecentGames возвращает последние limit партий игрока, включая игры с ботом.
+// recentRowWindow — сколько последних строк брать внутри одной игры и одного режима,
+// чтобы после склейки столов набрать limit партий в каждом срезе.
+const recentRowWindow = 60
+
+// ListRecentGames возвращает партии для срезов «все», «игра» и «игра+режим».
+// В каждом срезе не больше limit самых новых партий, включая игры с ботом.
 func ListRecentGames(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, limit int) ([]RecentGame, error) {
 	if limit <= 0 || limit > 20 {
 		limit = 10
@@ -47,19 +52,39 @@ func ListRecentGames(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 	rows, err := pool.Query(ctx, `
 		SELECT
 			game_id,
-			COALESCE(NULLIF(game_type, ''), 'tictactoe'),
-			COALESCE(game_mode, ''),
+			game_type,
+			game_mode,
 			result,
 			x_user_id,
 			o_user_id,
 			winner_user_id,
 			against_bot,
 			created_at
-		FROM game_results
-		WHERE x_user_id = $1 OR o_user_id = $1
+		FROM (
+			SELECT
+				game_id,
+				COALESCE(NULLIF(game_type, ''), 'tictactoe') AS game_type,
+				COALESCE(game_mode, '') AS game_mode,
+				result,
+				x_user_id,
+				o_user_id,
+				winner_user_id,
+				against_bot,
+				created_at,
+				ROW_NUMBER() OVER (
+					PARTITION BY COALESCE(NULLIF(game_type, ''), 'tictactoe')
+					ORDER BY created_at DESC
+				) AS rn_type,
+				ROW_NUMBER() OVER (
+					PARTITION BY COALESCE(NULLIF(game_type, ''), 'tictactoe'), COALESCE(game_mode, '')
+					ORDER BY created_at DESC
+				) AS rn_mode
+			FROM game_results
+			WHERE x_user_id = $1 OR o_user_id = $1
+		) recent_rows
+		WHERE rn_type <= $2 OR rn_mode <= $2
 		ORDER BY created_at DESC
-		LIMIT 80
-	`, userID)
+	`, userID, recentRowWindow)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +108,7 @@ func ListRecentGames(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	games := groupRecentGames(userID, raw, limit)
+	games := pickRecentBuckets(groupRecentGames(userID, raw, len(raw)+1), limit)
 	if err := fillRecentNames(ctx, pool, games); err != nil {
 		return nil, err
 	}
@@ -129,6 +154,29 @@ func groupRecentGames(userID uuid.UUID, rows []recentRow, limit int) []RecentGam
 			Opponents: recentOpponents(userID, group),
 		}
 		out = append(out, game)
+	}
+	return out
+}
+
+// pickRecentBuckets оставляет последние n партий в целом, по каждой игре
+// и по каждой паре игра+режим. Список уже отсортирован от новых к старым.
+func pickRecentBuckets(games []RecentGame, n int) []RecentGame {
+	if n <= 0 {
+		n = 10
+	}
+	all := 0
+	byType := map[string]int{}
+	byMode := map[string]int{}
+	out := make([]RecentGame, 0)
+	for _, g := range games {
+		typeKey := g.GameType
+		modeKey := typeKey + "\x00" + g.Mode
+		if all < n || byType[typeKey] < n || byMode[modeKey] < n {
+			out = append(out, g)
+		}
+		all++
+		byType[typeKey]++
+		byMode[modeKey]++
 	}
 	return out
 }

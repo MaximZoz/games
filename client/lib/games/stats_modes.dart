@@ -1,6 +1,25 @@
 import 'package:multigames_client/games/framework/game_registry.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/l10n/display_names.dart';
+
+/// Последние партии выбранного среза: все игры, одна игра или игра и режим.
+List<RecentGame> statsRecentSlice(
+  List<RecentGame> recent, {
+  required String game,
+  required String mode,
+  int limit = 10,
+}) {
+  if (limit <= 0) return const [];
+  final out = <RecentGame>[];
+  for (final item in recent) {
+    if (game.isNotEmpty && item.gameType != game) continue;
+    if (mode.isNotEmpty && item.mode != mode) continue;
+    out.add(item);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 
 /// Режимы, которые можно выбрать в статистике.
 ///
