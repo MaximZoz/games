@@ -5986,6 +5986,42 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'винтажа'**
   String get collectionCondGenVintage;
+
+  /// No description provided for @statsRecentTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последние партии'**
+  String get statsRecentTitle;
+
+  /// No description provided for @statsOutcomeWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Победа'**
+  String get statsOutcomeWin;
+
+  /// No description provided for @statsOutcomeLoss.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поражение'**
+  String get statsOutcomeLoss;
+
+  /// No description provided for @statsOutcomeDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья'**
+  String get statsOutcomeDraw;
+
+  /// No description provided for @statsAllModes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все режимы'**
+  String get statsAllModes;
+
+  /// No description provided for @statsDurakChip.
+  ///
+  /// In ru, this message translates to:
+  /// **'{players} · {deck}'**
+  String statsDurakChip(int players, String deck);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

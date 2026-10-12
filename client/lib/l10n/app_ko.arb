@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "최근 대국",
+  "statsOutcomeWin": "승",
+  "statsOutcomeLoss": "패",
+  "statsOutcomeDraw": "무승부",
+  "statsAllModes": "모든 모드",
+  "statsDurakChip": "{players} · {deck}"
 }

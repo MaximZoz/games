@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "เกมล่าสุด",
+  "statsOutcomeWin": "ชนะ",
+  "statsOutcomeLoss": "แพ้",
+  "statsOutcomeDraw": "เสมอ",
+  "statsAllModes": "ทุกโหมด",
+  "statsDurakChip": "{players} · {deck}"
 }

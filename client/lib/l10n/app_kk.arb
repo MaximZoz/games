@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Соңғы партиялар",
+  "statsOutcomeWin": "Жеңіс",
+  "statsOutcomeLoss": "Жеңіліс",
+  "statsOutcomeDraw": "Тең",
+  "statsAllModes": "Барлық режимдер",
+  "statsDurakChip": "{players} · {deck}"
 }

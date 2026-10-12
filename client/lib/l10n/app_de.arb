@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Letzte Partien",
+  "statsOutcomeWin": "Sieg",
+  "statsOutcomeLoss": "Niederlage",
+  "statsOutcomeDraw": "Remis",
+  "statsAllModes": "Alle Modi",
+  "statsDurakChip": "{players} · {deck}"
 }

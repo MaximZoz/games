@@ -3194,4 +3194,24 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'вінтажу';
+
+  @override
+  String get statsRecentTitle => 'Останні партії';
+
+  @override
+  String get statsOutcomeWin => 'Перемога';
+
+  @override
+  String get statsOutcomeLoss => 'Поразка';
+
+  @override
+  String get statsOutcomeDraw => 'Нічия';
+
+  @override
+  String get statsAllModes => 'Усі режими';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
 }

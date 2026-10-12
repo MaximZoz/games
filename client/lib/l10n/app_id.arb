@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Partai terbaru",
+  "statsOutcomeWin": "Menang",
+  "statsOutcomeLoss": "Kalah",
+  "statsOutcomeDraw": "Seri",
+  "statsAllModes": "Semua mode",
+  "statsDurakChip": "{players} · {deck}"
 }

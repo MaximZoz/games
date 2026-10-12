@@ -1567,5 +1567,11 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Últimas partidas",
+  "statsOutcomeWin": "Vitória",
+  "statsOutcomeLoss": "Derrota",
+  "statsOutcomeDraw": "Empate",
+  "statsAllModes": "Todos os modos",
+  "statsDurakChip": "{players} · {deck}"
 }

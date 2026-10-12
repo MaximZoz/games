@@ -2200,44 +2200,81 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 func (h *GamesHandler) recordDurakGameResult(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int, finishReason string) {
 	ids := state.PlayerIDs
 	if len(ids) < 2 {
+		ids = parsePlayerIDsCSV(m["player_ids"])
+	}
+	if len(ids) < 2 {
 		return
 	}
-	xID, oID := ids[0], ids[1]
+	deck := state.DeckSize
+	if deck == 0 {
+		deck, _ = strconv.Atoi(m["deck_size"])
+	}
+	if deck == 0 {
+		deck = 36
+	}
+	mode := fmt.Sprintf("%d:%d", len(ids), deck)
+	duration := 0
+	if t, ok := parseGameStartedAt(m["started_at"]); ok {
+		duration = clampNonNegative(int(time.Since(t).Seconds()))
+	}
 	var winnerID string
-	result := "draw"
-	if m["draw"] == "1" {
-		result = "draw"
-	} else if state.LoserIndex >= 0 && state.LoserIndex < len(ids) && len(ids) == 2 {
-		// 1×1: как крестики — x_won / o_won по слотам player_ids[0]/[1].
+	isDraw := m["draw"] == "1" || state.LoserIndex < 0 || state.LoserIndex >= len(ids)
+	if !isDraw && len(ids) == 2 {
 		if state.LoserIndex == 0 {
 			winnerID = ids[1]
-			result = "o_won"
 		} else {
 			winnerID = ids[0]
+		}
+	} else if !isDraw {
+		places := state.WinnerPlaceOrder()
+		if len(places) > 0 && places[0] >= 0 && places[0] < len(ids) {
+			winnerID = ids[places[0]]
+		}
+	}
+	write := func(rowID, xID, oID, winID string) {
+		result := "draw"
+		switch {
+		case winID != "" && winID == xID:
 			result = "x_won"
+		case winID != "" && winID == oID:
+			result = "o_won"
+		}
+		gr := store.GameResult{
+			GameID:       rowID,
+			GameType:     durakGameType,
+			Result:       result,
+			FinishReason: finishReason,
+			StakeBronze:  stakeBronze,
+			DurationSec:  duration,
+			AgainstBot:   isBot(xID) || isBot(oID),
+			GameMode:     mode,
+		}
+		if u, err := uuid.Parse(xID); err == nil {
+			gr.XUserID = u
+		}
+		if u, err := uuid.Parse(oID); err == nil {
+			gr.OUserID = u
+		}
+		if winID != "" && !isBot(winID) {
+			if w, err := uuid.Parse(winID); err == nil {
+				gr.WinnerUserID = &w
+			}
+		}
+		_ = store.RecordGameResult(ctx, h.Pool, gr)
+	}
+	if len(ids) == 2 {
+		write(gameID, ids[0], ids[1], winnerID)
+		return
+	}
+	if winnerID == "" {
+		for i := 1; i < len(ids); i++ {
+			write(gameID+":"+ids[i], ids[0], ids[i], "")
+		}
+		return
+	}
+	for _, id := range ids {
+		if id != winnerID {
+			write(gameID+":"+id, winnerID, id, winnerID)
 		}
 	}
-	gr := store.GameResult{
-		GameID:       gameID,
-		GameType:     durakGameType,
-		Result:       result,
-		FinishReason: finishReason,
-		StakeBronze:  stakeBronze,
-		AgainstBot:   isBot(xID) || isBot(oID),
-	}
-	if u, err := uuid.Parse(xID); err == nil {
-		gr.XUserID = u
-	}
-	if u, err := uuid.Parse(oID); err == nil {
-		gr.OUserID = u
-	}
-	if winnerID != "" && !isBot(winnerID) {
-		if w, err := uuid.Parse(winnerID); err == nil {
-			gr.WinnerUserID = &w
-		}
-	}
-	if t, ok := parseGameStartedAt(m["started_at"]); ok {
-		gr.DurationSec = clampNonNegative(int(time.Since(t).Seconds()))
-	}
-	_ = store.RecordGameResult(ctx, h.Pool, gr)
 }

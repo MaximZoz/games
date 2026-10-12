@@ -3188,4 +3188,24 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Соңғы партиялар';
+
+  @override
+  String get statsOutcomeWin => 'Жеңіс';
+
+  @override
+  String get statsOutcomeLoss => 'Жеңіліс';
+
+  @override
+  String get statsOutcomeDraw => 'Тең';
+
+  @override
+  String get statsAllModes => 'Барлық режимдер';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
 }

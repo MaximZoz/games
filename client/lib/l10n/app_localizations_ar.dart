@@ -3188,4 +3188,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'آخر المباريات';
+
+  @override
+  String get statsOutcomeWin => 'فوز';
+
+  @override
+  String get statsOutcomeLoss => 'خسارة';
+
+  @override
+  String get statsOutcomeDraw => 'تعادل';
+
+  @override
+  String get statsAllModes => 'كل الأوضاع';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
 }

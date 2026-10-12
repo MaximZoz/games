@@ -9,17 +9,18 @@ import (
 
 // GameResult — зафиксированный результат завершённой партии.
 type GameResult struct {
-	GameID        string
-	GameType      string
-	XUserID       uuid.UUID
-	OUserID       uuid.UUID
-	WinnerUserID  *uuid.UUID // nil — ничья
-	Result        string     // 'x_won' | 'o_won' | 'draw'
-	FinishReason  string     // 'normal' | 'forfeit' | 'timeout' | 'draw_agreement'
-	GridSize      int
-	StakeBronze   int
-	DurationSec   int
-	AgainstBot    bool
+	GameID       string
+	GameType     string
+	XUserID      uuid.UUID
+	OUserID      uuid.UUID
+	WinnerUserID *uuid.UUID // nil — ничья
+	Result       string     // 'x_won' | 'o_won' | 'draw'
+	FinishReason string     // 'normal' | 'forfeit' | 'timeout' | 'draw_agreement'
+	GridSize     int
+	StakeBronze  int
+	DurationSec  int
+	AgainstBot   bool
+	GameMode     string // режим: classic, russian, 2:36, …; пусто — режима нет
 }
 
 // GameStats — агрегированная статистика игрока.
@@ -99,10 +100,10 @@ func RecordGameResult(ctx context.Context, pool *pgxpool.Pool, r GameResult) err
 	_, err := pool.Exec(ctx, `
 		INSERT INTO game_results
 			(game_id, game_type, x_user_id, o_user_id, winner_user_id,
-			 result, finish_reason, grid_size, stake_bronze, duration_sec, against_bot)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			 result, finish_reason, grid_size, stake_bronze, duration_sec, against_bot, game_mode)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`, r.GameID, gameType, xUserID, oUserID, r.WinnerUserID,
-		r.Result, finishReason, r.GridSize, r.StakeBronze, r.DurationSec, r.AgainstBot)
+		r.Result, finishReason, r.GridSize, r.StakeBronze, r.DurationSec, r.AgainstBot, r.GameMode)
 	return err
 }
 
@@ -168,6 +169,60 @@ func GetGameStatsByType(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 	return out, rows.Err()
 }
 
+// GameModeStats — статистика игрока по типу игры и режиму.
+// Пустой режим в базу пишется, но сюда не попадает: он виден только в «всех режимах».
+type GameModeStats struct {
+	GameType         string         `json:"game_type"`
+	Mode             string         `json:"mode"`
+	Won              int            `json:"won"`
+	Drawn            int            `json:"drawn"`
+	Lost             int            `json:"lost"`
+	TotalDurationSec int            `json:"total_duration_sec"`
+	TopWon           []OpponentStat `json:"top_won"`
+	TopDrawn         []OpponentStat `json:"top_drawn"`
+	TopLost          []OpponentStat `json:"top_lost"`
+}
+
+// GetGameModeStats — разбивка по режиму. Строки с пустым game_mode пропускаются.
+func GetGameModeStats(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]GameModeStats, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT
+			COALESCE(NULLIF(game_type, ''), 'tictactoe') AS game_type,
+			game_mode,
+			COUNT(*) FILTER (WHERE winner_user_id = $1)::int AS wins,
+			COUNT(*) FILTER (WHERE winner_user_id IS NULL)::int AS draws,
+			COUNT(*) FILTER (WHERE winner_user_id IS NOT NULL AND winner_user_id <> $1)::int AS losses,
+			COALESCE(SUM(duration_sec), 0)::int AS total_duration
+		FROM game_results
+		WHERE (x_user_id = $1 OR o_user_id = $1)
+		  AND x_user_id IS NOT NULL
+		  AND o_user_id IS NOT NULL
+		  AND COALESCE(game_mode, '') <> ''
+		GROUP BY 1, 2
+		ORDER BY 1, 2
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := make([]GameModeStats, 0)
+	for rows.Next() {
+		var g GameModeStats
+		if err := rows.Scan(&g.GameType, &g.Mode, &g.Won, &g.Drawn, &g.Lost, &g.TotalDurationSec); err != nil {
+			return nil, err
+		}
+		if g.Won == 0 && g.Drawn == 0 && g.Lost == 0 {
+			continue
+		}
+		g.TopWon = []OpponentStat{}
+		g.TopDrawn = []OpponentStat{}
+		g.TopLost = []OpponentStat{}
+		out = append(out, g)
+	}
+	return out, rows.Err()
+}
+
 // GetHeadToHead возвращает счёт between userID и opponentID (только живые PvP, без ботов),
 // с разбивкой по типу игры.
 func GetHeadToHead(ctx context.Context, pool *pgxpool.Pool, userID, opponentID uuid.UUID) (HeadToHead, error) {
@@ -216,7 +271,7 @@ func GetHeadToHead(ctx context.Context, pool *pgxpool.Pool, userID, opponentID u
 // GetTopOpponents возвращает соперников, отсортированных по указанному критерию.
 // metric: "won" | "drawn" | "lost". В список попадают только с метрикой > 0.
 // gameType пустой — по всем играм; иначе фильтр по типу.
-func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, metric string, limit int, gameType string) ([]OpponentStat, error) {
+func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, metric string, limit int, gameType, gameMode string) ([]OpponentStat, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10
 	}
@@ -232,6 +287,7 @@ func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 			  AND o_user_id IS NOT NULL
 			  AND (x_user_id = $1 OR o_user_id = $1)
 			  AND ($2 = '' OR COALESCE(NULLIF(game_type, ''), 'tictactoe') = $2)
+			  AND ($3 = '' OR COALESCE(game_mode, '') = $3)
 		)
 		SELECT
 			opponent_id,
@@ -240,7 +296,7 @@ func GetTopOpponents(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 			COUNT(*) FILTER (WHERE winner_user_id = opponent_id)::int AS lost
 		FROM pairs
 		GROUP BY opponent_id
-	`, userID, gameType)
+	`, userID, gameType, gameMode)
 	if err != nil {
 		return nil, err
 	}

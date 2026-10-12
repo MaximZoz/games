@@ -1092,6 +1092,7 @@ func (h *GamesHandler) recordUnoGameResult(
 			StakeBronze:  stakeBronze,
 			DurationSec:  durationSec,
 			AgainstBot:   isBot(xID) || isBot(oID),
+			GameMode:     statsGameMode(store.GameTypeUno, m),
 		}
 		if userID, err := uuid.Parse(xID); err == nil {
 			gameResult.XUserID = userID
