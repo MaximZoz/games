@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
+import 'package:multigames_client/games/domino/domino_repository.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
@@ -33,6 +34,12 @@ bool hasFullDurakView(Map<String, dynamic> data) =>
 bool hasFullUnoView(Map<String, dynamic> data) {
   final players = data['players'];
   return players is List && players.isNotEmpty;
+}
+
+bool hasFullDominoView(Map<String, dynamic> data) {
+  final type = data['game_type']?.toString() ?? '';
+  if (type.isNotEmpty && type != 'domino') return false;
+  return data['chain'] is List && data.containsKey('boneyard_count');
 }
 
 bool hasFullPokerView(Map<String, dynamic> data) =>
@@ -137,6 +144,11 @@ bool isOlderUno(UnoGameView incoming, UnoGameView current) {
   if (incoming.roundNumber != current.roundNumber) {
     return incoming.roundNumber < current.roundNumber;
   }
+  return incoming.eventSeq < current.eventSeq;
+}
+
+bool isOlderDomino(DominoGameView incoming, DominoGameView current) {
+  if (incoming.round != current.round) return incoming.round < current.round;
   return incoming.eventSeq < current.eventSeq;
 }
 

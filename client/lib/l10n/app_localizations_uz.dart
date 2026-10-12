@@ -802,6 +802,56 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesChess => 'Shaxmat';
 
   @override
+  String get gamesDomino => 'Kozel';
+
+  @override
+  String get rulesDominoDeal => 'Har biriga 7 tosh. Ikki va uch kishida qolgani bozorda, to‘rt kishida bozor bo‘sh.';
+
+  @override
+  String get rulesDominoOpen => 'Birinchi konni 1-1 dan 6-6 gacha eng kichik dubl, so‘ng 0-0 boshlaydi. Dubl bo‘lmasa — eng katta tosh. Aynan shuni qo‘yish kerak.';
+
+  @override
+  String get rulesDominoPlay => 'Tosh ochiq uchdagi son bilan qo‘yiladi. Uchdagi dubl o‘sha sonni o‘zgartirmaydi.';
+
+  @override
+  String get rulesDominoDraw => 'Yura olmasangiz, mos tosh chiqquncha yoki bozor tugaguncha bittadan oling. Oxirgi toshni olish mumkin. Baribir yurish bo‘lmasa — pas.';
+
+  @override
+  String get rulesDominoScore => 'Kon oxirida har kim qo‘lidagi toshlar yig‘indisini yozadi. Chiqqan — 0. 101 gacha: kim yig‘sa, o‘sha kozel va yutqazadi.';
+
+  @override
+  String get rulesDominoFish => 'Baliq: bozor bo‘sh va hech kim qo‘ya olmaydi. Ochkoisi hammadan kam yagona o‘yinchi — 0, qolganlari o‘z yig‘indisini yozadi. Minimum hammada bir xil bo‘lsa, hammasi yozadi.';
+
+  @override
+  String get rulesDominoMatch => 'Bir konda bir necha kishi 101 dan o‘tsa, kozel — eng yuqori hisob. G‘oliblar — eng past hisob. Hammasi tenglashsa — durang.';
+
+  @override
+  String get rulesDominoOffline => 'Oflayn: siz va botlar. Bot mastlarni sanaydi va yashirin qo‘llarga qaramaydi.';
+
+  @override
+  String get dominoBoneyard => 'Bozor';
+
+  @override
+  String get dominoChooseEnd => 'Uchni tanlang';
+
+  @override
+  String get dominoFish => 'Baliq';
+
+  @override
+  String get dominoYouGoat => 'Siz kozelsiz';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Kozel — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Chap';
+
+  @override
+  String get dominoRight => 'O‘ng';
+
+  @override
   String get gamesChessModeClassic => 'Klassika';
 
   @override

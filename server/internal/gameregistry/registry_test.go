@@ -67,4 +67,22 @@ func TestDefaultRegistry(t *testing.T) {
 	if !r.Has(store.GameTypeCheckers) {
 		t.Fatalf("expected checkers, got %v", r.IDs())
 	}
+	domino := r.MustGet(store.GameTypeDomino)
+	if !domino.SupportsOffline() || domino.SupportsDrawOffer(2) || domino.SupportsDrawOffer(4) {
+		t.Fatalf("domino policies offline=%v draw2=%v",
+			domino.SupportsOffline(), domino.SupportsDrawOffer(2))
+	}
+	dominoModes := domino.Modes()
+	if len(dominoModes) != 1 || dominoModes[0].ID != "kozel" ||
+		dominoModes[0].MinPlayers != 2 || dominoModes[0].MaxPlayers != 4 {
+		t.Fatalf("domino modes: %+v", dominoModes)
+	}
+	dominoDefaults := domino.DefaultSettings()
+	if dominoDefaults.MaxPlayers != 2 || dominoDefaults.TurnTimeSec != 60 ||
+		dominoDefaults.GameMode != "kozel" || dominoDefaults.Variant != "kozel" {
+		t.Fatalf("domino defaults: %+v", dominoDefaults)
+	}
+	if r.Normalize("domino") != store.GameTypeDomino {
+		t.Fatalf("normalize domino")
+	}
 }

@@ -802,6 +802,56 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesChess => '체스';
 
   @override
+  String get gamesDomino => '염소';
+
+  @override
+  String get rulesDominoDeal => '각자 7장. 2·3명은 나머지가 더미, 4명은 더미가 비어 있습니다.';
+
+  @override
+  String get rulesDominoOpen => '첫 판은 1-1부터 6-6까지 가장 작은 더블, 그다음 0-0으로 시작합니다. 더블이 없으면 가장 큰 패를 내야 합니다.';
+
+  @override
+  String get rulesDominoPlay => '열린 끝과 같은 숫자에 붙입니다. 끝의 더블은 그 숫자를 바꾸지 않습니다.';
+
+  @override
+  String get rulesDominoDraw => '낼 수 없으면 낼 수 있거나 더미가 빌 때까지 한 장씩 뽑습니다. 마지막 장도 가져갈 수 있습니다. 그래도 없으면 패스.';
+
+  @override
+  String get rulesDominoScore => '판이 끝나면 남은 패의 합을 적습니다. 다 낸 사람은 0. 101에 도달한 사람이 염소이며 집니다.';
+
+  @override
+  String get rulesDominoFish => '물고기: 더미가 비고 아무도 낼 수 없을 때. 유일하게 가장 작은 합은 0, 나머지는 자기 합. 최소가 모두 같으면 모두 적습니다.';
+
+  @override
+  String get rulesDominoMatch => '한 판에 여러 명이 101을 넘으면 가장 높은 점수가 염소입니다. 가장 낮은 점수가 이깁니다. 모두 같으면 무승부.';
+
+  @override
+  String get rulesDominoOffline => '오프라인: 당신과 봇. 봇은 숫자를 세고 숨은 패는 보지 않습니다.';
+
+  @override
+  String get dominoBoneyard => '더미';
+
+  @override
+  String get dominoChooseEnd => '끝을 고르세요';
+
+  @override
+  String get dominoFish => '물고기';
+
+  @override
+  String get dominoYouGoat => '당신이 염소';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return '염소 — $name';
+  }
+
+  @override
+  String get dominoLeft => '왼쪽';
+
+  @override
+  String get dominoRight => '오른쪽';
+
+  @override
   String get gamesChessModeClassic => '클래식';
 
   @override

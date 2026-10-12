@@ -802,6 +802,56 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesChess => 'Sjakk';
 
   @override
+  String get gamesDomino => 'Geita';
+
+  @override
+  String get rulesDominoDeal => 'Alle får 7 brikker. Med 2 eller 3 ligger resten i bunken; med 4 er bunken tom.';
+
+  @override
+  String get rulesDominoOpen => 'Første runde starter med laveste dobbel fra 1-1 til 6-6, deretter 0-0. Uten dobbel starter høyeste brikke, og den må legges.';
+
+  @override
+  String get rulesDominoPlay => 'Legg en brikke mot en åpen ende med samme tall. En dobbel i enden endrer ikke tallet.';
+
+  @override
+  String get rulesDominoDraw => 'Kan du ikke legge, trekk én og én til du kan eller bunken er tom. Siste brikke kan tas. Går det fortsatt ikke, pass.';
+
+  @override
+  String get rulesDominoScore => 'På slutten av runden skriver hver summen av brikkene som er igjen. Den som går ut skriver 0. Til 101: den som når dit er geita og taper.';
+
+  @override
+  String get rulesDominoFish => 'Fisk: bunken er tom og ingen kan legge. Den unikt laveste summen er 0, de andre skriver sin. Er minimum felles, skriver alle.';
+
+  @override
+  String get rulesDominoMatch => 'Krysser flere 101 i samme runde, er høyeste poeng geita. Vinnere har laveste poeng. Er alle like, er det uavgjort.';
+
+  @override
+  String get rulesDominoOffline => 'Frakoblet: du og boter. Boten teller tall og kikker ikke i skjulte hender.';
+
+  @override
+  String get dominoBoneyard => 'Bunk';
+
+  @override
+  String get dominoChooseEnd => 'Velg en ende';
+
+  @override
+  String get dominoFish => 'Fisk';
+
+  @override
+  String get dominoYouGoat => 'Du er geita';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Geita — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Venstre';
+
+  @override
+  String get dominoRight => 'Høyre';
+
+  @override
   String get gamesChessModeClassic => 'Klassisk';
 
   @override

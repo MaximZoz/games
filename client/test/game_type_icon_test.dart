@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
+import 'package:multigames_client/ui/widgets/domino_game_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
@@ -19,6 +20,7 @@ void main() {
       );
       expect(GameTypeIcon.iconDataOf('poker'), PokerGameIcon.iconData);
       expect(GameTypeIcon.iconDataOf('uno'), Icons.style_rounded);
+      expect(GameTypeIcon.iconDataOf('domino'), Icons.grid_view_rounded);
       expect(GameTypeIcon.iconDataOf('nardy'), NardyGameIcon.iconData);
       expect(GameTypeIcon.iconDataOf('checkers'), CheckersGameIcon.iconData);
     });
@@ -95,5 +97,16 @@ void main() {
     expect(find.byIcon(Icons.sports_esports_rounded), findsNothing);
     expect(find.byIcon(Icons.sailing_rounded), findsNothing);
     expect(find.byIcon(Icons.notifications_rounded), findsNothing);
+  });
+
+  testWidgets('domino chip paints the tile icon', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: GameTypeIcon(gameType: 'domino', size: 26),
+        ),
+      ),
+    );
+    expect(find.byType(DominoGameIcon), findsOneWidget);
   });
 }

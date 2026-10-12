@@ -802,6 +802,56 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesChess => 'Skak';
 
   @override
+  String get gamesDomino => 'Geden';
+
+  @override
+  String get rulesDominoDeal => 'Alle får 7 brikker. Ved 2 eller 3 ligger resten i bunken; ved 4 er bunken tom.';
+
+  @override
+  String get rulesDominoOpen => 'Første runde starter med laveste dobbelt fra 1-1 til 6-6, derefter 0-0. Uden dobbelt starter højeste brik, og den skal lægges.';
+
+  @override
+  String get rulesDominoPlay => 'Læg en brik mod en åben ende med samme tal. En dobbelt i enden ændrer ikke tallet.';
+
+  @override
+  String get rulesDominoDraw => 'Kan du ikke lægge, træk én ad gangen, til du kan, eller bunken er tom. Sidste brik må tages. Kan du stadig ikke, pas.';
+
+  @override
+  String get rulesDominoScore => 'Ved rundens slut skriver hver summen af de brikker, der er tilbage. Den der går ud skriver 0. Til 101: den der når det, er geden og taber.';
+
+  @override
+  String get rulesDominoFish => 'Fisk: bunken er tom, og ingen kan lægge. Den unikt laveste sum er 0, de andre skriver deres. Er minimum fælles, skriver alle.';
+
+  @override
+  String get rulesDominoMatch => 'Krydser flere 101 i samme runde, er højeste score geden. Vindere har laveste score. Er alle lige, er det uafgjort.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: dig og bots. Botten tæller tal og kigger ikke i skjulte hænder.';
+
+  @override
+  String get dominoBoneyard => 'Bunke';
+
+  @override
+  String get dominoChooseEnd => 'Vælg en ende';
+
+  @override
+  String get dominoFish => 'Fisk';
+
+  @override
+  String get dominoYouGoat => 'Du er geden';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Geden — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Venstre';
+
+  @override
+  String get dominoRight => 'Højre';
+
+  @override
   String get gamesChessModeClassic => 'Klassisk';
 
   @override

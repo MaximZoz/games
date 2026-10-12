@@ -802,6 +802,56 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesChess => 'שחמט';
 
   @override
+  String get gamesDomino => 'העז';
+
+  @override
+  String get rulesDominoDeal => 'כל אחד מקבל 7 אבנים. בשניים או שלושה השאר בקופה, בארבעה הקופה ריקה.';
+
+  @override
+  String get rulesDominoOpen => 'הסיבוב הראשון נפתח בכפיל הנמוך מ-1-1 עד 6-6, ואז 0-0. בלי כפיל פותחים באבן הגבוהה וחייבים לשחק אותה.';
+
+  @override
+  String get rulesDominoPlay => 'מניחים אבן בקצה פתוח עם אותו מספר. כפיל בקצה לא משנה את המספר.';
+
+  @override
+  String get rulesDominoDraw => 'אם אי אפשר לשחק, שולפים אחת-אחת עד שאפשר או עד שהקופה ריקה. מותר לקחת את האחרונה. אם עדיין אין מהלך — פס.';
+
+  @override
+  String get rulesDominoScore => 'בסוף הסיבוב כל אחד רושם את סכום האבנים שנשארו. מי שיצא רושם 0. עד 101: מי שמגיע הוא העז ומפסיד.';
+
+  @override
+  String get rulesDominoFish => 'דג: הקופה ריקה ואף אחד לא יכול להניח. הסכום הנמוך היחיד הוא 0, השאר רושמים את שלהם. אם המינימום משותף — כולם רושמים.';
+
+  @override
+  String get rulesDominoMatch => 'אם כמה עוברים 101 באותו סיבוב, העז הוא הציון הגבוה. המנצחים הם עם הציון הנמוך. אם כולם שווים — תיקו.';
+
+  @override
+  String get rulesDominoOffline => 'לא מקוון: אתה ובוטים. הבוט סופר מספרים ולא מציץ לידיים נסתרות.';
+
+  @override
+  String get dominoBoneyard => 'קופה';
+
+  @override
+  String get dominoChooseEnd => 'בחרו קצה';
+
+  @override
+  String get dominoFish => 'דג';
+
+  @override
+  String get dominoYouGoat => 'אתה העז';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'העז — $name';
+  }
+
+  @override
+  String get dominoLeft => 'שמאל';
+
+  @override
+  String get dominoRight => 'ימין';
+
+  @override
   String get gamesChessModeClassic => 'קלאסי';
 
   @override

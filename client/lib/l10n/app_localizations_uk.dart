@@ -802,6 +802,56 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesChess => 'Шахи';
 
   @override
+  String get gamesDomino => 'Козел';
+
+  @override
+  String get rulesDominoDeal => 'Роздають по 7 кісток. Удвох і втрьох решта лежить у базарі, учотирьох базар порожній.';
+
+  @override
+  String get rulesDominoOpen => 'Перший кін починає молодший дубль від 1-1 до 6-6, потім 0-0. Якщо дублів немає — найстарша кістка. Її й треба поставити.';
+
+  @override
+  String get rulesDominoPlay => 'Кістку кладуть до відкритого кінця з тим самим числом. Дубль на кінці не змінює це число.';
+
+  @override
+  String get rulesDominoDraw => 'Якщо ходити нічим, беруть із базару по одній, доки не з’явиться підхожа або базар не скінчиться. Останню кістку можна взяти. Якщо ходів усе одно немає — пас.';
+
+  @override
+  String get rulesDominoScore => 'Наприкінці кону кожен записує суму своїх кісток. Хто вийшов — 0. Партія до 101: хто набрав, той козел і програв.';
+
+  @override
+  String get rulesDominoFish => 'Риба: базар порожній і ніхто не може приставити. У кого очок строго менше за всіх — 0, решта пише свою суму. Якщо мінімум у всіх однаковий, пишуть усі.';
+
+  @override
+  String get rulesDominoMatch => 'Якщо кілька перейшли 101 за один кін, козел — у кого більше. Переможці — з найменшим рахунком. Якщо всі зрівнялися — нічия.';
+
+  @override
+  String get rulesDominoOffline => 'Офлайн: ви і боти. Бот рахує масті й не підглядає в чужі руки.';
+
+  @override
+  String get dominoBoneyard => 'Базар';
+
+  @override
+  String get dominoChooseEnd => 'Оберіть кінець';
+
+  @override
+  String get dominoFish => 'Риба';
+
+  @override
+  String get dominoYouGoat => 'Ви козел';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Козел — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Зліва';
+
+  @override
+  String get dominoRight => 'Справа';
+
+  @override
   String get gamesChessModeClassic => 'Класика';
 
   @override

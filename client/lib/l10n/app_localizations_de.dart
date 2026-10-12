@@ -802,6 +802,56 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesChess => 'Schach';
 
   @override
+  String get gamesDomino => 'Ziegenbock';
+
+  @override
+  String get rulesDominoDeal => 'Jeder erhält 7 Steine. Bei 2 oder 3 Spielern liegt der Rest im Boneyard, bei 4 ist er leer.';
+
+  @override
+  String get rulesDominoOpen => 'Die erste Runde beginnt mit dem niedrigsten Doppel von 1-1 bis 6-6, dann 0-0. Gibt es kein Doppel, beginnt der höchste Stein und muss gelegt werden.';
+
+  @override
+  String get rulesDominoPlay => 'Ein Stein wird an ein offenes Ende mit derselben Zahl gelegt. Ein Doppel am Ende ändert diese Zahl nicht.';
+
+  @override
+  String get rulesDominoDraw => 'Wer nicht legen kann, zieht einzeln, bis ein passender Stein kommt oder der Boneyard leer ist. Der letzte Stein darf genommen werden. Geht es dann immer noch nicht, wird gepasst.';
+
+  @override
+  String get rulesDominoScore => 'Am Rundenende zählt jeder die Augen seiner Steine. Wer auslegt, schreibt 0. Bis 101: Wer sie erreicht, ist der Ziegenbock und verliert.';
+
+  @override
+  String get rulesDominoFish => 'Fisch: Der Boneyard ist leer und niemand kann legen. Die eindeutig kleinste Augensumme schreibt 0, die anderen ihre Summe. Ist das Minimum gleich, schreiben alle.';
+
+  @override
+  String get rulesDominoMatch => 'Überschreiten mehrere in einer Runde 101, ist der höchste Stand der Ziegenbock. Gewinner sind die mit dem niedrigsten Stand. Sind alle gleich, ist es unentschieden.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: du und Bots. Der Bot zählt die Zahlen und schaut nicht in verdeckte Hände.';
+
+  @override
+  String get dominoBoneyard => 'Boneyard';
+
+  @override
+  String get dominoChooseEnd => 'Ende wählen';
+
+  @override
+  String get dominoFish => 'Fisch';
+
+  @override
+  String get dominoYouGoat => 'Du bist der Ziegenbock';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Ziegenbock — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Links';
+
+  @override
+  String get dominoRight => 'Rechts';
+
+  @override
   String get gamesChessModeClassic => 'Klassisch';
 
   @override

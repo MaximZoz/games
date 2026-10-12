@@ -802,6 +802,56 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesChess => '国际象棋';
 
   @override
+  String get gamesDomino => '山羊多米诺';
+
+  @override
+  String get rulesDominoDeal => '每人 7 张。2 人或 3 人时其余在牌库，4 人时牌库为空。';
+
+  @override
+  String get rulesDominoOpen => '第一局从 1-1 到 6-6 的最小对子开局，然后是 0-0。没有对子就用最大的牌，并且必须打出。';
+
+  @override
+  String get rulesDominoPlay => '把牌接到数字相同的开口。对子接在一端时，这一端的数字不变。';
+
+  @override
+  String get rulesDominoDraw => '无法出牌就一张张抽，直到能出或牌库抽完。最后一张可以抽。仍然不能出就过牌。';
+
+  @override
+  String get rulesDominoScore => '一局结束时，每人记下手里剩余点数。出完记 0。先到 101 的人是山羊，也就是输家。';
+
+  @override
+  String get rulesDominoFish => '鱼：牌库已空且谁都不能接。唯一最少的点数记 0，其他人记自己的总和。最少点数相同则大家都记。';
+
+  @override
+  String get rulesDominoMatch => '同一局有多人达到 101 时，分数最高的是山羊。分数最低的人获胜。所有人同分则平局。';
+
+  @override
+  String get rulesDominoOffline => '离线：你和机器人。机器人计算点数，不会看别人的手牌。';
+
+  @override
+  String get dominoBoneyard => '牌库';
+
+  @override
+  String get dominoChooseEnd => '选择一端';
+
+  @override
+  String get dominoFish => '鱼';
+
+  @override
+  String get dominoYouGoat => '你是山羊';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return '山羊 — $name';
+  }
+
+  @override
+  String get dominoLeft => '左侧';
+
+  @override
+  String get dominoRight => '右侧';
+
+  @override
   String get gamesChessModeClassic => '经典';
 
   @override

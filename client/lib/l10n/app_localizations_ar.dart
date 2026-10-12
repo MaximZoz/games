@@ -802,6 +802,56 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesChess => 'شطرنج';
 
   @override
+  String get gamesDomino => 'التيس';
+
+  @override
+  String get rulesDominoDeal => 'لكل لاعب 7 قطع. مع لاعبين أو ثلاثة تبقى البقية في الاحتياط، ومع أربعة يكون الاحتياط فارغًا.';
+
+  @override
+  String get rulesDominoOpen => 'تبدأ الجولة الأولى بأصغر دبل من 1-1 حتى 6-6 ثم 0-0. إن لم يوجد دبل تبدأ أعلى قطعة ويجب لعبها.';
+
+  @override
+  String get rulesDominoPlay => 'تُوضع القطعة على طرف مفتوح بالرقم نفسه. الدبل على الطرف لا يغيّر ذلك الرقم.';
+
+  @override
+  String get rulesDominoDraw => 'إن لم تستطع اللعب فاسحب قطعة قطعة حتى تستطيع أو يفرغ الاحتياط. يمكن أخذ آخر قطعة. إن بقي بلا لعب فمرّر.';
+
+  @override
+  String get rulesDominoScore => 'في نهاية الجولة يسجّل كل لاعب مجموع قطعه. من فرغت يده يسجّل 0. حتى 101: من يبلغها هو التيس ويخسر.';
+
+  @override
+  String get rulesDominoFish => 'سمكة: الاحتياط فارغ ولا أحد يستطيع الوضع. أقل مجموع منفرد يسجّل 0 والباقون مجموعهم. إن تساوى الأدنى سجّل الجميع.';
+
+  @override
+  String get rulesDominoMatch => 'إن تجاوز عدة لاعبين 101 في جولة واحدة فالتيس هو الأعلى. الفائزون هم الأقل. إن تعادَل الجميع فهي تعادل.';
+
+  @override
+  String get rulesDominoOffline => 'دون اتصال: أنت والبوتات. البوت يعدّ الأرقام ولا ينظر إلى الأيدي المخفية.';
+
+  @override
+  String get dominoBoneyard => 'الاحتياط';
+
+  @override
+  String get dominoChooseEnd => 'اختر طرفًا';
+
+  @override
+  String get dominoFish => 'سمكة';
+
+  @override
+  String get dominoYouGoat => 'أنت التيس';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'التيس — $name';
+  }
+
+  @override
+  String get dominoLeft => 'يسار';
+
+  @override
+  String get dominoRight => 'يمين';
+
+  @override
   String get gamesChessModeClassic => 'كلاسيكي';
 
   @override
