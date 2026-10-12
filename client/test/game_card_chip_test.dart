@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 
@@ -84,6 +86,45 @@ void main() {
         gameCardChipHeight(compact: false, isDesktop: false),
       ),
     );
+  });
+
+  testWidgets('ставка той же высоты и в той же рамке, что переключатель',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Row(
+            children: [
+              GameCardChip(
+                label: '2',
+                icon: Icons.groups_rounded,
+                onTap: () {},
+              ),
+              GameCardStakeChip(stakeBronze: 2, onTap: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+    final plain = tester.getSize(find.byType(GameCardChip).at(0));
+    final stake = tester.getSize(find.byType(GameCardStakeChip));
+    expect(stake.height, plain.height);
+
+    final stakeBox = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(GameCardStakeChip),
+        matching: find.byType(Container),
+      ),
+    );
+    expect(
+      (stakeBox.decoration! as BoxDecoration).color,
+      AppColors.buttonFill,
+    );
+    expect(find.byType(CoinIcon), findsOneWidget);
+    expect(find.text('2'), findsNWidgets(2));
   });
 
   testWidgets('кнопки карточки заливаются цветом фона приложения',
