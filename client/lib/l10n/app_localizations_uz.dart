@@ -802,6 +802,103 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesChess => 'Shaxmat';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Kozel';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassika';
+
+  @override
+  String get gamesDominoModeSea => 'Dengiz';
+
+  @override
+  String get rulesDominoDeal => 'Har biriga 7 tosh. Ikki va uch kishida qolgani bozorda, to‘rt kishida bozor bo‘sh.';
+
+  @override
+  String get rulesDominoOpen => 'Birinchi konni 1-1 dan 6-6 gacha eng kichik dubl, so‘ng 0-0 boshlaydi. Dubl bo‘lmasa — eng katta tosh. Aynan shuni qo‘yish kerak.';
+
+  @override
+  String get rulesDominoPlay => 'Tosh ochiq uchdagi son bilan qo‘yiladi. Uchdagi dubl o‘sha sonni o‘zgartirmaydi.';
+
+  @override
+  String get rulesDominoDraw => 'Yura olmasangiz, mos tosh chiqquncha yoki bozor tugaguncha bittadan oling. Oxirgi toshni olish mumkin. Baribir yurish bo‘lmasa — pas.';
+
+  @override
+  String get rulesDominoScore => 'Kon oxirida har kim qo‘lidagi toshlar yig‘indisini yozadi. Chiqqan — 0. 101 gacha: kim yig‘sa, o‘sha kozel va yutqazadi.';
+
+  @override
+  String get rulesDominoFish => 'Baliq: bozor bo‘sh va hech kim qo‘ya olmaydi. Ochkoisi hammadan kam yagona o‘yinchi — 0, qolganlari o‘z yig‘indisini yozadi. Minimum hammada bir xil bo‘lsa, hammasi yozadi.';
+
+  @override
+  String get rulesDominoMatch => 'Bir konda bir necha kishi 101 dan o‘tsa, kozel — eng yuqori hisob. G‘oliblar — eng past hisob. Hammasi tenglashsa — durang.';
+
+  @override
+  String get rulesDominoOffline => 'Oflayn: siz va botlar. Bot mastlarni sanaydi va yashirin qo‘llarga qaramaydi.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Rejim: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Ikki va uch kishiga 7 tadan, to‘rttaga 5 tadan tosh beriladi. Qolgani bozorda.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Birinchi konni 6-6 dubl, so‘ng 0-0 va kichikroq dubllar boshlaydi. Dubl bo‘lmasa — eng katta tosh. Aynan shuni qo‘yish kerak.';
+
+  @override
+  String get rulesDominoClassicScore => 'Chiqqan o‘yinchi raqiblar toshlari yig‘indisini yozadi. 100 gacha: birinchi yig‘gan yutadi.';
+
+  @override
+  String get rulesDominoClassicFish => 'Baliq: ochkosi hammadan kam bo‘lgan har bir begona qo‘l bilan farqni yozadi. Minimum bir nechtada bo‘lsa, ochko yozilmaydi.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Bir xil eng yuqori hisob g‘alabani bo‘lishadi. Hamma hisob teng bo‘lsa — durang.';
+
+  @override
+  String get rulesDominoSeaSame => 'Tarqatish, birinchi yurish va olish — «Kozel» rejimidagidek. Zanjir ikki uchli.';
+
+  @override
+  String get rulesDominoSeaScore => 'Ochkoni kon oxirida qo‘lida eng ko‘pi bor odam yozadi. 25 dan kam yozilmaydi.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Ikki kishida birdaniga 25 va undan ko‘p bo‘lsa, bu kon hech kimga yozilmaydi.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Qo‘yilgan 0-0 konni darhol tugatadi: eng og‘ir qo‘lga 75 yoziladi. Ikkitasi bo‘lsa — hech kimga yozilmaydi.';
+
+  @override
+  String get rulesDominoSeaSix => 'Kon oxirgi 6-6 tosh bilan yopilsa, yutqazganga 100 yoziladi, yopganning partiya hisobi nolga tushadi.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Partiya 125 gacha. Yig‘gan yutqazadi.';
+
+  @override
+  String get dominoBoneyard => 'Bozor';
+
+  @override
+  String get dominoChooseEnd => 'Uchni tanlang';
+
+  @override
+  String get dominoFish => 'Baliq';
+
+  @override
+  String get dominoYouGoat => 'Siz kozelsiz';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Kozel — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Chap';
+
+  @override
+  String get dominoRight => 'O‘ng';
+
+  @override
   String get gamesChessModeClassic => 'Klassika';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'So‘nggi partiyalar';
+
+  @override
+  String get statsOutcomeWin => 'G‘alaba';
+
+  @override
+  String get statsOutcomeLoss => 'Mag‘lubiyat';
+
+  @override
+  String get statsOutcomeDraw => 'Durang';
+
+  @override
+  String get statsAllModes => 'Barcha rejimlar';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'O\'yin';
+
+  @override
+  String get statsSelectMode => 'Rejim';
+
+  @override
+  String get statsRecentEmpty => 'Hali partiyalar yo\'q';
 }

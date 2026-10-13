@@ -18,6 +18,7 @@ const (
 	GameTypeNardy      = "nardy"
 	GameTypeCheckers   = "checkers"
 	GameTypeChess      = "chess"
+	GameTypeDomino     = "domino"
 )
 
 // UserGameSettings — сохранённая конфигурация создания игры (на game_type).
@@ -93,6 +94,12 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		s.GameMode = "classic"
 		s.Variant = "classic"
 		s.GridSize = 8
+	}
+	if gameType == GameTypeDomino {
+		s.TurnTimeSec = 60
+		s.MaxPlayers = 2
+		s.GameMode = "kozel"
+		s.Variant = "kozel"
 	}
 	return s
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
 import 'package:multigames_client/ui/widgets/chess_game_icon.dart';
+import 'package:multigames_client/ui/widgets/domino_game_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
@@ -30,6 +31,8 @@ class GameTypeIcon extends StatelessWidget {
         return PokerGameIcon.iconData;
       case 'uno':
         return Icons.style_rounded;
+      case 'domino':
+        return Icons.grid_view_rounded;
       case 'nardy':
         return NardyGameIcon.iconData;
       case 'checkers':
@@ -52,6 +55,8 @@ class GameTypeIcon extends StatelessWidget {
         return PokerGameIcon(size: size, color: color);
       case 'uno':
         return UnoGameIcon(size: size);
+      case 'domino':
+        return DominoGameIcon(size: size);
       case 'nardy':
         return NardyGameIcon(size: size, color: color);
       case 'checkers':

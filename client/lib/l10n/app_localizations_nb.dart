@@ -802,6 +802,103 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesChess => 'Sjakk';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Geita';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassisk';
+
+  @override
+  String get gamesDominoModeSea => 'Sjø';
+
+  @override
+  String get rulesDominoDeal => 'Alle får 7 brikker. Med 2 eller 3 ligger resten i bunken; med 4 er bunken tom.';
+
+  @override
+  String get rulesDominoOpen => 'Første runde starter med laveste dobbel fra 1-1 til 6-6, deretter 0-0. Uten dobbel starter høyeste brikke, og den må legges.';
+
+  @override
+  String get rulesDominoPlay => 'Legg en brikke mot en åpen ende med samme tall. En dobbel i enden endrer ikke tallet.';
+
+  @override
+  String get rulesDominoDraw => 'Kan du ikke legge, trekk én og én til du kan eller bunken er tom. Siste brikke kan tas. Går det fortsatt ikke, pass.';
+
+  @override
+  String get rulesDominoScore => 'På slutten av runden skriver hver summen av brikkene som er igjen. Den som går ut skriver 0. Til 101: den som når dit er geita og taper.';
+
+  @override
+  String get rulesDominoFish => 'Fisk: bunken er tom og ingen kan legge. Den unikt laveste summen er 0, de andre skriver sin. Er minimum felles, skriver alle.';
+
+  @override
+  String get rulesDominoMatch => 'Krysser flere 101 i samme runde, er høyeste poeng geita. Vinnere har laveste poeng. Er alle like, er det uavgjort.';
+
+  @override
+  String get rulesDominoOffline => 'Frakoblet: du og boter. Boten teller tall og kikker ikke i skjulte hender.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modus: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'To eller tre spillere får 7 brikker, fire får 5. Resten er bunken.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Første runde åpnes med dobbel 6, så blank, så lavere dobler. Uten dobbel må høyeste brikke.';
+
+  @override
+  String get rulesDominoClassicScore => 'Den som går ut skriver motstandernes øyne. Først til 100 vinner.';
+
+  @override
+  String get rulesDominoClassicFish => 'Ved fisk skriver den unikt letteste hånden differansen mot hver annen. Delt minimum gir ingenting.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Delt høyeste poeng deler seieren. Er alle like, er det uavgjort.';
+
+  @override
+  String get rulesDominoSeaSame => 'Deling, åpning og trekk som i Geita. Kjeden har to ender.';
+
+  @override
+  String get rulesDominoSeaScore => 'Bare den tyngste hånden skriver poeng. Under 25 skrives ingenting.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Har to spillere 25 eller mer, skriver ingen den runden.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 avslutter runden med en gang: den unikt tyngste motstanderen får 75. Ved likt får ingen.';
+
+  @override
+  String get rulesDominoSeaSix => 'Å gå ut med 6-6 gir taperen 100 og nullstiller lukkerens kamppoeng.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Kampen går til 125. Den som når dit taper.';
+
+  @override
+  String get dominoBoneyard => 'Bunk';
+
+  @override
+  String get dominoChooseEnd => 'Velg en ende';
+
+  @override
+  String get dominoFish => 'Fisk';
+
+  @override
+  String get dominoYouGoat => 'Du er geita';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Geita — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Venstre';
+
+  @override
+  String get dominoRight => 'Høyre';
+
+  @override
   String get gamesChessModeClassic => 'Klassisk';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Siste partier';
+
+  @override
+  String get statsOutcomeWin => 'Seier';
+
+  @override
+  String get statsOutcomeLoss => 'Tap';
+
+  @override
+  String get statsOutcomeDraw => 'Uavgjort';
+
+  @override
+  String get statsAllModes => 'Alle moduser';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Spill';
+
+  @override
+  String get statsSelectMode => 'Modus';
+
+  @override
+  String get statsRecentEmpty => 'Ingen partier ennå';
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/locale_provider.dart';
@@ -586,12 +587,10 @@ class PeerCollectionsSection extends ConsumerWidget {
   }
 }
 
-/// Сетка картинок коллекций без карточек и подписей.
+/// Одна горизонтальная полоса картинок коллекций.
 ///
-/// На узкой карточке иконки чуть уменьшаются, чтобы крайняя не обрезалась
-/// рамкой. Если коллекций больше, чем влезает даже в компактный ряд, он
-/// переносится на следующую строку.
-class CollectionShowcaseGrid extends StatelessWidget {
+/// Профиль и карточка пользователя листают её вбок, если иконки не влезают.
+class CollectionShowcaseGrid extends StatefulWidget {
   const CollectionShowcaseGrid({
     super.key,
     required this.items,
@@ -603,91 +602,110 @@ class CollectionShowcaseGrid extends StatelessWidget {
   final String? emptyText;
   final bool titleOnlyOnTap;
 
-  static const _prefSlot = 56.0;
-  static const _prefGap = 10.0;
-  static const _minSlot = 44.0;
-  static const _minGap = 6.0;
-  static const _slotHeight = 64.0;
-  static const _emojiSize = 44.0;
+  static const slotWidth = 56.0;
+  static const slotHeight = 64.0;
+  static const emojiSize = 44.0;
+  static const gap = 10.0;
+
+  @override
+  State<CollectionShowcaseGrid> createState() => _CollectionShowcaseGridState();
+}
+
+class _CollectionShowcaseGridState extends State<CollectionShowcaseGrid> {
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || !_controller.hasClients) return;
+    final delta =
+        event.scrollDelta.dy != 0 ? event.scrollDelta.dy : event.scrollDelta.dx;
+    if (delta == 0) return;
+    final pos = _controller.position;
+    final next = (_controller.offset + delta).clamp(0.0, pos.maxScrollExtent);
+    if (next == _controller.offset) return;
+    _controller.jumpTo(next);
+    GestureBinding.instance.pointerSignalResolver.register(event, (_) {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    final items = widget.items;
     if (items.isEmpty) {
       return Text(
-        emptyText ?? context.l10n.shopEmpty,
+        widget.emptyText ?? context.l10n.shopEmpty,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
       );
     }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final layout = _layout(constraints.maxWidth, items.length);
-        return GamepadNavGroup(
-          name: 'collection-showcase',
-          child: Wrap(
-            spacing: layout.gap,
-            runSpacing: 4,
-            children: [
-              for (final it in items) _tile(context, it, slot: layout.slot),
-            ],
+    return SizedBox(
+      height: CollectionShowcaseGrid.slotHeight,
+      width: double.infinity,
+      child: Listener(
+        onPointerSignal: _onPointerSignal,
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            dragDevices: const {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+              PointerDeviceKind.stylus,
+              PointerDeviceKind.unknown,
+            },
           ),
-        );
-      },
-    );
-  }
-
-  /// Один ряд, если иконки влезают без обрезки. Иначе обычная сетка с переносом.
-  static ({double slot, double gap}) _layout(double maxWidth, int count) {
-    if (count <= 1 || !maxWidth.isFinite) {
-      return (slot: _prefSlot, gap: _prefGap);
-    }
-    final preferred = count * _prefSlot + (count - 1) * _prefGap;
-    if (preferred <= maxWidth + 0.5) {
-      return (slot: _prefSlot, gap: _prefGap);
-    }
-    final shrunk = (maxWidth - (count - 1) * _prefGap) / count;
-    if (shrunk >= _minSlot) {
-      return (slot: _floor2(shrunk), gap: _prefGap);
-    }
-    final packedGap = (maxWidth - count * _minSlot) / (count - 1);
-    if (packedGap >= _minGap) {
-      return (slot: _minSlot, gap: _floor2(packedGap));
-    }
-    return (slot: _prefSlot, gap: _prefGap);
-  }
-
-  static double _floor2(double value) => (value * 100).floorToDouble() / 100;
-
-  Widget _tile(BuildContext context, InventoryItem it, {required double slot}) {
-    void open() => showCollectionFullscreen(
-          context,
-          title: it.title,
-          animatedName: it.animatedName ?? 'sparkles',
-          fallback: it.emoji,
-          subtitle:
-              titleOnlyOnTap ? null : collectionItemSubtitle(it.dailyBronze),
-          acquiredAt: parseCollectionAcquiredAt(it.acquiredAt),
-          conditionShift: it.conditionShift,
-          vintageAt: parseCollectionAcquiredAt(it.vintageAt),
-        );
-    return GamepadFocusBlock(
-      radius: 14,
-      borderWidth: 2.4,
-      onActivate: open,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: open,
-        child: SizedBox(
-          width: slot,
-          height: _slotHeight,
-          child: Center(
-            child: ShopAnimatedEmoji(
-              animatedName: it.animatedName ?? 'sparkles',
-              size: _emojiSize * slot / _prefSlot,
-              fallback: it.emoji,
+          child: GamepadNavGroup(
+            name: 'collection-showcase',
+            child: ListView.separated(
+              controller: _controller,
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: CollectionShowcaseGrid.gap),
+              itemBuilder: (context, index) {
+                final it = items[index];
+                return GamepadFocusBlock(
+                  key: ValueKey(it.code),
+                  radius: 14,
+                  borderWidth: 2.4,
+                  onActivate: () => _openShowcaseItem(context, it),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _openShowcaseItem(context, it),
+                    child: SizedBox(
+                      width: CollectionShowcaseGrid.slotWidth,
+                      height: CollectionShowcaseGrid.slotHeight,
+                      child: Center(
+                        child: ShopAnimatedEmoji(
+                          animatedName: it.animatedName ?? 'sparkles',
+                          size: CollectionShowcaseGrid.emojiSize,
+                          fallback: it.emoji,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
       ),
+    );
+  }
+
+  void _openShowcaseItem(BuildContext context, InventoryItem it) {
+    showCollectionFullscreen(
+      context,
+      title: it.title,
+      animatedName: it.animatedName ?? 'sparkles',
+      fallback: it.emoji,
+      subtitle:
+          widget.titleOnlyOnTap ? null : collectionItemSubtitle(it.dailyBronze),
+      acquiredAt: parseCollectionAcquiredAt(it.acquiredAt),
+      conditionShift: it.conditionShift,
+      vintageAt: parseCollectionAcquiredAt(it.vintageAt),
     );
   }
 }

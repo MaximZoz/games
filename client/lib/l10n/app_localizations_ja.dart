@@ -802,6 +802,103 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesChess => 'チェス';
 
   @override
+  String get gamesDomino => 'ドミノ';
+
+  @override
+  String get gamesDominoModeKozel => 'ゴート';
+
+  @override
+  String get gamesDominoModeClassic => 'クラシック';
+
+  @override
+  String get gamesDominoModeSea => 'シー';
+
+  @override
+  String get rulesDominoDeal => '各自 7 枚。2・3 人は残りが山札、4 人は山札なし。';
+
+  @override
+  String get rulesDominoOpen => '最初のラウンドは 1-1 から 6-6 の小さいダブル、次に 0-0。ダブルがなければ最高の牌で始め、その牌を出します。';
+
+  @override
+  String get rulesDominoPlay => '開いている端と同じ数字につなぎます。端のダブルはその数字を変えません。';
+
+  @override
+  String get rulesDominoDraw => '出せなければ、出せるか山札が尽きるまで 1 枚ずつ引きます。最後の 1 枚も取れます。それでも出せなければパス。';
+
+  @override
+  String get rulesDominoScore => 'ラウンドの終わりに残りの目を記録します。上がりは 0。101 に達した人がゴートで負けです。';
+
+  @override
+  String get rulesDominoFish => 'フィッシュ: 山札が空で誰も出せないとき。唯一の最少だけ 0、ほかは自分の合計。最少が全員同じなら全員が記録します。';
+
+  @override
+  String get rulesDominoMatch => '同じラウンドで複数が 101 を超えたら、最高点がゴート。最低点が勝者。全員同点なら引き分け。';
+
+  @override
+  String get rulesDominoOffline => 'オフライン: あなたとボット。ボットは数字を数え、隠れた手牌は見ません。';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'モード: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => '2人と3人は7枚、4人は5枚。残りは山札。';
+
+  @override
+  String get rulesDominoClassicOpen => '最初の手は6-6、次に0-0、その後は小さいダブ。ダブがなければ一番大きい牌を出す。';
+
+  @override
+  String get rulesDominoClassicScore => '上がった人が相手の残り点を得る。先に100点で勝ち。';
+
+  @override
+  String get rulesDominoClassicFish => '詰みでは、ただ一人いちばん軽い手が相手との差を得る。同点なら得点なし。';
+
+  @override
+  String get rulesDominoClassicMatch => '最高点が同じ人は分け合う。全員同点なら引き分け。';
+
+  @override
+  String get rulesDominoSeaSame => '配り、最初の一手、山からの補充はゴートと同じ。列は両端だけ。';
+
+  @override
+  String get rulesDominoSeaScore => '点数を書くのは手札が一番重い人だけ。25未満は記録しない。';
+
+  @override
+  String get rulesDominoSeaWipe => '25以上が二人いるとその手は誰にも入らない。';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0を出すとその手は即終了。一番重い相手が一人なら75。同点なら誰も書かない。';
+
+  @override
+  String get rulesDominoSeaSix => '最後の牌が6-6なら敗者に100、閉じた人の対戦点は0に戻る。';
+
+  @override
+  String get rulesDominoSeaMatch => '対戦は125まで。到達した人が負け。';
+
+  @override
+  String get dominoBoneyard => '山札';
+
+  @override
+  String get dominoChooseEnd => '端を選ぶ';
+
+  @override
+  String get dominoFish => 'フィッシュ';
+
+  @override
+  String get dominoYouGoat => 'あなたがゴート';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'ゴート — $name';
+  }
+
+  @override
+  String get dominoLeft => '左';
+
+  @override
+  String get dominoRight => '右';
+
+  @override
   String get gamesChessModeClassic => 'クラシック';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => '最近の対局';
+
+  @override
+  String get statsOutcomeWin => '勝ち';
+
+  @override
+  String get statsOutcomeLoss => '負け';
+
+  @override
+  String get statsOutcomeDraw => '引き分け';
+
+  @override
+  String get statsAllModes => 'すべてのモード';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'ゲーム';
+
+  @override
+  String get statsSelectMode => 'モード';
+
+  @override
+  String get statsRecentEmpty => 'まだ対局がありません';
 }

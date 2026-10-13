@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -16,6 +17,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/lobby_guest.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -46,6 +48,7 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
   final Set<String> _inviting = {};
   final Set<String> _cancelling = {};
   bool _leaving = false;
+  bool _joining = false;
   bool _linkCopied = false;
   bool _startingSearch = false;
   Timer? _linkTimer;
@@ -168,6 +171,26 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
     }
   }
 
+  Future<void> _join() {
+    return runLobbyJoin(
+      context: context,
+      ref: ref,
+      lobbyId: widget.lobbyId,
+      gameType: 'checkers',
+      setJoining: (joining) {
+        if (mounted) setState(() => _joining = joining);
+      },
+      invalidateLobby: () =>
+          ref.invalidate(checkersLobbyProvider(widget.lobbyId)),
+      join: () async {
+        final result = await ref
+            .read(checkersRepositoryProvider)
+            .joinLobby(widget.lobbyId);
+        return LobbyJoinOutcome(joined: result.joined, gameId: result.gameId);
+      },
+    );
+  }
+
   Future<void> _copyLink(String lobbyId) async {
     final link = buildInviteLobbyShareUrl(
       lobbyId: lobbyId,
@@ -210,38 +233,54 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
     });
 
     final lobby = lobbyAsync.valueOrNull;
+    final guest = lobby != null &&
+        !lobbyUserIsMember(
+          userId: ref.watch(authStateProvider).valueOrNull?.id,
+          creatorId: lobby.creatorId,
+          playerIds: lobby.playerIds,
+          players: lobby.players,
+        );
     final isMatchmake = (lobby?.mode ?? widget.initialMode) == 'matchmake';
 
     return SwipeBackScope(
       enabled: !_leaving,
-      onBack: _confirmLeave,
+      onBack: guest ? () => exitLobbyGuest(context) : _confirmLeave,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: _leaving ? null : _confirmLeave,
+            onPressed: _leaving
+                ? null
+                : guest
+                    ? () => exitLobbyGuest(context)
+                    : _confirmLeave,
           ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CheckersGameIcon(
-                size: narrow ? 20 : 22,
-                color: AppColors.accentStart,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  context.l10n.gamesCheckers,
-                  overflow: TextOverflow.ellipsis,
+          title: guest
+              ? GameLobbyAppBarTitle(
+                  gameType: 'checkers',
+                  title: context.l10n.lobbyEnterGame,
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CheckersGameIcon(
+                      size: narrow ? 20 : 22,
+                      color: AppColors.accentStart,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        context.l10n.gamesCheckers,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
           centerTitle: false,
           actions: [
-            if (lobby != null)
+            if (lobby != null && !guest)
               LobbySearchAction(
                 searching: isMatchmake,
                 busy: _startingSearch,
@@ -304,6 +343,30 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
     AsyncValue<FriendsSnapshot> friendsAsync,
     bool isMatchmake,
   ) {
+    final guest = !lobbyUserIsMember(
+      userId: ref.watch(authStateProvider).valueOrNull?.id,
+      creatorId: lobby.creatorId,
+      playerIds: lobby.playerIds,
+      players: lobby.players,
+    );
+    if (guest) {
+      return LobbyInviteAcceptView(
+        creatorName: lobbyCreatorDisplayName(
+          creatorId: lobby.creatorId,
+          players: lobby.players,
+        ),
+        joining: _joining,
+        onJoin: () => unawaited(_join()),
+        stakeBronze: lobby.stakeBronze,
+        padding: EdgeInsets.all(isNarrow(context) ? 16 : 24),
+        rules: rulesTextLines(checkersRuleLines(
+          gameMode: lobby.gameMode,
+          turnTimeSec: lobby.turnTimeSec,
+          stakeBronze: lobby.stakeBronze,
+          l10n: context.l10n,
+        )),
+      );
+    }
     final memberIds = <String>{...lobby.playerIds, lobby.creatorId};
     final friendsCount = friendsAsync.valueOrNull?.friends
             .where((f) => !memberIds.contains(f.user.id))

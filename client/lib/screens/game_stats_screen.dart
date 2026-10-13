@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/stats_modes.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -110,7 +111,7 @@ class GameStatsBody extends ConsumerWidget {
           ),
         ),
       ),
-      data: (stats) => stats.isEmpty
+      data: (stats) => stats.isEmpty && stats.recent.isEmpty
           ? const _EmptyStats()
           : GamepadScope(
               onAction: (action) {
@@ -124,44 +125,11 @@ class GameStatsBody extends ConsumerWidget {
                 }
                 return false;
               },
-              child: ListView(
-              padding: contentPadding,
-              children: [
-                _GameStatsBlock(
-                  title: l10n.statsAllGames,
-                  icon: Icons.sports_esports_rounded,
-                  wins: stats.wins,
-                  draws: stats.draws,
-                  losses: stats.losses,
-                  winRate: stats.winRate,
-                  totalDurationSec: stats.totalDurationSec,
-                  topWon: stats.topWon,
-                  topDrawn: stats.topDrawn,
-                  topLost: stats.topLost,
-                  narrow: narrow,
-                ),
-                for (final g in stats.games) ...[
-                  const SizedBox(height: 12),
-                  _GameStatsBlock(
-                    title: localizedGameTypeName(g.gameType, l10n),
-                    icon: GameTypeIcon(
-                      gameType: g.gameType,
-                      size: 20,
-                      color: Colors.white,
-                    ),
-                    wins: g.won,
-                    draws: g.drawn,
-                    losses: g.lost,
-                    winRate: _winRate(g.won, g.drawn, g.lost),
-                    totalDurationSec: g.totalDurationSec,
-                    topWon: g.topWon,
-                    topDrawn: g.topDrawn,
-                    topLost: g.topLost,
-                    narrow: narrow,
-                  ),
-                ],
-              ],
-            ),
+              child: _StatsDeck(
+                stats: stats,
+                narrow: narrow,
+                padding: contentPadding,
+              ),
             ),
     );
   }
@@ -171,6 +139,467 @@ double _winRate(int wins, int draws, int losses) {
   final total = wins + draws + losses;
   if (total <= 0) return 0;
   return wins / total;
+}
+
+class _Slice {
+  const _Slice({
+    required this.title,
+    required this.icon,
+    required this.wins,
+    required this.draws,
+    required this.losses,
+    required this.duration,
+    required this.topWon,
+    required this.topDrawn,
+    required this.topLost,
+  });
+
+  final String title;
+  final Object icon;
+  final int wins;
+  final int draws;
+  final int losses;
+  final int duration;
+  final List<OpponentStat> topWon;
+  final List<OpponentStat> topDrawn;
+  final List<OpponentStat> topLost;
+}
+
+/// Два переключателя — игра и режим — и одна карточка счёта.
+class _StatsDeck extends StatefulWidget {
+  const _StatsDeck({
+    required this.stats,
+    required this.narrow,
+    required this.padding,
+  });
+
+  final GameStats stats;
+  final bool narrow;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  State<_StatsDeck> createState() => _StatsDeckState();
+}
+
+class _StatsDeckState extends State<_StatsDeck> {
+  String _game = '';
+  String _mode = '';
+
+  _Slice _slice(AppLocalizations l10n) {
+    if (_game.isEmpty) {
+      return _Slice(
+        title: l10n.statsAllGames,
+        icon: Icons.sports_esports_rounded,
+        wins: widget.stats.wins,
+        draws: widget.stats.draws,
+        losses: widget.stats.losses,
+        duration: widget.stats.totalDurationSec,
+        topWon: widget.stats.topWon,
+        topDrawn: widget.stats.topDrawn,
+        topLost: widget.stats.topLost,
+      );
+    }
+    GameTypeScore? game;
+    for (final item in widget.stats.games) {
+      if (item.gameType == _game) {
+        game = item;
+        break;
+      }
+    }
+    if (_mode.isEmpty) {
+      return _Slice(
+        title: localizedGameTypeName(_game, l10n),
+        icon: GameTypeIcon(gameType: _game, size: 20, color: Colors.white),
+        wins: game?.won ?? 0,
+        draws: game?.drawn ?? 0,
+        losses: game?.lost ?? 0,
+        duration: game?.totalDurationSec ?? 0,
+        topWon: game?.topWon ?? const [],
+        topDrawn: game?.topDrawn ?? const [],
+        topLost: game?.topLost ?? const [],
+      );
+    }
+    GameModeScore? mode;
+    for (final item in widget.stats.modes) {
+      if (item.gameType == _game && item.mode == _mode) {
+        mode = item;
+        break;
+      }
+    }
+    return _Slice(
+      title: localizedGameTypeName(_game, l10n),
+      icon: GameTypeIcon(gameType: _game, size: 20, color: Colors.white),
+      wins: mode?.won ?? 0,
+      draws: mode?.drawn ?? 0,
+      losses: mode?.lost ?? 0,
+      duration: mode?.totalDurationSec ?? 0,
+      topWon: mode?.topWon ?? const [],
+      topDrawn: mode?.topDrawn ?? const [],
+      topLost: mode?.topLost ?? const [],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final types = statsGameTypes([
+      for (final g in widget.stats.games) g.gameType,
+      for (final r in widget.stats.recent) r.gameType,
+    ]);
+    final modes = _game.isEmpty
+        ? const <String>[]
+        : statsModeOptions(
+            _game,
+            widget.stats.modes
+                .where((m) => m.gameType == _game)
+                .map((m) => m.mode),
+          );
+    final mode = modes.contains(_mode) ? _mode : '';
+    final slice = _slice(l10n);
+    final recent = statsRecentSlice(
+      widget.stats.recent,
+      game: _game,
+      mode: mode,
+    );
+    final gameValue = _game.isEmpty
+        ? l10n.statsAllGames
+        : localizedGameTypeName(_game, l10n);
+    final modeValue =
+        mode.isEmpty ? l10n.statsAllModes : statsModeLabel(_game, mode, l10n);
+    return ListView(
+      padding: widget.padding,
+      children: [
+        _StatsSelect(
+          selectKey: const Key('stats-game-select'),
+          caption: l10n.statsSelectGame,
+          value: gameValue,
+          icon: _game.isEmpty
+              ? const Icon(
+                  Icons.sports_esports_rounded,
+                  size: 20,
+                  color: AppColors.accentStart,
+                )
+              : GameTypeIcon(
+                  gameType: _game,
+                  size: 20,
+                  color: AppColors.accentStart,
+                ),
+          options: [
+            _StatsOption(
+              id: '',
+              label: l10n.statsAllGames,
+              icon: const Icon(
+                Icons.sports_esports_rounded,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            for (final id in types)
+              _StatsOption(
+                id: id,
+                label: localizedGameTypeName(id, l10n),
+                icon: GameTypeIcon(
+                  gameType: id,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+          ],
+          selectedId: _game,
+          onSelected: (id) => setState(() {
+            _game = id;
+            _mode = '';
+          }),
+        ),
+        const SizedBox(height: 8),
+        _StatsSelect(
+          selectKey: const Key('stats-mode-select'),
+          caption: l10n.statsSelectMode,
+          value: modeValue,
+          enabled: modes.isNotEmpty,
+          icon: const Icon(
+            Icons.tune_rounded,
+            size: 20,
+            color: AppColors.accentStart,
+          ),
+          options: [
+            _StatsOption(id: '', label: l10n.statsAllModes),
+            for (final item in modes)
+              _StatsOption(
+                id: item,
+                label: statsModeLabel(_game, item, l10n),
+              ),
+          ],
+          selectedId: mode,
+          onSelected: (id) => setState(() => _mode = id),
+        ),
+        const SizedBox(height: 12),
+        _GameStatsBlock(
+          title: slice.title,
+          icon: slice.icon,
+          wins: slice.wins,
+          draws: slice.draws,
+          losses: slice.losses,
+          winRate: _winRate(slice.wins, slice.draws, slice.losses),
+          totalDurationSec: slice.duration,
+          topWon: slice.topWon,
+          topDrawn: slice.topDrawn,
+          topLost: slice.topLost,
+          recent: recent,
+          narrow: widget.narrow,
+        ),
+      ],
+    );
+  }
+}
+
+class _StatsOption {
+  const _StatsOption({required this.id, required this.label, this.icon});
+
+  final String id;
+  final String label;
+  final Widget? icon;
+}
+
+/// Белая полоска-переключатель: подпись и текущее значение, по нажатию список.
+class _StatsSelect extends StatelessWidget {
+  const _StatsSelect({
+    required this.selectKey,
+    required this.caption,
+    required this.value,
+    required this.options,
+    required this.selectedId,
+    required this.onSelected,
+    this.icon,
+    this.enabled = true,
+  });
+
+  final Key selectKey;
+  final String caption;
+  final String value;
+  final Widget? icon;
+  final bool enabled;
+  final List<_StatsOption> options;
+  final String selectedId;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) {
+      return _StatsSelectBar(
+        barKey: selectKey,
+        caption: caption,
+        value: value,
+        icon: icon,
+        enabled: false,
+        onTap: null,
+      );
+    }
+    return MenuAnchor(
+      style: const MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(Colors.white),
+        surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+        elevation: WidgetStatePropertyAll(8),
+        maximumSize: WidgetStatePropertyAll(Size(360, 320)),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+        ),
+      ),
+      alignmentOffset: const Offset(0, 6),
+      menuChildren: [
+        for (final option in options)
+          MenuItemButton(
+            onPressed: () => onSelected(option.id),
+            style: ButtonStyle(
+              backgroundColor: WidgetStatePropertyAll(
+                option.id == selectedId
+                    ? AppColors.accentSoft
+                    : Colors.transparent,
+              ),
+            ),
+            leadingIcon: option.icon,
+            child: Text(
+              option.label,
+              style: TextStyle(
+                fontWeight: option.id == selectedId
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: option.id == selectedId
+                    ? AppColors.accentStart
+                    : AppColors.textPrimary,
+              ),
+            ),
+          ),
+      ],
+      builder: (context, controller, _) {
+        return _StatsSelectBar(
+          barKey: selectKey,
+          caption: caption,
+          value: value,
+          icon: icon,
+          enabled: true,
+          onTap: () {
+            if (controller.isOpen) {
+              controller.close();
+            } else {
+              controller.open();
+            }
+          },
+        );
+      },
+    );
+  }
+}
+
+class _StatsSelectBar extends StatelessWidget {
+  const _StatsSelectBar({
+    required this.barKey,
+    required this.caption,
+    required this.value,
+    required this.enabled,
+    required this.onTap,
+    this.icon,
+  });
+
+  final Key barKey;
+  final String caption;
+  final String value;
+  final Widget? icon;
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      key: barKey,
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: 56,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                if (icon != null) ...[
+                  icon!,
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        caption,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: enabled
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (enabled)
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    color: AppColors.textSecondary,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecentRow extends StatelessWidget {
+  const _RecentRow({required this.game});
+
+  final RecentGame game;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tone = _outcomeTone(game.outcome);
+    final label = switch (game.outcome) {
+      'win' => l10n.statsOutcomeWin,
+      'loss' => l10n.statsOutcomeLoss,
+      _ => l10n.statsOutcomeDraw,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: tone.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          GameTypeIcon(gameType: game.gameType, size: 18, color: tone.foreground),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _recentNames(game, l10n),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: tone.foreground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+_StatColor _outcomeTone(String outcome) {
+  switch (outcome) {
+    case 'win':
+      return const _StatColor._(Color(0xFF2E7D32), Color(0xFFE8F5E9));
+    case 'loss':
+      return const _StatColor._(Color(0xFFC62828), Color(0xFFFFEBEE));
+    default:
+      return const _StatColor._(Color(0xFFF9A825), Color(0xFFFFF8E1));
+  }
+}
+
+String _recentNames(RecentGame game, AppLocalizations l10n) {
+  if (game.opponents.isEmpty) return l10n.gameBot;
+  return game.opponents.map((o) {
+    if (o.bot) return l10n.gameBot;
+    final name = o.displayName.trim();
+    return name.isEmpty ? l10n.commonPlayer : name;
+  }).join(', ');
 }
 
 class _EmptyStats extends StatelessWidget {
@@ -234,6 +663,7 @@ class _GameStatsBlock extends StatelessWidget {
     required this.topWon,
     required this.topDrawn,
     required this.topLost,
+    required this.recent,
     required this.narrow,
   });
 
@@ -247,6 +677,7 @@ class _GameStatsBlock extends StatelessWidget {
   final List<OpponentStat> topWon;
   final List<OpponentStat> topDrawn;
   final List<OpponentStat> topLost;
+  final List<RecentGame> recent;
   final bool narrow;
 
   @override
@@ -385,6 +816,29 @@ class _GameStatsBlock extends StatelessWidget {
               nested: true,
             ),
           ],
+          const SizedBox(height: 14),
+          Text(
+            l10n.statsRecentTitle,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (recent.isEmpty)
+            Text(
+              l10n.statsRecentEmpty,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else
+            for (var i = 0; i < recent.length; i++) ...[
+              if (i > 0) const SizedBox(height: 6),
+              _RecentRow(game: recent[i]),
+            ],
         ],
       ),
     );
@@ -675,16 +1129,19 @@ class _StatsSkeleton extends StatelessWidget {
     return ShimmerAnimationScope(
       child: Column(
         children: [
-          Container(
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.card),
+          for (var i = 0; i < 2; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+          ],
+          const SizedBox(height: 12),
           Container(
-            height: 72,
+            height: 180,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(AppRadius.card),

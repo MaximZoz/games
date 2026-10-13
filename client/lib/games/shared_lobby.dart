@@ -47,8 +47,8 @@ String normalizeLobbyMode(String? mode) {
 ///
 /// Пока деталь не загружена, опираемся на [initialMode] из query
 /// (`?mode=invite|matchmake`). Открытый поиск: mode=matchmake → «Лобби».
-/// Своя игра: mode=invite → «Своя игра». Ссылки из чата ([fromInviteLink])
-/// для гостя — «Войти в игру».
+/// Своя игра: mode=invite → «Своя игра». Гость по ссылке ([fromInviteLink],
+/// ещё не в составе) видит «Войти в игру», а не стол хозяина.
 String lobbyAppBarTitle({
   String? status,
   String? initialMode,

@@ -1407,39 +1407,39 @@ class _GamesTabSwitcher extends StatelessWidget {
       descendantsAreFocusable: false,
       descendantsAreTraversable: false,
       child: GamepadTabSticks(
-      child: Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(AppRadius.button + 4),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.button + 2),
-        ),
-        child: Row(
-          children: [
-            _TabSegment(
-              label: context.l10n.gamesTitle,
-              icon: Icons.sports_esports_rounded,
-              isSelected: selectedTab == _GamesTab.games,
-              onTap: () => onTabChanged(_GamesTab.games),
-              isDesktop: isDesktop,
+        child: Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(AppRadius.button + 4),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.button + 2),
             ),
-            _TabSegment(
-              label: context.l10n.gamesLobbyTab,
-              icon: Icons.group_rounded,
-              isSelected: selectedTab == _GamesTab.lobbies,
-              onTap: () => onTabChanged(_GamesTab.lobbies),
-              isDesktop: isDesktop,
-              badgeCount: lobbyBadgeCount,
+            child: Row(
+              children: [
+                _TabSegment(
+                  label: context.l10n.gamesTitle,
+                  icon: Icons.sports_esports_rounded,
+                  isSelected: selectedTab == _GamesTab.games,
+                  onTap: () => onTabChanged(_GamesTab.games),
+                  isDesktop: isDesktop,
+                ),
+                _TabSegment(
+                  label: context.l10n.gamesLobbyTab,
+                  icon: Icons.group_rounded,
+                  isSelected: selectedTab == _GamesTab.lobbies,
+                  onTap: () => onTabChanged(_GamesTab.lobbies),
+                  isDesktop: isDesktop,
+                  badgeCount: lobbyBadgeCount,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    ),
-    ),
     );
   }
 }
@@ -1847,8 +1847,7 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
 
   void _cycleGameMode() {
     setState(() {
-      _gameMode =
-          _gameMode == nardyModeShort ? nardyModeLong : nardyModeShort;
+      _gameMode = _gameMode == nardyModeShort ? nardyModeLong : nardyModeShort;
     });
     _persistSettings();
   }
@@ -1924,8 +1923,8 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<UserGameSettings>>(
-        userGameSettingsProvider('nardy'), (prev, next) {
+    ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider('nardy'),
+        (prev, next) {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
@@ -2431,8 +2430,8 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<UserGameSettings>>(
-        userGameSettingsProvider('chess'), (prev, next) {
+    ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider('chess'),
+        (prev, next) {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
@@ -2534,6 +2533,295 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,
+    );
+  }
+}
+
+/// Карточка «Домино»: режим, 2–4 игрока, время хода, ставка и локальные боты.
+class _DominoGameCard extends ConsumerStatefulWidget {
+  const _DominoGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  ConsumerState<_DominoGameCard> createState() => _DominoGameCardState();
+}
+
+class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
+  int _players = 2;
+  String _gameMode = dominoModeKozel;
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('domino')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _players = saved.maxPlayers.clamp(2, 4);
+      _gameMode = dominoNormalizeMode(saved.gameMode);
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('domino').notifier).updateLocal(
+          gameCardSettings(
+            gameType: 'domino',
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+            maxPlayers: _players,
+            variant: _gameMode,
+            gameMode: _gameMode,
+          ),
+        );
+  }
+
+  void _cycleGameMode() {
+    setState(() => _gameMode = dominoNextMode(_gameMode));
+    _persistSettings();
+  }
+
+  void _cyclePlayers() {
+    setState(() => _players = _players == 4 ? 2 : _players + 1);
+    _persistSettings();
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
+    });
+    _persistSettings();
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final index = options.indexOf(_stakeBronze);
+    setState(() {
+      _stakeBronze = options[(index < 0 ? 0 : index + 1) % options.length];
+    });
+    _persistSettings();
+  }
+
+  Future<bool> _ensureStakeAffordable() async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance = ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    return false;
+  }
+
+  Future<void> _create(String mode) async {
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
+    if (!mounted || !await _ensureStakeAffordable() || !mounted) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final result = await ref.read(dominoRepositoryProvider).createLobby(
+            mode: mode,
+            maxPlayers: _players,
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+            gameMode: _gameMode,
+          );
+      if (!mounted) return;
+      final gameId = result.gameId?.trim() ?? '';
+      final lobbyId = result.lobbyId.trim();
+      if (gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'domino',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'domino');
+        context.push('/games/domino/game/$gameId');
+      } else if (lobbyId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'domino',
+                mode: mode,
+              ),
+            );
+        context.push(lobbyScreenPath(lobbyId, gameType: 'domino', mode: mode));
+      } else {
+        throw GamesException(503, context.l10n.commonTryLater);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(error)
+            ? finishCurrentGameMessage
+            : formatUserError(error),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
+
+  void _showRules(BuildContext context) {
+    showGameRulesDialog(
+      context: context,
+      content: rulesTextLines(dominoRuleLines(
+        players: _players,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: widget.isOffline ? 0 : _stakeBronze,
+        offlineBot: widget.isOffline,
+        mode: _gameMode,
+        l10n: context.l10n,
+      )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserGameSettings>>(
+      userGameSettingsProvider('domino'),
+      (_, next) {
+        final saved = next.valueOrNull;
+        if (saved == null || _settingsHydrated) return;
+        _settingsHydrated = true;
+        setState(() {
+          _players = saved.maxPlayers.clamp(2, 4);
+          _gameMode = dominoNormalizeMode(saved.gameMode);
+          _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+              ? saved.turnTimeSec
+              : 60;
+          _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+        });
+      },
+    );
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final busy = _creating || _finding;
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (available.isNotEmpty && !available.contains(_stakeBronze)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
+    final chips = <Widget>[
+      GameCardChip(
+        selected: true,
+        icon: Icons.groups_rounded,
+        label: '$_players',
+        onTap: busy ? null : _cyclePlayers,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      GameCardChip(
+        selected: true,
+        icon: Icons.style_rounded,
+        label: dominoModeLabel(_gameMode, context.l10n),
+        onTap: busy ? null : _cycleGameMode,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: busy ? null : _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+    ];
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      stakeChip: widget.isOffline
+          ? null
+          : GameCardStakeChip(
+              stakeBronze: _stakeBronze,
+              onTap: busy ? null : _cycleStake,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
+      header: GameCardHeader(
+        title: context.l10n.gamesDomino,
+        icon: Icons.grid_view_rounded,
+        iconChild: const DominoGameIcon(size: 26),
+        onInfoTap: busy ? null : () => _showRules(context),
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: () => _create('invite'),
+        findLabel: context.l10n.lobbySearchPlayers,
+        findingLabel: context.l10n.commonSearching,
+        onFind: () => _create('matchmake'),
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: () {
+          disposeAllOfflineGameSessions();
+          context.push(Uri(
+            path: '/games/domino/offline',
+            queryParameters: {
+              'players': '$_players',
+              'mode': _gameMode,
+            },
+          ).toString());
+        },
+        isCreating: _creating,
+        isFinding: _finding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
     );
   }
 }

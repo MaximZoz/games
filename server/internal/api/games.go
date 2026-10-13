@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"multigames/server/internal/chess"
+	"multigames/server/internal/domino"
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/gameregistry"
@@ -345,6 +346,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/chess/") {
 		h.serveChess(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/domino/") {
+		h.serveDomino(w, r)
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
@@ -2315,6 +2320,10 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	} else if gameType == unoGameType {
 		inviteData["variant"] = "classic"
 		inviteData["game_mode"] = "classic"
+	} else if gameType == dominoGameType {
+		mode := domino.NormalizeMode(m["game_mode"])
+		inviteData["variant"] = mode
+		inviteData["game_mode"] = mode
 	} else if gameType == pokerGameType {
 		inviteData["game_mode"] = "holdem"
 	} else if gameType == nardyGameType {
@@ -3170,6 +3179,10 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 		} else if gt == unoGameType {
 			item["variant"] = "classic"
 			item["game_mode"] = "classic"
+		} else if gt == dominoGameType {
+			mode := domino.NormalizeMode(m["game_mode"])
+			item["variant"] = mode
+			item["game_mode"] = mode
 		} else if gt == pokerGameType {
 			item["game_mode"] = "holdem"
 		} else if gt == nardyGameType {
@@ -3278,7 +3291,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	}
 	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType ||
 		m["game_type"] == pokerGameType || m["game_type"] == unoGameType ||
-		m["game_type"] == nardyGameType {
+		m["game_type"] == nardyGameType || m["game_type"] == dominoGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -4109,7 +4122,8 @@ func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID
 		return
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.onGameFinished(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, gameStatusDraw, "draw_agreement", m["started_at"])
+	m["status"] = gameStatusDraw
+	h.onGameFinishedWithMap(ctx, gameID, m, gridSize, stakeBronze, gameStatusDraw, "draw_agreement", m["started_at"])
 	drawHumans := humanUserIDs(xUserID, oUserID)
 	clearUsersFinishedGame(ctx, h.Rdb, drawHumans, gameID)
 	h.broadcast(drawHumans, map[string]any{
@@ -4355,6 +4369,21 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		}
 		return gid
 	}
+	if gm["game_type"] == dominoGameType {
+		players := parsePlayerIDsCSV(gm["player_ids"])
+		if !stringSliceContains(players, userID.String()) {
+			clearUserActiveGame(ctx, h.Rdb, userID)
+			return ""
+		}
+		if state, err := domino.Decode(gm["state"]); err == nil {
+			index := state.PlayerIndex(userID.String())
+			if index >= 0 && state.Players[index].Forfeited && !state.IsOver() {
+				moveActiveToObserving(ctx, h.Rdb, userID, gid)
+				return ""
+			}
+		}
+		return gid
+	}
 	// Durak / Poker / Nardy: участие определяется по player_ids CSV.
 	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType ||
 		gm["game_type"] == nardyGameType {
@@ -4412,8 +4441,6 @@ func (h *GamesHandler) onGameFinishedWithMap(
 	status, finishReason string,
 	startedAtRaw string,
 ) {
-	xUserID := m["x_user_id"]
-	oUserID := m["o_user_id"]
 	h.settleGameCoinsMulti(ctx, m, stakeBronze, status)
 	for _, uid := range gamePlayerUserIDs(m) {
 		if uid == "" || isBot(uid) {
@@ -4467,7 +4494,7 @@ func (h *GamesHandler) onGameFinishedWithMap(
 			}
 		}
 	}
-	h.recordGameResult(ctx, gameID, xUserID, oUserID, gridSize, stakeBronze, status, finishReason, startedAtRaw)
+	h.recordGameResult(ctx, gameID, m, gridSize, stakeBronze, status, finishReason, startedAtRaw)
 }
 
 func (h *GamesHandler) settleGameCoinsMulti(ctx context.Context, m map[string]string, stakeBronze int, status string) {
@@ -4508,50 +4535,84 @@ func (h *GamesHandler) settleGameCoinsMulti(ctx context.Context, m map[string]st
 // recordGameResult сохраняет результат партии в game_results (для статистики).
 func (h *GamesHandler) recordGameResult(
 	ctx context.Context,
-	gameID, xUserID, oUserID string,
+	gameID string,
+	m map[string]string,
 	gridSize, stakeBronze int,
 	status, finishReason, startedAtRaw string,
 ) {
-	if gameID == "" || (xUserID == "" && oUserID == "") {
+	if m == nil {
+		m = map[string]string{}
+	}
+	players := gamePlayerUserIDs(m)
+	if len(players) < 2 {
 		return
 	}
-	// Определяем победителя по статусу.
+	mode := statsGameMode("tictactoe", m)
 	var winnerID string
 	switch status {
 	case gameStatusXWon:
-		winnerID = xUserID
+		winnerID = m["x_user_id"]
 	case gameStatusOWon:
-		winnerID = oUserID
-	case gameStatusTWon, gameStatusSWon:
-		// Для multi победитель уже в Redis; здесь x/o-only запись — winner пустой.
-		winnerID = ""
+		winnerID = m["o_user_id"]
+	case gameStatusTWon:
+		winnerID = m["t_user_id"]
+	case gameStatusSWon:
+		winnerID = m["s_user_id"]
 	}
-	againstBot := isBot(xUserID) || isBot(oUserID)
-
-	gr := store.GameResult{
-		GameID:       gameID,
-		GameType:     "tictactoe",
-		Result:       status,
-		FinishReason: finishReason,
-		GridSize:     gridSize,
-		StakeBronze:  stakeBronze,
-		AgainstBot:   againstBot,
+	duration := 0
+	if t, ok := parseGameStartedAt(startedAtRaw); ok {
+		duration = clampNonNegative(int(time.Since(t).Seconds()))
 	}
-	if xID, err := uuid.Parse(xUserID); err == nil {
-		gr.XUserID = xID
+	write := func(rowID, xID, oID, winID string) {
+		if rowID == "" || (xID == "" && oID == "") {
+			return
+		}
+		result := "draw"
+		switch {
+		case winID != "" && winID == xID:
+			result = "x_won"
+		case winID != "" && winID == oID:
+			result = "o_won"
+		}
+		gr := store.GameResult{
+			GameID:       rowID,
+			GameType:     "tictactoe",
+			Result:       result,
+			FinishReason: finishReason,
+			GridSize:     gridSize,
+			StakeBronze:  stakeBronze,
+			DurationSec:  duration,
+			AgainstBot:   isBot(xID) || isBot(oID),
+			GameMode:     mode,
+		}
+		if id, err := uuid.Parse(xID); err == nil {
+			gr.XUserID = id
+		}
+		if id, err := uuid.Parse(oID); err == nil {
+			gr.OUserID = id
+		}
+		if winID != "" && !isBot(winID) {
+			if id, err := uuid.Parse(winID); err == nil {
+				gr.WinnerUserID = &id
+			}
+		}
+		_ = store.RecordGameResult(ctx, h.Pool, gr)
 	}
-	if oID, err := uuid.Parse(oUserID); err == nil {
-		gr.OUserID = oID
+	if len(players) == 2 {
+		write(gameID, players[0], players[1], winnerID)
+		return
 	}
-	if winnerID != "" && !isBot(winnerID) {
-		if wID, err := uuid.Parse(winnerID); err == nil {
-			gr.WinnerUserID = &wID
+	if winnerID == "" {
+		for i := 1; i < len(players); i++ {
+			write(gameID+":"+players[i], players[0], players[i], "")
+		}
+		return
+	}
+	for _, id := range players {
+		if id != winnerID {
+			write(gameID+":"+id, winnerID, id, winnerID)
 		}
 	}
-	if t, ok := parseGameStartedAt(startedAtRaw); ok {
-		gr.DurationSec = clampNonNegative(int(time.Since(t).Seconds()))
-	}
-	_ = store.RecordGameResult(ctx, h.Pool, gr)
 }
 
 // parseGameStartedAt разбирает RFC3339Nano-время старта партии из Redis.
@@ -4759,7 +4820,7 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 	}
 	inGame := false
 	if gt == durakGameType || gt == pokerGameType || gt == unoGameType ||
-		gt == nardyGameType {
+		gt == nardyGameType || gt == dominoGameType {
 		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
 			if p == userID.String() {
 				inGame = true
@@ -4829,6 +4890,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyPokerTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == unoGameType {
 				h.applyUnoTurnTimeout(ctx, gameID, m)
+			} else if m["game_type"] == dominoGameType {
+				h.applyDominoTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == nardyGameType {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == store.GameTypeChess {
@@ -4954,6 +5017,35 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":   gameID,
 						"lobby_id":  m["lobby_id"],
 						"game_type": unoGameType,
+					}
+				}
+			} else if m["game_type"] == dominoGameType {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				if !stringSliceContains(players, userID.String()) {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if state, decodeErr := domino.Decode(m["state"]); decodeErr == nil {
+					index := state.PlayerIndex(userID.String())
+					if index >= 0 && state.Players[index].Forfeited && !state.IsOver() {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+					} else {
+						active = map[string]any{
+							"type":      "game",
+							"game_id":   gameID,
+							"lobby_id":  m["lobby_id"],
+							"game_type": dominoGameType,
+							"is_my_turn": index >= 0 &&
+								index == state.Turn &&
+								state.Status == domino.StatusPlaying &&
+								!state.Players[index].Forfeited &&
+								!state.IsOver(),
+						}
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": dominoGameType,
 					}
 				}
 			} else if m["game_type"] == nardyGameType {
@@ -5284,17 +5376,17 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, "")
+	topWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, "", "")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, "")
+	topDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, "", "")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, "")
+	topLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, "", "")
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -5303,17 +5395,17 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		byGame = []store.GameTypeStats{}
 	}
 	for i := range byGame {
-		gWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, byGame[i].GameType)
+		gWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, byGame[i].GameType, "")
 		if err != nil {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
-		gDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, byGame[i].GameType)
+		gDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, byGame[i].GameType, "")
 		if err != nil {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
 		}
-		gLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, byGame[i].GameType)
+		gLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, byGame[i].GameType, "")
 		if err != nil {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return
@@ -5331,6 +5423,51 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		byGame[i].TopDrawn = gDrawn
 		byGame[i].TopLost = gLost
 	}
+	byMode, err := store.GetGameModeStats(ctx, h.Pool, targetID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	if byMode == nil {
+		byMode = []store.GameModeStats{}
+	}
+	for i := range byMode {
+		mWon, err := store.GetTopOpponents(ctx, h.Pool, targetID, "won", 3, byMode[i].GameType, byMode[i].Mode)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		mDrawn, err := store.GetTopOpponents(ctx, h.Pool, targetID, "drawn", 3, byMode[i].GameType, byMode[i].Mode)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		mLost, err := store.GetTopOpponents(ctx, h.Pool, targetID, "lost", 3, byMode[i].GameType, byMode[i].Mode)
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if mWon == nil {
+			mWon = []store.OpponentStat{}
+		}
+		if mDrawn == nil {
+			mDrawn = []store.OpponentStat{}
+		}
+		if mLost == nil {
+			mLost = []store.OpponentStat{}
+		}
+		byMode[i].TopWon = mWon
+		byMode[i].TopDrawn = mDrawn
+		byMode[i].TopLost = mLost
+	}
+	recent, err := store.ListRecentGames(ctx, h.Pool, targetID, 10)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	if recent == nil {
+		recent = []store.RecentGame{}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"wins":               stats.Wins,
 		"draws":              stats.Draws,
@@ -5342,6 +5479,8 @@ func (h *GamesHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		"top_won":            topWon,
 		"top_drawn":          topDrawn,
 		"top_lost":           topLost,
+		"modes":              byMode,
+		"recent":             recent,
 	})
 }
 

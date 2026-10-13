@@ -35,6 +35,7 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
+import 'package:multigames_client/games/domino/domino_provider.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -4495,6 +4496,10 @@ Future<bool> _isLobbyInviteExpired(WidgetRef ref, InviteLobbyLink link) async {
       final lobby = await ref.read(unoRepositoryProvider).getLobby(lobbyId);
       return lobby.status == 'in_game';
     }
+    if (gt == 'domino') {
+      final lobby = await ref.read(dominoRepositoryProvider).getLobby(lobbyId);
+      return lobby.status == 'in_game';
+    }
     final lobby = await ref.read(gamesRepositoryProvider).getLobby(lobbyId);
     return lobby.status == 'in_game';
   } on GamesException catch (e) {
@@ -4639,6 +4644,40 @@ class _ChatInviteCard extends ConsumerWidget {
               );
           unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
           context.go('/games/uno/lobby/$lobbyId?mode=invite');
+          return;
+        }
+        context.go(link.appPathFromMessage(messageId));
+        return;
+      }
+      if (gameType == 'domino') {
+        final result =
+            await ref.read(dominoRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (result.joined &&
+            result.gameId != null &&
+            result.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: result.gameId,
+                  gameType: 'domino',
+                ),
+              );
+          pinBlockingGame(ref, result.gameId!, gameType: 'domino');
+          context.go('/games/domino/game/${result.gameId}');
+          return;
+        }
+        if (result.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'domino',
+                ),
+              );
+          unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+          context.go('/games/domino/lobby/$lobbyId?mode=invite');
           return;
         }
         context.go(link.appPathFromMessage(messageId));

@@ -802,6 +802,103 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesChess => 'Schach';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Ziegenbock';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassisch';
+
+  @override
+  String get gamesDominoModeSea => 'See';
+
+  @override
+  String get rulesDominoDeal => 'Jeder erhält 7 Steine. Bei 2 oder 3 Spielern liegt der Rest im Boneyard, bei 4 ist er leer.';
+
+  @override
+  String get rulesDominoOpen => 'Die erste Runde beginnt mit dem niedrigsten Doppel von 1-1 bis 6-6, dann 0-0. Gibt es kein Doppel, beginnt der höchste Stein und muss gelegt werden.';
+
+  @override
+  String get rulesDominoPlay => 'Ein Stein wird an ein offenes Ende mit derselben Zahl gelegt. Ein Doppel am Ende ändert diese Zahl nicht.';
+
+  @override
+  String get rulesDominoDraw => 'Wer nicht legen kann, zieht einzeln, bis ein passender Stein kommt oder der Boneyard leer ist. Der letzte Stein darf genommen werden. Geht es dann immer noch nicht, wird gepasst.';
+
+  @override
+  String get rulesDominoScore => 'Am Rundenende zählt jeder die Augen seiner Steine. Wer auslegt, schreibt 0. Bis 101: Wer sie erreicht, ist der Ziegenbock und verliert.';
+
+  @override
+  String get rulesDominoFish => 'Fisch: Der Boneyard ist leer und niemand kann legen. Die eindeutig kleinste Augensumme schreibt 0, die anderen ihre Summe. Ist das Minimum gleich, schreiben alle.';
+
+  @override
+  String get rulesDominoMatch => 'Überschreiten mehrere in einer Runde 101, ist der höchste Stand der Ziegenbock. Gewinner sind die mit dem niedrigsten Stand. Sind alle gleich, ist es unentschieden.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: du und Bots. Der Bot zählt die Zahlen und schaut nicht in verdeckte Hände.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modus: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Zwei oder drei Spieler erhalten 7 Steine, vier Spieler 5. Der Rest ist der Markt.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Die erste Runde beginnt mit dem Doppel-6, dann der Blanke, dann kleinere Doppel. Ohne Doppel muss der höchste Stein gelegt werden.';
+
+  @override
+  String get rulesDominoClassicScore => 'Wer ausgeht, schreibt die Augen der Gegner gut. Wer zuerst 100 erreicht, gewinnt.';
+
+  @override
+  String get rulesDominoClassicFish => 'Bei Fisch schreibt die eindeutig leichteste Hand die Differenz zu jeder anderen. Bei Gleichstand gibt es keine Punkte.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Wer den höchsten Stand teilt, gewinnt gemeinsam. Sind alle gleich, ist es unentschieden.';
+
+  @override
+  String get rulesDominoSeaSame => 'Geben, Eröffnung und Nachziehen wie beim Ziegenbock. Die Kette hat zwei Enden.';
+
+  @override
+  String get rulesDominoSeaScore => 'Nur die schwerste Hand schreibt Punkte. Unter 25 wird nichts gutgeschrieben.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Haben zwei Spieler 25 oder mehr, schreibt niemand diese Runde.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 beendet die Runde sofort: der eindeutig schwerste Gegner bekommt 75. Bei Gleichstand niemand.';
+
+  @override
+  String get rulesDominoSeaSix => 'Wer mit 6-6 ausgeht, schreibt dem Verlierer 100 und setzt den eigenen Partiestand auf null.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Die Partie geht bis 125. Wer sie erreicht, verliert.';
+
+  @override
+  String get dominoBoneyard => 'Boneyard';
+
+  @override
+  String get dominoChooseEnd => 'Ende wählen';
+
+  @override
+  String get dominoFish => 'Fisch';
+
+  @override
+  String get dominoYouGoat => 'Du bist der Ziegenbock';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Ziegenbock — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Links';
+
+  @override
+  String get dominoRight => 'Rechts';
+
+  @override
   String get gamesChessModeClassic => 'Klassisch';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Letzte Partien';
+
+  @override
+  String get statsOutcomeWin => 'Sieg';
+
+  @override
+  String get statsOutcomeLoss => 'Niederlage';
+
+  @override
+  String get statsOutcomeDraw => 'Remis';
+
+  @override
+  String get statsAllModes => 'Alle Modi';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Spiel';
+
+  @override
+  String get statsSelectMode => 'Modus';
+
+  @override
+  String get statsRecentEmpty => 'Noch keine Partien';
 }

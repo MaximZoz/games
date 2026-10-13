@@ -9,8 +9,8 @@ import (
 
 // Registry — единственная точка «какие игры есть на сервере».
 type Registry struct {
-	mu   sync.RWMutex
-	byID map[string]Module
+	mu    sync.RWMutex
+	byID  map[string]Module
 	order []string
 }
 
@@ -92,5 +92,6 @@ func Default() *Registry {
 	r.Register(NewNardy())
 	r.Register(NewCheckers())
 	r.Register(NewChess())
+	r.Register(NewDomino())
 	return r
 }

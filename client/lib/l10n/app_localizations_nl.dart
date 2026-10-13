@@ -802,6 +802,103 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesChess => 'Schaken';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'De Bok';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassiek';
+
+  @override
+  String get gamesDominoModeSea => 'Zee';
+
+  @override
+  String get rulesDominoDeal => 'Iedereen krijgt 7 stenen. Bij 2 of 3 ligt de rest in de pot; bij 4 is de pot leeg.';
+
+  @override
+  String get rulesDominoOpen => 'De eerste ronde begint met de laagste dubbel van 1-1 tot 6-6, daarna 0-0. Zonder dubbel begint de hoogste steen, en die moet gespeeld worden.';
+
+  @override
+  String get rulesDominoPlay => 'Leg een steen aan een open eind met hetzelfde getal. Een dubbel aan het eind verandert dat getal niet.';
+
+  @override
+  String get rulesDominoDraw => 'Kun je niet leggen, trek dan één voor één tot het kan of de pot leeg is. De laatste steen mag gepakt worden. Lukt het nog niet, pas dan.';
+
+  @override
+  String get rulesDominoScore => 'Aan het eind van een ronde telt iedereen de ogen van de resterende stenen. Wie uitlegt, noteert 0. Tot 101: wie dat haalt is de bok en verliest.';
+
+  @override
+  String get rulesDominoFish => 'Vis: de pot is leeg en niemand kan leggen. De uniek laagste som noteert 0, de rest de eigen som. Is het minimum gelijk, dan noteren allen.';
+
+  @override
+  String get rulesDominoMatch => 'Halen meer spelers in één ronde 101, dan is de hoogste stand de bok. Winnaars hebben de laagste stand. Staan allen gelijk, dan is het remise.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: jij en bots. De bot telt de getallen en kijkt niet in verborgen handen.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Stand: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Bij twee of drie spelers 7 stenen, bij vier 5. De rest is de pot.';
+
+  @override
+  String get rulesDominoClassicOpen => 'De eerste hand opent met dubbel 6, dan de blanco, dan lagere dubbels. Zonder dubbel moet de hoogste steen.';
+
+  @override
+  String get rulesDominoClassicScore => 'Wie uitgaat schrijft de ogen van de tegenstanders bij. De eerste op 100 wint.';
+
+  @override
+  String get rulesDominoClassicFish => 'Bij vis schrijft de uniek lichtste hand het verschil met elke andere. Bij gedeeld minimum niets.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Wie de hoogste stand deelt, wint samen. Als iedereen gelijk staat, is het remise.';
+
+  @override
+  String get rulesDominoSeaSame => 'Delen, opening en trekken als bij De Bok. De keten heeft twee uiteinden.';
+
+  @override
+  String get rulesDominoSeaScore => 'Alleen de zwaarste hand schrijft punten. Onder 25 telt niet.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Hebben twee spelers 25 of meer, dan schrijft niemand die hand.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 speelt de hand meteen uit: de uniek zwaarste tegenstander krijgt 75. Bij gelijkspel niemand.';
+
+  @override
+  String get rulesDominoSeaSix => 'Uitgaan met 6-6 geeft de verliezer 100 en zet de partijstand van de sluiter op nul.';
+
+  @override
+  String get rulesDominoSeaMatch => 'De partij gaat tot 125. Wie dat haalt, verliest.';
+
+  @override
+  String get dominoBoneyard => 'Pot';
+
+  @override
+  String get dominoChooseEnd => 'Kies een eind';
+
+  @override
+  String get dominoFish => 'Vis';
+
+  @override
+  String get dominoYouGoat => 'Jij bent de bok';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'De bok — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Links';
+
+  @override
+  String get dominoRight => 'Rechts';
+
+  @override
   String get gamesChessModeClassic => 'Klassiek';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Laatste partijen';
+
+  @override
+  String get statsOutcomeWin => 'Winst';
+
+  @override
+  String get statsOutcomeLoss => 'Verlies';
+
+  @override
+  String get statsOutcomeDraw => 'Gelijkspel';
+
+  @override
+  String get statsAllModes => 'Alle modi';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Spel';
+
+  @override
+  String get statsSelectMode => 'Modus';
+
+  @override
+  String get statsRecentEmpty => 'Nog geen partijen';
 }

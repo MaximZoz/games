@@ -802,6 +802,103 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesChess => 'Σκάκι';
 
   @override
+  String get gamesDomino => 'Ντόμινο';
+
+  @override
+  String get gamesDominoModeKozel => 'Ο Τράγος';
+
+  @override
+  String get gamesDominoModeClassic => 'Κλασικό';
+
+  @override
+  String get gamesDominoModeSea => 'Θαλασσινό';
+
+  @override
+  String get rulesDominoDeal => 'Ο καθένας παίρνει 7 πούλια. Με 2 ή 3 οι υπόλοιπες είναι στη στοίβα· με 4 η στοίβα είναι άδεια.';
+
+  @override
+  String get rulesDominoOpen => 'Ο πρώτος γύρος ανοίγει με το μικρότερο διπλό από 1-1 ως 6-6, μετά 0-0. Χωρίς διπλό ανοίγει το μεγαλύτερο πούλι και πρέπει να παιχτεί.';
+
+  @override
+  String get rulesDominoPlay => 'Το πούλι μπαίνει σε ανοιχτή άκρη με τον ίδιο αριθμό. Διπλό στην άκρη δεν αλλάζει τον αριθμό.';
+
+  @override
+  String get rulesDominoDraw => 'Αν δεν μπορείτε να παίξετε, τραβάτε ένα-ένα ώσπου να μπορείτε ή να αδειάσει η στοίβα. Το τελευταίο επιτρέπεται. Αλλιώς πάσο.';
+
+  @override
+  String get rulesDominoScore => 'Στο τέλος του γύρου ο καθένας γράφει το άθροισμα των πουλιών του. Όποιος βγει γράφει 0. Ως το 101: όποιος το φτάσει είναι ο τράγος και χάνει.';
+
+  @override
+  String get rulesDominoFish => 'Ψάρι: άδεια στοίβα και κανείς δεν μπορεί να βάλει. Το μοναδικό μικρότερο άθροισμα είναι 0, οι άλλοι το δικό τους. Αν το ελάχιστο είναι κοινό, γράφουν όλοι.';
+
+  @override
+  String get rulesDominoMatch => 'Αν αρκετοί περάσουν το 101 στον ίδιο γύρο, τράγος είναι το υψηλότερο σκορ. Νικητές είναι το χαμηλότερο. Αν όλοι είναι ίσοι, ισοπαλία.';
+
+  @override
+  String get rulesDominoOffline => 'Εκτός σύνδεσης: εσείς και μποτ. Το μποτ μετρά αριθμούς και δεν κοιτά κρυφά χέρια.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Λειτουργία: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Δύο ή τρεις παίρνουν 7, τέσσερις από 5. Τα υπόλοιπα είναι η τράπεζα.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Το πρώτο χέρι ανοίγει με διπλό 6, μετά το 0-0 και μικρότερα διπλά. Χωρίς διπλό παίζεται το μεγαλύτερο.';
+
+  @override
+  String get rulesDominoClassicScore => 'Όποιος αδειάζει γράφει το άθροισμα των αντιπάλων. Ο πρώτος στους 100 κερδίζει.';
+
+  @override
+  String get rulesDominoClassicFish => 'Στο μπλοκάρισμα το μοναδικό ελαφρύτερο χέρι γράφει τη διαφορά από κάθε άλλο. Ισοπαλία ελάχιστου δεν γράφει.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Όσοι μοιράζονται το υψηλότερο σκορ κερδίζουν μαζί. Αν όλοι είναι ίσοι, ισοπαλία.';
+
+  @override
+  String get rulesDominoSeaSame => 'Μοίρασμα, άνοιγμα και τράβηγμα όπως στον Τράγο. Η αλυσίδα έχει δύο άκρα.';
+
+  @override
+  String get rulesDominoSeaScore => 'Μόνο το βαρύτερο χέρι γράφει. Κάτω από 25 δεν γράφεται.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Αν δύο έχουν 25 ή περισσότερα, κανείς δεν γράφει αυτό το χέρι.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Το 0-0 κλείνει αμέσως το χέρι: ο μοναδικός βαρύτερος αντίπαλος παίρνει 75. Σε ισοπαλία κανείς.';
+
+  @override
+  String get rulesDominoSeaSix => 'Κλείσιμο με τελευταίο 6-6 γράφει 100 στον ηττημένο και μηδενίζει το σκορ παρτίδας όποιου κλείνει.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Η παρτίδα ως το 125. Όποιος το φτάσει χάνει.';
+
+  @override
+  String get dominoBoneyard => 'Στοίβα';
+
+  @override
+  String get dominoChooseEnd => 'Διαλέξτε άκρη';
+
+  @override
+  String get dominoFish => 'Ψάρι';
+
+  @override
+  String get dominoYouGoat => 'Είστε ο τράγος';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Ο τράγος — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Αριστερά';
+
+  @override
+  String get dominoRight => 'Δεξιά';
+
+  @override
   String get gamesChessModeClassic => 'Κλασικό';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Τελευταία παιχνίδια';
+
+  @override
+  String get statsOutcomeWin => 'Νίκη';
+
+  @override
+  String get statsOutcomeLoss => 'Ήττα';
+
+  @override
+  String get statsOutcomeDraw => 'Ισοπαλία';
+
+  @override
+  String get statsAllModes => 'Όλες οι λειτουργίες';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Παιχνίδι';
+
+  @override
+  String get statsSelectMode => 'Λειτουργία';
+
+  @override
+  String get statsRecentEmpty => 'Δεν υπάρχουν παρτίδες ακόμα';
 }

@@ -802,6 +802,103 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesChess => 'שחמט';
 
   @override
+  String get gamesDomino => 'דומינו';
+
+  @override
+  String get gamesDominoModeKozel => 'העז';
+
+  @override
+  String get gamesDominoModeClassic => 'קלאסי';
+
+  @override
+  String get gamesDominoModeSea => 'ימי';
+
+  @override
+  String get rulesDominoDeal => 'כל אחד מקבל 7 אבנים. בשניים או שלושה השאר בקופה, בארבעה הקופה ריקה.';
+
+  @override
+  String get rulesDominoOpen => 'הסיבוב הראשון נפתח בכפיל הנמוך מ-1-1 עד 6-6, ואז 0-0. בלי כפיל פותחים באבן הגבוהה וחייבים לשחק אותה.';
+
+  @override
+  String get rulesDominoPlay => 'מניחים אבן בקצה פתוח עם אותו מספר. כפיל בקצה לא משנה את המספר.';
+
+  @override
+  String get rulesDominoDraw => 'אם אי אפשר לשחק, שולפים אחת-אחת עד שאפשר או עד שהקופה ריקה. מותר לקחת את האחרונה. אם עדיין אין מהלך — פס.';
+
+  @override
+  String get rulesDominoScore => 'בסוף הסיבוב כל אחד רושם את סכום האבנים שנשארו. מי שיצא רושם 0. עד 101: מי שמגיע הוא העז ומפסיד.';
+
+  @override
+  String get rulesDominoFish => 'דג: הקופה ריקה ואף אחד לא יכול להניח. הסכום הנמוך היחיד הוא 0, השאר רושמים את שלהם. אם המינימום משותף — כולם רושמים.';
+
+  @override
+  String get rulesDominoMatch => 'אם כמה עוברים 101 באותו סיבוב, העז הוא הציון הגבוה. המנצחים הם עם הציון הנמוך. אם כולם שווים — תיקו.';
+
+  @override
+  String get rulesDominoOffline => 'לא מקוון: אתה ובוטים. הבוט סופר מספרים ולא מציץ לידיים נסתרות.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'מצב: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'לשניים או שלושה 7 אבנים, לארבעה 5. השאר בקופה.';
+
+  @override
+  String get rulesDominoClassicOpen => 'היד הראשונה נפתחת ב-6-6, אחר כך 0-0 ואז כפולות קטנות. בלי כפולה משחקים את האבן הגבוהה.';
+
+  @override
+  String get rulesDominoClassicScore => 'מי שיוצא רושם את סכום היריבים. הראשון ל-100 מנצח.';
+
+  @override
+  String get rulesDominoClassicFish => 'בחסימה היד הקלה היחידה רושמת את ההפרש מכל יד אחרת. בתיקו לא רושמים.';
+
+  @override
+  String get rulesDominoClassicMatch => 'מי שחולק את הציון הגבוה מנצח יחד. אם כולם שווים — תיקו.';
+
+  @override
+  String get rulesDominoSeaSame => 'החלוקה, הפתיחה והשליפה כמו בעז. לשרשרת שני קצוות.';
+
+  @override
+  String get rulesDominoSeaScore => 'רק היד הכבדה ביותר רושמת. פחות מ-25 לא נרשם.';
+
+  @override
+  String get rulesDominoSeaWipe => 'אם לשניים יש 25 או יותר, היד הזו לא נרשמת לאף אחד.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 מסיים את היד מיד: ליריב הכבד היחיד נרשמים 75. בתיקו לאף אחד.';
+
+  @override
+  String get rulesDominoSeaSix => 'סגירה ב-6-6 האחרון רושמת למפסיד 100 ומאפסת את ניקוד המשחק של הסוגר.';
+
+  @override
+  String get rulesDominoSeaMatch => 'המשחק עד 125. מי שמגיע מפסיד.';
+
+  @override
+  String get dominoBoneyard => 'קופה';
+
+  @override
+  String get dominoChooseEnd => 'בחרו קצה';
+
+  @override
+  String get dominoFish => 'דג';
+
+  @override
+  String get dominoYouGoat => 'אתה העז';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'העז — $name';
+  }
+
+  @override
+  String get dominoLeft => 'שמאל';
+
+  @override
+  String get dominoRight => 'ימין';
+
+  @override
   String get gamesChessModeClassic => 'קלאסי';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'המשחקים האחרונים';
+
+  @override
+  String get statsOutcomeWin => 'ניצחון';
+
+  @override
+  String get statsOutcomeLoss => 'הפסד';
+
+  @override
+  String get statsOutcomeDraw => 'תיקו';
+
+  @override
+  String get statsAllModes => 'כל המצבים';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'משחק';
+
+  @override
+  String get statsSelectMode => 'מצב';
+
+  @override
+  String get statsRecentEmpty => 'אין משחקים עדיין';
 }

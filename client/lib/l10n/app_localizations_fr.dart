@@ -802,6 +802,103 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesChess => 'Échecs';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Le Bouc';
+
+  @override
+  String get gamesDominoModeClassic => 'Classique';
+
+  @override
+  String get gamesDominoModeSea => 'Marin';
+
+  @override
+  String get rulesDominoDeal => 'Chacun reçoit 7 dominos. À 2 ou 3 joueurs, le reste forme la pioche ; à 4, elle est vide.';
+
+  @override
+  String get rulesDominoOpen => 'La première manche commence par le plus petit double de 1-1 à 6-6, puis 0-0. Sans double, c’est le domino le plus fort, et il doit être posé.';
+
+  @override
+  String get rulesDominoPlay => 'On pose un domino sur une extrémité de même chiffre. Un double en bout ne change pas ce chiffre.';
+
+  @override
+  String get rulesDominoDraw => 'Si vous ne pouvez pas jouer, piochez un par un jusqu’à pouvoir poser ou jusqu’à épuisement. Le dernier domino peut être pris. Sinon, passez.';
+
+  @override
+  String get rulesDominoScore => 'En fin de manche, chacun marque la somme de ses dominos. Sortir marque 0. La partie va à 101 : qui l’atteint est le bouc et perd.';
+
+  @override
+  String get rulesDominoFish => 'Poisson : pioche vide et personne ne peut poser. La somme strictement la plus faible marque 0, les autres marquent la leur. Si le minimum est partagé, tout le monde marque.';
+
+  @override
+  String get rulesDominoMatch => 'Si plusieurs dépassent 101 dans la même manche, le bouc est le score le plus haut. Les gagnants ont le score le plus bas. Si tout le monde est à égalité, c’est nul.';
+
+  @override
+  String get rulesDominoOffline => 'Hors ligne : vous et des bots. Le bot compte les chiffres et ne regarde pas les mains cachées.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Mode : $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'À deux ou trois, 7 dominos chacun ; à quatre, 5. Le reste forme le talon.';
+
+  @override
+  String get rulesDominoClassicOpen => 'La première donne commence par le double 6, puis le blanc, puis les doubles plus petits. Sans double, on pose la plus forte tuile.';
+
+  @override
+  String get rulesDominoClassicScore => 'Celui qui sort marque la somme des dominos adverses. Le premier à 100 gagne la partie.';
+
+  @override
+  String get rulesDominoClassicFish => 'Au poisson, la main la plus légère, si elle est seule, marque l’écart avec chaque autre main. À égalité, personne ne marque.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Ceux qui partagent le meilleur score gagnent ensemble. Si tous sont égaux, c’est nul.';
+
+  @override
+  String get rulesDominoSeaSame => 'Distribution, ouverture et pioche comme au Bouc. La chaîne a deux bouts.';
+
+  @override
+  String get rulesDominoSeaScore => 'Seul la main la plus lourde marque. Moins de 25 ne compte pas.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Si deux joueurs ont 25 ou plus, personne ne marque cette donne.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Jouer 0-0 termine la donne : l’adversaire le plus lourd, s’il est seul, prend 75. À égalité, personne.';
+
+  @override
+  String get rulesDominoSeaSix => 'Sortir sur 6-6 donne 100 au perdant et remet à zéro le score de partie de celui qui ferme.';
+
+  @override
+  String get rulesDominoSeaMatch => 'La partie va jusqu’à 125. Celui qui les atteint perd.';
+
+  @override
+  String get dominoBoneyard => 'Pioche';
+
+  @override
+  String get dominoChooseEnd => 'Choisissez un bout';
+
+  @override
+  String get dominoFish => 'Poisson';
+
+  @override
+  String get dominoYouGoat => 'Vous êtes le bouc';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Le bouc — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Gauche';
+
+  @override
+  String get dominoRight => 'Droite';
+
+  @override
   String get gamesChessModeClassic => 'Classique';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Dernières parties';
+
+  @override
+  String get statsOutcomeWin => 'Victoire';
+
+  @override
+  String get statsOutcomeLoss => 'Défaite';
+
+  @override
+  String get statsOutcomeDraw => 'Nulle';
+
+  @override
+  String get statsAllModes => 'Tous les modes';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Jeu';
+
+  @override
+  String get statsSelectMode => 'Mode';
+
+  @override
+  String get statsRecentEmpty => 'Pas encore de parties';
 }

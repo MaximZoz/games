@@ -802,6 +802,103 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesChess => 'Szachy';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Kozioł';
+
+  @override
+  String get gamesDominoModeClassic => 'Klasyka';
+
+  @override
+  String get gamesDominoModeSea => 'Morski';
+
+  @override
+  String get rulesDominoDeal => 'Każdy dostaje 7 kamieni. Przy 2 i 3 reszta leży na kupce, przy 4 kupka jest pusta.';
+
+  @override
+  String get rulesDominoOpen => 'Pierwszą kolejkę zaczyna najmniejszy dubel od 1-1 do 6-6, potem 0-0. Bez dubli zaczyna najwyższy kamień i trzeba go położyć.';
+
+  @override
+  String get rulesDominoPlay => 'Kamień dokłada się do otwartego końca z tą samą liczbą. Dubel na końcu nie zmienia tej liczby.';
+
+  @override
+  String get rulesDominoDraw => 'Jeśli nie możesz zagrać, dobieraj po jednym, aż będzie ruch albo kupka się skończy. Ostatni kamień można wziąć. Jeśli nadal nie ma ruchu — pas.';
+
+  @override
+  String get rulesDominoScore => 'Na końcu kolejki każdy zapisuje sumę swoich kamieni. Kto wyszedł — 0. Partia do 101: kto osiągnie, jest kozłem i przegrywa.';
+
+  @override
+  String get rulesDominoFish => 'Ryba: kupka pusta i nikt nie może dołożyć. Jedyna najmniejsza suma to 0, reszta zapisuje swoją. Jeśli minimum jest wspólne, zapisują wszyscy.';
+
+  @override
+  String get rulesDominoMatch => 'Jeśli kilku przekroczy 101 w jednej kolejce, kozłem jest najwyższy wynik. Wygrywają z najniższym. Jeśli wszyscy są równi — remis.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: ty i boty. Bot liczy oczka i nie zagląda w cudze ręce.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Tryb: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Przy dwóch i trzech graczach po 7 kamieni, przy czterech po 5. Reszta to bazar.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Pierwszy rozdanie otwiera dubel 6-6, potem 0-0 i niższe duble. Bez dubla kładzie się najwyższy kamień.';
+
+  @override
+  String get rulesDominoClassicScore => 'Kto wyjdzie, zapisuje sumę kamieni rywali. Partia do 100: kto pierwszy uzbiera, wygrywa.';
+
+  @override
+  String get rulesDominoClassicFish => 'Ryba: kto ma ściśle najmniej, zapisuje różnicę z każdą obcą ręką. Przy remisie minimum nikt nie zapisuje.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Ten sam najwyższy wynik dzieli wygraną. Gdy wszyscy mają równo — remis.';
+
+  @override
+  String get rulesDominoSeaSame => 'Rozdanie, pierwsze zagranie i dobieranie jak w Koziołku. Łańcuch ma dwa końce.';
+
+  @override
+  String get rulesDominoSeaScore => 'Punkty zapisuje tylko najcięższa ręka. Poniżej 25 się nie zapisuje.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Jeśli dwóch ma 25 lub więcej, tego rozdania nikt nie zapisuje.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Zagranie 0-0 kończy rozdanie: najcięższy przeciwnik, jeśli jeden, dostaje 75. Przy remisie nikt.';
+
+  @override
+  String get rulesDominoSeaSix => 'Wyjście na 6-6 zapisuje przegranemu 100, a zamykającemu zeruje wynik partii.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Partia do 125. Kto uzbiera — przegrywa.';
+
+  @override
+  String get dominoBoneyard => 'Kupka';
+
+  @override
+  String get dominoChooseEnd => 'Wybierz koniec';
+
+  @override
+  String get dominoFish => 'Ryba';
+
+  @override
+  String get dominoYouGoat => 'Jesteś kozłem';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Kozioł — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Lewo';
+
+  @override
+  String get dominoRight => 'Prawo';
+
+  @override
   String get gamesChessModeClassic => 'Klasyka';
 
   @override
@@ -3194,4 +3291,33 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Ostatnie partie';
+
+  @override
+  String get statsOutcomeWin => 'Wygrana';
+
+  @override
+  String get statsOutcomeLoss => 'Przegrana';
+
+  @override
+  String get statsOutcomeDraw => 'Remis';
+
+  @override
+  String get statsAllModes => 'Wszystkie tryby';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Gra';
+
+  @override
+  String get statsSelectMode => 'Tryb';
+
+  @override
+  String get statsRecentEmpty => 'Nie ma jeszcze partii';
 }

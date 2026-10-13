@@ -802,6 +802,103 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesChess => 'Xadrez';
 
   @override
+  String get gamesDomino => 'Dominó';
+
+  @override
+  String get gamesDominoModeKozel => 'O Bode';
+
+  @override
+  String get gamesDominoModeClassic => 'Clássico';
+
+  @override
+  String get gamesDominoModeSea => 'Marinho';
+
+  @override
+  String get rulesDominoDeal => 'Cada um recebe 7 peças. Com 2 ou 3 jogadores o resto fica no monte; com 4 o monte fica vazio.';
+
+  @override
+  String get rulesDominoOpen => 'A primeira mão começa pelo dobro mais baixo, de 1-1 a 6-6, depois 0-0. Sem dobros, começa a peça mais alta, e ela tem de ser jogada.';
+
+  @override
+  String get rulesDominoPlay => 'Joga-se uma peça numa ponta com o mesmo número. Um dobro na ponta não muda esse número.';
+
+  @override
+  String get rulesDominoDraw => 'Se não puder jogar, compre uma a uma até poder ou até o monte acabar. A última peça pode ser comprada. Se ainda não houver jogada, passe.';
+
+  @override
+  String get rulesDominoScore => 'No fim da mão cada um marca a soma das peças que restam. Quem sai marca 0. A partida vai a 101: quem chega é o bode e perde.';
+
+  @override
+  String get rulesDominoFish => 'Peixe: monte vazio e ninguém pode jogar. A soma estritamente menor marca 0; os outros marcam a sua. Se o mínimo for de todos, todos marcam.';
+
+  @override
+  String get rulesDominoMatch => 'Se vários passarem de 101 na mesma mão, o bode é a pontuação mais alta. Vencem os de pontuação mais baixa. Se todos empatarem, é empate.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: você e bots. O bot conta os números e não olha as mãos escondidas.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modo: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'A dois ou três, 7 peças cada; a quatro, 5. O resto fica no mercado.';
+
+  @override
+  String get rulesDominoClassicOpen => 'A primeira mão abre com o duplo 6, depois o branco e os duplos menores. Sem duplo, joga-se a peça mais alta.';
+
+  @override
+  String get rulesDominoClassicScore => 'Quem sai anota a soma das peças dos adversários. O primeiro a 100 ganha.';
+
+  @override
+  String get rulesDominoClassicFish => 'No bloqueio, a mão mais leve, se for única, marca a diferença com cada outra. Em empate ninguém marca.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Quem partilha a pontuação mais alta ganha em conjunto. Se todos empatam, é empate.';
+
+  @override
+  String get rulesDominoSeaSame => 'Distribuição, abertura e compra como n’O Bode. A cadeia tem duas pontas.';
+
+  @override
+  String get rulesDominoSeaScore => 'Só a mão mais pesada marca. Menos de 25 não se regista.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Se dois jogadores têm 25 ou mais, ninguém regista essa mão.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Jogar 0-0 fecha a mão: o adversário mais pesado, se for único, leva 75. Em empate, ninguém.';
+
+  @override
+  String get rulesDominoSeaSix => 'Sair com 6-6 marca 100 ao perdedor e zera o placar da partida de quem fecha.';
+
+  @override
+  String get rulesDominoSeaMatch => 'A partida vai até 125. Quem chega perde.';
+
+  @override
+  String get dominoBoneyard => 'Monte';
+
+  @override
+  String get dominoChooseEnd => 'Escolha uma ponta';
+
+  @override
+  String get dominoFish => 'Peixe';
+
+  @override
+  String get dominoYouGoat => 'Você é o bode';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'O bode — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Esquerda';
+
+  @override
+  String get dominoRight => 'Direita';
+
+  @override
   String get gamesChessModeClassic => 'Clássico';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Últimas partidas';
+
+  @override
+  String get statsOutcomeWin => 'Vitória';
+
+  @override
+  String get statsOutcomeLoss => 'Derrota';
+
+  @override
+  String get statsOutcomeDraw => 'Empate';
+
+  @override
+  String get statsAllModes => 'Todos os modos';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Jogo';
+
+  @override
+  String get statsSelectMode => 'Modo';
+
+  @override
+  String get statsRecentEmpty => 'Ainda não há partidas';
 }

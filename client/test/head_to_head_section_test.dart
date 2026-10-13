@@ -53,6 +53,94 @@ void main() {
     expect(list.scrollDirection, Axis.horizontal);
   });
 
+  testWidgets('коллекции в узкой карточке листаются одной строкой',
+      (tester) async {
+    const cardWidth = 330.0;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('ru'),
+        home: const Scaffold(
+          body: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: cardWidth,
+              child: CollectionShowcaseGrid(
+                items: [
+                  InventoryItem(
+                    code: 'coll_a',
+                    kind: 'collection',
+                    title: 'А',
+                    description: '',
+                    payload: {'emoji': '🤖', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_b',
+                    kind: 'collection',
+                    title: 'Б',
+                    description: '',
+                    payload: {'emoji': '🚀', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_c',
+                    kind: 'collection',
+                    title: 'В',
+                    description: '',
+                    payload: {'emoji': '🦋', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_d',
+                    kind: 'collection',
+                    title: 'Г',
+                    description: '',
+                    payload: {'emoji': '🦅', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_e',
+                    kind: 'collection',
+                    title: 'Д',
+                    description: '',
+                    payload: {'emoji': '🐙', 'animated_name': 'sparkles'},
+                  ),
+                  InventoryItem(
+                    code: 'coll_f',
+                    kind: 'collection',
+                    title: 'Е',
+                    description: '',
+                    payload: {'emoji': '⛵', 'animated_name': 'sparkles'},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final list = tester.widget<ListView>(find.byType(ListView));
+    expect(list.scrollDirection, Axis.horizontal);
+    final grid = tester.getRect(find.byType(CollectionShowcaseGrid));
+    expect(grid.height, CollectionShowcaseGrid.slotHeight);
+    expect(grid.width, cardWidth);
+    final first = tester.getRect(find.byKey(const ValueKey('coll_a')));
+    final second = tester.getRect(find.byKey(const ValueKey('coll_b')));
+    expect(second.top, closeTo(first.top, 0.5));
+
+    final position =
+        tester.state<ScrollableState>(find.byType(Scrollable)).position;
+    expect(position.maxScrollExtent, greaterThan(0));
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+
+    final last = tester.getRect(find.byKey(const ValueKey('coll_f')));
+    expect(last.top, closeTo(first.top, 0.5));
+    expect(last.right, lessThanOrEqualTo(grid.right + 0.5));
+    expect(last.left, greaterThanOrEqualTo(grid.left - 0.5));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('коллекции в витрине получают рамку геймпада', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -84,63 +172,6 @@ void main() {
     await tester.pump();
     expect(find.byType(GamepadFocusBlock), findsNWidgets(2));
     expect(find.byType(GamepadNavGroup), findsOneWidget);
-  });
-
-  testWidgets('узкая витрина не обрезает крайнюю коллекцию', (tester) async {
-    Future<void> pumpGrid(double width, int count) {
-      return tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('ru'),
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: width,
-                child: CollectionShowcaseGrid(
-                  items: [
-                    for (var i = 0; i < count; i++)
-                      InventoryItem(
-                        code: 'coll_$i',
-                        kind: 'collection',
-                        title: 'Коллекция $i',
-                        description: '',
-                        payload: {
-                          'emoji': '🦉',
-                          'animated_name': 'showcase_fallback_$i',
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    await pumpGrid(338, 6);
-    await tester.pump();
-    var tiles = find.byType(GamepadFocusBlock);
-    expect(tiles, findsNWidgets(6));
-    var grid = tester.getRect(find.byType(CollectionShowcaseGrid));
-    var first = tester.getRect(tiles.at(0));
-    var last = tester.getRect(tiles.at(5));
-    expect(last.top, closeTo(first.top, 0.5));
-    expect(last.right, lessThanOrEqualTo(grid.right + 0.5));
-    expect(last.right, greaterThan(grid.right - 40));
-
-    await pumpGrid(240, 6);
-    await tester.pump();
-    tiles = find.byType(GamepadFocusBlock);
-    grid = tester.getRect(find.byType(CollectionShowcaseGrid));
-    first = tester.getRect(tiles.at(0));
-    final fourth = tester.getRect(tiles.at(3));
-    last = tester.getRect(tiles.at(5));
-    expect(fourth.top, greaterThan(first.bottom - 1));
-    expect(last.right, lessThanOrEqualTo(grid.right + 0.5));
-    expect(first.right, lessThanOrEqualTo(grid.right + 0.5));
   });
 
   testWidgets('во exclusive-попапе стик с шапки доходит до коллекции',

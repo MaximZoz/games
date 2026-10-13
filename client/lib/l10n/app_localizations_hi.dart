@@ -802,6 +802,103 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesChess => 'शतरंज';
 
   @override
+  String get gamesDomino => 'डोमिनो';
+
+  @override
+  String get gamesDominoModeKozel => 'बकरा';
+
+  @override
+  String get gamesDominoModeClassic => 'क्लासिक';
+
+  @override
+  String get gamesDominoModeSea => 'समुद्री';
+
+  @override
+  String get rulesDominoDeal => 'हर खिलाड़ी को 7 टाइल। 2 या 3 में बाकी भंडार में, 4 में भंडार खाली।';
+
+  @override
+  String get rulesDominoOpen => 'पहला दाँव 1-1 से 6-6 तक सबसे छोटे डबल से, फिर 0-0। डबल न हो तो सबसे बड़ी टाइल से शुरू, और वही खेलनी है।';
+
+  @override
+  String get rulesDominoPlay => 'टाइल खुले सिरे पर उसी अंक से लगाएँ। सिरे पर डबल उस अंक को नहीं बदलता।';
+
+  @override
+  String get rulesDominoDraw => 'चाल न हो तो एक-एक करके तब तक खींचें जब तक चाल बने या भंडार खत्म हो। आखिरी टाइल ली जा सकती है। फिर भी न हो तो पास।';
+
+  @override
+  String get rulesDominoScore => 'दाँव के अंत में हर कोई बची टाइलों का योग लिखता है। जो निकल गया — 0। 101 तक: जो पहुँचे वह बकरा और हार।';
+
+  @override
+  String get rulesDominoFish => 'मछली: भंडार खाली और कोई नहीं लगा सकता। सबसे कम योग अकेला हो तो 0, बाकी अपना योग। न्यूनतम सबका बराबर हो तो सब लिखते हैं।';
+
+  @override
+  String get rulesDominoMatch => 'एक ही दाँव में कई 101 पार करें तो सबसे बड़ा स्कोर बकरा है। सबसे कम स्कोर जीतते हैं। सब बराबर हों तो ड्रॉ।';
+
+  @override
+  String get rulesDominoOffline => 'ऑफ़लाइन: आप और बॉट। बॉट अंक गिनता है और छुपे हाथ नहीं देखता।';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'मोड: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'दो या तीन को 7, चार को 5 टाइल। बाकी बाज़ार।';
+
+  @override
+  String get rulesDominoClassicOpen => 'पहला दाँव डबल 6 से, फिर 0-0 और छोटे डबल। डबल न हो तो सबसे बड़ा टाइल रखना होगा।';
+
+  @override
+  String get rulesDominoClassicScore => 'जो खाली हाथ निकले, वह विरोधियों के पिप लिखता है। 100 तक पहले पहुँचने वाला जीतता है।';
+
+  @override
+  String get rulesDominoClassicFish => 'ब्लॉक पर सबसे हल्के अद्वितीय हाथ को हर दूसरे हाथ से अंतर मिलता है। बराबरी पर कुछ नहीं लिखा जाता।';
+
+  @override
+  String get rulesDominoClassicMatch => 'समान सबसे ऊँचा स्कोर जीत बाँटता है। सब बराबर हों तो ड्रॉ।';
+
+  @override
+  String get rulesDominoSeaSame => 'बाँटना, पहली चाल और खींचना बकरा जैसा। श्रृंखला के दो सिरे।';
+
+  @override
+  String get rulesDominoSeaScore => 'अंक केवल सबसे भारी हाथ लिखता है। 25 से कम नहीं लिखा जाता।';
+
+  @override
+  String get rulesDominoSeaWipe => 'यदि दो के पास 25 या अधिक हों, तो यह दाँव किसी को नहीं लिखा जाता।';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 डालते ही दाँव खत्म: सबसे भारी विरोधी अकेला हो तो 75। बराबरी पर किसी को नहीं।';
+
+  @override
+  String get rulesDominoSeaSix => 'अंतिम 6-6 से बंद होने पर हारने वाले को 100, बंद करने वाले का मैच स्कोर शून्य।';
+
+  @override
+  String get rulesDominoSeaMatch => 'मैच 125 तक। जो पहुँचे वह हारा।';
+
+  @override
+  String get dominoBoneyard => 'भंडार';
+
+  @override
+  String get dominoChooseEnd => 'सिरा चुनें';
+
+  @override
+  String get dominoFish => 'मछली';
+
+  @override
+  String get dominoYouGoat => 'आप बकरा हैं';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'बकरा — $name';
+  }
+
+  @override
+  String get dominoLeft => 'बाएँ';
+
+  @override
+  String get dominoRight => 'दाएँ';
+
+  @override
   String get gamesChessModeClassic => 'क्लासिक';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'हाल की बाज़ियाँ';
+
+  @override
+  String get statsOutcomeWin => 'जीत';
+
+  @override
+  String get statsOutcomeLoss => 'हार';
+
+  @override
+  String get statsOutcomeDraw => 'ड्रॉ';
+
+  @override
+  String get statsAllModes => 'सभी मोड';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'खेल';
+
+  @override
+  String get statsSelectMode => 'मोड';
+
+  @override
+  String get statsRecentEmpty => 'अभी कोई खेल नहीं';
 }

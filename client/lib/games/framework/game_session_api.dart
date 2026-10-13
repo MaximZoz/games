@@ -3,6 +3,8 @@ import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_repository.dart';
+import 'package:multigames_client/games/domino/domino_provider.dart';
+import 'package:multigames_client/games/domino/domino_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
@@ -30,6 +32,7 @@ class GameSessionApi {
       _ref.read(battleshipRepositoryProvider);
   PokerRepository get _poker => _ref.read(pokerRepositoryProvider);
   UnoRepository get _uno => _ref.read(unoRepositoryProvider);
+  DominoRepository get _domino => _ref.read(dominoRepositoryProvider);
   NardyRepository get _nardy => _ref.read(nardyRepositoryProvider);
   CheckersRepository get _checkers => _ref.read(checkersRepositoryProvider);
 
@@ -49,6 +52,10 @@ class GameSessionApi {
     }
     if (gt == 'uno') {
       await _uno.leaveLobby(lobbyId);
+      return;
+    }
+    if (gt == 'domino') {
+      await _domino.leaveLobby(lobbyId);
       return;
     }
     if (gt == 'nardy') {
@@ -82,6 +89,10 @@ class GameSessionApi {
       await _uno.forfeit(gameId);
       return;
     }
+    if (gt == 'domino') {
+      await _domino.forfeit(gameId);
+      return;
+    }
     if (gt == 'nardy') {
       await _nardy.forfeit(gameId);
       return;
@@ -99,8 +110,8 @@ class GameSessionApi {
       await _durak.offerDraw(gameId);
       return;
     }
-    if (gt == 'battleship' || gt == 'nardy') {
-      // Морской бой и нарды не поддерживают ничью.
+    if (gt == 'battleship' || gt == 'nardy' || gt == 'domino') {
+      // Морской бой, нарды и «Козёл» не предлагают ничью.
       return;
     }
     if (gt == 'checkers') {
@@ -116,7 +127,7 @@ class GameSessionApi {
       await _durak.acceptDraw(gameId);
       return;
     }
-    if (gt == 'battleship' || gt == 'nardy') {
+    if (gt == 'battleship' || gt == 'nardy' || gt == 'domino') {
       return;
     }
     if (gt == 'checkers') {
@@ -139,6 +150,10 @@ class GameSessionApi {
     try {
       await _uno.getGame(gameId);
       return 'uno';
+    } catch (_) {}
+    try {
+      await _domino.getGame(gameId);
+      return 'domino';
     } catch (_) {}
     try {
       await _nardy.getGame(gameId);

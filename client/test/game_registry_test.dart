@@ -9,6 +9,7 @@ void main() {
     expect(gameRegistry.contains('battleship'), isTrue);
     expect(gameRegistry.contains('poker'), isTrue);
     expect(gameRegistry.contains('uno'), isTrue);
+    expect(gameRegistry.contains('domino'), isTrue);
     expect(gameRegistry.contains('nardy'), isTrue);
     expect(gameRegistry.contains('checkers'), isTrue);
     expect(gameRegistry.contains('chess'), isTrue);
@@ -23,6 +24,7 @@ void main() {
           'durak',
           'battleship',
           'uno',
+          'domino',
           'poker',
           'nardy',
           'checkers',
@@ -38,6 +40,7 @@ void main() {
     expect(gameRegistry.normalizeId('battleship'), 'battleship');
     expect(gameRegistry.normalizeId('poker'), 'poker');
     expect(gameRegistry.normalizeId('uno'), 'uno');
+    expect(gameRegistry.normalizeId('domino'), 'domino');
   });
 
   test('paths and parse round-trip via navigation helpers', () {
@@ -53,6 +56,8 @@ void main() {
     expect(normalizeGameType('battleship'), 'battleship');
     expect(gamePathFor('u1', gameType: 'uno'), '/games/uno/game/u1');
     expect(normalizeGameType('uno'), 'uno');
+    expect(gamePathFor('d1', gameType: 'domino'), '/games/domino/game/d1');
+    expect(normalizeGameType('domino'), 'domino');
   });
 
   test('draw offer policy', () {
@@ -65,6 +70,8 @@ void main() {
     expect(poker.supportsDrawOffer(2), isTrue);
     expect(poker.supportsDrawOffer(6), isFalse);
     expect(gameRegistry['uno']!.supportsDrawOffer(2), isFalse);
+    expect(gameRegistry['domino']!.supportsDrawOffer(2), isFalse);
+    expect(gameRegistry['domino']!.supportsDrawOffer(4), isFalse);
     expect(gameRegistry['nardy']!.supportsDrawOffer(2), isFalse);
     expect(gameRegistry['checkers']!.supportsDrawOffer(2), isTrue);
     expect(gameRegistry['chess']!.supportsDrawOffer(2), isTrue);
@@ -80,6 +87,8 @@ void main() {
     expect(gameRegistry['poker']!.offlinePath, '/games/poker/offline');
     expect(gameRegistry['uno']!.supportsOffline, isTrue);
     expect(gameRegistry['uno']!.offlinePath, '/games/uno/offline');
+    expect(gameRegistry['domino']!.supportsOffline, isTrue);
+    expect(gameRegistry['domino']!.offlinePath, '/games/domino/offline');
     expect(gameRegistry['nardy']!.supportsOffline, isTrue);
     expect(gameRegistry['checkers']!.supportsOffline, isTrue);
     expect(gameRegistry['checkers']!.offlinePath, '/games/checkers/offline');

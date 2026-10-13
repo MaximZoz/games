@@ -802,6 +802,103 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesChess => 'Šachy';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Kozel';
+
+  @override
+  String get gamesDominoModeClassic => 'Klasika';
+
+  @override
+  String get gamesDominoModeSea => 'Mořský';
+
+  @override
+  String get rulesDominoDeal => 'Každý dostane 7 kamenů. Při 2 a 3 hráčích je zbytek v talonu, při 4 je talon prázdný.';
+
+  @override
+  String get rulesDominoOpen => 'První kolo začíná nejnižším dubletem od 1-1 do 6-6, pak 0-0. Bez dubletu začíná nejvyšší kámen a ten se musí zahrát.';
+
+  @override
+  String get rulesDominoPlay => 'Kámen se přikládá k otevřenému konci se stejným číslem. Dublet na konci to číslo nemění.';
+
+  @override
+  String get rulesDominoDraw => 'Když nelze hrát, berte po jednom, dokud to nepůjde nebo talon neskončí. Poslední kámen se smí vzít. Když tah pořád není, pas.';
+
+  @override
+  String get rulesDominoScore => 'Na konci kola každý zapíše součet svých kamenů. Kdo vyšel, má 0. Do 101: kdo dosáhne, je kozel a prohrál.';
+
+  @override
+  String get rulesDominoFish => 'Ryba: talon je prázdný a nikdo nemůže přiložit. Jediné nejnižší skóre je 0, ostatní píšou svůj součet. Je-li minimum společné, píšou všichni.';
+
+  @override
+  String get rulesDominoMatch => 'Překročí-li jich v kole víc 101, kozel je nejvyšší skóre. Vítězí nejnižší. Jsou-li všichni stejně, je remíza.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: vy a boti. Bot počítá čísla a nedívá se do skrytých rukou.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Režim: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Dva a tři hráči dostanou 7 kamenů, čtyři po 5. Zbytek je bank.';
+
+  @override
+  String get rulesDominoClassicOpen => 'První kolo otvírá dvojice 6-6, pak 0-0 a nižší dvojice. Bez dvojice se musí hrát nejvyšší kámen.';
+
+  @override
+  String get rulesDominoClassicScore => 'Kdo vyjde, zapíše součet soupeřů. První na 100 vyhrává.';
+
+  @override
+  String get rulesDominoClassicFish => 'Při rybě jediná nejlehčí ruka zapíše rozdíl proti každé jiné. Sdílené minimum se nezapisuje.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Stejné nejvyšší skóre dělí výhru. Jsou-li všichni stejně, je remíza.';
+
+  @override
+  String get rulesDominoSeaSame => 'Rozdání, první tah a dobírání jako v Kozlu. Řetěz má dva konce.';
+
+  @override
+  String get rulesDominoSeaScore => 'Body zapíše jen nejtěžší ruka. Pod 25 se nezapisuje.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Mají-li dva hráči 25 a víc, to kolo se nikomu nezapíše.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 hned končí kolo: jediný nejtěžší soupeř dostane 75. Při shodě nikdo.';
+
+  @override
+  String get rulesDominoSeaSix => 'Zavření posledním 6-6 zapíše poraženému 100 a vynuluje zápasové skóre zavírajícího.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Zápas do 125. Kdo dosáhne, prohrává.';
+
+  @override
+  String get dominoBoneyard => 'Talon';
+
+  @override
+  String get dominoChooseEnd => 'Vyberte konec';
+
+  @override
+  String get dominoFish => 'Ryba';
+
+  @override
+  String get dominoYouGoat => 'Jste kozel';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Kozel — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Vlevo';
+
+  @override
+  String get dominoRight => 'Vpravo';
+
+  @override
   String get gamesChessModeClassic => 'Klasika';
 
   @override
@@ -3191,4 +3288,33 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Poslední partie';
+
+  @override
+  String get statsOutcomeWin => 'Výhra';
+
+  @override
+  String get statsOutcomeLoss => 'Prohra';
+
+  @override
+  String get statsOutcomeDraw => 'Remíza';
+
+  @override
+  String get statsAllModes => 'Všechny režimy';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Hra';
+
+  @override
+  String get statsSelectMode => 'Režim';
+
+  @override
+  String get statsRecentEmpty => 'Zatím žádné partie';
 }

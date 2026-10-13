@@ -802,6 +802,103 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesChess => 'หมากรุก';
 
   @override
+  String get gamesDomino => 'โดมิโน';
+
+  @override
+  String get gamesDominoModeKozel => 'แพะ';
+
+  @override
+  String get gamesDominoModeClassic => 'คลาสสิก';
+
+  @override
+  String get gamesDominoModeSea => 'ทะเล';
+
+  @override
+  String get rulesDominoDeal => 'แต่ละคนได้ 7 ตัว ถ้า 2 หรือ 3 คน ที่เหลืออยู่ในกอง ถ้า 4 คน กองว่าง';
+
+  @override
+  String get rulesDominoOpen => 'ตาแรกเริ่มด้วยคู่ที่น้อยสุดจาก 1-1 ถึง 6-6 แล้วจึง 0-0 ถ้าไม่มีคู่ ให้เริ่มด้วยตัวที่มากสุด และต้องลงตัวนั้น';
+
+  @override
+  String get rulesDominoPlay => 'วางตัวที่ปลายเปิดที่มีเลขเดียวกัน คู่ที่ปลายไม่เปลี่ยนเลขนั้น';
+
+  @override
+  String get rulesDominoDraw => 'ถ้าลงไม่ได้ จั่วทีละใบจนกว่าจะลงได้หรือกองหมด ใบสุดท้ายจั่วได้ ถ้ายังลงไม่ได้ ให้ผ่าน';
+
+  @override
+  String get rulesDominoScore => 'จบตา แต่ละคนจดผลรวมของตัวที่เหลือ คนที่หมดจด 0 เล่นถึง 101 คนที่ถึงคือแพะและแพ้';
+
+  @override
+  String get rulesDominoFish => 'ปลา: กองว่างและไม่มีใครลงได้ ผลรวมน้อยสุดเพียงคนเดียวได้ 0 ที่เหลือจดของตน ถ้าน้อยสุดเท่ากันทุกคนจด';
+
+  @override
+  String get rulesDominoMatch => 'ถ้าหลายคนข้าม 101 ในตาเดียวกัน แพะคือคะแนนสูงสุด ผู้ชนะคือคะแนนต่ำสุด ถ้าเท่ากันทั้งหมดคือเสมอ';
+
+  @override
+  String get rulesDominoOffline => 'ออฟไลน์: คุณกับบอต บอตนับเลขและไม่แอบดูมือที่ซ่อน';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'โหมด: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'สองหรือสามคนได้คนละ 7 ชิ้น สี่คนได้คนละ 5 ที่เหลือคือกองกลาง';
+
+  @override
+  String get rulesDominoClassicOpen => 'มือแรกเปิดด้วยเบิ้ล 6 แล้ว 0-0 แล้วเบิ้ลที่น้อยลง ถ้าไม่มีเบิ้ลต้องลงตัวสูงสุด';
+
+  @override
+  String get rulesDominoClassicScore => 'คนที่หมดมือได้แต้มของคู่แข่ง คนแรกถึง 100 ชนะ';
+
+  @override
+  String get rulesDominoClassicFish => 'เมื่อบล็อก คนที่แต้มน้อยที่สุดคนเดียวได้ส่วนต่างจากแต่ละมือ ถ้าเสมอกันไม่มีใครได้แต้ม';
+
+  @override
+  String get rulesDominoClassicMatch => 'คะแนนสูงสุดเท่ากันแบ่งชัย ถ้าทุกคนเท่ากันคือเสมอ';
+
+  @override
+  String get rulesDominoSeaSame => 'แจก เปิด และจั่วเหมือนแพะ สายมีสองปลาย';
+
+  @override
+  String get rulesDominoSeaScore => 'คนที่แต้มในมือมากที่สุดคนเดียวได้บันทึก น้อยกว่า 25 ไม่บันทึก';
+
+  @override
+  String get rulesDominoSeaWipe => 'ถ้าสองคนมี 25 ขึ้นไปพร้อมกัน มือนี้ไม่มีใครได้บันทึก';
+
+  @override
+  String get rulesDominoSeaBlank => 'ลง 0-0 จบมือทันที คนที่หนักที่สุดคนเดียวได้ 75 ถ้าเสมอกันไม่มีใครได้';
+
+  @override
+  String get rulesDominoSeaSix => 'ปิดมือด้วย 6-6 ใบสุดท้าย คนแพ้ได้ 100 และคะแนนแมตช์ของผู้ปิดถูกล้าง';
+
+  @override
+  String get rulesDominoSeaMatch => 'แมตช์ถึง 125 คนที่ถึงแพ้';
+
+  @override
+  String get dominoBoneyard => 'กอง';
+
+  @override
+  String get dominoChooseEnd => 'เลือกปลาย';
+
+  @override
+  String get dominoFish => 'ปลา';
+
+  @override
+  String get dominoYouGoat => 'คุณคือแพะ';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'แพะ — $name';
+  }
+
+  @override
+  String get dominoLeft => 'ซ้าย';
+
+  @override
+  String get dominoRight => 'ขวา';
+
+  @override
   String get gamesChessModeClassic => 'คลาสสิก';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'เกมล่าสุด';
+
+  @override
+  String get statsOutcomeWin => 'ชนะ';
+
+  @override
+  String get statsOutcomeLoss => 'แพ้';
+
+  @override
+  String get statsOutcomeDraw => 'เสมอ';
+
+  @override
+  String get statsAllModes => 'ทุกโหมด';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'เกม';
+
+  @override
+  String get statsSelectMode => 'โหมด';
+
+  @override
+  String get statsRecentEmpty => 'ยังไม่มีเกม';
 }

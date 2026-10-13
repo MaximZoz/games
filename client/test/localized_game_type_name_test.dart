@@ -16,6 +16,7 @@ void main() {
   test('приглашение в Уно не подписывается как крестики-нолики', () {
     final t = l10n();
     expect(localizedGameTypeName('uno', t), 'Уно');
+    expect(localizedGameTypeName('domino', t), 'Домино');
     expect(localizedGameTypeName('uno', t), isNot(t.gamesTicTacToe));
     expect(localizedGameTypeName('tictactoe', t), t.gamesTicTacToe);
     expect(localizedGameTypeName('durak', t), t.gamesDurak);
@@ -37,6 +38,10 @@ void main() {
     final t = l10n();
     expect(localizeChatTitle('Уно', t), t.gamesUno);
     expect(localizeChatTitle('Uno', t), t.gamesUno);
+    expect(localizeChatTitle('Козёл', t), t.gamesDomino);
+    expect(localizeChatTitle('Домино', t), t.gamesDomino);
+    expect(localizeChatTitle('Goat', t), t.gamesDomino);
+    expect(localizeChatTitle('Domino', t), t.gamesDomino);
     expect(localizeChatTitle('Нарды', t), t.gamesNardy);
     expect(localizeChatTitle('Backgammon', t), t.gamesNardy);
   });
@@ -45,6 +50,18 @@ void main() {
     final t = l10n();
     expect(localizedGameModeLabel(gameType: 'uno', variant: 'classic', l10n: t),
         isEmpty);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'domino', variant: 'kozel', gameMode: 'kozel', l10n: t),
+        t.gamesDominoModeKozel);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'domino', variant: 'kozel', gameMode: 'classic', l10n: t),
+        t.gamesDominoModeClassic);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'domino', gameMode: 'sea', l10n: t),
+        t.gamesDominoModeSea);
     expect(
         localizedGameModeLabel(
             gameType: 'poker', variant: 'classic', gameMode: 'holdem', l10n: t),
@@ -110,6 +127,16 @@ void main() {
       'game_mode': 'classic',
     });
     expect(uno.modeLabel(t), isEmpty);
+    final domino = LobbyItem.fromJson({
+      'id': 'd1',
+      'creator_id': 'c',
+      'status': 'waiting_matchmake',
+      'game_type': 'domino',
+      'variant': 'kozel',
+      'game_mode': 'kozel',
+    });
+    expect(domino.isDomino, isTrue);
+    expect(domino.modeLabel(t), t.gamesDominoModeKozel);
 
     final nardy = LobbyItem.fromJson({
       'id': 'n1',
