@@ -305,17 +305,20 @@ class DominoJoinResult {
     required this.joined,
     this.gameId,
     this.lobbyId,
+    this.waitingMore = false,
   });
 
   final bool joined;
   final String? gameId;
   final String? lobbyId;
+  final bool waitingMore;
 
   factory DominoJoinResult.fromJson(Map<String, dynamic> json) =>
       DominoJoinResult(
         joined: json['joined'] == true,
         gameId: json['game_id']?.toString(),
         lobbyId: json['lobby_id']?.toString(),
+        waitingMore: json['waiting_more'] == true,
       );
 }
 

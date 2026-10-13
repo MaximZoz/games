@@ -271,14 +271,33 @@ void main() {
     expect(find.textContaining('Базар'), findsOneWidget);
     expect(find.textContaining('до 101'), findsOneWidget);
 
-    final legal = session.view.legal;
-    if (legal.isNotEmpty) {
-      await tester.tap(find.byKey(ValueKey('domino-hand-${legal.first.tile}')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 280));
-      expect(session.engine.chain, isNotEmpty);
+    // Раздача случайная: человек может не открывать, а боты ходят с паузой.
+    DominoMove? opening;
+    for (var i = 0; i < 24 && opening == null; i++) {
+      final legal = session.view.legal;
+      if (legal.isNotEmpty) {
+        opening = legal.first;
+        break;
+      }
+      if (session.view.canDraw) {
+        await session.applyMove(type: dominoActionDraw);
+      } else if (session.view.canPass) {
+        await session.applyMove(type: dominoActionPass);
+      }
+      await tester.pump(const Duration(milliseconds: 450));
     }
+    expect(opening, isNotNull);
+    // После ходов ботов рука на узком экране может уехать под край,
+    // тап по кости проверяет отдельный тест стола.
+    await session.applyMove(
+      type: dominoActionPlay,
+      tile: opening!.tile,
+      end: opening.end,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 280));
     expect(tester.takeException(), isNull);
+    expect(session.engine.chain, isNotEmpty);
 
     await pumpAt(const Size(1100, 800));
     await tester.pump(const Duration(milliseconds: 500));
