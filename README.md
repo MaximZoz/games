@@ -137,7 +137,8 @@ cd client && flutter analyze --no-fatal-infos && flutter test
 ./launcher/deploy_develop.sh      # origin/develop
 ```
 
-Android Play Internal: `develop` → flavor **dev**, `main` → **prod**. См. [docs/ANDROID_PLAY_INTERNAL.md](docs/ANDROID_PLAY_INTERNAL.md).
+Android Play Internal: `develop` → flavor **dev**, `main` → **prod**. См. [docs/ANDROID_PLAY_INTERNAL.md](docs/ANDROID_PLAY_INTERNAL.md).  
+iOS TestFlight без Mac: `develop` → DEV, `main` → prod. См. [docs/IOS_TESTFLIGHT.md](docs/IOS_TESTFLIGHT.md).
 
 Подробно: [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md), [docs/DEPLOY_FLY_DEV.md](docs/DEPLOY_FLY_DEV.md).
 
@@ -158,4 +159,6 @@ Android Play Internal: `develop` → flavor **dev**, `main` → **prod**. См. 
 - [API](docs/API.md)
 - [Базы данных](docs/DATABASE.md)
 - [Деплой](DEPLOY.md)
+- [Android Play Internal](docs/ANDROID_PLAY_INTERNAL.md)
+- [iOS TestFlight](docs/IOS_TESTFLIGHT.md)
 - [Скрипты](launcher/README.md)
