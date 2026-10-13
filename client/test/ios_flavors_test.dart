@@ -56,4 +56,29 @@ void main() {
       isNot(contains('PRODUCT_BUNDLE_IDENTIFIER')),
     );
   });
+
+  test('iOS TestFlight CI covers both flavors without a local Mac', () {
+    final workflow = File('../.github/workflows/ios-testflight.yml').readAsStringSync();
+    final fastfile = File('ios/fastlane/Fastfile').readAsStringSync();
+    final info = File('ios/Runner/Info.plist').readAsStringSync();
+
+    expect(workflow, contains('runs-on: macos-15'));
+    expect(workflow, contains('com.zozugames.app.dev'));
+    expect(workflow, contains('com.zozugames.app'));
+    expect(workflow, contains('https://multigameszozu-dev.fly.dev'));
+    expect(workflow, contains('https://multigameszozu.fly.dev'));
+    for (final secret in [
+      'APP_STORE_CONNECT_KEY_ID',
+      'APP_STORE_CONNECT_ISSUER_ID',
+      'APP_STORE_CONNECT_API_KEY',
+      'APPLE_TEAM_ID',
+      'MATCH_PASSWORD',
+    ]) {
+      expect(workflow, contains(secret), reason: 'workflow must require $secret');
+    }
+    expect(fastfile, contains('upload_to_testflight'));
+    expect(fastfile, contains('match('));
+    expect(fastfile, contains('flutter", "build", "ipa"'));
+    expect(info, contains('ITSAppUsesNonExemptEncryption'));
+  });
 }

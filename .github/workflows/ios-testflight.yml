@@ -1,0 +1,185 @@
+# Авторелиз iOS IPA в TestFlight (без локального Mac):
+#   push в develop → flavor dev  → com.zozugames.app.dev  + DEV API
+#   push в main    → flavor prod → com.zozugames.app      + prod API
+#
+# Два Bundle ID → оба приложения на одном iPhone.
+# Для DEV в App Store Connect нужно ОТДЕЛЬНОЕ приложение.
+#
+# Секреты: APP_STORE_CONNECT_* + APPLE_TEAM_ID + MATCH_PASSWORD
+# Setup: docs/IOS_TESTFLIGHT.md
+
+name: iOS TestFlight
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'client/**'
+      - '.github/workflows/ios-testflight.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Flavor / API (dev или prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+      force_match:
+        description: 'Пересоздать сертификат/профиль (если match сломался)'
+        required: false
+        default: false
+        type: boolean
+
+# develop и main не отменяют друг друга (разные Bundle ID / flavor).
+concurrency:
+  group: ios-testflight-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: client/ios
+    steps:
+      - name: Resolve target
+        id: target
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TARGET="${{ inputs.target }}"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            TARGET="prod"
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            TARGET="dev"
+          else
+            echo "Неизвестная ветка: ${{ github.ref_name }}"
+            exit 1
+          fi
+
+          if [[ "$TARGET" == "prod" ]]; then
+            API_BASE="https://multigameszozu.fly.dev"
+            BUNDLE_ID="com.zozugames.app"
+            FLAVOR="prod"
+          else
+            API_BASE="https://multigameszozu-dev.fly.dev"
+            BUNDLE_ID="com.zozugames.app.dev"
+            FLAVOR="dev"
+          fi
+
+          BUILD_NUMBER=$((10000 + ${{ github.run_number }}))
+          BUILD_NAME="0.1.0-${TARGET}.${{ github.run_number }}"
+          BUILD_ID="$(printf '%s' '${{ github.sha }}' | cut -c1-7)"
+          APP_VERSION="${BUILD_NAME}+${BUILD_NUMBER}"
+
+          {
+            echo "target=$TARGET"
+            echo "flavor=$FLAVOR"
+            echo "api_base=$API_BASE"
+            echo "bundle_id=$BUNDLE_ID"
+            echo "build_number=$BUILD_NUMBER"
+            echo "build_name=$BUILD_NAME"
+            echo "build_id=$BUILD_ID"
+            echo "app_version=$APP_VERSION"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "TestFlight: branch=${{ github.ref_name }} → $TARGET flavor=$FLAVOR bundle=$BUNDLE_ID"
+          echo "API_BASE=$API_BASE version=$APP_VERSION BUILD_ID=$BUILD_ID"
+
+      - name: Check required secrets
+        working-directory: .
+        shell: bash
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_API_KEY APPLE_TEAM_ID MATCH_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Нет секрета $name — открой docs/IOS_TESTFLIGHT.md (раздел «Без Mac») и добавь Secrets в GitHub"
+              missing=1
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            exit 1
+          fi
+          if [[ ! "$APPLE_TEAM_ID" =~ ^[A-Z0-9]{10}$ ]]; then
+            echo "::error::APPLE_TEAM_ID должен быть 10 символов (Membership Details), сейчас длина ${#APPLE_TEAM_ID}"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: stable
+          cache: true
+
+      - name: Flutter pub get
+        working-directory: client
+        run: flutter pub get
+
+      - name: Write App Store Connect API key
+        working-directory: .
+        env:
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$APP_STORE_CONNECT_API_KEY" > "$RUNNER_TEMP/AuthKey.p8"
+          test -s "$RUNNER_TEMP/AuthKey.p8"
+          if ! grep -q 'BEGIN PRIVATE KEY' "$RUNNER_TEMP/AuthKey.p8"; then
+            echo "::error::APP_STORE_CONNECT_API_KEY должен быть текстом .p8 (включая BEGIN PRIVATE KEY)"
+            exit 1
+          fi
+          echo "AuthKey.p8 bytes=$(wc -c < "$RUNNER_TEMP/AuthKey.p8")"
+
+      - name: Install Fastlane
+        run: gem install fastlane --no-document
+
+      - name: Build IPA and upload to TestFlight
+        working-directory: client/ios
+        env:
+          FLAVOR: ${{ steps.target.outputs.flavor }}
+          BUNDLE_ID: ${{ steps.target.outputs.bundle_id }}
+          API_BASE: ${{ steps.target.outputs.api_base }}
+          BUILD_NUMBER: ${{ steps.target.outputs.build_number }}
+          BUILD_NAME: ${{ steps.target.outputs.build_name }}
+          BUILD_ID: ${{ steps.target.outputs.build_id }}
+          APP_VERSION: ${{ steps.target.outputs.app_version }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: https://github.com/${{ github.repository }}.git
+          MATCH_GIT_BRANCH: match-certs
+          MATCH_FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force_match || false }}
+          MATCH_READONLY: 'false'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          MATCH_GIT_BASIC_AUTHORIZATION="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
+          export MATCH_GIT_BASIC_AUTHORIZATION
+          fastlane ios beta
+
+      - name: Upload IPA artifact
+        if: success()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ios-${{ steps.target.outputs.flavor }}-${{ steps.target.outputs.build_number }}
+          path: client/build/ios/ipa/*.ipa
+          if-no-files-found: warn
+          retention-days: 14
