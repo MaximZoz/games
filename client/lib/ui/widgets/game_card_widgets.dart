@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show rulesLineWithStakeIcon;
+    show formatStakeAmount, rulesLineWithStakeIcon, stakeCoinType;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -55,8 +55,9 @@ class GameCardTitle extends StatelessWidget {
   }
 }
 
-/// Верхний блок карточки игры: иконка + заголовок + ставка (кликабельная) +
-/// иконка-инфо с правилами. Используется в «Крестики-нолики», «Дурак» и т.д.
+/// Верхний блок карточки игры: иконка, название и справка.
+///
+/// Ставка стоит в ряду переключателей — [GameCardStakeChip], не в шапке.
 class GameCardHeader extends StatelessWidget {
   const GameCardHeader({
     super.key,
@@ -64,12 +65,7 @@ class GameCardHeader extends StatelessWidget {
     required this.icon,
     this.flipIcon = false,
     this.iconChild,
-    this.stakeBronze,
-    this.stakeLabel,
-    this.stakeCoinType = CoinType.bronze,
-    this.onStakeTap,
     this.onInfoTap,
-    this.busy = false,
     this.isDesktop = false,
     this.isMedium = false,
   });
@@ -82,28 +78,18 @@ class GameCardHeader extends StatelessWidget {
 
   /// Кастомная иконка (например Уно); если задана — вместо [icon]/[flipIcon].
   final Widget? iconChild;
-
-  /// Отображаемая ставка (например, `1`, `10`). null → блок ставки скрыт.
-  final int? stakeBronze;
-
-  /// Кастомный подписант, если нужно текст вместо числа. Пустая строка → ничего.
-  final String? stakeLabel;
-  final CoinType stakeCoinType;
-  final VoidCallback? onStakeTap;
   final VoidCallback? onInfoTap;
-  final bool busy;
   final bool isDesktop;
   final bool isMedium;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final Widget leading = iconChild ??
         (flipIcon
             ? DurakGameIcon(size: 26, color: Colors.white)
             : Icon(icon, color: Colors.white, size: 26));
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: isDesktop ? 52 : 44,
@@ -121,89 +107,43 @@ class GameCardHeader extends StatelessWidget {
         ),
         SizedBox(width: isDesktop ? 20 : 12),
         Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: gameCardTitleMinHeight(
-                      isDesktop: isDesktop,
-                      isMedium: isMedium,
-                    ),
-                  ),
-                  child: GameCardTitle(
-                    title: title,
-                    isDesktop: isDesktop,
-                    isMedium: isMedium,
-                  ),
-                ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: gameCardTitleMinHeight(
+                isDesktop: isDesktop,
+                isMedium: isMedium,
               ),
-              if (stakeBronze != null && stakeBronze! > 0) ...[
-                SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
-                GamepadFocusBlock(
-                  radius: 12,
-                  outlinePadding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  onActivate: busy ? null : onStakeTap,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      canRequestFocus: false,
-                      onTap: busy ? null : onStakeTap,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 2),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              stakeLabel ?? '$stakeBronze',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            CoinIcon(
-                              coinType: stakeCoinType,
-                              size: 20,
-                              showBorder: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              if (onInfoTap != null)
-                GamepadFocusBlock(
-                  radius: 16,
-                  shape: GamepadHighlightShape.circle,
-                  onActivate: onInfoTap,
-                  child: IconButton(
-                    // Не отключать при busy: IconButton с onPressed == null
-                    // уходит в disabled и анимирует цвет — иконка «моргает».
-                    onPressed: onInfoTap,
-                    icon: const Icon(
-                      Icons.info_outline_rounded,
-                      size: 22,
-                      color: AppColors.textSecondary,
-                    ),
-                    style: IconButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      minimumSize: const Size(32, 32),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: const EdgeInsets.all(4),
-                    ),
-                  ),
-                ),
-            ],
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: GameCardTitle(
+                title: title,
+                isDesktop: isDesktop,
+                isMedium: isMedium,
+              ),
+            ),
           ),
         ),
+        if (onInfoTap != null)
+          GamepadFocusBlock(
+            radius: 16,
+            shape: GamepadHighlightShape.circle,
+            onActivate: onInfoTap,
+            child: IconButton(
+              onPressed: onInfoTap,
+              icon: const Icon(
+                Icons.info_outline_rounded,
+                size: 22,
+                color: AppColors.textSecondary,
+              ),
+              style: IconButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                minimumSize: const Size(32, 32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.all(4),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -222,6 +162,8 @@ class GameCardChip extends StatelessWidget {
     this.compact = false,
     this.isDesktop = false,
     this.isMedium = false,
+    this.showLeading = true,
+    this.trailing,
   });
 
   final String label;
@@ -237,6 +179,12 @@ class GameCardChip extends StatelessWidget {
   final bool compact;
   final bool isDesktop;
   final bool isMedium;
+
+  /// false — без иконки слева (ставка: число и монета справа).
+  final bool showLeading;
+
+  /// Дополнительный виджет справа от подписи, внутри той же рамки.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -280,11 +228,13 @@ class GameCardChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              iconChild ??
-                  (flipIcon
-                      ? DurakGameIcon(size: iconSz, color: color)
-                      : Icon(icon, size: iconSz, color: color)),
-              SizedBox(width: compact ? 4 : 6),
+              if (showLeading) ...[
+                iconChild ??
+                    (flipIcon
+                        ? DurakGameIcon(size: iconSz, color: color)
+                        : Icon(icon, size: iconSz, color: color)),
+                SizedBox(width: compact ? 4 : 6),
+              ],
               Text(
                 label,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -294,10 +244,56 @@ class GameCardChip extends StatelessWidget {
                   height: 1.35,
                 ),
               ),
+              if (trailing != null) ...[
+                SizedBox(width: compact ? 4 : 6),
+                trailing!,
+              ],
             ],
           ),
         ),
       ),
+      ),
+    );
+  }
+}
+
+/// Ставка в том же чипе, что игроки, время и режим: рамка, фон переключателя,
+/// число и монета. Тап крутит ставку, как остальные переключатели.
+class GameCardStakeChip extends StatelessWidget {
+  const GameCardStakeChip({
+    super.key,
+    required this.stakeBronze,
+    required this.onTap,
+    this.isDesktop = false,
+    this.isMedium = false,
+    this.compact = false,
+  });
+
+  final int stakeBronze;
+  final VoidCallback? onTap;
+  final bool isDesktop;
+  final bool isMedium;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
+    return Tooltip(
+      message: context.l10n.gamesTapChangeStake,
+      child: GameCardChip(
+        selected: true,
+        icon: Icons.monetization_on_rounded,
+        showLeading: false,
+        label: formatStakeAmount(stakeBronze),
+        trailing: CoinIcon(
+          coinType: stakeCoinType(stakeBronze),
+          size: iconSz,
+          showBorder: true,
+        ),
+        onTap: onTap,
+        compact: compact,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
     );
   }
@@ -506,8 +502,8 @@ double gameCardChipHeight({
   return (math.max(iconSz, fontSz * 1.35) + padV * 2 + 2).ceilToDouble();
 }
 
-/// Полоса чипов на три ряда: на плитке ~340px четыре чипа Дурака
-/// («Переводной», «24 карты») переносятся дважды, не в два ряда.
+/// Высота трёх рядов чипов. Карточка больше не резервирует её целиком:
+/// переключатели занимают столько рядов, сколько занял [Wrap].
 @visibleForTesting
 double gameCardChipsMinHeight({
   required bool compact,
@@ -551,11 +547,15 @@ class GameCardShell extends StatelessWidget {
     required this.header,
     required this.chips,
     required this.actions,
+    this.stakeChip,
     this.isDesktop = false,
     this.isMedium = false,
   });
 
   final GameCardHeader header;
+
+  /// Ставка. Стоит первой в ряду переключателей. null — офлайн, ставки нет.
+  final Widget? stakeChip;
 
   /// Ряды чипов (используется Wrap внутри).
   final List<Widget> chips;
@@ -572,6 +572,10 @@ class GameCardShell extends StatelessWidget {
     );
     final chipsGap = isDesktop ? 18.0 : 14.0;
     final actionsGap = isDesktop ? 20.0 : 16.0;
+    final toggles = <Widget>[
+      if (stakeChip != null) stakeChip!,
+      ...chips,
+    ];
     return GradientCard(
       animate: false,
       padding: EdgeInsets.symmetric(
@@ -585,18 +589,10 @@ class GameCardShell extends StatelessWidget {
           header,
           SizedBox(
             width: double.infinity,
-            height: gameCardChipsMinHeight(
-              compact: false,
-              isDesktop: isDesktop,
-              isMedium: isMedium,
-            ),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Wrap(
-                spacing: isDesktop ? 10 : 8,
-                runSpacing: 8,
-                children: chips,
-              ),
+            child: Wrap(
+              spacing: isDesktop ? 10 : 8,
+              runSpacing: 8,
+              children: toggles,
             ),
           ),
           actions,

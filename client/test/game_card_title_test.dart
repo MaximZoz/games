@@ -21,7 +21,6 @@ void main() {
               child: GameCardHeader(
                 title: 'Крестики-нолики',
                 icon: Icons.grid_3x3_rounded,
-                stakeBronze: 2,
               ),
             ),
           ),
@@ -39,8 +38,7 @@ void main() {
     expect(title.data, contains('\u200b'));
   });
 
-  testWidgets('иконка правил остаётся при busy и не уходит в disabled',
-      (tester) async {
+  testWidgets('иконка правил не уходит в disabled', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -48,25 +46,6 @@ void main() {
             title: 'Дурак',
             icon: Icons.style_rounded,
             onInfoTap: () {},
-          ),
-        ),
-      ),
-    );
-
-    expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
-    expect(
-      tester.widget<IconButton>(find.byType(IconButton)).onPressed,
-      isNotNull,
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GameCardHeader(
-            title: 'Дурак',
-            icon: Icons.style_rounded,
-            onInfoTap: () {},
-            busy: true,
           ),
         ),
       ),
