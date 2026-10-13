@@ -13,6 +13,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException, LobbyPlayer;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/lobby_guest.dart';
 import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
@@ -47,6 +48,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
   final Set<String> _cancelling = {};
   final Set<String> _friendRequestInFlight = {};
   bool _leaving = false;
+  bool _joining = false;
   bool _startingSearch = false;
 
   /// Открыть свою игру для поиска: лобби становится публичным.
@@ -157,6 +159,28 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
     }
   }
 
+  Future<void> _join() {
+    return runLobbyJoin(
+      context: context,
+      ref: ref,
+      lobbyId: widget.lobbyId,
+      gameType: 'uno',
+      setJoining: (joining) {
+        if (mounted) setState(() => _joining = joining);
+      },
+      invalidateLobby: () => ref.invalidate(unoLobbyProvider(widget.lobbyId)),
+      join: () async {
+        final result =
+            await ref.read(unoRepositoryProvider).joinLobby(widget.lobbyId);
+        return LobbyJoinOutcome(
+          joined: result.joined,
+          gameId: result.gameId,
+          waitingMore: result.waitingMore,
+        );
+      },
+    );
+  }
+
   void _showRules(UnoLobbyView lobby) {
     showGameRulesDialog(
       context: context,
@@ -189,30 +213,44 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
     });
 
     final lobby = lobbyAsync.valueOrNull;
+    final guest = lobby != null &&
+        !lobbyUserIsMember(
+          userId: ref.watch(authStateProvider).valueOrNull?.id,
+          creatorId: lobby.creatorId,
+          playerIds: lobby.playerIds,
+          players: lobby.players,
+        );
     final matchmaking = (lobby?.mode ?? widget.initialMode) == 'matchmake';
     return SwipeBackScope(
       enabled: !_leaving,
-      onBack: _confirmLeave,
+      onBack: guest ? () => exitLobbyGuest(context) : _confirmLeave,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(
             tooltip: context.l10n.commonBack,
-            onPressed: _leaving ? null : _confirmLeave,
+            onPressed: _leaving
+                ? null
+                : guest
+                    ? () => exitLobbyGuest(context)
+                    : _confirmLeave,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
           titleSpacing: 8,
           title: GameLobbyAppBarTitle(
             gameType: LobbyGameKind.uno,
             title: lobbyAppBarTitle(
+              status: lobby?.status,
               initialMode: widget.initialMode,
               lobbyMode: lobby?.mode,
+              fromInviteLink: guest && lobby.mode != 'matchmake',
+              isLobbyMember: lobby != null && !guest,
             ),
           ),
           centerTitle: false,
           actions: [
-            if (lobby != null)
+            if (lobby != null && !guest)
               LobbySearchAction(
                 searching: matchmaking,
                 busy: _startingSearch,
@@ -250,6 +288,31 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
     UnoLobbyView lobby,
     AsyncValue<FriendsSnapshot> friendsAsync,
   ) {
+    final guest = !lobbyUserIsMember(
+      userId: ref.watch(authStateProvider).valueOrNull?.id,
+      creatorId: lobby.creatorId,
+      playerIds: lobby.playerIds,
+      players: lobby.players,
+    );
+    if (guest) {
+      return LobbyInviteAcceptView(
+        creatorName: lobbyCreatorDisplayName(
+          creatorId: lobby.creatorId,
+          players: lobby.players,
+        ),
+        joining: _joining,
+        onJoin: () => unawaited(_join()),
+        stakeBronze: lobby.maxPlayers > 2 ? 0 : lobby.stakeBronze,
+        padding: EdgeInsets.all(isNarrow(context) ? 16 : 24),
+        top: lobby.maxPlayers > 2 ? _buildMultiPlayersCard(lobby) : null,
+        rules: rulesTextLines(unoRuleLines(
+          players: lobby.maxPlayers,
+          turnTimeSec: lobby.turnTimeSec,
+          stakeBronze: lobby.stakeBronze,
+          l10n: context.l10n,
+        )),
+      );
+    }
     final memberIds = <String>{...lobby.playerIds, lobby.creatorId};
     final friendsCount = friendsAsync.valueOrNull?.friends
             .where((friend) => !memberIds.contains(friend.user.id))

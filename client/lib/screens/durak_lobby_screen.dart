@@ -17,6 +17,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException, LobbyPlayer;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/lobby_guest.dart';
 import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
@@ -45,6 +46,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
   final Set<String> _cancelling = {};
   final Set<String> _friendRequestInFlight = {};
   bool _leaving = false;
+  bool _joining = false;
   bool _startingSearch = false;
 
   /// Открыть свою игру для поиска: лобби становится публичным.
@@ -177,6 +179,28 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     }
   }
 
+  Future<void> _join() {
+    return runLobbyJoin(
+      context: context,
+      ref: ref,
+      lobbyId: widget.lobbyId,
+      gameType: 'durak',
+      setJoining: (joining) {
+        if (mounted) setState(() => _joining = joining);
+      },
+      invalidateLobby: () => ref.invalidate(durakLobbyProvider(widget.lobbyId)),
+      join: () async {
+        final result =
+            await ref.read(durakRepositoryProvider).joinLobby(widget.lobbyId);
+        return LobbyJoinOutcome(
+          joined: result.joined,
+          gameId: result.gameId,
+          waitingMore: result.waitingMore,
+        );
+      },
+    );
+  }
+
   Future<void> _copyLink(String lobbyId) async {
     // Абсолютный URL + pendingInvitePaste — как в крестиках: чип «Вставить» в чате.
     final link = buildInviteLobbyShareUrl(
@@ -221,29 +245,43 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     });
 
     final lobby = lobbyAsync.valueOrNull;
+    final guest = lobby != null &&
+        !lobbyUserIsMember(
+          userId: ref.watch(authStateProvider).valueOrNull?.id,
+          creatorId: lobby.creatorId,
+          playerIds: lobby.playerIds,
+          players: lobby.players,
+        );
     final isMatchmake = (lobby?.mode ?? widget.initialMode) == 'matchmake';
     return SwipeBackScope(
       enabled: !_leaving,
-      onBack: _confirmLeave,
+      onBack: guest ? () => exitLobbyGuest(context) : _confirmLeave,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: _leaving ? null : _confirmLeave,
+            onPressed: _leaving
+                ? null
+                : guest
+                    ? () => exitLobbyGuest(context)
+                    : _confirmLeave,
           ),
           titleSpacing: 8,
           title: GameLobbyAppBarTitle(
             gameType: LobbyGameKind.durak,
             title: lobbyAppBarTitle(
+              status: lobby?.status,
               initialMode: widget.initialMode,
               lobbyMode: lobby?.mode,
+              fromInviteLink: guest && lobby.mode != 'matchmake',
+              isLobbyMember: lobby != null && !guest,
             ),
           ),
           centerTitle: false,
           actions: [
-            if (lobby != null)
+            if (lobby != null && !guest)
               LobbySearchAction(
                 searching: isMatchmake,
                 busy: _startingSearch,
@@ -294,6 +332,31 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     DurakLobbyView lobby,
     AsyncValue<FriendsSnapshot> friendsAsync,
   ) {
+    final guest = !lobbyUserIsMember(
+      userId: ref.watch(authStateProvider).valueOrNull?.id,
+      creatorId: lobby.creatorId,
+      playerIds: lobby.playerIds,
+      players: lobby.players,
+    );
+    if (guest) {
+      return LobbyInviteAcceptView(
+        creatorName: lobbyCreatorDisplayName(
+          creatorId: lobby.creatorId,
+          players: lobby.players,
+        ),
+        joining: _joining,
+        onJoin: () => unawaited(_join()),
+        stakeBronze: lobby.maxPlayers > 2 ? 0 : lobby.stakeBronze,
+        top: lobby.maxPlayers > 2 ? _buildMultiPlayersCard(lobby) : null,
+        rules: rulesTextLines(durakRuleLines(
+          mode: lobby.gameMode,
+          players: lobby.maxPlayers,
+          deckSize: lobby.deckSize,
+          turnTimeSec: lobby.turnTimeSec,
+          stakeBronze: lobby.stakeBronze,
+        )),
+      );
+    }
     final memberIds = <String>{...lobby.playerIds, lobby.creatorId};
     final friendsCount = friendsAsync.valueOrNull?.friends
             .where((f) => !memberIds.contains(f.user.id))

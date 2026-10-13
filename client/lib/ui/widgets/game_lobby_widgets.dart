@@ -735,6 +735,106 @@ class GameLobbyWaitingLayout extends StatelessWidget {
   }
 }
 
+/// Экран гостя по ссылке: кто пригласил, правила и «Войти в игру».
+class LobbyInviteAcceptView extends StatelessWidget {
+  const LobbyInviteAcceptView({
+    super.key,
+    required this.creatorName,
+    required this.joining,
+    required this.onJoin,
+    this.rules,
+    this.top,
+    this.stakeBronze = 0,
+    this.padding = const EdgeInsets.all(24),
+  });
+
+  final String creatorName;
+  final bool joining;
+  final VoidCallback onJoin;
+  final Widget? rules;
+  final Widget? top;
+  final int stakeBronze;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final name = creatorName.trim();
+    final subtitle = name.isNotEmpty
+        ? l10n.lobbyCreatorInvites(name)
+        : l10n.lobbyInvitedToPlay;
+    return Padding(
+      padding: padding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (stakeBronze > 0) ...[
+            LobbyStakeChip(
+              stakeBronze: stakeBronze,
+              label: l10n.shopStakes,
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (top != null) ...[
+            top!,
+            const SizedBox(height: 12),
+          ],
+          Expanded(
+            child: GradientCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Text(
+                    l10n.lobbyInviteTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  if (rules != null) ...[
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: SingleChildScrollView(child: rules),
+                    ),
+                  ] else
+                    const Spacer(),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: joining ? null : onJoin,
+                    style: AppButtonStyles.of(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    child: joining
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.textPrimary,
+                            ),
+                          )
+                        : Text(l10n.lobbyEnterGame),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Список друзей в лобби «Своя игра» — один вид для всех игр.
 ///
 /// Сортирует по presence, показывает «Онлайн» / «был в сети» и зелёную точку.
