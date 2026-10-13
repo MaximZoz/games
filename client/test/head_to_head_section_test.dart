@@ -53,7 +53,7 @@ void main() {
     expect(list.scrollDirection, Axis.horizontal);
   });
 
-  testWidgets('коллекции в узкой карточке переносятся и не обрезаются',
+  testWidgets('коллекции в узкой карточке листаются одной строкой',
       (tester) async {
     const cardWidth = 330.0;
     await tester.pumpWidget(
@@ -119,16 +119,25 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byType(ListView), findsNothing);
-    final tiles = find.byType(GamepadFocusBlock);
-    expect(tiles, findsNWidgets(6));
-    final wrapBox = tester.getRect(find.byType(Wrap));
-    expect(wrapBox.width, lessThanOrEqualTo(cardWidth));
-    final first = tester.getRect(tiles.first);
-    final last = tester.getRect(tiles.last);
-    expect(last.top, greaterThan(first.bottom - 1));
-    expect(last.right, lessThanOrEqualTo(wrapBox.right + 0.1));
-    expect(first.left, greaterThanOrEqualTo(wrapBox.left - 0.1));
+    final list = tester.widget<ListView>(find.byType(ListView));
+    expect(list.scrollDirection, Axis.horizontal);
+    final grid = tester.getRect(find.byType(CollectionShowcaseGrid));
+    expect(grid.height, CollectionShowcaseGrid.slotHeight);
+    expect(grid.width, cardWidth);
+    final first = tester.getRect(find.byKey(const ValueKey('coll_a')));
+    final second = tester.getRect(find.byKey(const ValueKey('coll_b')));
+    expect(second.top, closeTo(first.top, 0.5));
+
+    final position =
+        tester.state<ScrollableState>(find.byType(Scrollable)).position;
+    expect(position.maxScrollExtent, greaterThan(0));
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+
+    final last = tester.getRect(find.byKey(const ValueKey('coll_f')));
+    expect(last.top, closeTo(first.top, 0.5));
+    expect(last.right, lessThanOrEqualTo(grid.right + 0.5));
+    expect(last.left, greaterThanOrEqualTo(grid.left - 0.5));
     expect(tester.takeException(), isNull);
   });
 
