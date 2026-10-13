@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"multigames/server/internal/checkers"
+	"multigames/server/internal/domino"
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/store"
@@ -296,17 +297,22 @@ func normalizeDominoSettings(body gameSettingsBody) (store.UserGameSettings, str
 	if stake < 2 {
 		stake = 2
 	}
+	rawMode := body.GameMode
+	if strings.TrimSpace(rawMode) == "" {
+		rawMode = body.Variant
+	}
+	mode := domino.NormalizeMode(rawMode)
 	return store.UserGameSettings{
 		GameType:             store.GameTypeDomino,
 		TurnTimeSec:          body.TurnTimeSec,
 		GridSize:             3,
-		Variant:              "kozel",
+		Variant:              mode,
 		SwapRule:             false,
 		FirstMoveRestriction: false,
 		StakeBronze:          stake,
 		DeckSize:             28,
 		MaxPlayers:           maxPlayers,
-		GameMode:             "kozel",
+		GameMode:             mode,
 	}, ""
 }
 
@@ -412,8 +418,12 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		if s.MaxPlayers < 1 || s.MaxPlayers > 4 {
 			s.MaxPlayers = 2
 		}
-		s.GameMode = "kozel"
-		s.Variant = "kozel"
+		rawMode := s.GameMode
+		if strings.TrimSpace(rawMode) == "" {
+			rawMode = s.Variant
+		}
+		s.GameMode = domino.NormalizeMode(rawMode)
+		s.Variant = s.GameMode
 	} else if gameType == store.GameTypeNardy {
 		s.MaxPlayers = 2
 		if s.GameMode != "long" {

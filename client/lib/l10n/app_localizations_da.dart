@@ -802,7 +802,16 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesChess => 'Skak';
 
   @override
-  String get gamesDomino => 'Geden';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Geden';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassisk';
+
+  @override
+  String get gamesDominoModeSea => 'Hav';
 
   @override
   String get rulesDominoDeal => 'Alle får 7 brikker. Ved 2 eller 3 ligger resten i bunken; ved 4 er bunken tom.';
@@ -827,6 +836,44 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: dig og bots. Botten tæller tal og kigger ikke i skjulte hænder.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Tilstand: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'To eller tre spillere får 7 brikker, fire får 5. Resten er bunken.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Første runde åbnes med dobbelt 6, så blank, så lavere dobler. Uden dobbelt skal den højeste brik.';
+
+  @override
+  String get rulesDominoClassicScore => 'Den der går ud skriver modstandernes øjne. Først til 100 vinder.';
+
+  @override
+  String get rulesDominoClassicFish => 'Ved fisk skriver den unikt letteste hånd forskellen mod hver anden. Delt minimum giver intet.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Delt højeste score deler sejren. Er alle lige, er det uafgjort.';
+
+  @override
+  String get rulesDominoSeaSame => 'Deling, åbning og træk som i Geden. Kæden har to ender.';
+
+  @override
+  String get rulesDominoSeaScore => 'Kun den tungeste hånd skriver point. Under 25 skrives intet.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Har to spillere 25 eller mere, skriver ingen den runde.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 afslutter runden med det samme: den unikt tungeste modstander får 75. Ved lige får ingen.';
+
+  @override
+  String get rulesDominoSeaSix => 'At gå ud med 6-6 giver taberen 100 og nulstiller lukkerens kamppoint.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Kampen går til 125. Den der når det taber.';
 
   @override
   String get dominoBoneyard => 'Bunke';

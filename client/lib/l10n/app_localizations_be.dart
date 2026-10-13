@@ -802,7 +802,16 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesChess => 'Шахматы';
 
   @override
-  String get gamesDomino => 'Казёл';
+  String get gamesDomino => 'Даміно';
+
+  @override
+  String get gamesDominoModeKozel => 'Казёл';
+
+  @override
+  String get gamesDominoModeClassic => 'Класіка';
+
+  @override
+  String get gamesDominoModeSea => 'Марскі';
 
   @override
   String get rulesDominoDeal => 'Раздаюць па 7 костак. Пры дваіх і траіх астатнія ляжаць у базары, пры чацвярых базар пусты.';
@@ -827,6 +836,44 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Офлайн: вы і боты. Бот лічыць масці і не падглядвае ў чужыя рукі.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Рэжым: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Дваім і траім раздаюць па 7 костак, чацвярым — па 5. Астатняе ляжыць у базары.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Першы кон пачынае дубль 6-6, потым 0-0 і далей дублі па змяншэнні. Калі дублёў няма — старэйшая костка. Яе і трэба паставіць.';
+
+  @override
+  String get rulesDominoClassicScore => 'Хто выйшаў, запісвае суму костак супернікаў. Партыя да 100: хто першым набраў — выйграў.';
+
+  @override
+  String get rulesDominoClassicFish => 'Рыба: у каго ачкоў строга менш за ўсіх, запісвае розніцу з кожнай чужой рукой. Калі мінімум у некалькіх — ачкі не пішуцца.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Аднолькавы найвышэйшы лік дзеліць перамогу. Калі лік ва ўсіх роўны — нічыя.';
+
+  @override
+  String get rulesDominoSeaSame => 'Раздача, першы ход і дабор — як у рэжыме «Казёл». Ланцужок на два канцы.';
+
+  @override
+  String get rulesDominoSeaScore => 'Ачкі піша толькі той, у каго ў канцы кону больш за ўсіх на руках. Менш за 25 не запісваецца.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Калі 25 і больш адразу ў дваіх, гэты кон нікому не пішацца.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Выкладзены 0-0 адразу заканчвае кон: гульцу з самай цяжкай рукой пішуць 75. Калі такіх двое — не пішуць нікому.';
+
+  @override
+  String get rulesDominoSeaSix => 'Калі кон закрыты апошняй косткай 6-6, прайграўшаму пішуць 100, а ў таго, хто закрыў, лік партыі скідаецца.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Партыя да 125. Хто набраў — прайграў.';
 
   @override
   String get dominoBoneyard => 'Базар';

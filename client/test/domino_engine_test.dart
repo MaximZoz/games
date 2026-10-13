@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/domino/domino_bot.dart';
 import 'package:multigames_client/games/domino/domino_engine.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 
 DominoGame freshGame(List<List<int>> hands, List<int> boneyard, int left, int right) {
   final game = DominoGame(
@@ -345,5 +346,70 @@ void main() {
       }
     }
     expect(losses, lessThanOrEqualTo(games ~/ 3));
+  });
+
+  test('classic and sea scoring', () {
+    final four = DominoGame.newGame(
+      ['a', 'b', 'c', 'd'],
+      3,
+      dominoModeClassic,
+    );
+    expect(four.mode, dominoModeClassic);
+    expect(four.target, dominoClassicScore);
+    expect(four.players.first.hand, hasLength(5));
+    expect(four.boneyard, hasLength(8));
+
+    final opening = freshGame([
+      [dominoTileId(1, 1)],
+      [dominoTileId(6, 6)],
+    ], const [], -1, -1);
+    opening.mode = dominoModeClassic;
+    expect(opening.pickOpening(), (1, dominoTileId(6, 6)));
+    opening.mode = dominoModeKozel;
+    expect(opening.pickOpening(), (0, dominoTileId(1, 1)));
+
+    final out = freshGame([
+      [dominoTileId(1, 1)],
+      [dominoTileId(3, 3), dominoTileId(4, 4)],
+    ], const [], 1, 2);
+    out.mode = dominoModeClassic;
+    out.target = dominoClassicScore;
+    out.apply(DominoAction(type: dominoActionPlay, tile: dominoTileId(1, 1), end: 'left'));
+    expect(out.status, dominoStatusRoundEnd);
+    expect(out.players[0].score, 14);
+    expect(out.players[1].score, 0);
+
+    final fish = freshGame([
+      [dominoTileId(2, 3)],
+      [dominoTileId(4, 4)],
+      [dominoTileId(5, 5), dominoTileId(6, 6)],
+    ], const [], 0, 1);
+    fish.mode = dominoModeClassic;
+    fish.target = dominoClassicScore;
+    fish.apply(const DominoAction(type: dominoActionPass));
+    expect(fish.roundKind, dominoRoundFish);
+    expect(fish.players[0].score, 20);
+
+    final blank = freshGame([
+      [dominoTileId(0, 0), dominoTileId(1, 2)],
+      [dominoTileId(6, 6)],
+    ], const [], 0, 5);
+    blank.mode = dominoModeSea;
+    blank.target = dominoSeaScore;
+    blank.apply(DominoAction(type: dominoActionPlay, tile: dominoTileId(0, 0), end: 'left'));
+    expect(blank.roundKind, dominoRoundFast);
+    expect(blank.players[1].score, dominoSeaBlankHit);
+    expect(blank.players[0].hand, hasLength(1));
+
+    final six = freshGame([
+      [dominoTileId(6, 6)],
+      [dominoTileId(5, 5)],
+    ], const [], 6, 1);
+    six.mode = dominoModeSea;
+    six.target = dominoSeaScore;
+    six.players[0].score = 40;
+    six.apply(DominoAction(type: dominoActionPlay, tile: dominoTileId(6, 6), end: 'left'));
+    expect(six.players[0].score, 0);
+    expect(six.players[1].score, dominoSeaSixHit);
   });
 }

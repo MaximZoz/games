@@ -27,6 +27,10 @@
    - Шапка: `GameLobbyAppBarTitle` + `lobbyAppBarTitle` — везде «Своя игра» /
      «Лобби», не название игры.
    - Партия: хром через `GameActionsOverlay` + `handleGameScreenClose` + таймеры.
+   - Экран партии оборачивать в `SwipeBackScope.gameBoard`, не в обычный
+     `SwipeBackScope`. Непрозрачная полоса 48px у левого края перехватывает
+     тап по крайней левой кости, карте или клетке. Если рука вдоль низа —
+     передать `bottomInset` (как в дураке и Уно, около 42% высоты).
    - Выбывание multi: `enterGameObservation(ref, gameId, gameType: id)`.
 3. `GameDescriptor` в `client/lib/games/framework/<id>_game.dart`
    (`id`, `localizedName`, `visibleModeLabel`, экраны).

@@ -802,7 +802,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesChess => 'หมากรุก';
 
   @override
-  String get gamesDomino => 'แพะ';
+  String get gamesDomino => 'โดมิโน';
+
+  @override
+  String get gamesDominoModeKozel => 'แพะ';
+
+  @override
+  String get gamesDominoModeClassic => 'คลาสสิก';
+
+  @override
+  String get gamesDominoModeSea => 'ทะเล';
 
   @override
   String get rulesDominoDeal => 'แต่ละคนได้ 7 ตัว ถ้า 2 หรือ 3 คน ที่เหลืออยู่ในกอง ถ้า 4 คน กองว่าง';
@@ -827,6 +836,44 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'ออฟไลน์: คุณกับบอต บอตนับเลขและไม่แอบดูมือที่ซ่อน';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'โหมด: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'สองหรือสามคนได้คนละ 7 ชิ้น สี่คนได้คนละ 5 ที่เหลือคือกองกลาง';
+
+  @override
+  String get rulesDominoClassicOpen => 'มือแรกเปิดด้วยเบิ้ล 6 แล้ว 0-0 แล้วเบิ้ลที่น้อยลง ถ้าไม่มีเบิ้ลต้องลงตัวสูงสุด';
+
+  @override
+  String get rulesDominoClassicScore => 'คนที่หมดมือได้แต้มของคู่แข่ง คนแรกถึง 100 ชนะ';
+
+  @override
+  String get rulesDominoClassicFish => 'เมื่อบล็อก คนที่แต้มน้อยที่สุดคนเดียวได้ส่วนต่างจากแต่ละมือ ถ้าเสมอกันไม่มีใครได้แต้ม';
+
+  @override
+  String get rulesDominoClassicMatch => 'คะแนนสูงสุดเท่ากันแบ่งชัย ถ้าทุกคนเท่ากันคือเสมอ';
+
+  @override
+  String get rulesDominoSeaSame => 'แจก เปิด และจั่วเหมือนแพะ สายมีสองปลาย';
+
+  @override
+  String get rulesDominoSeaScore => 'คนที่แต้มในมือมากที่สุดคนเดียวได้บันทึก น้อยกว่า 25 ไม่บันทึก';
+
+  @override
+  String get rulesDominoSeaWipe => 'ถ้าสองคนมี 25 ขึ้นไปพร้อมกัน มือนี้ไม่มีใครได้บันทึก';
+
+  @override
+  String get rulesDominoSeaBlank => 'ลง 0-0 จบมือทันที คนที่หนักที่สุดคนเดียวได้ 75 ถ้าเสมอกันไม่มีใครได้';
+
+  @override
+  String get rulesDominoSeaSix => 'ปิดมือด้วย 6-6 ใบสุดท้าย คนแพ้ได้ 100 และคะแนนแมตช์ของผู้ปิดถูกล้าง';
+
+  @override
+  String get rulesDominoSeaMatch => 'แมตช์ถึง 125 คนที่ถึงแพ้';
 
   @override
   String get dominoBoneyard => 'กอง';

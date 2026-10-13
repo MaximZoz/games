@@ -802,7 +802,16 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesChess => 'Shaxmat';
 
   @override
-  String get gamesDomino => 'Kozel';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Kozel';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassika';
+
+  @override
+  String get gamesDominoModeSea => 'Dengiz';
 
   @override
   String get rulesDominoDeal => 'Har biriga 7 tosh. Ikki va uch kishida qolgani bozorda, to‘rt kishida bozor bo‘sh.';
@@ -827,6 +836,44 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Oflayn: siz va botlar. Bot mastlarni sanaydi va yashirin qo‘llarga qaramaydi.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Rejim: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Ikki va uch kishiga 7 tadan, to‘rttaga 5 tadan tosh beriladi. Qolgani bozorda.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Birinchi konni 6-6 dubl, so‘ng 0-0 va kichikroq dubllar boshlaydi. Dubl bo‘lmasa — eng katta tosh. Aynan shuni qo‘yish kerak.';
+
+  @override
+  String get rulesDominoClassicScore => 'Chiqqan o‘yinchi raqiblar toshlari yig‘indisini yozadi. 100 gacha: birinchi yig‘gan yutadi.';
+
+  @override
+  String get rulesDominoClassicFish => 'Baliq: ochkosi hammadan kam bo‘lgan har bir begona qo‘l bilan farqni yozadi. Minimum bir nechtada bo‘lsa, ochko yozilmaydi.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Bir xil eng yuqori hisob g‘alabani bo‘lishadi. Hamma hisob teng bo‘lsa — durang.';
+
+  @override
+  String get rulesDominoSeaSame => 'Tarqatish, birinchi yurish va olish — «Kozel» rejimidagidek. Zanjir ikki uchli.';
+
+  @override
+  String get rulesDominoSeaScore => 'Ochkoni kon oxirida qo‘lida eng ko‘pi bor odam yozadi. 25 dan kam yozilmaydi.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Ikki kishida birdaniga 25 va undan ko‘p bo‘lsa, bu kon hech kimga yozilmaydi.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Qo‘yilgan 0-0 konni darhol tugatadi: eng og‘ir qo‘lga 75 yoziladi. Ikkitasi bo‘lsa — hech kimga yozilmaydi.';
+
+  @override
+  String get rulesDominoSeaSix => 'Kon oxirgi 6-6 tosh bilan yopilsa, yutqazganga 100 yoziladi, yopganning partiya hisobi nolga tushadi.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Partiya 125 gacha. Yig‘gan yutqazadi.';
 
   @override
   String get dominoBoneyard => 'Bozor';

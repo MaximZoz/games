@@ -802,7 +802,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesChess => 'Chess';
 
   @override
-  String get gamesDomino => 'Goat';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Goat';
+
+  @override
+  String get gamesDominoModeClassic => 'Classic';
+
+  @override
+  String get gamesDominoModeSea => 'Sea';
 
   @override
   String get rulesDominoDeal => 'Each player gets 7 tiles. With 2 or 3 players the rest form the boneyard; with 4 the boneyard is empty.';
@@ -827,6 +836,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: you and bots. The bot counts suits and does not look at hidden hands.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Mode: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Two or three players get 7 tiles, four players get 5. The rest is the boneyard.';
+
+  @override
+  String get rulesDominoClassicOpen => 'The first hand opens with double 6, then the blank, then lower doubles. If there is no double, the highest tile must be played.';
+
+  @override
+  String get rulesDominoClassicScore => 'The player who goes out scores the pips left with the opponents. First to 100 wins the match.';
+
+  @override
+  String get rulesDominoClassicFish => 'On a block, the unique lightest hand scores the difference against each other hand. A shared minimum scores nothing.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Players who share the highest score all win. If every score is equal, the match is a draw.';
+
+  @override
+  String get rulesDominoSeaSame => 'The deal, opening and draw match Goat. The chain has two ends.';
+
+  @override
+  String get rulesDominoSeaScore => 'Only the heaviest hand records points. Less than 25 is not recorded.';
+
+  @override
+  String get rulesDominoSeaWipe => 'If two players both have 25 or more, nobody records that hand.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Playing 0-0 ends the hand at once: the unique heaviest opponent is charged 75. A tie charges nobody.';
+
+  @override
+  String get rulesDominoSeaSix => 'Going out with 6-6 charges the loser 100 and resets the closer\'s match score.';
+
+  @override
+  String get rulesDominoSeaMatch => 'The match goes to 125. The player who reaches it loses.';
 
   @override
   String get dominoBoneyard => 'Boneyard';

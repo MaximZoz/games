@@ -31,8 +31,18 @@ type createDominoLobbyBody struct {
 	GameMode    string `json:"game_mode"`
 }
 
-func dominoMatchmakeLockKey(turnTimeSec, maxPlayers, stakeBronze int) string {
-	return fmt.Sprintf("domino_open_lock:%d:%d:%d", turnTimeSec, maxPlayers, stakeBronze)
+const dominoChatTitle = "Домино"
+
+func dominoMatchmakeLockKey(turnTimeSec, maxPlayers, stakeBronze int, gameMode string) string {
+	return fmt.Sprintf("domino_open_lock:%s:%d:%d:%d", domino.NormalizeMode(gameMode), turnTimeSec, maxPlayers, stakeBronze)
+}
+
+func dominoModeOf(m map[string]string) string {
+	raw := strings.TrimSpace(m["game_mode"])
+	if raw == "" {
+		raw = strings.TrimSpace(m["variant"])
+	}
+	return domino.NormalizeMode(raw)
 }
 
 func (h *GamesHandler) serveDomino(w http.ResponseWriter, r *http.Request) {
@@ -114,10 +124,7 @@ func (h *GamesHandler) CreateDominoLobby(w http.ResponseWriter, r *http.Request)
 	if mode != "invite" && mode != "matchmake" {
 		mode = "invite"
 	}
-	if gameMode := strings.ToLower(strings.TrimSpace(body.GameMode)); gameMode != "" && gameMode != "kozel" && gameMode != "classic" {
-		WriteErr(w, r, http.StatusBadRequest, "game_mode must be kozel")
-		return
-	}
+	gameMode := domino.NormalizeMode(body.GameMode)
 	maxPlayers := body.MaxPlayers
 	if maxPlayers < 1 || maxPlayers > 4 {
 		maxPlayers = 2
@@ -158,6 +165,7 @@ func (h *GamesHandler) CreateDominoLobby(w http.ResponseWriter, r *http.Request)
 			body.TurnTimeSec,
 			stakeBronze,
 			2,
+			gameMode,
 		)
 		if err != nil {
 			h.writeDominoStartError(w, r, err)
@@ -171,11 +179,11 @@ func (h *GamesHandler) CreateDominoLobby(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if mode == "matchmake" {
-		lockKey := dominoMatchmakeLockKey(body.TurnTimeSec, maxPlayers, stakeBronze)
+		lockKey := dominoMatchmakeLockKey(body.TurnTimeSec, maxPlayers, stakeBronze, gameMode)
 		if locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result(); locked {
 			defer h.Rdb.Del(ctx, lockKey)
 		}
-		if existing := h.findOpenDominoLobbyID(ctx, userID, body.TurnTimeSec, maxPlayers, stakeBronze); existing != "" {
+		if existing := h.findOpenDominoLobbyID(ctx, userID, body.TurnTimeSec, maxPlayers, stakeBronze, gameMode); existing != "" {
 			h.JoinDominoLobby(w, r, existing)
 			return
 		}
@@ -193,8 +201,8 @@ func (h *GamesHandler) CreateDominoLobby(w http.ResponseWriter, r *http.Request)
 		"mode", mode,
 		"turn_time_sec", strconv.Itoa(body.TurnTimeSec),
 		"max_players", strconv.Itoa(maxPlayers),
-		"game_mode", "kozel",
-		"variant", "kozel",
+		"game_mode", gameMode,
+		"variant", gameMode,
 		"player_ids", userID.String(),
 		"stake_bronze", strconv.Itoa(stakeBronze),
 	)
@@ -205,7 +213,7 @@ func (h *GamesHandler) CreateDominoLobby(w http.ResponseWriter, r *http.Request)
 	}
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 	if maxPlayers > 2 {
-		if cid, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, []uuid.UUID{userID}, "Козёл", dominoGameType); err == nil {
+		if cid, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, []uuid.UUID{userID}, dominoChatTitle, dominoGameType); err == nil {
 			h.Rdb.HSet(ctx, key, "chat_id", cid.String())
 			h.broadcast([]uuid.UUID{userID}, map[string]any{"type": "chat_list_changed"})
 		}
@@ -222,7 +230,7 @@ func (h *GamesHandler) CreateDominoLobby(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-func (h *GamesHandler) findOpenDominoLobbyID(ctx context.Context, excludeUser uuid.UUID, turnTimeSec, maxPlayers, stakeBronze int) string {
+func (h *GamesHandler) findOpenDominoLobbyID(ctx context.Context, excludeUser uuid.UUID, turnTimeSec, maxPlayers, stakeBronze int, gameMode string) string {
 	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
@@ -252,6 +260,9 @@ func (h *GamesHandler) findOpenDominoLobbyID(ctx context.Context, excludeUser uu
 			stake = 2
 		}
 		if stake != stakeBronze {
+			continue
+		}
+		if dominoModeOf(m) != domino.NormalizeMode(gameMode) {
 			continue
 		}
 		players := parsePlayerIDsCSV(m["player_ids"])
@@ -300,7 +311,7 @@ func (h *GamesHandler) ListDominoLobbies(w http.ResponseWriter, r *http.Request)
 			"creator_id":    m["creator_id"],
 			"status":        status,
 			"game_type":     dominoGameType,
-			"game_mode":     "kozel",
+			"game_mode":     dominoModeOf(m),
 			"max_players":   maxPlayers,
 			"turn_time_sec": turnTimeSec,
 			"stake_bronze":  stakeBronze,
@@ -387,7 +398,7 @@ func (h *GamesHandler) JoinDominoLobby(w http.ResponseWriter, r *http.Request, l
 		h.notifyPublicLobbiesChanged()
 	}
 	if maxPlayers > 2 {
-		if cid, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, humans, "Козёл", dominoGameType); err == nil {
+		if cid, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, humans, dominoChatTitle, dominoGameType); err == nil {
 			h.Rdb.HSet(ctx, key, "chat_id", cid.String())
 			h.broadcast(humans, map[string]any{"type": "chat_list_changed"})
 		}
@@ -398,7 +409,7 @@ func (h *GamesHandler) JoinDominoLobby(w http.ResponseWriter, r *http.Request, l
 		if stakeBronze < 2 {
 			stakeBronze = 2
 		}
-		gameID, err := h.startDominoGameCore(ctx, lobbyID, players, humans, turnTimeSec, stakeBronze, maxPlayers)
+		gameID, err := h.startDominoGameCore(ctx, lobbyID, players, humans, turnTimeSec, stakeBronze, maxPlayers, dominoModeOf(m))
 		if err != nil {
 			h.writeDominoStartError(w, r, err)
 			return
@@ -429,7 +440,7 @@ func (h *GamesHandler) writeDominoStartError(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (h *GamesHandler) startDominoGameCore(ctx context.Context, lobbyID string, playerIDs []string, humans []uuid.UUID, turnTimeSec, stakeBronze, maxPlayers int) (string, error) {
+func (h *GamesHandler) startDominoGameCore(ctx context.Context, lobbyID string, playerIDs []string, humans []uuid.UUID, turnTimeSec, stakeBronze, maxPlayers int, gameMode string) (string, error) {
 	if len(playerIDs) < 2 || len(playerIDs) > 4 {
 		return "", fmt.Errorf("domino: need 2..4 players")
 	}
@@ -450,7 +461,8 @@ func (h *GamesHandler) startDominoGameCore(ctx context.Context, lobbyID string, 
 			return "", err
 		}
 	}
-	state, err := domino.NewGame(playerIDs, time.Now().UTC().UnixNano())
+	gameMode = domino.NormalizeMode(gameMode)
+	state, err := domino.NewMatch(playerIDs, time.Now().UTC().UnixNano(), gameMode)
 	if err != nil {
 		for _, userID := range humans {
 			_ = store.AddCoins(ctx, h.Pool, userID, stakeBronze)
@@ -474,8 +486,8 @@ func (h *GamesHandler) startDominoGameCore(ctx context.Context, lobbyID string, 
 		"game_type", dominoGameType,
 		"status", gameStatusActive,
 		"lobby_id", lobbyID,
-		"game_mode", "kozel",
-		"variant", "kozel",
+		"game_mode", gameMode,
+		"variant", gameMode,
 		"max_players", strconv.Itoa(maxPlayers),
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
 		"stake_bronze", strconv.Itoa(stakeBronze),
@@ -495,8 +507,8 @@ func (h *GamesHandler) startDominoGameCore(ctx context.Context, lobbyID string, 
 		"status", lobbyStatusInGame,
 		"game_id", gameID,
 		"game_type", dominoGameType,
-		"game_mode", "kozel",
-		"variant", "kozel",
+		"game_mode", gameMode,
+		"variant", gameMode,
 		"player_ids", strings.Join(playerIDs, ","),
 	)
 	pipe.Expire(ctx, "lobby:"+lobbyID, 24*time.Hour)
@@ -705,7 +717,7 @@ func (h *GamesHandler) DominoRematch(w http.ResponseWriter, r *http.Request) {
 		}
 		lobbyID := uuid.New().String()
 		h.rememberLobby(lobbyID)
-		gameID, err := h.startDominoGameCore(ctx, lobbyID, ids, []uuid.UUID{userID}, turnTimeSec, stakeBronze, len(ids))
+		gameID, err := h.startDominoGameCore(ctx, lobbyID, ids, []uuid.UUID{userID}, turnTimeSec, stakeBronze, len(ids), dominoModeOf(m))
 		if err != nil {
 			h.writeDominoStartError(w, r, err)
 			return
@@ -717,7 +729,7 @@ func (h *GamesHandler) DominoRematch(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusBadRequest, "no opponents")
 		return
 	}
-	lobbyID, err := h.createDominoInviteLobby(ctx, userID, invitees, turnTimeSec, stakeBronze, maxPlayers)
+	lobbyID, err := h.createDominoInviteLobby(ctx, userID, invitees, turnTimeSec, stakeBronze, maxPlayers, dominoModeOf(m))
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -725,7 +737,8 @@ func (h *GamesHandler) DominoRematch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"lobby_id": lobbyID, "status": lobbyStatusWaitingInvite, "matched": false})
 }
 
-func (h *GamesHandler) createDominoInviteLobby(ctx context.Context, creatorID uuid.UUID, invitees []string, turnTimeSec, stakeBronze, maxPlayers int) (string, error) {
+func (h *GamesHandler) createDominoInviteLobby(ctx context.Context, creatorID uuid.UUID, invitees []string, turnTimeSec, stakeBronze, maxPlayers int, gameMode string) (string, error) {
+	gameMode = domino.NormalizeMode(gameMode)
 	lobbyID := uuid.New().String()
 	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
@@ -738,8 +751,8 @@ func (h *GamesHandler) createDominoInviteLobby(ctx context.Context, creatorID uu
 		"mode", "invite",
 		"turn_time_sec", strconv.Itoa(turnTimeSec),
 		"max_players", strconv.Itoa(maxPlayers),
-		"game_mode", "kozel",
-		"variant", "kozel",
+		"game_mode", gameMode,
+		"variant", gameMode,
 		"player_ids", creatorID.String(),
 		"stake_bronze", strconv.Itoa(stakeBronze),
 		"invite_target_id", invitees[0],
@@ -755,16 +768,16 @@ func (h *GamesHandler) createDominoInviteLobby(ctx context.Context, creatorID uu
 	h.trackUserInvites(ctx, lobbyID, invitees)
 	setUserActiveLobby(ctx, h.Rdb, creatorID, lobbyID)
 	if maxPlayers > 2 {
-		if chatID, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, []uuid.UUID{creatorID}, "Козёл", dominoGameType); err == nil {
+		if chatID, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, []uuid.UUID{creatorID}, dominoChatTitle, dominoGameType); err == nil {
 			h.Rdb.HSet(ctx, key, "chat_id", chatID.String())
 			h.broadcast([]uuid.UUID{creatorID}, map[string]any{"type": "chat_list_changed"})
 		}
 	}
-	h.broadcastDominoInvites(ctx, creatorID, invitees, lobbyID, turnTimeSec, stakeBronze, maxPlayers)
+	h.broadcastDominoInvites(ctx, creatorID, invitees, lobbyID, turnTimeSec, stakeBronze, maxPlayers, gameMode)
 	return lobbyID, nil
 }
 
-func (h *GamesHandler) broadcastDominoInvites(ctx context.Context, creatorID uuid.UUID, invitees []string, lobbyID string, turnTimeSec, stakeBronze, maxPlayers int) {
+func (h *GamesHandler) broadcastDominoInvites(ctx context.Context, creatorID uuid.UUID, invitees []string, lobbyID string, turnTimeSec, stakeBronze, maxPlayers int, gameMode string) {
 	creator, _ := store.GetUserByID(ctx, h.Pool, creatorID)
 	creatorName := "Игрок"
 	creatorAvatarKind := ""
@@ -790,8 +803,8 @@ func (h *GamesHandler) broadcastDominoInvites(ctx context.Context, creatorID uui
 		"creator_id":    creatorID.String(),
 		"creator_name":  creatorName,
 		"game_type":     dominoGameType,
-		"game_mode":     "kozel",
-		"variant":       "kozel",
+		"game_mode":     domino.NormalizeMode(gameMode),
+		"variant":       domino.NormalizeMode(gameMode),
 		"turn_time_sec": turnTimeSec,
 		"max_players":   maxPlayers,
 		"stake_bronze":  stakeBronze,

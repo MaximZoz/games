@@ -802,7 +802,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesChess => 'Xadrez';
 
   @override
-  String get gamesDomino => 'O Bode';
+  String get gamesDomino => 'Dominó';
+
+  @override
+  String get gamesDominoModeKozel => 'O Bode';
+
+  @override
+  String get gamesDominoModeClassic => 'Clássico';
+
+  @override
+  String get gamesDominoModeSea => 'Marinho';
 
   @override
   String get rulesDominoDeal => 'Cada um recebe 7 peças. Com 2 ou 3 jogadores o resto fica no monte; com 4 o monte fica vazio.';
@@ -827,6 +836,44 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: você e bots. O bot conta os números e não olha as mãos escondidas.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modo: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'A dois ou três, 7 peças cada; a quatro, 5. O resto fica no mercado.';
+
+  @override
+  String get rulesDominoClassicOpen => 'A primeira mão abre com o duplo 6, depois o branco e os duplos menores. Sem duplo, joga-se a peça mais alta.';
+
+  @override
+  String get rulesDominoClassicScore => 'Quem sai anota a soma das peças dos adversários. O primeiro a 100 ganha.';
+
+  @override
+  String get rulesDominoClassicFish => 'No bloqueio, a mão mais leve, se for única, marca a diferença com cada outra. Em empate ninguém marca.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Quem partilha a pontuação mais alta ganha em conjunto. Se todos empatam, é empate.';
+
+  @override
+  String get rulesDominoSeaSame => 'Distribuição, abertura e compra como n’O Bode. A cadeia tem duas pontas.';
+
+  @override
+  String get rulesDominoSeaScore => 'Só a mão mais pesada marca. Menos de 25 não se regista.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Se dois jogadores têm 25 ou mais, ninguém regista essa mão.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Jogar 0-0 fecha a mão: o adversário mais pesado, se for único, leva 75. Em empate, ninguém.';
+
+  @override
+  String get rulesDominoSeaSix => 'Sair com 6-6 marca 100 ao perdedor e zera o placar da partida de quem fecha.';
+
+  @override
+  String get rulesDominoSeaMatch => 'A partida vai até 125. Quem chega perde.';
 
   @override
   String get dominoBoneyard => 'Monte';

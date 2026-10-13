@@ -153,6 +153,7 @@ class _DominoLobbyScreenState extends ConsumerState<DominoLobbyScreen> {
         players: lobby.maxPlayers,
         turnTimeSec: lobby.turnTimeSec,
         stakeBronze: lobby.stakeBronze,
+        mode: lobby.gameMode,
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,

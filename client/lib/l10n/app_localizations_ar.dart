@@ -802,7 +802,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesChess => 'شطرنج';
 
   @override
-  String get gamesDomino => 'التيس';
+  String get gamesDomino => 'دومينو';
+
+  @override
+  String get gamesDominoModeKozel => 'التيس';
+
+  @override
+  String get gamesDominoModeClassic => 'كلاسيك';
+
+  @override
+  String get gamesDominoModeSea => 'بحري';
 
   @override
   String get rulesDominoDeal => 'لكل لاعب 7 قطع. مع لاعبين أو ثلاثة تبقى البقية في الاحتياط، ومع أربعة يكون الاحتياط فارغًا.';
@@ -827,6 +836,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'دون اتصال: أنت والبوتات. البوت يعدّ الأرقام ولا ينظر إلى الأيدي المخفية.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'الوضع: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'لاعبان أو ثلاثة يأخذون 7، وأربعة يأخذون 5. الباقي في السوق.';
+
+  @override
+  String get rulesDominoClassicOpen => 'تبدأ اليد الأولى بالدبل 6 ثم الصفر ثم الدبل الأصغر. بلا دبل تُلعب أعلى قطعة.';
+
+  @override
+  String get rulesDominoClassicScore => 'من يفرغ يده يسجّل مجموع خصومه. أول من يبلغ 100 يفوز.';
+
+  @override
+  String get rulesDominoClassicFish => 'عند الانسداد يسجّل الأخف إذا كان وحيداً الفرق مع كل يد أخرى. عند التعادل لا تُسجَّل نقاط.';
+
+  @override
+  String get rulesDominoClassicMatch => 'من يتساوى في الأعلى يتقاسم الفوز. إن تساوى الجميع فهي تعادل.';
+
+  @override
+  String get rulesDominoSeaSame => 'التوزيع والافتتاح والسحب كما في التيس. السلسلة بطرفين.';
+
+  @override
+  String get rulesDominoSeaScore => 'يسجّل فقط صاحب أثقل يد. أقل من 25 لا يُسجَّل.';
+
+  @override
+  String get rulesDominoSeaWipe => 'إذا كان لدى اثنين 25 أو أكثر فلا يُسجَّل أحد في هذه اليد.';
+
+  @override
+  String get rulesDominoSeaBlank => 'لعب 0-0 ينهي اليد فوراً: أثقل خصم إذا كان وحيداً يُسجَّل له 75. عند التعادل لا أحد.';
+
+  @override
+  String get rulesDominoSeaSix => 'إن أُغلقت اليد بآخر قطعة 6-6 يُسجَّل للخاسر 100 ويُصفَّر رصيد من أغلق.';
+
+  @override
+  String get rulesDominoSeaMatch => 'المباراة حتى 125. من يبلغها يخسر.';
 
   @override
   String get dominoBoneyard => 'الاحتياط';

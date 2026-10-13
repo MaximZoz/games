@@ -802,7 +802,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesChess => 'Ajedrez';
 
   @override
-  String get gamesDomino => 'El Chivo';
+  String get gamesDomino => 'Dominó';
+
+  @override
+  String get gamesDominoModeKozel => 'El Chivo';
+
+  @override
+  String get gamesDominoModeClassic => 'Clásica';
+
+  @override
+  String get gamesDominoModeSea => 'Marino';
 
   @override
   String get rulesDominoDeal => 'Cada uno recibe 7 fichas. Con 2 o 3 jugadores el resto es el pozo; con 4 el pozo está vacío.';
@@ -827,6 +836,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Sin conexión: tú y bots. El bot cuenta los números y no mira las manos ocultas.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modo: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Dos o tres jugadores reciben 7 fichas; cuatro, 5. El resto es el pozo.';
+
+  @override
+  String get rulesDominoClassicOpen => 'La primera mano abre con el doble 6, luego el blanco y los dobles menores. Si no hay doble, se juega la ficha más alta.';
+
+  @override
+  String get rulesDominoClassicScore => 'Quien se queda sin fichas anota los puntos de los rivales. El primero en llegar a 100 gana.';
+
+  @override
+  String get rulesDominoClassicFish => 'En el bloqueo, la mano más ligera, si es única, anota la diferencia con cada otra. Si hay empate, nadie anota.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Quienes empatan en el máximo se reparten la victoria. Si todos están iguales, hay empate.';
+
+  @override
+  String get rulesDominoSeaSame => 'Reparto, apertura y robo como en El Chivo. La cadena tiene dos extremos.';
+
+  @override
+  String get rulesDominoSeaScore => 'Solo anota la mano más pesada. Menos de 25 no se anota.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Si dos jugadores tienen 25 o más, nadie anota esa mano.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Jugar 0-0 cierra la mano: al rival más pesado, si es único, se le anotan 75. Si hay empate, a nadie.';
+
+  @override
+  String get rulesDominoSeaSix => 'Salir con 6-6 anota 100 al perdedor y pone a cero el marcador de partida de quien cierra.';
+
+  @override
+  String get rulesDominoSeaMatch => 'La partida llega a 125. Quien los alcanza pierde.';
 
   @override
   String get dominoBoneyard => 'Pozo';

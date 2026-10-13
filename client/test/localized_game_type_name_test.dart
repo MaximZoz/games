@@ -16,7 +16,7 @@ void main() {
   test('приглашение в Уно не подписывается как крестики-нолики', () {
     final t = l10n();
     expect(localizedGameTypeName('uno', t), 'Уно');
-    expect(localizedGameTypeName('domino', t), 'Козёл');
+    expect(localizedGameTypeName('domino', t), 'Домино');
     expect(localizedGameTypeName('uno', t), isNot(t.gamesTicTacToe));
     expect(localizedGameTypeName('tictactoe', t), t.gamesTicTacToe);
     expect(localizedGameTypeName('durak', t), t.gamesDurak);
@@ -39,6 +39,7 @@ void main() {
     expect(localizeChatTitle('Уно', t), t.gamesUno);
     expect(localizeChatTitle('Uno', t), t.gamesUno);
     expect(localizeChatTitle('Козёл', t), t.gamesDomino);
+    expect(localizeChatTitle('Домино', t), t.gamesDomino);
     expect(localizeChatTitle('Goat', t), t.gamesDomino);
     expect(localizeChatTitle('Domino', t), t.gamesDomino);
     expect(localizeChatTitle('Нарды', t), t.gamesNardy);
@@ -52,11 +53,15 @@ void main() {
     expect(
         localizedGameModeLabel(
             gameType: 'domino', variant: 'kozel', gameMode: 'kozel', l10n: t),
-        isEmpty);
+        t.gamesDominoModeKozel);
     expect(
         localizedGameModeLabel(
-            gameType: 'domino', variant: 'classic', gameMode: 'kozel', l10n: t),
-        isEmpty);
+            gameType: 'domino', variant: 'kozel', gameMode: 'classic', l10n: t),
+        t.gamesDominoModeClassic);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'domino', gameMode: 'sea', l10n: t),
+        t.gamesDominoModeSea);
     expect(
         localizedGameModeLabel(
             gameType: 'poker', variant: 'classic', gameMode: 'holdem', l10n: t),
@@ -131,7 +136,7 @@ void main() {
       'game_mode': 'kozel',
     });
     expect(domino.isDomino, isTrue);
-    expect(domino.modeLabel(t), isEmpty);
+    expect(domino.modeLabel(t), t.gamesDominoModeKozel);
 
     final nardy = LobbyItem.fromJson({
       'id': 'n1',

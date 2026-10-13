@@ -802,7 +802,16 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesChess => 'Шахмат';
 
   @override
-  String get gamesDomino => 'Козёл';
+  String get gamesDomino => 'Домино';
+
+  @override
+  String get gamesDominoModeKozel => 'Козёл';
+
+  @override
+  String get gamesDominoModeClassic => 'Классика';
+
+  @override
+  String get gamesDominoModeSea => 'Теңіз';
 
   @override
   String get rulesDominoDeal => 'Әркімге 7 сүйек. Екеу мен үшеуде қалғаны базарда, төртеуде базар бос.';
@@ -827,6 +836,44 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Офлайн: сіз және боттар. Бот масть санайды және бөтен қолды қарамайды.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Режим: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Екеу мен үшеуге 7-ден, төртеуге 5-тен сүйек беріледі. Қалғаны базарда.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Алғашқы қонды 6-6 дублі бастайды, содан 0-0 және кіші дубльдер. Дубль жоқ болса — ең үлкен сүйек. Соны қою керек.';
+
+  @override
+  String get rulesDominoClassicScore => 'Шыққан ойыншы қарсыластардың ұпайын жазады. 100-ге дейін: бірінші жинаған жеңеді.';
+
+  @override
+  String get rulesDominoClassicFish => 'Балық: ұпайы бәрінен аз адам әр бөтен қолмен айырмасын жазады. Минимум бірнешеуде болса, ұпай жазылмайды.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Бірдей ең жоғары есеп жеңісті бөліседі. Барлығының есебі тең болса — тең ойын.';
+
+  @override
+  String get rulesDominoSeaSame => 'Тарату, алғашқы жүріс және алу — «Козёл» режиміндегідей. Тізбек екі ұшынан.';
+
+  @override
+  String get rulesDominoSeaScore => 'Ұпайды қон соңында қолында ең көбі бар адам ғана жазады. 25-тен аз жазылмайды.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Екеуінде бірден 25 және одан көп болса, бұл қон ешкімге жазылмайды.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Қойылған 0-0 қонды бірден аяқтайды: ең ауыр қолға 75 жазылады. Екеу болса — ешкімге жазылмайды.';
+
+  @override
+  String get rulesDominoSeaSix => 'Қон соңғы 6-6 сүйегімен жабылса, жеңілгенге 100 жазылады, жапқанның партиялық есебі нөлденеді.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Партия 125-ке дейін. Жинаған ұтылады.';
 
   @override
   String get dominoBoneyard => 'Базар';

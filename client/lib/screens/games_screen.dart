@@ -14,6 +14,7 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/domino/domino_provider.dart';
 import 'package:multigames_client/games/domino/domino_rules.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
@@ -1051,6 +1052,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         players: inv.maxPlayers,
         turnTimeSec: inv.turnTimeSec,
         stakeBronze: inv.stakeBronze,
+        mode: inv.durakMode,
         l10n: context.l10n,
       ));
     }
@@ -1700,6 +1702,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             players: lobby.maxPlayers,
             turnTimeSec: lobby.turnTimeSec,
             stakeBronze: lobby.stakeBronze,
+            mode: lobby.gameMode,
             l10n: context.l10n,
           ));
         } else if (lobby.isNardy) {
