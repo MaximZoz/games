@@ -207,6 +207,16 @@ func TestNormalizeDominoGameSettings(t *testing.T) {
 	if s2.MaxPlayers != 2 {
 		t.Fatalf("max_players=%d want 2 (clamp)", s2.MaxPlayers)
 	}
+	sea, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeDomino,
+		TurnTimeSec: 60,
+		StakeBronze: 2,
+		MaxPlayers:  3,
+		GameMode:    "sea",
+	})
+	if errMsg != "" || sea.GameMode != "sea" || sea.Variant != "sea" {
+		t.Fatalf("sea settings %+v err=%s", sea, errMsg)
+	}
 }
 
 func TestNormalizeNardyGameSettings(t *testing.T) {

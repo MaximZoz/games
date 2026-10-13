@@ -802,7 +802,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesChess => 'Cờ vua';
 
   @override
-  String get gamesDomino => 'Dê';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Dê';
+
+  @override
+  String get gamesDominoModeClassic => 'Cổ điển';
+
+  @override
+  String get gamesDominoModeSea => 'Biển';
 
   @override
   String get rulesDominoDeal => 'Mỗi người 7 quân. 2 hoặc 3 người thì phần còn lại ở nọc, 4 người thì nọc trống.';
@@ -827,6 +836,44 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Ngoại tuyến: bạn và bot. Bot đếm số và không nhìn bài úp.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Chế độ: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Hai hoặc ba người được 7 quân, bốn người được 5. Phần còn lại là kho.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Ván đầu mở bằng kép 6, rồi 0-0 và các kép nhỏ hơn. Không có kép thì phải đánh quân lớn nhất.';
+
+  @override
+  String get rulesDominoClassicScore => 'Người hết quân ghi tổng điểm đối thủ. Ai tới 100 trước thắng.';
+
+  @override
+  String get rulesDominoClassicFish => 'Khi bí, tay nhẹ nhất duy nhất ghi hiệu với từng tay khác. Hòa mức tối thiểu thì không ghi điểm.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Cùng điểm cao nhất thì chia thắng. Nếu mọi người bằng nhau là hòa.';
+
+  @override
+  String get rulesDominoSeaSame => 'Chia, mở và bốc như Dê. Chuỗi có hai đầu.';
+
+  @override
+  String get rulesDominoSeaScore => 'Chỉ tay nặng nhất được ghi điểm. Dưới 25 không ghi.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Nếu hai người cùng từ 25 trở lên, ván đó không ai được ghi.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Đánh 0-0 kết thúc ván ngay: đối thủ nặng nhất duy nhất bị ghi 75. Hòa thì không ai bị ghi.';
+
+  @override
+  String get rulesDominoSeaSix => 'Kết thúc bằng quân 6-6 cuối thì người thua bị ghi 100, điểm trận của người đóng về 0.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Trận đến 125. Ai đạt thì thua.';
 
   @override
   String get dominoBoneyard => 'Nọc';

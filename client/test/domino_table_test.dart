@@ -23,6 +23,67 @@ DominoPlaced _tile(int lo, int hi, {String end = 'right'}) {
   );
 }
 
+DominoPlaced _oriented(int inward, int outward, {String end = 'right'}) {
+  final lo = inward <= outward ? inward : outward;
+  final hi = inward <= outward ? outward : inward;
+  return DominoPlaced(
+    id: dominoTileId(lo, hi),
+    lo: lo,
+    hi: hi,
+    inward: inward,
+    outward: outward,
+    end: end,
+    isDouble: inward == outward,
+  );
+}
+
+/// Число на половине, которой кость смотрит на соседа.
+int _pipToward(
+  DominoPlaced tile,
+  DominoLayoutSlot self,
+  Rect neighbor, {
+  required bool upperLeadsRight,
+}) {
+  final halves = dominoHalfPips(tile, leadingOnRight: self.leadingOnRight);
+  final dx = neighbor.center.dx - self.rect.center.dx;
+  final dy = neighbor.center.dy - self.rect.center.dy;
+  if (dx.abs() > dy.abs() + 4) return dx > 0 ? halves.right : halves.left;
+  final leftMeet = (self.rect.left - neighbor.left).abs() < 2;
+  final rightMeet = (self.rect.right - neighbor.right).abs() < 2;
+  if (rightMeet && !leftMeet) return halves.right;
+  if (leftMeet && !rightMeet) return halves.left;
+  return upperLeadsRight ? halves.right : halves.left;
+}
+
+void _expectJoints(List<DominoPlaced> chain, double maxWidth) {
+  final slots = layoutDominoChain(chain, maxWidth);
+  expect(slots, hasLength(chain.length));
+  var sawReturn = false;
+  var sawThird = false;
+  for (var i = 0; i < chain.length - 1; i++) {
+    if (!slots[i].leadingOnRight) sawReturn = true;
+    if (sawReturn && slots[i].leadingOnRight) sawThird = true;
+    final upperLeadsRight = slots[i].rect.top <= slots[i + 1].rect.top
+        ? slots[i].leadingOnRight
+        : slots[i + 1].leadingOnRight;
+    final mine = _pipToward(
+      chain[i],
+      slots[i],
+      slots[i + 1].rect,
+      upperLeadsRight: upperLeadsRight,
+    );
+    final theirs = _pipToward(
+      chain[i + 1],
+      slots[i + 1],
+      slots[i].rect,
+      upperLeadsRight: upperLeadsRight,
+    );
+    expect(mine, theirs, reason: 'стык $i: $mine и $theirs');
+  }
+  expect(sawReturn, isTrue, reason: 'ряд должен развернуться');
+  expect(sawThird, isTrue, reason: 'третий ряд снова вправо');
+}
+
 void main() {
   test('цепь не накладывает кости и дубль выше обычной', () {
     final chain = [
@@ -33,6 +94,7 @@ void main() {
     expect(slots, hasLength(chain.length));
     final doubleSlot = slots.last;
     expect(doubleSlot.rect.height, greaterThan(doubleSlot.rect.width));
+    expect(slots.first.leadingOnRight, isTrue);
     for (var i = 0; i < slots.length; i++) {
       for (var j = i + 1; j < slots.length; j++) {
         final overlap = slots[i].rect.intersect(slots[j].rect);
@@ -43,6 +105,42 @@ void main() {
         );
       }
     }
+  });
+
+  test('на обратном ряду 1-6 смотрит шестёркой к соседу', () {
+    final chain = [
+      _oriented(6, 6, end: 'start'),
+      _oriented(6, 4),
+      _oriented(4, 2),
+      _oriented(2, 3),
+      _oriented(3, 0),
+      _oriented(0, 2),
+      _oriented(2, 5),
+      _oriented(5, 6),
+      _oriented(6, 1),
+      _oriented(1, 0),
+      _oriented(0, 6),
+      _oriented(6, 3),
+      _oriented(3, 5),
+    ];
+    final slots = layoutDominoChain(chain, 332);
+    final played = chain[8];
+    expect(slots[8].leadingOnRight, isFalse);
+    final halves = dominoHalfPips(played, leadingOnRight: false);
+    expect(halves.right, 6);
+    expect(halves.left, 1);
+    _expectJoints(chain, 332);
+
+    final fromLeft = [
+      _oriented(4, 5, end: 'left'),
+      _oriented(3, 4, end: 'left'),
+      _oriented(2, 3, end: 'left'),
+      _oriented(1, 2, end: 'left'),
+      _oriented(1, 0, end: 'start'),
+      _oriented(0, 6),
+      _oriented(6, 5),
+    ];
+    _expectJoints(fromLeft, 120);
   });
 
   test('старый кадр козла не откатывает кон', () {
@@ -71,7 +169,8 @@ void main() {
     expect(hasFullDominoView({'players': <Map<String, dynamic>>[]}), isFalse);
   });
 
-  testWidgets('тап по кости руки ставит её на единственный конец', (tester) async {
+  testWidgets('тап по кости руки ставит её на единственный конец',
+      (tester) async {
     final tile = dominoTileId(1, 2);
     DominoMove? played;
     final view = DominoGameView.fromJson({
@@ -204,6 +303,63 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(tester.takeException(), isNull);
     expect(find.textContaining('Базар'), findsOneWidget);
+    OfflineDominoRegistry.instance.disposeAll();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('крайняя левая кость руки нажимается', (tester) async {
+    setUpTestLocaleRu();
+    tester.view.physicalSize = const Size(390, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final session = OfflineDominoSession.create(
+      humanUserId: 'local:player',
+      playerCount: 2,
+      humanDisplayName: 'Я',
+    );
+    addTearDown(() {
+      OfflineDominoRegistry.instance.disposeAll();
+    });
+    final tile = dominoTileId(0, 1);
+    final game = session.engine;
+    game
+      ..leftEnd = -1
+      ..rightEnd = -1
+      ..turn = 0
+      ..forcedTile = -1
+      ..status = dominoStatusPlaying
+      ..chain.clear();
+    game.players[0].hand
+      ..clear()
+      ..addAll(
+          [tile, dominoTileId(2, 3), dominoTileId(4, 5), dominoTileId(6, 6)]);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: DominoGameScreen(gameId: session.gameId),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final key = find.byKey(ValueKey('domino-hand-$tile'));
+    expect(key, findsOneWidget);
+    final center = tester.getCenter(key);
+    expect(center.dx, lessThan(48),
+        reason: 'кость в зоне старой полосы крестика');
+    await tester.tapAt(center);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(tester.takeException(), isNull);
+    expect(session.engine.chain, isNotEmpty);
+    expect(session.engine.chain.first.id, tile);
     OfflineDominoRegistry.instance.disposeAll();
     await tester.pumpWidget(const SizedBox.shrink());
   });

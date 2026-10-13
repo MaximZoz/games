@@ -2514,7 +2514,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
   }
 }
 
-/// Карточка «Козёл»: 2–4 игрока, время хода, ставка и локальные боты.
+/// Карточка «Домино»: режим, 2–4 игрока, время хода, ставка и локальные боты.
 class _DominoGameCard extends ConsumerStatefulWidget {
   const _DominoGameCard({
     required this.isOffline,
@@ -2530,6 +2530,7 @@ class _DominoGameCard extends ConsumerStatefulWidget {
 
 class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
   int _players = 2;
+  String _gameMode = dominoModeKozel;
   int _turnTimeSec = 60;
   int _stakeBronze = 2;
   bool _settingsHydrated = false;
@@ -2551,6 +2552,7 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
     _settingsHydrated = true;
     setState(() {
       _players = saved.maxPlayers.clamp(2, 4);
+      _gameMode = dominoNormalizeMode(saved.gameMode);
       _turnTimeSec =
           turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
       _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
@@ -2564,10 +2566,15 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
             turnTimeSec: _turnTimeSec,
             stakeBronze: _stakeBronze,
             maxPlayers: _players,
-            variant: 'kozel',
-            gameMode: 'kozel',
+            variant: _gameMode,
+            gameMode: _gameMode,
           ),
         );
+  }
+
+  void _cycleGameMode() {
+    setState(() => _gameMode = dominoNextMode(_gameMode));
+    _persistSettings();
   }
 
   void _cyclePlayers() {
@@ -2626,6 +2633,7 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
             maxPlayers: _players,
             turnTimeSec: _turnTimeSec,
             stakeBronze: _stakeBronze,
+            gameMode: _gameMode,
           );
       if (!mounted) return;
       final gameId = result.gameId?.trim() ?? '';
@@ -2681,6 +2689,7 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
         turnTimeSec: _turnTimeSec,
         stakeBronze: widget.isOffline ? 0 : _stakeBronze,
         offlineBot: widget.isOffline,
+        mode: _gameMode,
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,
@@ -2697,6 +2706,7 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
         _settingsHydrated = true;
         setState(() {
           _players = saved.maxPlayers.clamp(2, 4);
+          _gameMode = dominoNormalizeMode(saved.gameMode);
           _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
               ? saved.turnTimeSec
               : 60;
@@ -2724,6 +2734,14 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
         icon: Icons.groups_rounded,
         label: '$_players',
         onTap: busy ? null : _cyclePlayers,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      GameCardChip(
+        selected: true,
+        icon: Icons.style_rounded,
+        label: dominoModeLabel(_gameMode, context.l10n),
+        onTap: busy ? null : _cycleGameMode,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -2767,7 +2785,10 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
           disposeAllOfflineGameSessions();
           context.push(Uri(
             path: '/games/domino/offline',
-            queryParameters: {'players': '$_players'},
+            queryParameters: {
+              'players': '$_players',
+              'mode': _gameMode,
+            },
           ).toString());
         },
         isCreating: _creating,

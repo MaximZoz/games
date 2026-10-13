@@ -802,7 +802,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesChess => 'शतरंज';
 
   @override
-  String get gamesDomino => 'बकरा';
+  String get gamesDomino => 'डोमिनो';
+
+  @override
+  String get gamesDominoModeKozel => 'बकरा';
+
+  @override
+  String get gamesDominoModeClassic => 'क्लासिक';
+
+  @override
+  String get gamesDominoModeSea => 'समुद्री';
 
   @override
   String get rulesDominoDeal => 'हर खिलाड़ी को 7 टाइल। 2 या 3 में बाकी भंडार में, 4 में भंडार खाली।';
@@ -827,6 +836,44 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'ऑफ़लाइन: आप और बॉट। बॉट अंक गिनता है और छुपे हाथ नहीं देखता।';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'मोड: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'दो या तीन को 7, चार को 5 टाइल। बाकी बाज़ार।';
+
+  @override
+  String get rulesDominoClassicOpen => 'पहला दाँव डबल 6 से, फिर 0-0 और छोटे डबल। डबल न हो तो सबसे बड़ा टाइल रखना होगा।';
+
+  @override
+  String get rulesDominoClassicScore => 'जो खाली हाथ निकले, वह विरोधियों के पिप लिखता है। 100 तक पहले पहुँचने वाला जीतता है।';
+
+  @override
+  String get rulesDominoClassicFish => 'ब्लॉक पर सबसे हल्के अद्वितीय हाथ को हर दूसरे हाथ से अंतर मिलता है। बराबरी पर कुछ नहीं लिखा जाता।';
+
+  @override
+  String get rulesDominoClassicMatch => 'समान सबसे ऊँचा स्कोर जीत बाँटता है। सब बराबर हों तो ड्रॉ।';
+
+  @override
+  String get rulesDominoSeaSame => 'बाँटना, पहली चाल और खींचना बकरा जैसा। श्रृंखला के दो सिरे।';
+
+  @override
+  String get rulesDominoSeaScore => 'अंक केवल सबसे भारी हाथ लिखता है। 25 से कम नहीं लिखा जाता।';
+
+  @override
+  String get rulesDominoSeaWipe => 'यदि दो के पास 25 या अधिक हों, तो यह दाँव किसी को नहीं लिखा जाता।';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 डालते ही दाँव खत्म: सबसे भारी विरोधी अकेला हो तो 75। बराबरी पर किसी को नहीं।';
+
+  @override
+  String get rulesDominoSeaSix => 'अंतिम 6-6 से बंद होने पर हारने वाले को 100, बंद करने वाले का मैच स्कोर शून्य।';
+
+  @override
+  String get rulesDominoSeaMatch => 'मैच 125 तक। जो पहुँचे वह हारा।';
 
   @override
   String get dominoBoneyard => 'भंडार';

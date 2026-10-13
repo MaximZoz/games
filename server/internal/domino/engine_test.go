@@ -240,6 +240,140 @@ func TestForfeitLeavesWinner(t *testing.T) {
 	}
 }
 
+func TestModesDealOpeningAndScore(t *testing.T) {
+	four, err := NewMatch([]string{"a", "b", "c", "d"}, 3, ModeClassic)
+	if err != nil || four.Target != ClassicScore || four.Mode != ModeClassic {
+		t.Fatalf("classic err=%v mode=%s target=%d", err, four.Mode, four.Target)
+	}
+	if len(four.Players[0].Hand) != 5 || len(four.Boneyard) != 8 {
+		t.Fatalf("classic 4p hands=%d bone=%d", len(four.Players[0].Hand), len(four.Boneyard))
+	}
+	sea, err := NewMatch([]string{"a", "b"}, 5, ModeSea)
+	if err != nil || sea.Target != SeaScore || len(sea.Players[0].Hand) != 7 || len(sea.Boneyard) != 14 {
+		t.Fatalf("sea err=%v target=%d bone=%d", err, sea.Target, len(sea.Boneyard))
+	}
+	if NormalizeMode("nope") != ModeKozel || NormalizeMode(" classic ") != ModeClassic {
+		t.Fatal("normalize")
+	}
+
+	opening := freshGame([][]int{{TileID(1, 1)}, {TileID(6, 6), TileID(0, 0)}}, nil, -1, -1)
+	opening.Mode = ModeClassic
+	seat, tile, ok := opening.pickOpening()
+	if !ok || seat != 1 || tile != TileID(6, 6) {
+		t.Fatalf("classic open seat=%d tile=%d", seat, tile)
+	}
+	opening.Players[1].Hand = []int{TileID(0, 0)}
+	seat, tile, ok = opening.pickOpening()
+	if !ok || seat != 1 || tile != TileID(0, 0) {
+		t.Fatalf("classic blank open seat=%d tile=%d", seat, tile)
+	}
+	opening.Mode = ModeKozel
+	opening.Players[0].Hand = []int{TileID(1, 1)}
+	opening.Players[1].Hand = []int{TileID(6, 6)}
+	seat, tile, ok = opening.pickOpening()
+	if !ok || seat != 0 || tile != TileID(1, 1) {
+		t.Fatalf("goat open seat=%d tile=%d", seat, tile)
+	}
+}
+
+func TestClassicOutAndFish(t *testing.T) {
+	g := freshGame([][]int{{TileID(1, 1)}, {TileID(3, 3), TileID(4, 4)}}, nil, 1, 2)
+	g.Mode = ModeClassic
+	g.Target = ClassicScore
+	if err := g.Apply(Action{Type: ActionPlay, Tile: TileID(1, 1), End: "left"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Status != StatusRoundEnd || g.Players[0].Score != 14 || g.Players[1].Score != 0 || g.RoundKind != RoundOut {
+		t.Fatalf("classic out scores=%d/%d kind=%s status=%s", g.Players[0].Score, g.Players[1].Score, g.RoundKind, g.Status)
+	}
+
+	fish := freshGame([][]int{{TileID(2, 3)}, {TileID(4, 4)}, {TileID(5, 5), TileID(6, 6)}}, nil, 0, 1)
+	fish.Mode = ModeClassic
+	fish.Target = ClassicScore
+	fish.finishRound(RoundFish, -1)
+	if fish.Players[0].Score != 20 || fish.Players[1].Score != 0 || fish.Players[2].Score != 0 {
+		t.Fatalf("classic fish %d %d %d", fish.Players[0].Score, fish.Players[1].Score, fish.Players[2].Score)
+	}
+
+	tie := freshGame([][]int{{TileID(2, 2)}, {TileID(0, 4)}}, nil, 0, 1)
+	tie.Mode = ModeClassic
+	tie.Target = ClassicScore
+	tie.finishRound(RoundFish, -1)
+	if tie.Players[0].Score != 0 || tie.Players[1].Score != 0 || tie.Status != StatusRoundEnd {
+		t.Fatalf("tie fish %d %d %s", tie.Players[0].Score, tie.Players[1].Score, tie.Status)
+	}
+
+	win := freshGame([][]int{{TileID(6, 6)}, {TileID(5, 5), TileID(5, 4), TileID(6, 5)}}, nil, 6, 0)
+	win.Mode = ModeClassic
+	win.Target = ClassicScore
+	win.Players[0].Score = 90
+	if err := win.Apply(Action{Type: ActionPlay, Tile: TileID(6, 6), End: "left"}); err != nil {
+		t.Fatal(err)
+	}
+	if !win.IsOver() || len(win.WinnerUserIDs) != 1 || win.WinnerUserIDs[0] != "p0" || win.GoatSeat != -1 {
+		t.Fatalf("classic win winners=%v goat=%d score=%d", win.WinnerUserIDs, win.GoatSeat, win.Players[0].Score)
+	}
+}
+
+func TestSeaScoring(t *testing.T) {
+	blank := freshGame([][]int{{TileID(0, 0), TileID(1, 2)}, {TileID(6, 6)}}, nil, 0, 5)
+	blank.Mode = ModeSea
+	blank.Target = SeaScore
+	if err := blank.Apply(Action{Type: ActionPlay, Tile: TileID(0, 0), End: "left"}); err != nil {
+		t.Fatal(err)
+	}
+	if blank.RoundKind != RoundFast || blank.Players[1].Score != SeaBlankHit || blank.Players[0].Score != 0 || len(blank.Players[0].Hand) != 1 {
+		t.Fatalf("blank kind=%s scores=%d/%d hand=%d", blank.RoundKind, blank.Players[0].Score, blank.Players[1].Score, len(blank.Players[0].Hand))
+	}
+
+	light := freshGame([][]int{{}, {TileID(5, 5), TileID(4, 4)}}, nil, 0, 1)
+	light.Mode = ModeSea
+	light.Target = SeaScore
+	light.finishRound(RoundOut, 0)
+	if light.Players[1].Score != 0 || light.Players[1].RoundPips != 18 {
+		t.Fatalf("under 25 score=%d pips=%d", light.Players[1].Score, light.Players[1].RoundPips)
+	}
+
+	rec := freshGame([][]int{{}, {TileID(6, 6), TileID(6, 5), TileID(6, 4)}}, nil, 0, 1)
+	rec.Mode = ModeSea
+	rec.Target = SeaScore
+	rec.finishRound(RoundOut, 0)
+	if rec.Players[1].Score != 33 {
+		t.Fatalf("record %d", rec.Players[1].Score)
+	}
+
+	both := freshGame([][]int{{TileID(6, 6), TileID(6, 5), TileID(6, 4)}, {TileID(5, 5), TileID(5, 4), TileID(5, 3)}}, nil, 0, 1)
+	both.Mode = ModeSea
+	both.Target = SeaScore
+	both.Players[0].Score = 40
+	both.finishRound(RoundFish, -1)
+	if both.Players[0].Score != 40 || both.Players[1].Score != 0 {
+		t.Fatalf("wipe %d %d", both.Players[0].Score, both.Players[1].Score)
+	}
+
+	six := freshGame([][]int{{TileID(6, 6)}, {TileID(5, 5)}}, nil, 6, 1)
+	six.Mode = ModeSea
+	six.Target = SeaScore
+	six.Players[0].Score = 40
+	if err := six.Apply(Action{Type: ActionPlay, Tile: TileID(6, 6), End: "left"}); err != nil {
+		t.Fatal(err)
+	}
+	if six.Players[0].Score != 0 || six.Players[1].Score != SeaSixHit || six.RoundKind != RoundOut {
+		t.Fatalf("six scores=%d/%d kind=%s", six.Players[0].Score, six.Players[1].Score, six.RoundKind)
+	}
+
+	lose := freshGame([][]int{{TileID(6, 6)}, {TileID(3, 3)}}, nil, 6, 0)
+	lose.Mode = ModeSea
+	lose.Target = SeaScore
+	lose.Players[1].Score = 50
+	if err := lose.Apply(Action{Type: ActionPlay, Tile: TileID(6, 6), End: "left"}); err != nil {
+		t.Fatal(err)
+	}
+	if !lose.IsOver() || lose.GoatSeat != 1 || len(lose.WinnerUserIDs) != 1 || lose.WinnerUserIDs[0] != "p0" {
+		t.Fatalf("sea lose goat=%d winners=%v scores=%d/%d", lose.GoatSeat, lose.WinnerUserIDs, lose.Players[0].Score, lose.Players[1].Score)
+	}
+}
+
 func TestEncodeRoundTrip(t *testing.T) {
 	g, err := NewGame([]string{"a", "b", "c"}, 42)
 	if err != nil {

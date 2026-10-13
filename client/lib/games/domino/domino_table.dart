@@ -33,10 +33,31 @@ const List<List<int>> _pipIndex = [
 ];
 
 class DominoLayoutSlot {
-  const DominoLayoutSlot({required this.id, required this.rect});
+  const DominoLayoutSlot({
+    required this.id,
+    required this.rect,
+    required this.leadingOnRight,
+  });
 
   final int id;
   final Rect rect;
+
+  /// true, пока ряд идёт вправо: открытый конец кости — справа.
+  /// На обратном ряду открытый конец слева, и половины надо поменять местами.
+  final bool leadingOnRight;
+}
+
+/// Какую половину рисовать слева и справа.
+/// [leadingOnRight] — открытый конец (к следующей кости цепи) справа.
+({int left, int right}) dominoHalfPips(
+  DominoPlaced tile, {
+  required bool leadingOnRight,
+}) {
+  if (tile.isDouble) return (left: tile.lo, right: tile.hi);
+  final towardLower = tile.end == 'left' ? tile.outward : tile.inward;
+  final towardHigher = tile.end == 'left' ? tile.inward : tile.outward;
+  if (leadingOnRight) return (left: towardLower, right: towardHigher);
+  return (left: towardHigher, right: towardLower);
 }
 
 /// Раскладка цепи: слева направо, с переносом, когда ряд не влезает.
@@ -72,7 +93,11 @@ List<DominoLayoutSlot> layoutDominoChain(
       tileWidth,
       tileHeight,
     );
-    slots.add(DominoLayoutSlot(id: tile.id, rect: rect));
+    slots.add(DominoLayoutSlot(
+      id: tile.id,
+      rect: rect,
+      leadingOnRight: dir == 1,
+    ));
     rowHeight = math.max(rowHeight, kDominoLong);
     if (dir == 1) {
       x += tileWidth + kDominoGap;
@@ -248,8 +273,10 @@ class _DominoTableState extends State<DominoTable>
         final dx = (constraints.maxWidth - bounds.width) / 2 - bounds.left;
         final dy = (constraints.maxHeight - bounds.height) / 2 - bounds.top;
         final placed = {
-          for (final slot in slots)
-            slot.id: slot.rect.shift(Offset(dx, dy)),
+          for (final slot in slots) slot.id: slot.rect.shift(Offset(dx, dy)),
+        };
+        final leading = {
+          for (final slot in slots) slot.id: slot.leadingOnRight,
         };
         if (_to.isEmpty) _to = placed;
         final spawn = _spawnRect(constraints.biggest, view);
@@ -275,7 +302,8 @@ class _DominoTableState extends State<DominoTable>
                       final now = <int, Rect>{};
                       for (final entry in placed.entries) {
                         var origin = _from[entry.key] ?? entry.value;
-                        if (entry.key == _spawnId && !_from.containsKey(entry.key)) {
+                        if (entry.key == _spawnId &&
+                            !_from.containsKey(entry.key)) {
                           origin = spawn;
                         }
                         now[entry.key] =
@@ -286,6 +314,7 @@ class _DominoTableState extends State<DominoTable>
                         painter: _ChainPainter(
                           chain: view.chain,
                           rects: now,
+                          leadingOnRight: leading,
                         ),
                       );
                     },
@@ -411,9 +440,8 @@ class _DominoTableState extends State<DominoTable>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: selected
-                        ? const Color(0xFFFFD54F)
-                        : Colors.transparent,
+                    color:
+                        selected ? const Color(0xFFFFD54F) : Colors.transparent,
                     width: 2,
                   ),
                 ),
@@ -574,7 +602,8 @@ class DominoFacePainter extends CustomPainter {
     for (final index in _pipIndex[count]) {
       final spot = _pipGrid[index];
       canvas.drawCircle(
-        Offset(area.left + area.width * spot.dx, area.top + area.height * spot.dy),
+        Offset(
+            area.left + area.width * spot.dx, area.top + area.height * spot.dy),
         radius.clamp(1.2, 3.4),
         paint,
       );
@@ -614,10 +643,12 @@ class _ChainPainter extends CustomPainter {
   _ChainPainter({
     required this.chain,
     required this.rects,
+    required this.leadingOnRight,
   });
 
   final List<DominoPlaced> chain;
   final Map<int, Rect> rects;
+  final Map<int, bool> leadingOnRight;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -626,12 +657,13 @@ class _ChainPainter extends CustomPainter {
       if (rect == null) continue;
       canvas.save();
       canvas.translate(rect.left, rect.top);
-      final (left, right) = tile.end == 'left'
-          ? (tile.outward, tile.inward)
-          : (tile.inward, tile.outward);
+      final halves = dominoHalfPips(
+        tile,
+        leadingOnRight: leadingOnRight[tile.id] ?? true,
+      );
       DominoFacePainter(
-        lo: tile.isDouble ? tile.lo : left,
-        hi: tile.isDouble ? tile.hi : right,
+        lo: halves.left,
+        hi: halves.right,
         vertical: tile.isDouble,
       ).paint(canvas, rect.size);
       canvas.restore();

@@ -8,6 +8,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/chess/chess_rules.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
@@ -265,15 +266,19 @@ class UserGameSettings {
       );
     }
     if (gameType == 'domino') {
+      final rawMode = (modeRaw == null || modeRaw.isEmpty)
+          ? json['variant']?.toString()
+          : gameMode;
+      final mode = dominoNormalizeMode(rawMode);
       return UserGameSettings(
         gameType: 'domino',
         turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
-        variant: 'kozel',
+        variant: mode,
         gridSize: 3,
         stakeBronze: stake < 2 ? 2 : stake,
         deckSize: 28,
         maxPlayers: maxP.clamp(1, 4),
-        gameMode: 'kozel',
+        gameMode: mode,
       );
     }
     if (gameType == 'nardy') {
@@ -358,11 +363,12 @@ class UserGameSettings {
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
     } else if (gameType == 'domino') {
-      out['variant'] = 'kozel';
+      final mode = dominoNormalizeMode(gameMode);
+      out['variant'] = mode;
       out['grid_size'] = 3;
       out['deck_size'] = 28;
       out['max_players'] = maxPlayers;
-      out['game_mode'] = 'kozel';
+      out['game_mode'] = mode;
     } else if (gameType == 'nardy' ||
         gameType == 'checkers' ||
         gameType == 'chess') {

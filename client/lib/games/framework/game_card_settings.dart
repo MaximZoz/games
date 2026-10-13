@@ -1,3 +1,4 @@
+import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_repository.dart';
 
@@ -73,14 +74,18 @@ UserGameSettings gameCardSettings({
         gameMode: 'classic',
       );
     case 'domino':
+      final raw = (gameMode == 'podkidnoi' || gameMode.isEmpty)
+          ? (variant == 'classic' ? dominoModeKozel : variant)
+          : gameMode;
+      final mode = dominoNormalizeMode(raw);
       return UserGameSettings(
         gameType: 'domino',
         turnTimeSec: turnTimeSec,
-        variant: 'kozel',
+        variant: mode,
         stakeBronze: stakeBronze,
         deckSize: 28,
         maxPlayers: maxPlayers,
-        gameMode: 'kozel',
+        gameMode: mode,
       );
     case 'battleship':
       return UserGameSettings(

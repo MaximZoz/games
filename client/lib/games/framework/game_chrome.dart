@@ -3,7 +3,9 @@
 /// Импортируйте виджеты из `ui/widgets/game_screen_widgets.dart`:
 ///
 /// - [GameActionsOverlay] — флаг «сдаться» + рукопожатие «ничья»
-/// - [handleGameScreenClose] / [confirmGameActionDialog] — крестик / свайп назад
+/// - [handleGameScreenClose] / [confirmGameActionDialog] — крестик / свайп назад.
+///   Сам экран — в `SwipeBackScope.gameBoard`: обычный `SwipeBackScope`
+///   рисует непрозрачную полосу у левого края и съедает крайнюю кость.
 /// - [GameTurnCountdown], [TurnTimerBorder], [TurnTimerAppFrame], [MyTurnAlert] / [MyTurnAlert.stackLeaf] — таймер и сигнал хода
 /// - [GameActorHighlight] — чей ход: рамка с таймером или без лимита времени
 /// - [GameRematchSection] — «Повторить» / «Другой соперник»

@@ -1,9 +1,27 @@
 import 'dart:convert';
 
+import 'package:multigames_client/games/domino/domino_mode.dart';
+
 const int dominoTileCount = 28;
 const int dominoSuitCopies = 7;
 const int dominoGoatScore = 101;
+const int dominoClassicScore = 100;
+const int dominoSeaScore = 125;
+const int dominoSeaRecordMin = 25;
+const int dominoSeaBlankHit = 75;
+const int dominoSeaSixHit = 100;
 const int dominoHandSize = 7;
+
+int dominoTargetFor(String? mode) {
+  switch (dominoNormalizeMode(mode)) {
+    case dominoModeClassic:
+      return dominoClassicScore;
+    case dominoModeSea:
+      return dominoSeaScore;
+    default:
+      return dominoGoatScore;
+  }
+}
 
 const String dominoStatusPlaying = 'playing';
 const String dominoStatusRoundEnd = 'round_end';
@@ -18,6 +36,7 @@ const String dominoActionForfeit = 'forfeit';
 const String dominoRoundOut = 'out';
 const String dominoRoundFish = 'fish';
 const String dominoRoundForfeit = 'forfeit';
+const String dominoRoundFast = 'fast';
 
 /// splitmix64 на uint64. В JS нет точных int больше 2^53, поэтому
 /// состояние считается в BigInt и совпадает с серверным uint64.
@@ -216,6 +235,7 @@ class DominoView {
     required this.winnerUserIds,
     required this.legal,
     required this.targetScore,
+    required this.mode,
     required this.lastAction,
     required this.lastTile,
     required this.lastEnd,
@@ -239,6 +259,7 @@ class DominoView {
   final List<String> winnerUserIds;
   final List<DominoMove> legal;
   final int targetScore;
+  final String mode;
   final String lastAction;
   final int lastTile;
   final String lastEnd;
@@ -315,6 +336,7 @@ class DominoGame {
     this.eventSeq = 0,
     Object? rng,
     this.target = dominoGoatScore,
+    this.mode = dominoModeKozel,
   })  : boneyard = List<int>.of(boneyard ?? const []),
         chain = List<DominoPlaced>.of(chain ?? const []),
         winnerUserIds = List<String>.of(winnerUserIds ?? const []),
@@ -341,23 +363,37 @@ class DominoGame {
   int eventSeq;
   BigInt rng;
   int target;
+  String mode;
 
   bool get isOver => status == dominoStatusOver;
 
-  factory DominoGame.newGame(List<String> playerIds, int seed) {
+  factory DominoGame.newGame(
+    List<String> playerIds,
+    int seed, [
+    String mode = dominoModeKozel,
+  ]) {
     if (playerIds.length < 2 || playerIds.length > 4) {
       throw StateError('domino: need 2..4 players');
     }
     if (seed == 0) seed = 1;
+    final normalized = dominoNormalizeMode(mode);
     final game = DominoGame(
       players: [
         for (final id in playerIds) DominoPlayer(userId: id),
       ],
       rng: seed,
+      mode: normalized,
+      target: dominoTargetFor(normalized),
     );
     game.deal(opening: true);
     return game;
   }
+
+  String get normalizedMode => dominoNormalizeMode(mode);
+
+  int get handSize => normalizedMode == dominoModeClassic && players.length >= 4
+      ? 5
+      : dominoHandSize;
 
   int playerIndex(String userId) {
     for (var i = 0; i < players.length; i++) {
@@ -389,6 +425,7 @@ class DominoGame {
       eventSeq: eventSeq,
       rng: rng,
       target: target,
+      mode: mode,
     );
   }
 
@@ -431,11 +468,12 @@ class DominoGame {
     var cursor = 0;
     for (final player in players) {
       if (player.forfeited) continue;
-      if (cursor + dominoHandSize > ids.length) {
+      final size = handSize;
+      if (cursor + size > ids.length) {
         throw StateError('domino: not enough tiles');
       }
-      player.hand = ids.sublist(cursor, cursor + dominoHandSize);
-      cursor += dominoHandSize;
+      player.hand = ids.sublist(cursor, cursor + size);
+      cursor += size;
     }
     boneyard = ids.sublist(cursor);
     chain = [];
@@ -460,8 +498,12 @@ class DominoGame {
     forcedTile = -1;
   }
 
+  List<int> get _openingDoubles => normalizedMode == dominoModeClassic
+      ? const [6, 0, 5, 4, 3, 2, 1]
+      : const [1, 2, 3, 4, 5, 6, 0];
+
   (int, int)? pickOpening() {
-    for (final pip in const [1, 2, 3, 4, 5, 6, 0]) {
+    for (final pip in _openingDoubles) {
       final id = dominoTileId(pip, pip);
       for (var i = 0; i < players.length; i++) {
         if (players[i].forfeited) continue;
@@ -491,7 +533,7 @@ class DominoGame {
   }
 
   int pickNextStarter() {
-    if (roundKind == dominoRoundOut &&
+    if ((roundKind == dominoRoundOut || roundKind == dominoRoundFast) &&
         outSeat >= 0 &&
         outSeat < players.length &&
         !players[outSeat].forfeited) {
@@ -683,6 +725,10 @@ class DominoGame {
     lastTile = move.tile;
     lastEnd = placed.end;
     lastActor = seat;
+    if (normalizedMode == dominoModeSea && move.tile == dominoTileId(0, 0)) {
+      _finishRound(dominoRoundFast, seat);
+      return;
+    }
     if (players[seat].hand.isEmpty) {
       _finishRound(dominoRoundOut, seat);
       return;
@@ -761,6 +807,17 @@ class DominoGame {
   }
 
   void _finishRound(String kind, int out) {
+    switch (normalizedMode) {
+      case dominoModeClassic:
+        _finishClassic(kind, out);
+      case dominoModeSea:
+        _finishSea(kind, out);
+      default:
+        _finishGoat(kind, out);
+    }
+  }
+
+  void _finishGoat(String kind, int out) {
     roundKind = kind;
     outSeat = out;
     var active = 0;
@@ -794,12 +851,184 @@ class DominoGame {
       players[i].score += delta;
       if (players[i].score >= target) crossed = true;
     }
+    _closeRound(crossed);
+  }
+
+  void _finishClassic(String kind, int out) {
+    roundKind = kind;
+    outSeat = out;
+    final snap = _snapshotPips();
+    for (var i = 0; i < players.length; i++) {
+      if (!players[i].forfeited) players[i].roundDelta = 0;
+    }
+    if (kind == dominoRoundOut &&
+        out >= 0 &&
+        out < players.length &&
+        !players[out].forfeited) {
+      var gain = 0;
+      for (var i = 0; i < players.length; i++) {
+        if (players[i].forfeited || i == out) continue;
+        gain += snap.pips[i];
+      }
+      players[out].roundDelta = gain;
+      players[out].score += gain;
+    } else if (kind == dominoRoundFish && snap.minCount == 1) {
+      var winner = -1;
+      var others = 0;
+      var oppN = 0;
+      for (var i = 0; i < players.length; i++) {
+        if (players[i].forfeited) continue;
+        if (snap.pips[i] == snap.minPips) {
+          winner = i;
+          continue;
+        }
+        others += snap.pips[i];
+        oppN++;
+      }
+      if (winner >= 0) {
+        var gain = others - snap.minPips * oppN;
+        if (gain < 0) gain = 0;
+        players[winner].roundDelta = gain;
+        players[winner].score += gain;
+      }
+    }
+    _closeRound(_someoneReached());
+  }
+
+  void _finishSea(String kind, int out) {
+    roundKind = kind;
+    outSeat = out;
+    final snap = _snapshotPips();
+    for (var i = 0; i < players.length; i++) {
+      if (!players[i].forfeited) players[i].roundDelta = 0;
+    }
+    if (kind == dominoRoundOut &&
+        lastTile == dominoTileId(6, 6) &&
+        out >= 0 &&
+        out < players.length) {
+      players[out].score = 0;
+    }
+    final candidates = <int>[];
+    for (var i = 0; i < players.length; i++) {
+      if (players[i].forfeited) continue;
+      if ((kind == dominoRoundOut || kind == dominoRoundFast) && i == out) {
+        continue;
+      }
+      candidates.add(i);
+    }
+    if (kind == dominoRoundFast) {
+      _chargeUnique(candidates, snap.pips, dominoSeaBlankHit);
+    } else if (kind == dominoRoundOut && lastTile == dominoTileId(6, 6)) {
+      _chargeUnique(candidates, snap.pips, dominoSeaSixHit);
+    } else {
+      _chargeHeaviest(candidates, snap.pips);
+    }
+    _closeRound(_someoneReached());
+  }
+
+  ({List<int> pips, int minPips, int minCount}) _snapshotPips() {
+    final pips = List<int>.filled(players.length, 0);
+    var minPips = 1 << 30;
+    for (var i = 0; i < players.length; i++) {
+      if (players[i].forfeited) {
+        players[i].roundPips = 0;
+        players[i].roundDelta = 0;
+        continue;
+      }
+      final sum = dominoPipSum(players[i].hand);
+      pips[i] = sum;
+      players[i].roundPips = sum;
+      if (sum < minPips) minPips = sum;
+    }
+    var minCount = 0;
+    for (var i = 0; i < players.length; i++) {
+      if (players[i].forfeited) continue;
+      if (pips[i] == minPips) minCount++;
+    }
+    return (pips: pips, minPips: minPips, minCount: minCount);
+  }
+
+  bool _someoneReached() {
+    for (final player in players) {
+      if (!player.forfeited && player.score >= target) return true;
+    }
+    return false;
+  }
+
+  void _chargeUnique(List<int> candidates, List<int> pips, int amount) {
+    var best = -1;
+    var ties = 0;
+    var bestPips = -1;
+    for (final seat in candidates) {
+      if (pips[seat] > bestPips) {
+        bestPips = pips[seat];
+        best = seat;
+        ties = 1;
+        continue;
+      }
+      if (pips[seat] == bestPips) ties++;
+    }
+    if (ties != 1 || best < 0) return;
+    players[best].roundDelta = amount;
+    players[best].score += amount;
+  }
+
+  void _chargeHeaviest(List<int> candidates, List<int> pips) {
+    var heavy = 0;
+    var best = -1;
+    var ties = 0;
+    var bestPips = -1;
+    for (final seat in candidates) {
+      if (pips[seat] >= dominoSeaRecordMin) heavy++;
+      if (pips[seat] > bestPips) {
+        bestPips = pips[seat];
+        best = seat;
+        ties = 1;
+        continue;
+      }
+      if (pips[seat] == bestPips) ties++;
+    }
+    if (heavy >= 2 || ties != 1 || best < 0 || bestPips < dominoSeaRecordMin) {
+      return;
+    }
+    players[best].roundDelta = bestPips;
+    players[best].score += bestPips;
+  }
+
+  void _closeRound(bool crossed) {
     if (crossed || aliveCount() <= 1) {
       status = dominoStatusOver;
+      if (normalizedMode == dominoModeClassic) {
+        _settlePositive();
+        return;
+      }
       _settleScores();
       return;
     }
     status = dominoStatusRoundEnd;
+  }
+
+  void _settlePositive() {
+    goatSeat = -1;
+    winnerUserIds = [];
+    var bestScore = -1;
+    var alive = 0;
+    for (final player in players) {
+      if (player.forfeited) continue;
+      alive++;
+      if (player.score > bestScore) bestScore = player.score;
+    }
+    if (bestScore < 0 || alive == 0) return;
+    var same = 0;
+    for (final player in players) {
+      if (player.forfeited) continue;
+      if (player.score == bestScore) same++;
+    }
+    if (same == alive) return;
+    for (final player in players) {
+      if (player.forfeited || player.score != bestScore) continue;
+      winnerUserIds.add(player.userId);
+    }
   }
 
   void _settleScores() {
@@ -874,7 +1103,9 @@ class DominoGame {
       }
     }
     for (final placed in chain) {
-      if (placed.id >= 0 && placed.id < dominoTileCount) known[placed.id] = true;
+      if (placed.id >= 0 && placed.id < dominoTileCount) {
+        known[placed.id] = true;
+      }
     }
     return [
       for (var id = 0; id < dominoTileCount; id++)
@@ -883,8 +1114,7 @@ class DominoGame {
   }
 
   DominoView view(String viewer) {
-    final reveal =
-        status == dominoStatusRoundEnd || status == dominoStatusOver;
+    final reveal = status == dominoStatusRoundEnd || status == dominoStatusOver;
     final viewerSeat = playerIndex(viewer);
     final viewPlayers = <DominoViewPlayer>[];
     for (var i = 0; i < players.length; i++) {
@@ -928,6 +1158,7 @@ class DominoGame {
       winnerUserIds: List<String>.of(winnerUserIds),
       legal: legalMoves,
       targetScore: target,
+      mode: normalizedMode,
       lastAction: lastAction,
       lastTile: shownTile,
       lastEnd: lastEnd,
@@ -958,6 +1189,7 @@ class DominoGame {
         'event_seq': eventSeq,
         'rng': rng.toString(),
         'target': target,
+        'mode': normalizedMode,
       };
 
   String encode() => jsonEncode(toJson());
@@ -1001,9 +1233,10 @@ class DominoGame {
       lastActor: (map['last_actor'] as num?)?.toInt() ?? -1,
       eventSeq: (map['event_seq'] as num?)?.toInt() ?? 0,
       rng: map['rng'],
-      target: (map['target'] as num?)?.toInt() ?? dominoGoatScore,
+      target: (map['target'] as num?)?.toInt() ?? 0,
+      mode: dominoNormalizeMode(map['mode']?.toString()),
     );
-    if (game.target == 0) game.target = dominoGoatScore;
+    if (game.target == 0) game.target = dominoTargetFor(game.mode);
     return game;
   }
 }

@@ -86,6 +86,7 @@ String localizeChatTitle(String? title, [AppLocalizations? l10n]) {
     case 'Uno':
       return t.gamesUno;
     case 'Козёл':
+    case 'Домино':
     case 'Domino':
     case 'Goat':
       return t.gamesDomino;

@@ -1,4 +1,5 @@
 import 'package:multigames_client/games/domino/domino_engine.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 
 const int dominoBotSearchDepth = 8;
 const int dominoBotNodeCap = 6000;
@@ -121,6 +122,9 @@ int _heuristic(DominoGame game, int seat, DominoMove move) {
   final (lo, hi) = dominoPips(move.tile);
   var score = (lo + hi) * 20;
   if (lo == hi) score += 24;
+  if (game.normalizedMode == dominoModeSea && move.tile == dominoTileId(0, 0)) {
+    score += 500;
+  }
   final hand = [
     for (final id in game.players[seat].hand)
       if (id != move.tile) id,
@@ -251,6 +255,9 @@ int _evalRound(DominoGame game, int root) {
       opp += game.players[i].roundDelta;
     }
     var value = opp * 4 - game.players[root].roundDelta * 5;
+    if (game.normalizedMode == dominoModeClassic) {
+      value = game.players[root].roundDelta * 5 - opp * 4;
+    }
     if (game.roundKind == dominoRoundOut && game.outSeat == root) value += 8000;
     if (game.roundKind == dominoRoundOut &&
         game.outSeat >= 0 &&

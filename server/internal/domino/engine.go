@@ -3,13 +3,23 @@ package domino
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 const (
-	TileCount  = 28
-	SuitCopies = 7
-	GoatScore  = 101
-	HandSize   = 7
+	TileCount    = 28
+	SuitCopies   = 7
+	GoatScore    = 101
+	ClassicScore = 100
+	SeaScore     = 125
+	SeaRecordMin = 25
+	SeaBlankHit  = 75
+	SeaSixHit    = 100
+	HandSize     = 7
+
+	ModeKozel   = "kozel"
+	ModeClassic = "classic"
+	ModeSea     = "sea"
 
 	StatusPlaying  = "playing"
 	StatusRoundEnd = "round_end"
@@ -24,12 +34,39 @@ const (
 	RoundOut     = "out"
 	RoundFish    = "fish"
 	RoundForfeit = "forfeit"
+	RoundFast    = "fast"
 )
 
-// Козёл: 28 костей, 2–4 игрока, штрафные очки, проигрывает тот, кто набрал 101.
-// Дубль на конце не меняет число конца. Рыба: при пустом базаре и общей блокаде
-// игроки с единственным минимумом очков записывают 0, остальные — сумму своих костей.
-// Если минимум у всех одинаковый, записывают все.
+// Режимы на одной цепочке из двух концов.
+// Козёл: штраф до 101, проигрывает набравший.
+// Классика: вышедший записывает чужие очки, первый до 100 побеждает.
+// Морской: как козёл по ходам, но пишет только самая тяжёлая рука (от 25),
+// 0-0 сразу закрывает кон на 75, выход на 6-6 пишет 100 и сбрасывает счёт закрывшего.
+// Партия до 125, набравший проигрывает.
+
+// NormalizeMode приводит пустой и неизвестный режим к «Козлу».
+func NormalizeMode(mode string) string {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case ModeClassic:
+		return ModeClassic
+	case ModeSea:
+		return ModeSea
+	default:
+		return ModeKozel
+	}
+}
+
+// TargetFor — порог партии для режима.
+func TargetFor(mode string) int {
+	switch NormalizeMode(mode) {
+	case ModeClassic:
+		return ClassicScore
+	case ModeSea:
+		return SeaScore
+	default:
+		return GoatScore
+	}
+}
 
 type Action struct {
 	Type  string `json:"type"`
@@ -84,6 +121,7 @@ type Game struct {
 	EventSeq      int      `json:"event_seq"`
 	Rng           uint64   `json:"rng"`
 	Target        int      `json:"target"`
+	Mode          string   `json:"mode"`
 }
 
 type ViewPlayer struct {
@@ -124,6 +162,7 @@ type View struct {
 	LastEnd       string       `json:"last_end"`
 	LastActor     int          `json:"last_actor"`
 	EventSeq      int          `json:"event_seq"`
+	Mode          string       `json:"mode"`
 }
 
 func Pips(id int) (lo, hi int) {
@@ -163,12 +202,17 @@ func IsDouble(id int) bool {
 }
 
 func NewGame(playerIDs []string, seed int64) (*Game, error) {
+	return NewMatch(playerIDs, seed, ModeKozel)
+}
+
+func NewMatch(playerIDs []string, seed int64, mode string) (*Game, error) {
 	if len(playerIDs) < 2 || len(playerIDs) > 4 {
 		return nil, fmt.Errorf("domino: need 2..4 players")
 	}
 	if seed == 0 {
 		seed = 1
 	}
+	mode = NormalizeMode(mode)
 	g := &Game{
 		Players:    make([]Player, len(playerIDs)),
 		LeftEnd:    -1,
@@ -178,7 +222,8 @@ func NewGame(playerIDs []string, seed int64) (*Game, error) {
 		GoatSeat:   -1,
 		Status:     StatusPlaying,
 		Round:      1,
-		Target:     GoatScore,
+		Target:     TargetFor(mode),
+		Mode:       mode,
 		Rng:        uint64(seed),
 		LastTile:   -1,
 		LastActor:  -1,
@@ -211,8 +256,9 @@ func Decode(raw string) (*Game, error) {
 	if err := json.Unmarshal([]byte(raw), &g); err != nil {
 		return nil, err
 	}
+	g.Mode = NormalizeMode(g.Mode)
 	if g.Target == 0 {
-		g.Target = GoatScore
+		g.Target = TargetFor(g.Mode)
 	}
 	return &g, nil
 }
@@ -294,11 +340,12 @@ func (g *Game) deal(opening bool) error {
 		if g.Players[i].Forfeited {
 			continue
 		}
-		if cursor+HandSize > len(ids) {
+		handSize := g.handSize()
+		if cursor+handSize > len(ids) {
 			return fmt.Errorf("domino: not enough tiles")
 		}
-		g.Players[i].Hand = append([]int(nil), ids[cursor:cursor+HandSize]...)
-		cursor += HandSize
+		g.Players[i].Hand = append([]int(nil), ids[cursor:cursor+handSize]...)
+		cursor += handSize
 	}
 	g.Boneyard = append([]int(nil), ids[cursor:]...)
 	g.Chain = nil
@@ -326,10 +373,32 @@ func (g *Game) deal(opening bool) error {
 	return nil
 }
 
-// pickOpening — первый кон: дубли 1-1 … 6-6, затем 0-0.
+func (g *Game) handSize() int {
+	if g.normalizedMode() == ModeClassic && len(g.Players) >= 4 {
+		return 5
+	}
+	return HandSize
+}
+
+func (g *Game) normalizedMode() string {
+	if g == nil {
+		return ModeKozel
+	}
+	return NormalizeMode(g.Mode)
+}
+
+func (g *Game) openingDoubles() []int {
+	if g.normalizedMode() == ModeClassic {
+		return []int{6, 0, 5, 4, 3, 2, 1}
+	}
+	return []int{1, 2, 3, 4, 5, 6, 0}
+}
+
+// pickOpening — козёл и морской: дубли 1-1 … 6-6, затем 0-0.
+// Классика: 6-6, затем 0-0 и дальше дубли по убыванию.
 // Если дублей нет, самая старшая кость (старший пайк, затем младший).
 func (g *Game) pickOpening() (seat, tile int, ok bool) {
-	for _, pip := range []int{1, 2, 3, 4, 5, 6, 0} {
+	for _, pip := range g.openingDoubles() {
 		id := TileID(pip, pip)
 		for i := range g.Players {
 			if g.Players[i].Forfeited {
@@ -369,7 +438,7 @@ func tileBeats(a, b int) bool {
 }
 
 func (g *Game) pickNextStarter() int {
-	if g.RoundKind == RoundOut && g.OutSeat >= 0 && g.OutSeat < len(g.Players) && !g.Players[g.OutSeat].Forfeited {
+	if (g.RoundKind == RoundOut || g.RoundKind == RoundFast) && g.OutSeat >= 0 && g.OutSeat < len(g.Players) && !g.Players[g.OutSeat].Forfeited {
 		return g.OutSeat
 	}
 	minPips := int(^uint(0) >> 1)
@@ -584,6 +653,10 @@ func (g *Game) play(seat int, mv Move) {
 	g.LastTile = mv.Tile
 	g.LastEnd = placed.End
 	g.LastActor = seat
+	if g.normalizedMode() == ModeSea && mv.Tile == TileID(0, 0) {
+		g.finishRound(RoundFast, seat)
+		return
+	}
 	if len(g.Players[seat].Hand) == 0 {
 		g.finishRound(RoundOut, seat)
 		return
@@ -700,6 +773,17 @@ func tileMatches(id, end int) bool {
 }
 
 func (g *Game) finishRound(kind string, outSeat int) {
+	switch g.normalizedMode() {
+	case ModeClassic:
+		g.finishClassic(kind, outSeat)
+	case ModeSea:
+		g.finishSea(kind, outSeat)
+	default:
+		g.finishGoat(kind, outSeat)
+	}
+}
+
+func (g *Game) finishGoat(kind string, outSeat int) {
 	g.RoundKind = kind
 	g.OutSeat = outSeat
 	active := 0
@@ -743,12 +827,220 @@ func (g *Game) finishRound(kind string, outSeat int) {
 			crossed = true
 		}
 	}
+	g.closeRound(crossed)
+}
+
+func (g *Game) finishClassic(kind string, outSeat int) {
+	g.RoundKind = kind
+	g.OutSeat = outSeat
+	pips, _, minPips, minCount := g.snapshotPips()
+	for i := range g.Players {
+		if !g.Players[i].Forfeited {
+			g.Players[i].RoundDelta = 0
+		}
+	}
+	if kind == RoundOut && outSeat >= 0 && outSeat < len(g.Players) && !g.Players[outSeat].Forfeited {
+		gain := 0
+		for i := range g.Players {
+			if g.Players[i].Forfeited || i == outSeat {
+				continue
+			}
+			gain += pips[i]
+		}
+		g.Players[outSeat].RoundDelta = gain
+		g.Players[outSeat].Score += gain
+	} else if kind == RoundFish && minCount == 1 {
+		winner := -1
+		others := 0
+		oppN := 0
+		for i := range g.Players {
+			if g.Players[i].Forfeited {
+				continue
+			}
+			if pips[i] == minPips {
+				winner = i
+				continue
+			}
+			others += pips[i]
+			oppN++
+		}
+		if winner >= 0 {
+			gain := others - minPips*oppN
+			if gain < 0 {
+				gain = 0
+			}
+			g.Players[winner].RoundDelta = gain
+			g.Players[winner].Score += gain
+		}
+	}
+	g.closeRound(g.someoneReached())
+}
+
+func (g *Game) finishSea(kind string, outSeat int) {
+	g.RoundKind = kind
+	g.OutSeat = outSeat
+	pips, _, _, _ := g.snapshotPips()
+	for i := range g.Players {
+		if !g.Players[i].Forfeited {
+			g.Players[i].RoundDelta = 0
+		}
+	}
+	if kind == RoundOut && g.LastTile == TileID(6, 6) && outSeat >= 0 && outSeat < len(g.Players) {
+		g.Players[outSeat].Score = 0
+	}
+	candidates := make([]int, 0, len(g.Players))
+	for i := range g.Players {
+		if g.Players[i].Forfeited {
+			continue
+		}
+		if (kind == RoundOut || kind == RoundFast) && i == outSeat {
+			continue
+		}
+		candidates = append(candidates, i)
+	}
+	switch {
+	case kind == RoundFast:
+		g.chargeUnique(candidates, pips, SeaBlankHit)
+	case kind == RoundOut && g.LastTile == TileID(6, 6):
+		g.chargeUnique(candidates, pips, SeaSixHit)
+	default:
+		g.chargeHeaviest(candidates, pips)
+	}
+	g.closeRound(g.someoneReached())
+}
+
+func (g *Game) snapshotPips() (pips []int, active, minPips, minCount int) {
+	pips = make([]int, len(g.Players))
+	minPips = int(^uint(0) >> 1)
+	for i := range g.Players {
+		if g.Players[i].Forfeited {
+			g.Players[i].RoundPips = 0
+			g.Players[i].RoundDelta = 0
+			continue
+		}
+		sum := PipSum(g.Players[i].Hand)
+		pips[i] = sum
+		g.Players[i].RoundPips = sum
+		active++
+		if sum < minPips {
+			minPips = sum
+		}
+	}
+	for i := range g.Players {
+		if g.Players[i].Forfeited {
+			continue
+		}
+		if pips[i] == minPips {
+			minCount++
+		}
+	}
+	return pips, active, minPips, minCount
+}
+
+func (g *Game) someoneReached() bool {
+	for i := range g.Players {
+		if g.Players[i].Forfeited {
+			continue
+		}
+		if g.Players[i].Score >= g.Target {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *Game) chargeUnique(candidates, pips []int, amount int) {
+	best, ties, bestPips := -1, 0, -1
+	for _, seat := range candidates {
+		if pips[seat] > bestPips {
+			bestPips = pips[seat]
+			best = seat
+			ties = 1
+			continue
+		}
+		if pips[seat] == bestPips {
+			ties++
+		}
+	}
+	if ties != 1 || best < 0 {
+		return
+	}
+	g.Players[best].RoundDelta = amount
+	g.Players[best].Score += amount
+}
+
+func (g *Game) chargeHeaviest(candidates, pips []int) {
+	heavy := 0
+	best, ties, bestPips := -1, 0, -1
+	for _, seat := range candidates {
+		if pips[seat] >= SeaRecordMin {
+			heavy++
+		}
+		if pips[seat] > bestPips {
+			bestPips = pips[seat]
+			best = seat
+			ties = 1
+			continue
+		}
+		if pips[seat] == bestPips {
+			ties++
+		}
+	}
+	if heavy >= 2 || ties != 1 || best < 0 || bestPips < SeaRecordMin {
+		return
+	}
+	g.Players[best].RoundDelta = bestPips
+	g.Players[best].Score += bestPips
+}
+
+func (g *Game) closeRound(crossed bool) {
 	if crossed || g.aliveCount() <= 1 {
 		g.Status = StatusOver
+		if g.normalizedMode() == ModeClassic {
+			g.settlePositive()
+			return
+		}
 		g.settleScores()
 		return
 	}
 	g.Status = StatusRoundEnd
+}
+
+func (g *Game) settlePositive() {
+	g.GoatSeat = -1
+	g.WinnerUserIDs = nil
+	bestScore := -1
+	alive := 0
+	for i := range g.Players {
+		if g.Players[i].Forfeited {
+			continue
+		}
+		alive++
+		if g.Players[i].Score > bestScore {
+			bestScore = g.Players[i].Score
+		}
+	}
+	if bestScore < 0 || alive == 0 {
+		return
+	}
+	same := 0
+	for i := range g.Players {
+		if g.Players[i].Forfeited {
+			continue
+		}
+		if g.Players[i].Score == bestScore {
+			same++
+		}
+	}
+	if same == alive {
+		return
+	}
+	for i := range g.Players {
+		if g.Players[i].Forfeited || g.Players[i].Score != bestScore {
+			continue
+		}
+		g.WinnerUserIDs = append(g.WinnerUserIDs, g.Players[i].UserID)
+	}
 }
 
 func (g *Game) settleScores() {
@@ -865,6 +1157,7 @@ func (g *Game) View(viewer string) View {
 		LastEnd:       g.LastEnd,
 		LastActor:     g.LastActor,
 		EventSeq:      g.EventSeq,
+		Mode:          g.normalizedMode(),
 	}
 }
 

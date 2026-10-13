@@ -6,6 +6,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/domino/domino_engine.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/domino/domino_offline_session.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show GamesException, LobbyPlayer, parseLobbyInvited;
@@ -100,6 +101,7 @@ class DominoGameView {
     required this.winnerUserIds,
     required this.legal,
     required this.targetScore,
+    this.mode = dominoModeKozel,
     required this.lastAction,
     required this.lastTile,
     required this.lastEnd,
@@ -134,6 +136,7 @@ class DominoGameView {
   final List<String> winnerUserIds;
   final List<DominoMove> legal;
   final int targetScore;
+  final String mode;
   final String lastAction;
   final int lastTile;
   final String lastEnd;
@@ -176,6 +179,8 @@ class DominoGameView {
 
   bool get iAmGoat => isOver && goatSeat == myIndex && !iForfeited;
 
+  bool get isPenalty => dominoIsPenaltyMode(mode);
+
   factory DominoGameView.fromJson(Map<String, dynamic> json) {
     final players = _models(json['players'], DominoPlayerView.fromJson);
     return DominoGameView(
@@ -201,6 +206,7 @@ class DominoGameView {
       ],
       legal: _models(json['legal'], DominoMove.fromJson),
       targetScore: _asInt(json['target_score'], dominoGoatScore),
+      mode: dominoNormalizeMode(json['mode']?.toString()),
       lastAction: (json['last_action'] ?? '').toString(),
       lastTile: _asInt(json['last_tile'], -1),
       lastEnd: (json['last_end'] ?? '').toString(),
@@ -231,6 +237,7 @@ class DominoLobbyView {
     this.invited = const [],
     this.chatId,
     this.gameId,
+    this.gameMode = dominoModeKozel,
   });
 
   final String id;
@@ -245,6 +252,7 @@ class DominoLobbyView {
   final List<LobbyPlayer> invited;
   final String? chatId;
   final String? gameId;
+  final String gameMode;
 
   factory DominoLobbyView.fromJson(Map<String, dynamic> json) {
     final ids =
@@ -266,6 +274,9 @@ class DominoLobbyView {
           : [for (final id in ids) LobbyPlayer(id: id, displayName: '')],
       chatId: json['chat_id']?.toString(),
       gameId: json['game_id']?.toString(),
+      gameMode: dominoNormalizeMode(
+        (json['game_mode'] ?? json['variant'])?.toString(),
+      ),
     );
   }
 }
@@ -351,6 +362,7 @@ class DominoRepository {
     required int maxPlayers,
     required int turnTimeSec,
     required int stakeBronze,
+    String gameMode = dominoModeKozel,
   }) async {
     final response = await _sendAuth((token) => ApiClient.post(
           Uri.parse('$apiBaseUrl/api/games/domino/lobby'),
@@ -363,7 +375,7 @@ class DominoRepository {
             'max_players': maxPlayers,
             'turn_time_sec': turnTimeSec,
             'stake_bronze': stakeBronze,
-            'game_mode': 'kozel',
+            'game_mode': dominoNormalizeMode(gameMode),
           }),
           operation: 'DominoRepository.createLobby',
         ));

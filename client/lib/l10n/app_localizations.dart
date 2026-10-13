@@ -1682,8 +1682,26 @@ abstract class AppLocalizations {
   /// No description provided for @gamesDomino.
   ///
   /// In ru, this message translates to:
-  /// **'Козёл'**
+  /// **'Домино'**
   String get gamesDomino;
+
+  /// No description provided for @gamesDominoModeKozel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Козёл'**
+  String get gamesDominoModeKozel;
+
+  /// No description provided for @gamesDominoModeClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классика'**
+  String get gamesDominoModeClassic;
+
+  /// No description provided for @gamesDominoModeSea.
+  ///
+  /// In ru, this message translates to:
+  /// **'Морской'**
+  String get gamesDominoModeSea;
 
   /// No description provided for @rulesDominoDeal.
   ///
@@ -1732,6 +1750,78 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Офлайн: вы и боты. Бот считает масти и не подглядывает в чужие руки.'**
   String get rulesDominoOffline;
+
+  /// No description provided for @rulesDominoMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}'**
+  String rulesDominoMode(String mode);
+
+  /// No description provided for @rulesDominoClassicDeal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Двоим и троим раздают по 7 костей, четверым — по 5. Остальное лежит в базаре.'**
+  String get rulesDominoClassicDeal;
+
+  /// No description provided for @rulesDominoClassicOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Первый кон начинает дубль 6-6, затем 0-0 и дальше дубли по убыванию. Если дублей нет — старшая кость. Её и надо поставить.'**
+  String get rulesDominoClassicOpen;
+
+  /// No description provided for @rulesDominoClassicScore.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кто вышел, записывает сумму костей соперников. Партия до 100: кто первым набрал — выиграл.'**
+  String get rulesDominoClassicScore;
+
+  /// No description provided for @rulesDominoClassicFish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рыба: у кого очков строго меньше всех, записывает разницу с каждой чужой рукой. Если минимум у нескольких — очки не пишутся.'**
+  String get rulesDominoClassicFish;
+
+  /// No description provided for @rulesDominoClassicMatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Одинаковый высший счёт делят победу. Если счёт у всех равный — ничья.'**
+  String get rulesDominoClassicMatch;
+
+  /// No description provided for @rulesDominoSeaSame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раздача, первый ход и добор — как в режиме «Козёл». Цепочка на два конца.'**
+  String get rulesDominoSeaSame;
+
+  /// No description provided for @rulesDominoSeaScore.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очки пишет только тот, у кого в конце кона больше всех на руках. Меньше 25 не записывается.'**
+  String get rulesDominoSeaScore;
+
+  /// No description provided for @rulesDominoSeaWipe.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если 25 и больше сразу у двоих, этот кон никому не пишется.'**
+  String get rulesDominoSeaWipe;
+
+  /// No description provided for @rulesDominoSeaBlank.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выложенный 0-0 сразу заканчивает кон: игроку с самой тяжёлой рукой пишут 75. Если таких двое — не пишут никому.'**
+  String get rulesDominoSeaBlank;
+
+  /// No description provided for @rulesDominoSeaSix.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если кон закрыт последней костью 6-6, проигравшему пишут 100, а у закрывшего счёт партии сбрасывается.'**
+  String get rulesDominoSeaSix;
+
+  /// No description provided for @rulesDominoSeaMatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Партия до 125. Кто набрал — проиграл.'**
+  String get rulesDominoSeaMatch;
 
   /// No description provided for @dominoBoneyard.
   ///

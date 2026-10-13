@@ -73,7 +73,8 @@ func TestDefaultRegistry(t *testing.T) {
 			domino.SupportsOffline(), domino.SupportsDrawOffer(2))
 	}
 	dominoModes := domino.Modes()
-	if len(dominoModes) != 1 || dominoModes[0].ID != "kozel" ||
+	if len(dominoModes) != 3 || dominoModes[0].ID != "kozel" ||
+		dominoModes[1].ID != "classic" || dominoModes[2].ID != "sea" ||
 		dominoModes[0].MinPlayers != 2 || dominoModes[0].MaxPlayers != 4 {
 		t.Fatalf("domino modes: %+v", dominoModes)
 	}
