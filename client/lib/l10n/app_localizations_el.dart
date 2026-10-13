@@ -3285,4 +3285,33 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Τελευταία παιχνίδια';
+
+  @override
+  String get statsOutcomeWin => 'Νίκη';
+
+  @override
+  String get statsOutcomeLoss => 'Ήττα';
+
+  @override
+  String get statsOutcomeDraw => 'Ισοπαλία';
+
+  @override
+  String get statsAllModes => 'Όλες οι λειτουργίες';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Παιχνίδι';
+
+  @override
+  String get statsSelectMode => 'Λειτουργία';
+
+  @override
+  String get statsRecentEmpty => 'Δεν υπάρχουν παρτίδες ακόμα';
 }

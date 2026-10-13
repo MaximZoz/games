@@ -3288,4 +3288,33 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Poslední partie';
+
+  @override
+  String get statsOutcomeWin => 'Výhra';
+
+  @override
+  String get statsOutcomeLoss => 'Prohra';
+
+  @override
+  String get statsOutcomeDraw => 'Remíza';
+
+  @override
+  String get statsAllModes => 'Všechny režimy';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Hra';
+
+  @override
+  String get statsSelectMode => 'Režim';
+
+  @override
+  String get statsRecentEmpty => 'Zatím žádné partie';
 }

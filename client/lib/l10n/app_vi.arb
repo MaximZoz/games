@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Ván gần đây",
+  "statsOutcomeWin": "Thắng",
+  "statsOutcomeLoss": "Thua",
+  "statsOutcomeDraw": "Hòa",
+  "statsAllModes": "Mọi chế độ",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Trò chơi",
+  "statsSelectMode": "Chế độ",
+  "statsRecentEmpty": "Chưa có ván nào"
 }

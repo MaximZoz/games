@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Poslední partie",
+  "statsOutcomeWin": "Výhra",
+  "statsOutcomeLoss": "Prohra",
+  "statsOutcomeDraw": "Remíza",
+  "statsAllModes": "Všechny režimy",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Hra",
+  "statsSelectMode": "Režim",
+  "statsRecentEmpty": "Zatím žádné partie"
 }

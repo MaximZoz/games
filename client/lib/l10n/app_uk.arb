@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "потертого",
   "collectionCondGenTired": "втомленого",
   "collectionCondGenShabby": "старого",
-  "collectionCondGenVintage": "вінтажу"
+  "collectionCondGenVintage": "вінтажу",
+  "statsRecentTitle": "Останні партії",
+  "statsOutcomeWin": "Перемога",
+  "statsOutcomeLoss": "Поразка",
+  "statsOutcomeDraw": "Нічия",
+  "statsAllModes": "Усі режими",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Гра",
+  "statsSelectMode": "Режим",
+  "statsRecentEmpty": "Поки немає партій"
 }

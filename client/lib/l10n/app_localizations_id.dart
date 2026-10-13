@@ -3285,4 +3285,33 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Partai terbaru';
+
+  @override
+  String get statsOutcomeWin => 'Menang';
+
+  @override
+  String get statsOutcomeLoss => 'Kalah';
+
+  @override
+  String get statsOutcomeDraw => 'Seri';
+
+  @override
+  String get statsAllModes => 'Semua mode';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Permainan';
+
+  @override
+  String get statsSelectMode => 'Mode';
+
+  @override
+  String get statsRecentEmpty => 'Belum ada permainan';
 }

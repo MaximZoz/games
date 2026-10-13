@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "آخر المباريات",
+  "statsOutcomeWin": "فوز",
+  "statsOutcomeLoss": "خسارة",
+  "statsOutcomeDraw": "تعادل",
+  "statsAllModes": "كل الأوضاع",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "لعبة",
+  "statsSelectMode": "الوضع",
+  "statsRecentEmpty": "لا توجد مباريات بعد"
 }

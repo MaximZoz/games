@@ -3285,4 +3285,33 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Laatste partijen';
+
+  @override
+  String get statsOutcomeWin => 'Winst';
+
+  @override
+  String get statsOutcomeLoss => 'Verlies';
+
+  @override
+  String get statsOutcomeDraw => 'Gelijkspel';
+
+  @override
+  String get statsAllModes => 'Alle modi';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Spel';
+
+  @override
+  String get statsSelectMode => 'Modus';
+
+  @override
+  String get statsRecentEmpty => 'Nog geen partijen';
 }

@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Senaste partier",
+  "statsOutcomeWin": "Vinst",
+  "statsOutcomeLoss": "Förlust",
+  "statsOutcomeDraw": "Oavgjort",
+  "statsAllModes": "Alla lägen",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spel",
+  "statsSelectMode": "Läge",
+  "statsRecentEmpty": "Inga partier än"
 }

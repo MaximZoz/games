@@ -3285,4 +3285,33 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Ván gần đây';
+
+  @override
+  String get statsOutcomeWin => 'Thắng';
+
+  @override
+  String get statsOutcomeLoss => 'Thua';
+
+  @override
+  String get statsOutcomeDraw => 'Hòa';
+
+  @override
+  String get statsAllModes => 'Mọi chế độ';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Trò chơi';
+
+  @override
+  String get statsSelectMode => 'Chế độ';
+
+  @override
+  String get statsRecentEmpty => 'Chưa có ván nào';
 }

@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Τελευταία παιχνίδια",
+  "statsOutcomeWin": "Νίκη",
+  "statsOutcomeLoss": "Ήττα",
+  "statsOutcomeDraw": "Ισοπαλία",
+  "statsAllModes": "Όλες οι λειτουργίες",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Παιχνίδι",
+  "statsSelectMode": "Λειτουργία",
+  "statsRecentEmpty": "Δεν υπάρχουν παρτίδες ακόμα"
 }

@@ -6172,6 +6172,60 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'винтажа'**
   String get collectionCondGenVintage;
+
+  /// No description provided for @statsRecentTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последние партии'**
+  String get statsRecentTitle;
+
+  /// No description provided for @statsOutcomeWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Победа'**
+  String get statsOutcomeWin;
+
+  /// No description provided for @statsOutcomeLoss.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поражение'**
+  String get statsOutcomeLoss;
+
+  /// No description provided for @statsOutcomeDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья'**
+  String get statsOutcomeDraw;
+
+  /// No description provided for @statsAllModes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все режимы'**
+  String get statsAllModes;
+
+  /// No description provided for @statsDurakChip.
+  ///
+  /// In ru, this message translates to:
+  /// **'{players} · {deck}'**
+  String statsDurakChip(int players, String deck);
+
+  /// No description provided for @statsSelectGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра'**
+  String get statsSelectGame;
+
+  /// No description provided for @statsSelectMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим'**
+  String get statsSelectMode;
+
+  /// No description provided for @statsRecentEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока нет партий'**
+  String get statsRecentEmpty;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

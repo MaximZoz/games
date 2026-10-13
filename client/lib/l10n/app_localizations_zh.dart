@@ -3285,4 +3285,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => '最近的对局';
+
+  @override
+  String get statsOutcomeWin => '胜利';
+
+  @override
+  String get statsOutcomeLoss => '失败';
+
+  @override
+  String get statsOutcomeDraw => '平局';
+
+  @override
+  String get statsAllModes => '全部模式';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => '游戏';
+
+  @override
+  String get statsSelectMode => '模式';
+
+  @override
+  String get statsRecentEmpty => '还没有对局';
 }

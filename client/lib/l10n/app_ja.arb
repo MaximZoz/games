@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "最近の対局",
+  "statsOutcomeWin": "勝ち",
+  "statsOutcomeLoss": "負け",
+  "statsOutcomeDraw": "引き分け",
+  "statsAllModes": "すべてのモード",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "ゲーム",
+  "statsSelectMode": "モード",
+  "statsRecentEmpty": "まだ対局がありません"
 }

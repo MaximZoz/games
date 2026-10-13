@@ -3285,4 +3285,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => '最近の対局';
+
+  @override
+  String get statsOutcomeWin => '勝ち';
+
+  @override
+  String get statsOutcomeLoss => '負け';
+
+  @override
+  String get statsOutcomeDraw => '引き分け';
+
+  @override
+  String get statsAllModes => 'すべてのモード';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'ゲーム';
+
+  @override
+  String get statsSelectMode => 'モード';
+
+  @override
+  String get statsRecentEmpty => 'まだ対局がありません';
 }

@@ -3285,4 +3285,33 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Viime pelit';
+
+  @override
+  String get statsOutcomeWin => 'Voitto';
+
+  @override
+  String get statsOutcomeLoss => 'Tappio';
+
+  @override
+  String get statsOutcomeDraw => 'Tasapeli';
+
+  @override
+  String get statsAllModes => 'Kaikki tilat';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Peli';
+
+  @override
+  String get statsSelectMode => 'Tila';
+
+  @override
+  String get statsRecentEmpty => 'Ei pelejä vielä';
 }

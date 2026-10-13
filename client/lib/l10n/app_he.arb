@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "המשחקים האחרונים",
+  "statsOutcomeWin": "ניצחון",
+  "statsOutcomeLoss": "הפסד",
+  "statsOutcomeDraw": "תיקו",
+  "statsAllModes": "כל המצבים",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "משחק",
+  "statsSelectMode": "מצב",
+  "statsRecentEmpty": "אין משחקים עדיין"
 }

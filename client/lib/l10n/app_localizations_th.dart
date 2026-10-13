@@ -3285,4 +3285,33 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'เกมล่าสุด';
+
+  @override
+  String get statsOutcomeWin => 'ชนะ';
+
+  @override
+  String get statsOutcomeLoss => 'แพ้';
+
+  @override
+  String get statsOutcomeDraw => 'เสมอ';
+
+  @override
+  String get statsAllModes => 'ทุกโหมด';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'เกม';
+
+  @override
+  String get statsSelectMode => 'โหมด';
+
+  @override
+  String get statsRecentEmpty => 'ยังไม่มีเกม';
 }

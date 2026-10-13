@@ -1625,5 +1625,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Recent games",
+  "statsOutcomeWin": "Win",
+  "statsOutcomeLoss": "Loss",
+  "statsOutcomeDraw": "Draw",
+  "statsAllModes": "All modes",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Game",
+  "statsSelectMode": "Mode",
+  "statsRecentEmpty": "No games yet"
 }

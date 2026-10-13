@@ -3291,4 +3291,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'винтажа';
+
+  @override
+  String get statsRecentTitle => 'Последние партии';
+
+  @override
+  String get statsOutcomeWin => 'Победа';
+
+  @override
+  String get statsOutcomeLoss => 'Поражение';
+
+  @override
+  String get statsOutcomeDraw => 'Ничья';
+
+  @override
+  String get statsAllModes => 'Все режимы';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Игра';
+
+  @override
+  String get statsSelectMode => 'Режим';
+
+  @override
+  String get statsRecentEmpty => 'Пока нет партий';
 }

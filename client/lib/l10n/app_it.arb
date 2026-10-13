@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Ultime partite",
+  "statsOutcomeWin": "Vittoria",
+  "statsOutcomeLoss": "Sconfitta",
+  "statsOutcomeDraw": "Pareggio",
+  "statsAllModes": "Tutte le modalità",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Gioco",
+  "statsSelectMode": "Modalità",
+  "statsRecentEmpty": "Ancora nessuna partita"
 }

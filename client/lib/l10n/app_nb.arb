@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Siste partier",
+  "statsOutcomeWin": "Seier",
+  "statsOutcomeLoss": "Tap",
+  "statsOutcomeDraw": "Uavgjort",
+  "statsAllModes": "Alle moduser",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spill",
+  "statsSelectMode": "Modus",
+  "statsRecentEmpty": "Ingen partier ennå"
 }

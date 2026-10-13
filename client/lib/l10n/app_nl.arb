@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "worn",
   "collectionCondGenTired": "tired",
   "collectionCondGenShabby": "shabby",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Laatste partijen",
+  "statsOutcomeWin": "Winst",
+  "statsOutcomeLoss": "Verlies",
+  "statsOutcomeDraw": "Gelijkspel",
+  "statsAllModes": "Alle modi",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Spel",
+  "statsSelectMode": "Modus",
+  "statsRecentEmpty": "Nog geen partijen"
 }

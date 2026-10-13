@@ -38,9 +38,22 @@ const String dominoRoundFish = 'fish';
 const String dominoRoundForfeit = 'forfeit';
 const String dominoRoundFast = 'fast';
 
-const int _mask64 = 0xFFFFFFFFFFFFFFFF;
+/// splitmix64 на uint64. В JS нет точных int больше 2^53, поэтому
+/// состояние считается в BigInt и совпадает с серверным uint64.
+final BigInt _mask64 = (BigInt.one << 64) - BigInt.one;
+final BigInt _mixGolden = BigInt.parse('9E3779B97F4A7C15', radix: 16);
+final BigInt _mix1 = BigInt.parse('BF58476D1CE4E5B9', radix: 16);
+final BigInt _mix2 = BigInt.parse('94D049BB133111EB', radix: 16);
 
-int _u64(int value) => value & _mask64;
+BigInt _u64(BigInt value) => value & _mask64;
+
+BigInt _rngBits(Object? raw) {
+  if (raw == null) return BigInt.one;
+  if (raw is BigInt) return raw & _mask64;
+  if (raw is int) return BigInt.from(raw) & _mask64;
+  if (raw is num) return BigInt.from(raw.toInt()) & _mask64;
+  return (BigInt.tryParse(raw.toString()) ?? BigInt.one) & _mask64;
+}
 
 class DominoAction {
   const DominoAction({
@@ -321,12 +334,13 @@ class DominoGame {
     this.lastEnd = '',
     this.lastActor = -1,
     this.eventSeq = 0,
-    this.rng = 1,
+    Object? rng,
     this.target = dominoGoatScore,
     this.mode = dominoModeKozel,
   })  : boneyard = List<int>.of(boneyard ?? const []),
         chain = List<DominoPlaced>.of(chain ?? const []),
-        winnerUserIds = List<String>.of(winnerUserIds ?? const []);
+        winnerUserIds = List<String>.of(winnerUserIds ?? const []),
+        rng = _rngBits(rng);
 
   List<DominoPlayer> players;
   List<int> boneyard;
@@ -347,7 +361,7 @@ class DominoGame {
   String lastEnd;
   int lastActor;
   int eventSeq;
-  int rng;
+  BigInt rng;
   int target;
   String mode;
 
@@ -367,7 +381,7 @@ class DominoGame {
       players: [
         for (final id in playerIds) DominoPlayer(userId: id),
       ],
-      rng: _u64(seed),
+      rng: seed,
       mode: normalized,
       target: dominoTargetFor(normalized),
     );
@@ -377,10 +391,9 @@ class DominoGame {
 
   String get normalizedMode => dominoNormalizeMode(mode);
 
-  int get handSize =>
-      normalizedMode == dominoModeClassic && players.length >= 4
-          ? 5
-          : dominoHandSize;
+  int get handSize => normalizedMode == dominoModeClassic && players.length >= 4
+      ? 5
+      : dominoHandSize;
 
   int playerIndex(String userId) {
     for (var i = 0; i < players.length; i++) {
@@ -416,17 +429,17 @@ class DominoGame {
     );
   }
 
-  int _nextRand() {
-    rng = _u64(rng + 0x9E3779B97F4A7C15);
+  BigInt _nextRand() {
+    rng = _u64(rng + _mixGolden);
     var z = rng;
-    z = _u64((z ^ (z >> 30)) * 0xBF58476D1CE4E5B9);
-    z = _u64((z ^ (z >> 27)) * 0x94D049BB133111EB);
+    z = _u64((z ^ (z >> 30)) * _mix1);
+    z = _u64((z ^ (z >> 27)) * _mix2);
     return _u64(z ^ (z >> 31));
   }
 
   void _shuffle(List<int> ids) {
     for (var i = ids.length - 1; i > 0; i--) {
-      final j = _nextRand() % (i + 1);
+      final j = (_nextRand() % BigInt.from(i + 1)).toInt();
       final swap = ids[i];
       ids[i] = ids[j];
       ids[j] = swap;
@@ -1090,7 +1103,9 @@ class DominoGame {
       }
     }
     for (final placed in chain) {
-      if (placed.id >= 0 && placed.id < dominoTileCount) known[placed.id] = true;
+      if (placed.id >= 0 && placed.id < dominoTileCount) {
+        known[placed.id] = true;
+      }
     }
     return [
       for (var id = 0; id < dominoTileCount; id++)
@@ -1099,8 +1114,7 @@ class DominoGame {
   }
 
   DominoView view(String viewer) {
-    final reveal =
-        status == dominoStatusRoundEnd || status == dominoStatusOver;
+    final reveal = status == dominoStatusRoundEnd || status == dominoStatusOver;
     final viewerSeat = playerIndex(viewer);
     final viewPlayers = <DominoViewPlayer>[];
     for (var i = 0; i < players.length; i++) {
@@ -1173,7 +1187,7 @@ class DominoGame {
         'last_end': lastEnd,
         'last_actor': lastActor,
         'event_seq': eventSeq,
-        'rng': rng,
+        'rng': rng.toString(),
         'target': target,
         'mode': normalizedMode,
       };
@@ -1218,7 +1232,7 @@ class DominoGame {
       lastEnd: (map['last_end'] ?? '').toString(),
       lastActor: (map['last_actor'] as num?)?.toInt() ?? -1,
       eventSeq: (map['event_seq'] as num?)?.toInt() ?? 0,
-      rng: (map['rng'] as num?)?.toInt() ?? 1,
+      rng: map['rng'],
       target: (map['target'] as num?)?.toInt() ?? 0,
       mode: dominoNormalizeMode(map['mode']?.toString()),
     );

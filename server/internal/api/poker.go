@@ -1621,6 +1621,7 @@ func (h *GamesHandler) recordPokerGameResult(ctx context.Context, gameID string,
 			StakeBronze:  stakeBronze,
 			AgainstBot:   isBot(xID) || isBot(oID),
 			DurationSec:  durationSec,
+			GameMode:     statsGameMode(pokerGameType, m),
 		}
 		if u, err := uuid.Parse(xID); err == nil {
 			gr.XUserID = u

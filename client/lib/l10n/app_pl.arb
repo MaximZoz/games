@@ -1598,5 +1598,14 @@
   "collectionCondGenWorn": "zużytego",
   "collectionCondGenTired": "zmęczonego",
   "collectionCondGenShabby": "zniszczonego",
-  "collectionCondGenVintage": "vintage"
+  "collectionCondGenVintage": "vintage",
+  "statsRecentTitle": "Ostatnie partie",
+  "statsOutcomeWin": "Wygrana",
+  "statsOutcomeLoss": "Przegrana",
+  "statsOutcomeDraw": "Remis",
+  "statsAllModes": "Wszystkie tryby",
+  "statsDurakChip": "{players} · {deck}",
+  "statsSelectGame": "Gra",
+  "statsSelectMode": "Tryb",
+  "statsRecentEmpty": "Nie ma jeszcze partii"
 }
