@@ -6,9 +6,14 @@ import 'package:multigames_client/screens/domino_game_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 class DominoOfflineScreen extends ConsumerStatefulWidget {
-  const DominoOfflineScreen({super.key, this.playerCount = 2});
+  const DominoOfflineScreen({
+    super.key,
+    this.playerCount = 2,
+    this.gameMode = 'kozel',
+  });
 
   final int playerCount;
+  final String gameMode;
 
   @override
   ConsumerState<DominoOfflineScreen> createState() =>
@@ -31,6 +36,7 @@ class _DominoOfflineScreenState extends ConsumerState<DominoOfflineScreen> {
     final session = OfflineDominoSession.create(
       humanUserId: user?.id ?? 'local:player',
       playerCount: widget.playerCount,
+      gameMode: widget.gameMode,
       humanDisplayName: user?.displayName,
       humanAvatarKind: user?.avatarKind,
       humanAvatarValue: user?.avatarValue,

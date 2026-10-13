@@ -802,7 +802,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesChess => 'Catur';
 
   @override
-  String get gamesDomino => 'Kambing';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Kambing';
+
+  @override
+  String get gamesDominoModeClassic => 'Klasik';
+
+  @override
+  String get gamesDominoModeSea => 'Laut';
 
   @override
   String get rulesDominoDeal => 'Setiap pemain mendapat 7 kartu. Untuk 2 atau 3 pemain sisanya di tumpukan; untuk 4 tumpukan kosong.';
@@ -827,6 +836,44 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: kamu dan bot. Bot menghitung angka dan tidak mengintip kartu tersembunyi.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Mode: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Dua atau tiga pemain dapat 7, empat dapat 5. Sisanya di bazar.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Tangan pertama dibuka dobel 6, lalu 0-0, lalu dobel lebih kecil. Tanpa dobel, batu tertinggi wajib dimainkan.';
+
+  @override
+  String get rulesDominoClassicScore => 'Yang habis mencatat jumlah lawan. Yang pertama mencapai 100 menang.';
+
+  @override
+  String get rulesDominoClassicFish => 'Saat macet, tangan teringan yang tunggal mencatat selisih tiap tangan lain. Seri minimum tidak mencatat.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Skor tertinggi yang sama berbagi menang. Jika semua sama, seri.';
+
+  @override
+  String get rulesDominoSeaSame => 'Bagi, buka, dan ambil seperti Kambing. Rantai punya dua ujung.';
+
+  @override
+  String get rulesDominoSeaScore => 'Hanya tangan terberat yang mencatat. Di bawah 25 tidak dicatat.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Jika dua pemain sama-sama 25 atau lebih, tangan itu tidak dicatat siapa pun.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Memainkan 0-0 langsung mengakhiri tangan: lawan terberat yang tunggal kena 75. Seri tidak kena siapa pun.';
+
+  @override
+  String get rulesDominoSeaSix => 'Menutup dengan 6-6 terakhir mengenakan 100 pada yang kalah dan mengosongkan skor pertandingan penutup.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Pertandingan sampai 125. Yang mencapai kalah.';
 
   @override
   String get dominoBoneyard => 'Tumpukan';

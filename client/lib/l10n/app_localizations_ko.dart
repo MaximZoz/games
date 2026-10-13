@@ -802,7 +802,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesChess => '체스';
 
   @override
-  String get gamesDomino => '염소';
+  String get gamesDomino => '도미노';
+
+  @override
+  String get gamesDominoModeKozel => '염소';
+
+  @override
+  String get gamesDominoModeClassic => '클래식';
+
+  @override
+  String get gamesDominoModeSea => '바다';
 
   @override
   String get rulesDominoDeal => '각자 7장. 2·3명은 나머지가 더미, 4명은 더미가 비어 있습니다.';
@@ -827,6 +836,44 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => '오프라인: 당신과 봇. 봇은 숫자를 세고 숨은 패는 보지 않습니다.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return '모드: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => '2·3명은 7개, 4명은 5개. 나머지는 바자.';
+
+  @override
+  String get rulesDominoClassicOpen => '첫 판은 6-6, 그다음 0-0, 이어서 더 작은 더블. 더블이 없으면 가장 큰 패를 낸다.';
+
+  @override
+  String get rulesDominoClassicScore => '먼저 비운 사람이 상대 남은 점수를 적는다. 100에 먼저 도달하면 이긴다.';
+
+  @override
+  String get rulesDominoClassicFish => '막히면 유일하게 가장 가벼운 손이 다른 손과의 차이를 적는다. 최소가 같으면 점수를 쓰지 않는다.';
+
+  @override
+  String get rulesDominoClassicMatch => '같은 최고점은 승리를 나눈다. 모두 같으면 무승부.';
+
+  @override
+  String get rulesDominoSeaSame => '패 돌리기, 첫 수, 보충은 염소와 같다. 줄은 양쪽 끝만 있다.';
+
+  @override
+  String get rulesDominoSeaScore => '점수는 손에 가장 많은 사람만 적는다. 25 미만은 적지 않는다.';
+
+  @override
+  String get rulesDominoSeaWipe => '둘이 25 이상이면 그 판은 아무도 적지 않는다.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0을 내면 그 판이 바로 끝난다. 가장 무거운 상대가 한 명이면 75. 같으면 아무도 안 적는다.';
+
+  @override
+  String get rulesDominoSeaSix => '마지막 패가 6-6이면 진 사람에게 100, 닫은 사람의 경기 점수는 0이 된다.';
+
+  @override
+  String get rulesDominoSeaMatch => '경기는 125까지. 도달한 사람이 진다.';
 
   @override
   String get dominoBoneyard => '더미';

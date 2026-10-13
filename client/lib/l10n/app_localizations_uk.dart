@@ -802,7 +802,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesChess => 'Шахи';
 
   @override
-  String get gamesDomino => 'Козел';
+  String get gamesDomino => 'Доміно';
+
+  @override
+  String get gamesDominoModeKozel => 'Козел';
+
+  @override
+  String get gamesDominoModeClassic => 'Класика';
+
+  @override
+  String get gamesDominoModeSea => 'Морський';
 
   @override
   String get rulesDominoDeal => 'Роздають по 7 кісток. Удвох і втрьох решта лежить у базарі, учотирьох базар порожній.';
@@ -827,6 +836,44 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Офлайн: ви і боти. Бот рахує масті й не підглядає в чужі руки.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Режим: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Двом і трьом роздають по 7 костей, чотирьом — по 5. Решта лежить у базарі.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Перший кон починає дубль 6-6, потім 0-0 і далі дублі за спаданням. Якщо дублів немає — старша кістка. Її й треба поставити.';
+
+  @override
+  String get rulesDominoClassicScore => 'Хто вийшов, записує суму костей суперників. Партія до 100: хто першим набрав — виграв.';
+
+  @override
+  String get rulesDominoClassicFish => 'Риба: у кого очок строго менше за всіх, записує різницю з кожною чужою рукою. Якщо мінімум у кількох — очки не пишуться.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Однаковий найвищий рахунок ділить перемогу. Якщо рахунок у всіх рівний — нічия.';
+
+  @override
+  String get rulesDominoSeaSame => 'Роздача, перший хід і добір — як у режимі «Козел». Ланцюжок на два кінці.';
+
+  @override
+  String get rulesDominoSeaScore => 'Очки пише лише той, у кого наприкінці кону найбільше на руках. Менше 25 не записується.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Якщо 25 і більше одразу у двох, цей кон нікому не пишеться.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Викладений 0-0 одразу закінчує кон: гравцю з найважчою рукою пишуть 75. Якщо таких двоє — не пишуть нікому.';
+
+  @override
+  String get rulesDominoSeaSix => 'Якщо кон закрито останньою кісткою 6-6, програвшому пишуть 100, а в того, хто закрив, рахунок партії скидається.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Партія до 125. Хто набрав — програв.';
 
   @override
   String get dominoBoneyard => 'Базар';

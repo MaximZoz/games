@@ -802,7 +802,16 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesChess => 'Šachy';
 
   @override
-  String get gamesDomino => 'Kozel';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Kozel';
+
+  @override
+  String get gamesDominoModeClassic => 'Klasika';
+
+  @override
+  String get gamesDominoModeSea => 'Mořský';
 
   @override
   String get rulesDominoDeal => 'Každý dostane 7 kamenů. Při 2 a 3 hráčích je zbytek v talonu, při 4 je talon prázdný.';
@@ -827,6 +836,44 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: vy a boti. Bot počítá čísla a nedívá se do skrytých rukou.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Režim: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Dva a tři hráči dostanou 7 kamenů, čtyři po 5. Zbytek je bank.';
+
+  @override
+  String get rulesDominoClassicOpen => 'První kolo otvírá dvojice 6-6, pak 0-0 a nižší dvojice. Bez dvojice se musí hrát nejvyšší kámen.';
+
+  @override
+  String get rulesDominoClassicScore => 'Kdo vyjde, zapíše součet soupeřů. První na 100 vyhrává.';
+
+  @override
+  String get rulesDominoClassicFish => 'Při rybě jediná nejlehčí ruka zapíše rozdíl proti každé jiné. Sdílené minimum se nezapisuje.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Stejné nejvyšší skóre dělí výhru. Jsou-li všichni stejně, je remíza.';
+
+  @override
+  String get rulesDominoSeaSame => 'Rozdání, první tah a dobírání jako v Kozlu. Řetěz má dva konce.';
+
+  @override
+  String get rulesDominoSeaScore => 'Body zapíše jen nejtěžší ruka. Pod 25 se nezapisuje.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Mají-li dva hráči 25 a víc, to kolo se nikomu nezapíše.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 hned končí kolo: jediný nejtěžší soupeř dostane 75. Při shodě nikdo.';
+
+  @override
+  String get rulesDominoSeaSix => 'Zavření posledním 6-6 zapíše poraženému 100 a vynuluje zápasové skóre zavírajícího.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Zápas do 125. Kdo dosáhne, prohrává.';
 
   @override
   String get dominoBoneyard => 'Talon';

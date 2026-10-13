@@ -6,6 +6,7 @@ import (
 
 	"multigames/server/internal/checkers"
 	"multigames/server/internal/chess"
+	"multigames/server/internal/domino"
 	"multigames/server/internal/nardy"
 	"multigames/server/internal/store"
 )
@@ -68,9 +69,13 @@ func applyLobbyTypeFields(item *LobbyItem, m map[string]string) {
 		item.GridSize = 0
 		item.GameMode = "classic"
 	case dominoGameType:
+		raw := strings.TrimSpace(m["game_mode"])
+		if raw == "" {
+			raw = strings.TrimSpace(m["variant"])
+		}
 		item.Variant = ""
 		item.GridSize = 0
-		item.GameMode = "kozel"
+		item.GameMode = domino.NormalizeMode(raw)
 	case nardyGameType:
 		raw := strings.TrimSpace(m["game_mode"])
 		if raw == "" {

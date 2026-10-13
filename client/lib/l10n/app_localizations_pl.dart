@@ -802,7 +802,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesChess => 'Szachy';
 
   @override
-  String get gamesDomino => 'Kozioł';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Kozioł';
+
+  @override
+  String get gamesDominoModeClassic => 'Klasyka';
+
+  @override
+  String get gamesDominoModeSea => 'Morski';
 
   @override
   String get rulesDominoDeal => 'Każdy dostaje 7 kamieni. Przy 2 i 3 reszta leży na kupce, przy 4 kupka jest pusta.';
@@ -827,6 +836,44 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: ty i boty. Bot liczy oczka i nie zagląda w cudze ręce.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Tryb: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Przy dwóch i trzech graczach po 7 kamieni, przy czterech po 5. Reszta to bazar.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Pierwszy rozdanie otwiera dubel 6-6, potem 0-0 i niższe duble. Bez dubla kładzie się najwyższy kamień.';
+
+  @override
+  String get rulesDominoClassicScore => 'Kto wyjdzie, zapisuje sumę kamieni rywali. Partia do 100: kto pierwszy uzbiera, wygrywa.';
+
+  @override
+  String get rulesDominoClassicFish => 'Ryba: kto ma ściśle najmniej, zapisuje różnicę z każdą obcą ręką. Przy remisie minimum nikt nie zapisuje.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Ten sam najwyższy wynik dzieli wygraną. Gdy wszyscy mają równo — remis.';
+
+  @override
+  String get rulesDominoSeaSame => 'Rozdanie, pierwsze zagranie i dobieranie jak w Koziołku. Łańcuch ma dwa końce.';
+
+  @override
+  String get rulesDominoSeaScore => 'Punkty zapisuje tylko najcięższa ręka. Poniżej 25 się nie zapisuje.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Jeśli dwóch ma 25 lub więcej, tego rozdania nikt nie zapisuje.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Zagranie 0-0 kończy rozdanie: najcięższy przeciwnik, jeśli jeden, dostaje 75. Przy remisie nikt.';
+
+  @override
+  String get rulesDominoSeaSix => 'Wyjście na 6-6 zapisuje przegranemu 100, a zamykającemu zeruje wynik partii.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Partia do 125. Kto uzbiera — przegrywa.';
 
   @override
   String get dominoBoneyard => 'Kupka';

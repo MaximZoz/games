@@ -209,6 +209,9 @@ func (g *Game) heuristic(seat int, mv Move) int {
 	if lo == hi {
 		score += 24
 	}
+	if g.normalizedMode() == ModeSea && mv.Tile == TileID(0, 0) {
+		score += 500
+	}
 	hand := make([]int, 0, len(g.Players[seat].Hand))
 	for _, id := range g.Players[seat].Hand {
 		if id != mv.Tile {
@@ -356,6 +359,9 @@ func evalRound(g *Game, root int) int {
 			opp += g.Players[i].RoundDelta
 		}
 		value := opp*4 - g.Players[root].RoundDelta*5
+		if g.normalizedMode() == ModeClassic {
+			value = g.Players[root].RoundDelta*5 - opp*4
+		}
 		if g.RoundKind == RoundOut && g.OutSeat == root {
 			value += 8000
 		}

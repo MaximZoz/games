@@ -802,7 +802,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesChess => 'Scacchi';
 
   @override
-  String get gamesDomino => 'La Capra';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'La Capra';
+
+  @override
+  String get gamesDominoModeClassic => 'Classica';
+
+  @override
+  String get gamesDominoModeSea => 'Marino';
 
   @override
   String get rulesDominoDeal => 'Ognuno riceve 7 tessere. In 2 o 3 il resto è la riserva; in 4 la riserva è vuota.';
@@ -827,6 +836,44 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: tu e i bot. Il bot conta i numeri e non guarda le mani nascoste.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modalità: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'In due o tre si danno 7 tessere, in quattro 5. Il resto è il tallone.';
+
+  @override
+  String get rulesDominoClassicOpen => 'La prima mano apre col doppio 6, poi lo zero, poi i doppi minori. Senza doppi si gioca la tessera più alta.';
+
+  @override
+  String get rulesDominoClassicScore => 'Chi esce segna la somma delle tessere avversarie. Il primo a 100 vince la partita.';
+
+  @override
+  String get rulesDominoClassicFish => 'Al blocco, la mano più leggera, se è unica, segna la differenza con ogni altra. In parità non si segna.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Chi condivide il punteggio più alto vince insieme. Se tutti sono pari, è patta.';
+
+  @override
+  String get rulesDominoSeaSame => 'Distribuzione, apertura e pesca come ne La Capra. La catena ha due estremità.';
+
+  @override
+  String get rulesDominoSeaScore => 'Segna solo la mano più pesante. Sotto 25 non si scrive.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Se due giocatori hanno 25 o più, nessuno segna quella mano.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Giocare 0-0 chiude la mano: l’avversario più pesante, se unico, prende 75. In parità nessuno.';
+
+  @override
+  String get rulesDominoSeaSix => 'Uscire con 6-6 assegna 100 al perdente e azzera il punteggio di partita di chi chiude.';
+
+  @override
+  String get rulesDominoSeaMatch => 'La partita arriva a 125. Chi li raggiunge perde.';
 
   @override
   String get dominoBoneyard => 'Riserva';

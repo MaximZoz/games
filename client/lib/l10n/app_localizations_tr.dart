@@ -802,7 +802,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesChess => 'Satranç';
 
   @override
-  String get gamesDomino => 'Keçi';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Keçi';
+
+  @override
+  String get gamesDominoModeClassic => 'Klasik';
+
+  @override
+  String get gamesDominoModeSea => 'Deniz';
 
   @override
   String get rulesDominoDeal => 'Herkes 7 taş alır. 2 ve 3 kişide kalanlar destededir, 4 kişide deste boştur.';
@@ -827,6 +836,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Çevrimdışı: sen ve botlar. Bot sayıları sayar ve gizli ellere bakmaz.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Mod: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'İki ve üç oyuncuya 7, dörde 5 taş dağıtılır. Kalanı pazar.';
+
+  @override
+  String get rulesDominoClassicOpen => 'İlk el 6-6 ile, sonra 0-0 ve daha küçük dublelerle açılır. Duble yoksa en yüksek taş konur.';
+
+  @override
+  String get rulesDominoClassicScore => 'Çıkan oyuncu rakiplerin taş toplamını yazar. 100’e ilk ulaşan kazanır.';
+
+  @override
+  String get rulesDominoClassicFish => 'Balıkta en az puana sahip tek oyuncu her el ile farkı yazar. Eşitlikte puan yazılmaz.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Aynı en yüksek skoru paylaşanlar kazanır. Herkes eşitse berabere.';
+
+  @override
+  String get rulesDominoSeaSame => 'Dağıtım, ilk hamle ve çekme Keçi ile aynı. Zincirin iki ucu vardır.';
+
+  @override
+  String get rulesDominoSeaScore => 'Puanı yalnız elde en çok olan yazar. 25’ten az yazılmaz.';
+
+  @override
+  String get rulesDominoSeaWipe => 'İkisinde birden 25 ve üzeri varsa bu el kimseye yazılmaz.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 eli hemen bitirir: en ağır rakibe, tekse, 75 yazılır. Beraberlikte kimseye yazılmaz.';
+
+  @override
+  String get rulesDominoSeaSix => '6-6 ile bitirmek kaybedene 100 yazar, kapatan oyuncunun parti skoru sıfırlanır.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Parti 125’e kadardır. Ulaşan kaybeder.';
 
   @override
   String get dominoBoneyard => 'Deste';

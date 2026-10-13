@@ -12,6 +12,7 @@ class OfflineDominoSession extends ChangeNotifier {
     required this.gameId,
     required this.humanUserId,
     required this.playerCount,
+    required this.gameMode,
     this.humanDisplayName,
     this.humanAvatarKind = 'letter',
     this.humanAvatarValue,
@@ -25,6 +26,7 @@ class OfflineDominoSession extends ChangeNotifier {
   final String gameId;
   final String humanUserId;
   final int playerCount;
+  final String gameMode;
   final String? humanDisplayName;
   final String humanAvatarKind;
   final String? humanAvatarValue;
@@ -43,6 +45,7 @@ class OfflineDominoSession extends ChangeNotifier {
   factory OfflineDominoSession.create({
     required String humanUserId,
     int playerCount = 2,
+    String gameMode = 'kozel',
     String? gameId,
     String? humanDisplayName,
     String? humanAvatarKind,
@@ -53,6 +56,7 @@ class OfflineDominoSession extends ChangeNotifier {
       humanUserId:
           humanUserId.trim().isEmpty ? 'local:player' : humanUserId.trim(),
       playerCount: playerCount.clamp(2, 4),
+      gameMode: gameMode,
       humanDisplayName: humanDisplayName,
       humanAvatarKind: (humanAvatarKind ?? '').trim().isEmpty
           ? 'letter'
@@ -70,7 +74,11 @@ class OfflineDominoSession extends ChangeNotifier {
       for (var i = 1; i < playerCount; i++)
         i == 1 ? 'bot:domino' : 'bot:domino:$i',
     ];
-    _engine = DominoGame.newGame(ids, DateTime.now().microsecondsSinceEpoch);
+    _engine = DominoGame.newGame(
+      ids,
+      DateTime.now().microsecondsSinceEpoch,
+      gameMode,
+    );
   }
 
   void ensureStarted() {
@@ -123,6 +131,7 @@ class OfflineDominoSession extends ChangeNotifier {
       winnerUserIds: List<String>.of(_engine.winnerUserIds),
       legal: _engine.turn == 0 ? _engine.legal(0) : const [],
       targetScore: _engine.target,
+      mode: _engine.normalizedMode,
       lastAction: _engine.lastAction,
       lastTile: _engine.lastAction == dominoActionDraw &&
               _engine.lastActor != 0 &&

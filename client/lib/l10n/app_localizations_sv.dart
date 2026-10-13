@@ -802,7 +802,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesChess => 'Schack';
 
   @override
-  String get gamesDomino => 'Geten';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Geten';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassisk';
+
+  @override
+  String get gamesDominoModeSea => 'Hav';
 
   @override
   String get rulesDominoDeal => 'Alla får 7 brickor. Vid 2 eller 3 ligger resten i högen; vid 4 är högen tom.';
@@ -827,6 +836,44 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: du och bottar. Botten räknar tal och tittar inte på dolda händer.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Läge: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Två eller tre spelare får 7 brickor, fyra får 5. Resten är högen.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Första given öppnas med dubbel-6, sedan nollan och lägre dubblar. Utan dubbel måste högsta brickan.';
+
+  @override
+  String get rulesDominoClassicScore => 'Den som går ut skriver motståndarnas ögon. Först till 100 vinner.';
+
+  @override
+  String get rulesDominoClassicFish => 'Vid fisk skriver den unikt lättaste handen skillnaden mot varje annan. Delat minimum ger inget.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Delad högsta poäng delar vinsten. Är alla lika är det oavgjort.';
+
+  @override
+  String get rulesDominoSeaSame => 'Giv, öppning och drag som i Geten. Kedjan har två ändar.';
+
+  @override
+  String get rulesDominoSeaScore => 'Bara den tyngsta handen skriver poäng. Under 25 skrivs inget.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Har två spelare 25 eller mer skriver ingen den given.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 avslutar given genast: den unikt tyngsta motståndaren får 75. Vid lika får ingen.';
+
+  @override
+  String get rulesDominoSeaSix => 'Att gå ut med 6-6 ger förloraren 100 och nollställer stängarens matchpoäng.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Matchen går till 125. Den som når dit förlorar.';
 
   @override
   String get dominoBoneyard => 'Hög';

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/domino/domino_engine.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/domino/domino_offline_session.dart';
 import 'package:multigames_client/games/domino/domino_provider.dart';
 import 'package:multigames_client/games/domino/domino_repository.dart';
@@ -177,9 +178,11 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
     final l10n = context.l10n;
     if (game.isOver) {
       if (game.isDraw) return l10n.gameDraw;
-      if (game.iAmGoat) return l10n.dominoYouGoat;
+      if (game.isPenalty && game.iAmGoat) return l10n.dominoYouGoat;
       if (game.iWon) return l10n.gameYouWonShort;
-      if (game.goatSeat >= 0 && game.goatSeat < game.players.length) {
+      if (game.isPenalty &&
+          game.goatSeat >= 0 &&
+          game.goatSeat < game.players.length) {
         return l10n.dominoGoatNamed(_playerName(game.players[game.goatSeat]));
       }
       return l10n.gameYouLost;
@@ -351,6 +354,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
             maxPlayers: game?.players.length ?? 2,
             turnTimeSec: game?.turnTimeSec ?? 60,
             stakeBronze: game?.stakeBronze ?? 2,
+            gameMode: game?.mode ?? dominoModeKozel,
           );
       if (!mounted) return;
       clearBlockingGamePin(ref);
@@ -375,6 +379,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
         turnTimeSec: game?.turnTimeSec ?? 0,
         stakeBronze: _isOffline ? 0 : (game?.stakeBronze ?? 0),
         offlineBot: _isOffline,
+        mode: game?.mode ?? dominoModeKozel,
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,
@@ -444,7 +449,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
                       fontSize: narrow ? 15 : 17,
                     ),
                     Text(
-                      context.l10n.unoRoundProgress(game.round, game.targetScore),
+                      '${dominoModeLabel(game.mode, context.l10n)} · ${context.l10n.unoRoundProgress(game.round, game.targetScore)}',
                       style: const TextStyle(fontSize: 12),
                     ),
                   ],
@@ -555,7 +560,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
           table: RematchTable(
             gameType: 'domino',
             stakeBronze: game.stakeBronze,
-            gameMode: 'kozel',
+            gameMode: game.mode,
           ),
         ),
       );

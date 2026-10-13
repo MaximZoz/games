@@ -802,7 +802,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesChess => 'Schach';
 
   @override
-  String get gamesDomino => 'Ziegenbock';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Ziegenbock';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassisch';
+
+  @override
+  String get gamesDominoModeSea => 'See';
 
   @override
   String get rulesDominoDeal => 'Jeder erhält 7 Steine. Bei 2 oder 3 Spielern liegt der Rest im Boneyard, bei 4 ist er leer.';
@@ -827,6 +836,44 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: du und Bots. Der Bot zählt die Zahlen und schaut nicht in verdeckte Hände.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modus: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Zwei oder drei Spieler erhalten 7 Steine, vier Spieler 5. Der Rest ist der Markt.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Die erste Runde beginnt mit dem Doppel-6, dann der Blanke, dann kleinere Doppel. Ohne Doppel muss der höchste Stein gelegt werden.';
+
+  @override
+  String get rulesDominoClassicScore => 'Wer ausgeht, schreibt die Augen der Gegner gut. Wer zuerst 100 erreicht, gewinnt.';
+
+  @override
+  String get rulesDominoClassicFish => 'Bei Fisch schreibt die eindeutig leichteste Hand die Differenz zu jeder anderen. Bei Gleichstand gibt es keine Punkte.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Wer den höchsten Stand teilt, gewinnt gemeinsam. Sind alle gleich, ist es unentschieden.';
+
+  @override
+  String get rulesDominoSeaSame => 'Geben, Eröffnung und Nachziehen wie beim Ziegenbock. Die Kette hat zwei Enden.';
+
+  @override
+  String get rulesDominoSeaScore => 'Nur die schwerste Hand schreibt Punkte. Unter 25 wird nichts gutgeschrieben.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Haben zwei Spieler 25 oder mehr, schreibt niemand diese Runde.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 beendet die Runde sofort: der eindeutig schwerste Gegner bekommt 75. Bei Gleichstand niemand.';
+
+  @override
+  String get rulesDominoSeaSix => 'Wer mit 6-6 ausgeht, schreibt dem Verlierer 100 und setzt den eigenen Partiestand auf null.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Die Partie geht bis 125. Wer sie erreicht, verliert.';
 
   @override
   String get dominoBoneyard => 'Boneyard';

@@ -802,7 +802,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesChess => 'Échecs';
 
   @override
-  String get gamesDomino => 'Le Bouc';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Le Bouc';
+
+  @override
+  String get gamesDominoModeClassic => 'Classique';
+
+  @override
+  String get gamesDominoModeSea => 'Marin';
 
   @override
   String get rulesDominoDeal => 'Chacun reçoit 7 dominos. À 2 ou 3 joueurs, le reste forme la pioche ; à 4, elle est vide.';
@@ -827,6 +836,44 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Hors ligne : vous et des bots. Le bot compte les chiffres et ne regarde pas les mains cachées.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Mode : $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'À deux ou trois, 7 dominos chacun ; à quatre, 5. Le reste forme le talon.';
+
+  @override
+  String get rulesDominoClassicOpen => 'La première donne commence par le double 6, puis le blanc, puis les doubles plus petits. Sans double, on pose la plus forte tuile.';
+
+  @override
+  String get rulesDominoClassicScore => 'Celui qui sort marque la somme des dominos adverses. Le premier à 100 gagne la partie.';
+
+  @override
+  String get rulesDominoClassicFish => 'Au poisson, la main la plus légère, si elle est seule, marque l’écart avec chaque autre main. À égalité, personne ne marque.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Ceux qui partagent le meilleur score gagnent ensemble. Si tous sont égaux, c’est nul.';
+
+  @override
+  String get rulesDominoSeaSame => 'Distribution, ouverture et pioche comme au Bouc. La chaîne a deux bouts.';
+
+  @override
+  String get rulesDominoSeaScore => 'Seul la main la plus lourde marque. Moins de 25 ne compte pas.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Si deux joueurs ont 25 ou plus, personne ne marque cette donne.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Jouer 0-0 termine la donne : l’adversaire le plus lourd, s’il est seul, prend 75. À égalité, personne.';
+
+  @override
+  String get rulesDominoSeaSix => 'Sortir sur 6-6 donne 100 au perdant et remet à zéro le score de partie de celui qui ferme.';
+
+  @override
+  String get rulesDominoSeaMatch => 'La partie va jusqu’à 125. Celui qui les atteint perd.';
 
   @override
   String get dominoBoneyard => 'Pioche';

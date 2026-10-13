@@ -802,7 +802,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesChess => 'チェス';
 
   @override
-  String get gamesDomino => 'ゴート';
+  String get gamesDomino => 'ドミノ';
+
+  @override
+  String get gamesDominoModeKozel => 'ゴート';
+
+  @override
+  String get gamesDominoModeClassic => 'クラシック';
+
+  @override
+  String get gamesDominoModeSea => 'シー';
 
   @override
   String get rulesDominoDeal => '各自 7 枚。2・3 人は残りが山札、4 人は山札なし。';
@@ -827,6 +836,44 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'オフライン: あなたとボット。ボットは数字を数え、隠れた手牌は見ません。';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'モード: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => '2人と3人は7枚、4人は5枚。残りは山札。';
+
+  @override
+  String get rulesDominoClassicOpen => '最初の手は6-6、次に0-0、その後は小さいダブ。ダブがなければ一番大きい牌を出す。';
+
+  @override
+  String get rulesDominoClassicScore => '上がった人が相手の残り点を得る。先に100点で勝ち。';
+
+  @override
+  String get rulesDominoClassicFish => '詰みでは、ただ一人いちばん軽い手が相手との差を得る。同点なら得点なし。';
+
+  @override
+  String get rulesDominoClassicMatch => '最高点が同じ人は分け合う。全員同点なら引き分け。';
+
+  @override
+  String get rulesDominoSeaSame => '配り、最初の一手、山からの補充はゴートと同じ。列は両端だけ。';
+
+  @override
+  String get rulesDominoSeaScore => '点数を書くのは手札が一番重い人だけ。25未満は記録しない。';
+
+  @override
+  String get rulesDominoSeaWipe => '25以上が二人いるとその手は誰にも入らない。';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0を出すとその手は即終了。一番重い相手が一人なら75。同点なら誰も書かない。';
+
+  @override
+  String get rulesDominoSeaSix => '最後の牌が6-6なら敗者に100、閉じた人の対戦点は0に戻る。';
+
+  @override
+  String get rulesDominoSeaMatch => '対戦は125まで。到達した人が負け。';
 
   @override
   String get dominoBoneyard => '山札';

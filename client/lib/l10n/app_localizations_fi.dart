@@ -802,7 +802,16 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesChess => 'Shakki';
 
   @override
-  String get gamesDomino => 'Pukki';
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Pukki';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassinen';
+
+  @override
+  String get gamesDominoModeSea => 'Meri';
 
   @override
   String get rulesDominoDeal => 'Jokainen saa 7 laattaa. Kahdella ja kolmella loput ovat pakassa, neljällä pakka on tyhjä.';
@@ -827,6 +836,44 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesDominoOffline => 'Offline: sinä ja botit. Botti laskee numerot eikä katso piilotettuja käsiä.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Tila: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Kaksi tai kolme saa 7 laattaa, neljä saa 5. Loput ovat pakka.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Ensimmäinen jako alkaa tupla-6:lla, sitten 0-0 ja pienemmät tuplat. Ilman tuplaa pelataan korkein laatta.';
+
+  @override
+  String get rulesDominoClassicScore => 'Ulos päässyt kirjaa vastustajien silmät. Ensimmäinen 100 pisteeseen voittaa.';
+
+  @override
+  String get rulesDominoClassicFish => 'Umpikujassa kevein yksittäinen käsi kirjaa eron jokaiseen muuhun. Jaettu minimi ei kirjaa.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Sama korkein tulos jakaa voiton. Jos kaikki ovat tasan, on tasapeli.';
+
+  @override
+  String get rulesDominoSeaSame => 'Jako, avaus ja nosto kuten Pukissa. Ketjulla on kaksi päätä.';
+
+  @override
+  String get rulesDominoSeaScore => 'Vain painavin käsi kirjaa pisteet. Alle 25 ei kirjaudu.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Jos kahdella on 25 tai enemmän, sitä jakoa ei kirjata kenellekään.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 päättää jaon heti: ainoa painavin vastustaja saa 75. Tasatilanteessa ei kukaan.';
+
+  @override
+  String get rulesDominoSeaSix => 'Päättäminen viimeisellä 6-6:lla kirjaa häviäjälle 100 ja nollaa päättäjän ottelupisteet.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Ottelu menee 125:een. Sen saavuttava häviää.';
 
   @override
   String get dominoBoneyard => 'Pakka';

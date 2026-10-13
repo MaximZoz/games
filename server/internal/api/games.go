@@ -2321,8 +2321,9 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		inviteData["variant"] = "classic"
 		inviteData["game_mode"] = "classic"
 	} else if gameType == dominoGameType {
-		inviteData["variant"] = "kozel"
-		inviteData["game_mode"] = "kozel"
+		mode := domino.NormalizeMode(m["game_mode"])
+		inviteData["variant"] = mode
+		inviteData["game_mode"] = mode
 	} else if gameType == pokerGameType {
 		inviteData["game_mode"] = "holdem"
 	} else if gameType == nardyGameType {
@@ -3179,8 +3180,9 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 			item["variant"] = "classic"
 			item["game_mode"] = "classic"
 		} else if gt == dominoGameType {
-			item["variant"] = "kozel"
-			item["game_mode"] = "kozel"
+			mode := domino.NormalizeMode(m["game_mode"])
+			item["variant"] = mode
+			item["game_mode"] = mode
 		} else if gt == pokerGameType {
 			item["game_mode"] = "holdem"
 		} else if gt == nardyGameType {
