@@ -86,6 +86,63 @@ void main() {
     expect(find.byType(GamepadNavGroup), findsOneWidget);
   });
 
+  testWidgets('узкая витрина не обрезает крайнюю коллекцию', (tester) async {
+    Future<void> pumpGrid(double width, int count) {
+      return tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: width,
+                child: CollectionShowcaseGrid(
+                  items: [
+                    for (var i = 0; i < count; i++)
+                      InventoryItem(
+                        code: 'coll_$i',
+                        kind: 'collection',
+                        title: 'Коллекция $i',
+                        description: '',
+                        payload: {
+                          'emoji': '🦉',
+                          'animated_name': 'showcase_fallback_$i',
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await pumpGrid(338, 6);
+    await tester.pump();
+    var tiles = find.byType(GamepadFocusBlock);
+    expect(tiles, findsNWidgets(6));
+    var grid = tester.getRect(find.byType(CollectionShowcaseGrid));
+    var first = tester.getRect(tiles.at(0));
+    var last = tester.getRect(tiles.at(5));
+    expect(last.top, closeTo(first.top, 0.5));
+    expect(last.right, lessThanOrEqualTo(grid.right + 0.5));
+    expect(last.right, greaterThan(grid.right - 40));
+
+    await pumpGrid(240, 6);
+    await tester.pump();
+    tiles = find.byType(GamepadFocusBlock);
+    grid = tester.getRect(find.byType(CollectionShowcaseGrid));
+    first = tester.getRect(tiles.at(0));
+    final fourth = tester.getRect(tiles.at(3));
+    last = tester.getRect(tiles.at(5));
+    expect(fourth.top, greaterThan(first.bottom - 1));
+    expect(last.right, lessThanOrEqualTo(grid.right + 0.5));
+    expect(first.right, lessThanOrEqualTo(grid.right + 0.5));
+  });
+
   testWidgets('во exclusive-попапе стик с шапки доходит до коллекции',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -212,7 +269,8 @@ void main() {
     expect(closed, isTrue);
   });
 
-  testWidgets('диалог статистики: крестик без рамки, стик скроллит, B закрывает',
+  testWidgets(
+      'диалог статистики: крестик без рамки, стик скроллит, B закрывает',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     const stats = GameStats(
@@ -285,8 +343,7 @@ void main() {
     expect(find.byType(Dialog), findsNothing);
   });
 
-  testWidgets(
-      'стик в карточке профиля листает счёт, не вкладки друзей',
+  testWidgets('стик в карточке профиля листает счёт, не вкладки друзей',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(400, 800);
