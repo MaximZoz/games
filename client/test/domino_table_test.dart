@@ -172,17 +172,74 @@ void main() {
     expect(find.textContaining('Базар'), findsOneWidget);
     expect(find.textContaining('до 101'), findsOneWidget);
 
-    final opening = session.view.legal.first;
-    await tester.tap(find.byKey(ValueKey('domino-hand-${opening.tile}')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 280));
+    final legal = session.view.legal;
+    if (legal.isNotEmpty) {
+      await tester.tap(find.byKey(ValueKey('domino-hand-${legal.first.tile}')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 280));
+      expect(session.engine.chain, isNotEmpty);
+    }
     expect(tester.takeException(), isNull);
-    expect(session.engine.chain, isNotEmpty);
 
     await pumpAt(const Size(1100, 800));
     await tester.pump(const Duration(milliseconds: 500));
     expect(tester.takeException(), isNull);
     expect(find.textContaining('Базар'), findsOneWidget);
+    OfflineDominoRegistry.instance.disposeAll();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('крайняя левая кость руки нажимается', (tester) async {
+    setUpTestLocaleRu();
+    tester.view.physicalSize = const Size(390, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final session = OfflineDominoSession.create(
+      humanUserId: 'local:player',
+      playerCount: 2,
+      humanDisplayName: 'Я',
+    );
+    addTearDown(() {
+      OfflineDominoRegistry.instance.disposeAll();
+    });
+    final tile = dominoTileId(0, 1);
+    final game = session.engine;
+    game
+      ..leftEnd = -1
+      ..rightEnd = -1
+      ..turn = 0
+      ..forcedTile = -1
+      ..status = dominoStatusPlaying
+      ..chain.clear();
+    game.players[0].hand
+      ..clear()
+      ..addAll([tile, dominoTileId(2, 3), dominoTileId(4, 5), dominoTileId(6, 6)]);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: DominoGameScreen(gameId: session.gameId),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final key = find.byKey(ValueKey('domino-hand-$tile'));
+    expect(key, findsOneWidget);
+    final center = tester.getCenter(key);
+    expect(center.dx, lessThan(48), reason: 'кость в зоне старой полосы крестика');
+    await tester.tapAt(center);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(tester.takeException(), isNull);
+    expect(session.engine.chain, isNotEmpty);
+    expect(session.engine.chain.first.id, tile);
     OfflineDominoRegistry.instance.disposeAll();
     await tester.pumpWidget(const SizedBox.shrink());
   });

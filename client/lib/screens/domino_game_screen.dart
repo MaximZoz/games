@@ -416,17 +416,21 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
                 isDraw: game.isDraw,
                 iWon: false,
               );
-    return SwipeBackScope(
+    // Как в дураке и Уно: непрозрачные 48px у левого края съедали тап
+    // по крайней левой кости. Узкая прозрачная полоса, низ с рукой вырезан.
+    final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
+    return SwipeBackScope.gameBoard(
       onBack: _onClose,
+      bottomInset: swipeBottomExclude,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leading: IconButton(
-            tooltip: context.l10n.commonClose,
-            onPressed: _onClose,
-            icon: const Icon(Icons.close_rounded),
+          leadingWidth: gameAppBarLeadingWidth(),
+          leading: buildGameAppBarLeading(
+            onClose: _onClose,
+            closeTooltip: context.l10n.commonClose,
           ),
           title: game == null
               ? const SizedBox.shrink()
