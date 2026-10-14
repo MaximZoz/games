@@ -24,7 +24,7 @@ Workflow: `.github/workflows/ios-testflight.yml`
 3. API-ключ App Store Connect (роль **Admin**) + Team ID
 4. Пять секретов в GitHub
 5. Запустить workflow **iOS TestFlight**, target `dev` (заливка IPA)
-6. Взять код из **iOS TestFlight code** и Redeem в приложении TestFlight
+6. Ссылку взять из Summary у **iOS TestFlight** (job **link**) и открыть в Safari
 
 ## 1. Идентификаторы (один раз)
 
@@ -131,7 +131,7 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 **Не вводи код в TestFlight → Redeem.** Это поле для кодов App Store (только цифры/другой формат). Наш `3U9jPUVa` туда не вводится.
 
 1. На iPhone открой **Safari** (не TestFlight)
-2. Вставь ссылку вида `https://testflight.apple.com/join/…` из Actions → **iOS TestFlight code** → Summary
+2. Вставь ссылку вида `https://testflight.apple.com/join/…` из Actions → **iOS TestFlight** → job **link** → Summary
 3. Safari предложит открыть TestFlight — Open
 4. Install у **Zozu Games DEV**
 
@@ -141,10 +141,10 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 2. Слева **Test Information**
 3. Contact Information → телефон (свой, настоящий)
 4. Save
-5. GitHub → Actions → **iOS TestFlight code** → Run workflow → в поле телефона те же цифры (или пусто, если уже сохранил в ASC)
-6. Подожди письмо Ready to Test (обычно несколько часов) и снова открой ту же ссылку `testflight.apple.com/join/…`
+5. Если ссылку нужно снова напечатать: Actions → **iOS TestFlight** → Run workflow → включи **только ссылка**
+6. Подожди письмо Ready to Test и открой ту же ссылку `testflight.apple.com/join/…`
 
-Новый код без пересборки IPA: Actions → **iOS TestFlight code** → Run workflow → `dev`.
+Один workflow: job **release** собирает IPA, job **link** печатает ссылку. Новую IPA не жми без нужды.
 
 Первая сборка иногда спрашивает Export Compliance. В приложении уже стоит `ITSAppUsesNonExemptEncryption=false` (только обычный HTTPS). Если ASC всё равно спросит: encryption yes, only HTTPS / exempt.
 

@@ -306,7 +306,7 @@ platform :ios do
         UI.important(
           "Нет contactPhone — Apple не примет внешних тестеров. " \
           "Safari → https://appstoreconnect.apple.com/apps/#{app.id}/testflight " \
-          "→ Test Information → телефон. Потом Actions → iOS TestFlight code → Run."
+          "→ Test Information → телефон. Потом Actions → iOS TestFlight → Run, «только ссылка»."
         )
       else
         tf_asc(
@@ -523,7 +523,7 @@ platform :ios do
         file.puts "Если TestFlight пишет «не принимает тестировщиков»: " \
                   "ещё нет одобренной внешней сборки. Safari → " \
                   "https://appstoreconnect.apple.com/apps/#{app.id}/testflight " \
-                  "→ Test Information → телефон, затем Run workflow **iOS TestFlight code**."
+                  "→ Test Information → телефон, затем Run **iOS TestFlight** с «только ссылка»."
       end
     end
   end
