@@ -124,15 +124,16 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 
 Если match/сертификат сломался: Run workflow → **force_match**.
 
-## 6. Поставить на iPhone (только код Redeem)
+## 6. Поставить на iPhone (только ссылка)
 
-Список приложений в TestFlight пустой, если на телефоне другой Apple ID — так и должно быть. Почту тестера не добавляем, только код.
+Список в TestFlight пустой, если на телефоне другой Apple ID — так и должно быть. Почту не добавляем.
 
-1. GitHub → **Actions** → **iOS TestFlight code** → зелёный прогон → Summary. Там строка `TESTFLIGHT_CODE=…` и ссылка `https://testflight.apple.com/join/…`
-2. На iPhone: App Store → **TestFlight** (от Apple)
-3. Справа сверху **Redeem** (карточка / «Использовать код»)
-4. Вставь код (кусок после `/join/`) или открой ссылку в Safari — TestFlight сам подхватит
-5. Install у **Zozu Games DEV**
+**Не вводи код в TestFlight → Redeem.** Это поле для кодов App Store (только цифры/другой формат). Наш `3U9jPUVa` туда не вводится.
+
+1. На iPhone открой **Safari** (не TestFlight)
+2. Вставь ссылку вида `https://testflight.apple.com/join/…` из Actions → **iOS TestFlight code** → Summary
+3. Safari предложит открыть TestFlight — Open
+4. Install у **Zozu Games DEV**
 
 Первая внешняя сборка идёт на **Beta Review** у Apple (обычно несколько часов). Код уже есть, но Install появится после одобрения. Если TestFlight пишет, что бета недоступна — подожди письмо.
 
