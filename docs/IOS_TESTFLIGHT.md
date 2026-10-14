@@ -1,6 +1,6 @@
 # iOS → TestFlight без Mac (Zozu Games)
 
-Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-15`), как Android AAB заливается в Play Internal.
+Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-26` + Xcode 26 / iOS 26 SDK), как Android AAB заливается в Play Internal. С апреля 2026 App Store Connect не принимает SDK старше iOS 26.
 
 На iPhone ставишь приложение **TestFlight** из App Store и ставишь сборку оттуда.
 
@@ -23,8 +23,8 @@ Workflow: `.github/workflows/ios-testflight.yml`
 2. Два приложения в App Store Connect
 3. API-ключ App Store Connect (роль **Admin**) + Team ID
 4. Пять секретов в GitHub
-5. Запустить workflow **iOS TestFlight**, target `dev`
-6. Подождать Processing и открыть сборку в приложении TestFlight
+5. Запустить workflow **iOS TestFlight**, target `dev` (заливка IPA)
+6. Взять код из **iOS TestFlight code** и Redeem в приложении TestFlight
 
 ## 1. Идентификаторы (один раз)
 
@@ -78,7 +78,10 @@ Capabilities (Push, Sign in with Apple) не нужны для первой ус
 7. **Download** — файл `AuthKey_XXXX.p8`. Apple отдаёт его **один раз**
 8. Открой файл в «Файлы» / текстовом редакторе и скопируй **весь** текст, включая
    `-----BEGIN PRIVATE KEY-----` и `-----END PRIVATE KEY-----`
-   Это `APP_STORE_CONNECT_API_KEY`
+   Это `APP_STORE_CONNECT_API_KEY`. Не Key ID и не Issuer ID.
+
+   Если секрет уже создан не тем текстом: карандаш у `APP_STORE_CONNECT_API_KEY` →
+   вставь файл заново → Update secret.
 
 Ключ никуда не коммить и никому не слать.
 
@@ -121,15 +124,27 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 
 Если match/сертификат сломался: Run workflow → **force_match**.
 
-## 6. Поставить на iPhone
+## 6. Поставить на iPhone (только ссылка)
 
-1. App Store → приложение **TestFlight** (от Apple), войти тем же Apple ID, что у Developer
-2. App Store Connect → **Zozu Games DEV** → **TestFlight**
-3. Дождись **Processing** (5–30 минут, иногда дольше). Придёт письмо Ready to Test
-4. Ты как Admin / Account Holder уже в Internal Testing — сборка появится в TestFlight
-5. На iPhone открой TestFlight → **Zozu Games DEV** → Install
+Список в TestFlight пустой, если на телефоне другой Apple ID — так и должно быть. Почту не добавляем.
 
-Другой Apple ID: TestFlight → Internal Testing → добавь email.
+**Не вводи код в TestFlight → Redeem.** Это поле для кодов App Store (только цифры/другой формат). Наш `3U9jPUVa` туда не вводится.
+
+1. На iPhone открой **Safari** (не TestFlight)
+2. Вставь ссылку вида `https://testflight.apple.com/join/…` из Actions → **iOS TestFlight code** → Summary
+3. Safari предложит открыть TestFlight — Open
+4. Install у **Zozu Games DEV**
+
+Если TestFlight пишет **«не принимает новых тестировщиков»** — ссылка верная, но Apple ещё не одобрил **внешнюю** сборку (Beta Review). Один раз в Safari:
+
+1. https://appstoreconnect.apple.com/apps/6822534284/testflight
+2. Слева **Test Information**
+3. Contact Information → телефон (свой, настоящий)
+4. Save
+5. GitHub → Actions → **iOS TestFlight code** → Run workflow → в поле телефона те же цифры (или пусто, если уже сохранил в ASC)
+6. Подожди письмо Ready to Test (обычно несколько часов) и снова открой ту же ссылку `testflight.apple.com/join/…`
+
+Новый код без пересборки IPA: Actions → **iOS TestFlight code** → Run workflow → `dev`.
 
 Первая сборка иногда спрашивает Export Compliance. В приложении уже стоит `ITSAppUsesNonExemptEncryption=false` (только обычный HTTPS). Если ASC всё равно спросит: encryption yes, only HTTPS / exempt.
 
@@ -149,11 +164,15 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 |-----------|-------------|
 | `Нет секрета …` | добавь секрет из таблицы выше |
 | `APPLE_TEAM_ID должен быть 10 символов` | скопируй Team ID из Membership, без пробелов |
-| `BEGIN PRIVATE KEY` | в секрет вставлен не весь `.p8` |
-| `No suitable application records were found` / нет приложения | создай app в App Store Connect с тем Bundle ID |
+| `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
+| `не может его создать` / `does not allow CREATE` | API-ключ не умеет New App. Создай вручную: App Store Connect → Apps → + → iOS, Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev` |
 | `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
+| `readonly` / `No code signing identity` | не жми Re-run на старом прогоне `main`. Actions → iOS TestFlight → **Run workflow** с ветки `cursor/fix-lobby-search-size-27ec`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
 | `match` / git push | не удаляй ветку `match-certs`; у workflow есть `contents: write` |
+| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — новый push на эту ветку |
+| `Invalid MinimumOSVersion` / `App.framework` | в `client/ios/Flutter/AppFrameworkInfo.plist` должен быть `MinimumOSVersion` 13.0 |
+| `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
 
 Лог Actions: job **release**, шаг **Build IPA and upload to TestFlight**.
 
