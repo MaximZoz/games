@@ -160,4 +160,154 @@ platform :ios do
       )
     end
   end
+
+  desc "Публичный Redeem-код TestFlight, без новой сборки IPA"
+  lane :public_code do
+    bundle_id = ENV.fetch("BUNDLE_ID")
+    group_name = ENV.fetch("TESTFLIGHT_GROUP", "Redeem")
+    key_path = ENV["ASC_KEY_FILE"]
+    key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"] if key_path.nil? || key_path.empty?
+    UI.user_error!("Нет файла API-ключа (ASC_KEY_FILE)") if key_path.nil? || key_path.empty?
+
+    app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+      key_filepath: key_path,
+      duration: 1200,
+      in_house: false
+    )
+    ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")
+    ENV.delete("APP_STORE_CONNECT_API_KEY")
+
+    app = Spaceship::ConnectAPI::App.find(bundle_id)
+    UI.user_error!("Нет приложения #{bundle_id} в App Store Connect") if app.nil?
+    UI.success("App Store Connect: #{bundle_id} id=#{app.id}")
+
+    begin
+      Spaceship::ConnectAPI.patch_beta_app_review_detail(
+        app_id: app.id,
+        attributes: {
+          contactEmail: "noreply@zozugames.com",
+          contactFirstName: "Zozu",
+          contactLastName: "Games",
+          demoAccountRequired: false,
+          notes: "DEV build. Register in the app or sign in. Play vs bot."
+        }
+      )
+    rescue StandardError => e
+      UI.important("beta review detail: #{e.message}")
+    end
+
+    begin
+      Spaceship::ConnectAPI.post_beta_app_localizations(
+        app_id: app.id,
+        attributes: {
+          locale: "en-US",
+          feedbackEmail: "noreply@zozugames.com",
+          description: "Zozu Games DEV — board games vs bot or online.",
+          whatsNew: "TestFlight redeem install"
+        }
+      )
+    rescue StandardError => e
+      UI.important("beta localization: #{e.message}")
+    end
+
+    groups = app.get_beta_groups || []
+    group = groups.find do |item|
+      item.name == group_name && item.is_internal_group != true
+    end
+    group ||= groups.find { |item| item.name == group_name }
+    if group.nil?
+      UI.message("Создаю группу #{group_name}")
+      created = app.create_beta_group(
+        group_name: group_name,
+        is_internal_group: false,
+        public_link_enabled: true,
+        public_link_limit_enabled: true,
+        public_link_limit: 100
+      )
+      group = created.is_a?(Array) ? created.first : created
+    end
+    UI.user_error!("Не удалось создать группу #{group_name}") if group.nil?
+
+    unless group.public_link_enabled
+      begin
+        group.update(
+          public_link_enabled: true,
+          public_link_limit_enabled: true,
+          public_link_limit: 100
+        )
+      rescue StandardError => e
+        UI.important("enable public link: #{e.message}")
+      end
+    end
+
+    builds = Spaceship::ConnectAPI.get_builds(
+      filter: { app: app.id },
+      sort: "-uploadedDate",
+      includes: "buildBetaDetail",
+      limit: 15
+    ) || []
+    UI.message("Сборок: #{builds.size}")
+    builds.each do |item|
+      UI.message(
+        "  build #{item.version} state=#{item.processing_state} expired=#{item.expired}"
+      )
+    end
+    build = builds.find do |item|
+      item.expired != true && (item.processing_state.nil? || item.processing_state == "VALID")
+    end
+    build ||= builds.find { |item| item.expired != true }
+    UI.user_error!("Нет обработанной сборки в TestFlight") if build.nil?
+    UI.success("Сборка #{build.version} id=#{build.id} state=#{build.processing_state}")
+
+    begin
+      Spaceship::ConnectAPI.post_beta_app_review_submissions(build_id: build.id)
+      UI.success("Отправлено на Beta Review")
+    rescue StandardError => e
+      UI.important("beta review: #{e.message}")
+    end
+
+    begin
+      Spaceship::ConnectAPI.add_beta_groups_to_build(
+        build_id: build.id,
+        beta_group_ids: [group.id]
+      )
+      UI.success("Сборка добавлена в группу #{group_name}")
+    rescue StandardError => e
+      UI.important("add build to group: #{e.message}")
+    end
+
+    group = (app.get_beta_groups || []).find { |item| item.id == group.id } || group
+    code = group.public_link_id.to_s
+    link = group.public_link.to_s
+    if code.empty? && link =~ %r{join/([^/?#]+)}
+      code = Regexp.last_match(1)
+    end
+    link = "https://testflight.apple.com/join/#{code}" if link.empty? && !code.empty?
+
+    if code.empty?
+      UI.user_error!(
+        "Публичная ссылка ещё не включилась. Первая внешняя сборка идёт на Beta Review. " \
+        "Подожди письмо от Apple или Safari → App Store Connect → приложение → " \
+        "TestFlight → External Testing → Enable Public Link."
+      )
+    end
+
+    UI.success("TESTFLIGHT_CODE=#{code}")
+    UI.success("TESTFLIGHT_URL=#{link}")
+    puts "::notice::TestFlight Redeem: #{code} — #{link}"
+    summary = ENV["GITHUB_STEP_SUMMARY"]
+    if summary && !summary.empty?
+      File.open(summary, "a") do |file|
+        file.puts "## TestFlight Redeem"
+        file.puts ""
+        file.puts "Код: `#{code}`"
+        file.puts ""
+        file.puts link
+        file.puts ""
+        file.puts "На iPhone: TestFlight → Redeem → вставь код (или открой ссылку)."
+      end
+    end
+  end
 end

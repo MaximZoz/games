@@ -77,6 +77,9 @@ void main() {
       expect(workflow, contains(secret), reason: 'workflow must require $secret');
     }
     expect(fastfile, contains('upload_to_testflight'));
+    expect(fastfile, contains('lane :public_code'));
+    expect(fastfile, contains('public_link_enabled'));
+    expect(fastfile, contains('TESTFLIGHT_CODE'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
@@ -90,6 +93,11 @@ void main() {
     expect(workflow, contains('BUILD_NAME="0.1.0"'));
     expect(workflow, contains('Select Xcode 26'));
     expect(workflow, contains('Xcode_26'));
+    final codeWf =
+        File('../.github/workflows/ios-testflight-code.yml').readAsStringSync();
+    expect(codeWf, contains('fastlane ios public_code'));
+    expect(codeWf, contains('runs-on: ubuntu-latest'));
+    expect(codeWf, contains('com.zozugames.app.dev'));
     final appFw = File('ios/Flutter/AppFrameworkInfo.plist').readAsStringSync();
     expect(appFw, contains('<key>MinimumOSVersion</key>'));
     expect(appFw, contains('<string>13.0</string>'));

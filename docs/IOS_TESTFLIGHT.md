@@ -23,8 +23,8 @@ Workflow: `.github/workflows/ios-testflight.yml`
 2. Два приложения в App Store Connect
 3. API-ключ App Store Connect (роль **Admin**) + Team ID
 4. Пять секретов в GitHub
-5. Запустить workflow **iOS TestFlight**, target `dev`
-6. Подождать Processing и открыть сборку в приложении TestFlight
+5. Запустить workflow **iOS TestFlight**, target `dev` (заливка IPA)
+6. Взять код из **iOS TestFlight code** и Redeem в приложении TestFlight
 
 ## 1. Идентификаторы (один раз)
 
@@ -124,15 +124,19 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 
 Если match/сертификат сломался: Run workflow → **force_match**.
 
-## 6. Поставить на iPhone
+## 6. Поставить на iPhone (только код Redeem)
 
-1. App Store → приложение **TestFlight** (от Apple), войти тем же Apple ID, что у Developer
-2. App Store Connect → **Zozu Games DEV** → **TestFlight**
-3. Дождись **Processing** (5–30 минут, иногда дольше). Придёт письмо Ready to Test
-4. Ты как Admin / Account Holder уже в Internal Testing — сборка появится в TestFlight
-5. На iPhone открой TestFlight → **Zozu Games DEV** → Install
+Список приложений в TestFlight пустой, если на телефоне другой Apple ID — так и должно быть. Почту тестера не добавляем, только код.
 
-Другой Apple ID: TestFlight → Internal Testing → добавь email.
+1. GitHub → **Actions** → **iOS TestFlight code** → зелёный прогон → Summary. Там строка `TESTFLIGHT_CODE=…` и ссылка `https://testflight.apple.com/join/…`
+2. На iPhone: App Store → **TestFlight** (от Apple)
+3. Справа сверху **Redeem** (карточка / «Использовать код»)
+4. Вставь код (кусок после `/join/`) или открой ссылку в Safari — TestFlight сам подхватит
+5. Install у **Zozu Games DEV**
+
+Первая внешняя сборка идёт на **Beta Review** у Apple (обычно несколько часов). Код уже есть, но Install появится после одобрения. Если TestFlight пишет, что бета недоступна — подожди письмо.
+
+Новый код без пересборки IPA: Actions → **iOS TestFlight code** → Run workflow → `dev`.
 
 Первая сборка иногда спрашивает Export Compliance. В приложении уже стоит `ITSAppUsesNonExemptEncryption=false` (только обычный HTTPS). Если ASC всё равно спросит: encryption yes, only HTTPS / exempt.
 

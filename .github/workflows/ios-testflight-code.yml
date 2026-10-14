@@ -1,0 +1,127 @@
+# Публичный Redeem-код TestFlight без новой сборки IPA.
+# Ubuntu + App Store Connect API. Mac не нужен.
+# Setup: docs/IOS_TESTFLIGHT.md
+
+name: iOS TestFlight code
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - cursor/fix-lobby-search-size-27ec
+    paths:
+      - 'client/ios/fastlane/**'
+      - '.github/workflows/ios-testflight-code.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Flavor (dev или prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+concurrency:
+  group: ios-testflight-code-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  code:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client/ios
+    steps:
+      - name: Resolve target
+        id: target
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TARGET="${{ inputs.target }}"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            TARGET="prod"
+          else
+            TARGET="dev"
+          fi
+          if [[ "$TARGET" == "prod" ]]; then
+            BUNDLE_ID="com.zozugames.app"
+          else
+            BUNDLE_ID="com.zozugames.app.dev"
+          fi
+          {
+            echo "target=$TARGET"
+            echo "bundle_id=$BUNDLE_ID"
+          } >> "$GITHUB_OUTPUT"
+          echo "TestFlight code: $TARGET $BUNDLE_ID"
+
+      - name: Check required secrets
+        working-directory: .
+        shell: bash
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_API_KEY; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Нет секрета $name"
+              missing=1
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+
+      - name: Write App Store Connect API key
+        working-directory: .
+        env:
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          raw="$APP_STORE_CONNECT_API_KEY"
+          raw="${raw//$'\r'/}"
+          raw="${raw#\"}"
+          raw="${raw%\"}"
+          raw="${raw#\'}"
+          raw="${raw%\'}"
+          if [[ "$raw" == *'\n'* ]]; then
+            raw="${raw//\\n/$'\n'}"
+          fi
+          if printf '%s' "$raw" | grep -q 'BEGIN PRIVATE KEY'; then
+            printf '%s\n' "$raw" > "$RUNNER_TEMP/AuthKey.p8"
+          else
+            {
+              echo '-----BEGIN PRIVATE KEY-----'
+              printf '%s' "$raw" | tr -d ' \t\n' | fold -w 64
+              echo
+              echo '-----END PRIVATE KEY-----'
+            } > "$RUNNER_TEMP/AuthKey.p8"
+          fi
+          test -s "$RUNNER_TEMP/AuthKey.p8"
+          grep -q 'BEGIN PRIVATE KEY' "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Install Fastlane
+        run: gem install fastlane --no-document
+
+      - name: Print TestFlight redeem code
+        working-directory: client/ios
+        env:
+          BUNDLE_ID: ${{ steps.target.outputs.bundle_id }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY_FILE: ${{ runner.temp }}/AuthKey.p8
+          TESTFLIGHT_GROUP: Redeem
+        shell: bash
+        run: |
+          set -euo pipefail
+          fastlane ios public_code
