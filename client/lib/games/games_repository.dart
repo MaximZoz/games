@@ -373,7 +373,8 @@ class UserGameSettings {
         gameType == 'checkers' ||
         gameType == 'chess') {
       out['variant'] = gameMode;
-      out['grid_size'] = (gameType == 'checkers' || gameType == 'chess') ? 8 : 3;
+      out['grid_size'] =
+          (gameType == 'checkers' || gameType == 'chess') ? 8 : 3;
       out['max_players'] = 2;
       out['game_mode'] = gameMode;
     } else if (gameType == 'checkers') {
@@ -1052,8 +1053,7 @@ class GameStateItem {
   bool get isActivePvp =>
       status == 'active' && playerUserIds.every((id) => !id.startsWith('bot:'));
 
-  int get filledCellCount =>
-      board.where((c) => c.trim().isNotEmpty).length;
+  int get filledCellCount => board.where((c) => c.trim().isNotEmpty).length;
 
   /// WS крестиков часто без имён/id — оставляем их с последнего HTTP.
   GameStateItem mergePreservingIdentity(GameStateItem incoming) {
@@ -1068,7 +1068,8 @@ class GameStateItem {
       status: incoming.status,
       forfeit: incoming.forfeit || forfeit,
       timeout: incoming.timeout || timeout,
-      turnTimeSec: incoming.turnTimeSec > 0 ? incoming.turnTimeSec : turnTimeSec,
+      turnTimeSec:
+          incoming.turnTimeSec > 0 ? incoming.turnTimeSec : turnTimeSec,
       turnDeadline: incoming.turnDeadline ?? turnDeadline,
       gridSize: incoming.gridSize,
       maxPlayers: incoming.maxPlayers > 0 ? incoming.maxPlayers : maxPlayers,
@@ -1077,9 +1078,11 @@ class GameStateItem {
       tUserId: pickId(incoming.tUserId, tUserId),
       sUserId: pickId(incoming.sUserId, sUserId),
       swapRule: incoming.swapRule || swapRule,
-      firstMoveRestriction: incoming.firstMoveRestriction || firstMoveRestriction,
+      firstMoveRestriction:
+          incoming.firstMoveRestriction || firstMoveRestriction,
       canSwap: incoming.canSwap,
-      stakeBronze: incoming.stakeBronze != 0 ? incoming.stakeBronze : stakeBronze,
+      stakeBronze:
+          incoming.stakeBronze != 0 ? incoming.stakeBronze : stakeBronze,
       xDisplayName: incoming.xDisplayName ?? xDisplayName,
       oDisplayName: incoming.oDisplayName ?? oDisplayName,
       xAvatarKind: incoming.xUserId.trim().isNotEmpty
@@ -1750,17 +1753,29 @@ class RecentOpponent {
   const RecentOpponent({
     required this.displayName,
     this.opponentId = '',
+    this.avatarKind = 'letter',
+    this.avatarValue,
+    this.frameCode,
+    this.frameColor,
     this.bot = false,
   });
 
   final String opponentId;
   final String displayName;
+  final String avatarKind;
+  final String? avatarValue;
+  final String? frameCode;
+  final String? frameColor;
   final bool bot;
 
   factory RecentOpponent.fromJson(Map<String, dynamic> json) {
     return RecentOpponent(
       opponentId: json['opponent_id'] as String? ?? '',
       displayName: json['display_name'] as String? ?? '',
+      avatarKind: json['avatar_kind'] as String? ?? 'letter',
+      avatarValue: json['avatar_value'] as String?,
+      frameCode: json['frame_code'] as String?,
+      frameColor: json['frame_color'] as String?,
       bot: json['bot'] as bool? ?? false,
     );
   }
