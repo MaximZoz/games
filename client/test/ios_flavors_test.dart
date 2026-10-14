@@ -87,4 +87,13 @@ void main() {
         reason: 'flutter build ipa treats -- args as a target file');
     expect(info, contains('ITSAppUsesNonExemptEncryption'));
   });
+
+  test('iOS delegates compile on Flutter 3.27', () {
+    final app = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+    final scene = File('ios/Runner/SceneDelegate.swift').readAsStringSync();
+    expect(app, contains('GeneratedPluginRegistrant.register'));
+    expect(app, isNot(contains('FlutterImplicitEngine')));
+    expect(scene, contains('UIWindowSceneDelegate'));
+    expect(scene, isNot(contains('FlutterSceneDelegate')));
+  });
 }
