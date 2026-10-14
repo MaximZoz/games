@@ -94,7 +94,7 @@
 - iOS: TestFlight without a Mac — GitHub Actions builds the IPA and uploads it (develop → DEV, main → prod)
 - iOS: separate prod and dev apps, same as Android — different bundle IDs and home-screen icons, TestFlight per app
 - iOS CI: builds with Xcode 26 (iOS 26 SDK); the app version is three numbers so Apple accepts the IPA
-- iOS: TestFlight install is redeem-code only — no email invite and no matching Apple ID
+- iOS: TestFlight install is the Safari `testflight.apple.com/join/…` link — do not type it into Redeem
 - Gamepad: in a text field the left stick and D-pad pick keys; the right stick moves the caret
 - Gamepad: focusing a text field opens the controller keyboard; the system keyboard stays hidden
 - Checkers: Russian and giveaway — lobby, search, invite, bot, draw, resign, rematch and stats, same chrome as the other games
