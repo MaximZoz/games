@@ -135,7 +135,14 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 3. Safari предложит открыть TestFlight — Open
 4. Install у **Zozu Games DEV**
 
-Первая внешняя сборка идёт на **Beta Review** у Apple (обычно несколько часов). Код уже есть, но Install появится после одобрения. Если TestFlight пишет, что бета недоступна — подожди письмо.
+Если TestFlight пишет **«не принимает новых тестировщиков»** — ссылка верная, но Apple ещё не одобрил **внешнюю** сборку (Beta Review). Один раз в Safari:
+
+1. https://appstoreconnect.apple.com/apps/6822534284/testflight
+2. Слева **Test Information**
+3. Contact Information → телефон (свой, настоящий)
+4. Save
+5. GitHub → Actions → **iOS TestFlight code** → Run workflow → в поле телефона те же цифры (или пусто, если уже сохранил в ASC)
+6. Подожди письмо Ready to Test (обычно несколько часов) и снова открой ту же ссылку `testflight.apple.com/join/…`
 
 Новый код без пересборки IPA: Actions → **iOS TestFlight code** → Run workflow → `dev`.
 

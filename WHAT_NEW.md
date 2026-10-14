@@ -7,6 +7,7 @@
 - iOS: отдельные приложения prod и dev, как на Android — разные Bundle ID и иконки на телефоне, TestFlight для каждой
 - iOS CI: сборка на Xcode 26 (iOS 26 SDK); версия приложения три числа — иначе Apple отклоняет IPA
 - iOS: TestFlight только по ссылке `testflight.apple.com/join/…` в Safari — не вводить в Redeem
+- iOS: если TestFlight «не принимает тестировщиков» — нужна Test Information и Beta Review, не новый IPA
 - Геймпад: в поле левый стик и крест выбирают символы на клавиатуре, правый стик двигает курсор
 - Геймпад: тап или фокус в поле ввода открывает клавиатуру контроллера, системная не выезжает
 - Шашки: русские и поддавки — лобби, поиск, инвайт, бот, ничья, сдача, реванш и статистика, как в других играх
@@ -95,6 +96,7 @@
 - iOS: separate prod and dev apps, same as Android — different bundle IDs and home-screen icons, TestFlight per app
 - iOS CI: builds with Xcode 26 (iOS 26 SDK); the app version is three numbers so Apple accepts the IPA
 - iOS: TestFlight install is the Safari `testflight.apple.com/join/…` link — do not type it into Redeem
+- iOS: “not accepting testers” means Test Information / Beta Review is missing, not a new IPA
 - Gamepad: in a text field the left stick and D-pad pick keys; the right stick moves the caret
 - Gamepad: focusing a text field opens the controller keyboard; the system keyboard stays hidden
 - Checkers: Russian and giveaway — lobby, search, invite, bot, draw, resign, rematch and stats, same chrome as the other games

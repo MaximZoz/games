@@ -23,6 +23,10 @@ on:
         options:
           - dev
           - prod
+      contact_phone:
+        description: 'Телефон для Beta Review (цифры). Без него Apple не пускает внешних тестеров'
+        required: false
+        type: string
 
 concurrency:
   group: ios-testflight-code-${{ github.ref_name }}
@@ -126,6 +130,7 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_KEY_FILE: ${{ runner.temp }}/AuthKey.p8
           TESTFLIGHT_GROUP: Redeem
+          TESTFLIGHT_CONTACT_PHONE: ${{ github.event.inputs.contact_phone || secrets.TESTFLIGHT_CONTACT_PHONE }}
         shell: bash
         run: |
           set -euo pipefail

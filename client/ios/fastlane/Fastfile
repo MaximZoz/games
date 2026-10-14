@@ -23,6 +23,46 @@ def tf_redeem_from(group)
   [code, link]
 end
 
+def tf_jwt
+  token = Spaceship::ConnectAPI.token
+  UI.user_error!("Нет ASC token") if token.nil?
+  token.refresh! if token.respond_to?(:expired?) && token.expired?
+  return token.text if token.respond_to?(:text)
+  token.to_s
+end
+
+def tf_asc(method, path, body = nil)
+  require "net/http"
+  require "json"
+  uri = URI("https://api.appstoreconnect.apple.com#{path}")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  request = case method
+            when :get then Net::HTTP::Get.new(uri)
+            when :post then Net::HTTP::Post.new(uri)
+            when :patch then Net::HTTP::Patch.new(uri)
+            else
+              UI.user_error!("ASC method #{method}")
+            end
+  request["Authorization"] = "Bearer #{tf_jwt}"
+  request["Content-Type"] = "application/json"
+  request.body = JSON.generate(body) if body
+  response = http.request(request)
+  parsed = {}
+  parsed = JSON.parse(response.body) unless response.body.to_s.empty?
+  UI.message("ASC #{method.upcase} #{path} → #{response.code}")
+  if parsed["errors"].is_a?(Array)
+    parsed["errors"].each do |error|
+      UI.important("#{error['title']}: #{error['detail']}")
+    end
+  end
+  [response.code.to_i, parsed]
+end
+
+def tf_contact_phone
+  ENV.fetch("TESTFLIGHT_CONTACT_PHONE", "").gsub(/\D/, "")
+end
+
 default_platform(:ios)
 
 platform :ios do
@@ -204,17 +244,83 @@ platform :ios do
     UI.user_error!("Нет приложения #{bundle_id} в App Store Connect") if app.nil?
     UI.success("App Store Connect: #{bundle_id} id=#{app.id}")
 
-    begin
-      Spaceship::ConnectAPI.post_beta_app_localizations(
-        app_id: app.id,
-        attributes: {
-          locale: "en-US",
-          feedbackEmail: "noreply@zozugames.com",
-          description: "Zozu Games DEV — board games vs bot or online."
+    loc_code, loc_json = tf_asc(:get, "/v1/betaAppLocalizations?filter[app]=#{app.id}")
+    UI.message("betaAppLocalizations HTTP #{loc_code}")
+    locales = loc_json["data"] || []
+    loc_attrs = {
+      locale: "en-US",
+      feedbackEmail: "noreply@zozugames.com",
+      description: "Zozu Games DEV — board games vs bot or online. Register in the app or play vs bot."
+    }
+    if locales.empty?
+      tf_asc(
+        :post,
+        "/v1/betaAppLocalizations",
+        {
+          data: {
+            type: "betaAppLocalizations",
+            attributes: loc_attrs,
+            relationships: {
+              app: { data: { type: "apps", id: app.id } }
+            }
+          }
         }
       )
-    rescue StandardError => e
-      UI.important("beta localization: #{e.message}")
+    else
+      loc = locales.first
+      tf_asc(
+        :patch,
+        "/v1/betaAppLocalizations/#{loc['id']}",
+        {
+          data: {
+            type: "betaAppLocalizations",
+            id: loc["id"],
+            attributes: {
+              feedbackEmail: loc_attrs[:feedbackEmail],
+              description: loc_attrs[:description]
+            }
+          }
+        }
+      )
+    end
+
+    review_code, review_json = tf_asc(:get, "/v1/betaAppReviewDetails?filter[app]=#{app.id}")
+    UI.message("betaAppReviewDetails HTTP #{review_code}")
+    review = (review_json["data"] || []).first
+    if review
+      attrs = review["attributes"] || {}
+      UI.message(
+        "review contact email=#{attrs['contactEmail']} phone=#{attrs['contactPhone']} " \
+        "demo=#{attrs['demoAccountRequired']}"
+      )
+      patch_attrs = {
+        contactEmail: "noreply@zozugames.com",
+        contactFirstName: "Zozu",
+        contactLastName: "Games",
+        demoAccountRequired: false,
+        notes: "DEV build. Register in the app or sign in. Play vs bot."
+      }
+      phone = tf_contact_phone
+      patch_attrs[:contactPhone] = phone unless phone.empty?
+      if phone.empty? && attrs["contactPhone"].to_s.empty?
+        UI.important(
+          "Нет contactPhone — Apple не примет внешних тестеров. " \
+          "Safari → https://appstoreconnect.apple.com/apps/#{app.id}/testflight " \
+          "→ Test Information → телефон. Потом Actions → iOS TestFlight code → Run."
+        )
+      else
+        tf_asc(
+          :patch,
+          "/v1/betaAppReviewDetails/#{review['id']}",
+          {
+            data: {
+              type: "betaAppReviewDetails",
+              id: review["id"],
+              attributes: patch_attrs
+            }
+          }
+        )
+      end
     end
 
     groups = tf_models(app.get_beta_groups)
@@ -247,6 +353,31 @@ platform :ios do
       end
     end
 
+    crit_code, crit_json = tf_asc(:get, "/v1/betaGroups/#{group.id}/betaRecruitmentCriteria")
+    crit_data = crit_json["data"]
+    crit_empty = crit_data.nil? || (crit_data.is_a?(Array) && crit_data.empty?)
+    UI.message("recruitment HTTP #{crit_code} empty=#{crit_empty}")
+    if crit_empty
+      tf_asc(
+        :post,
+        "/v1/betaRecruitmentCriteria",
+        {
+          data: {
+            type: "betaRecruitmentCriteria",
+            attributes: {
+              deviceFamilyOsVersionFilters: [
+                { deviceFamily: "IPHONE", minimumOsInclusive: "13.0" },
+                { deviceFamily: "IPAD", minimumOsInclusive: "13.0" }
+              ]
+            },
+            relationships: {
+              betaGroup: { data: { type: "betaGroups", id: group.id } }
+            }
+          }
+        }
+      )
+    end
+
     groups = tf_models(app.get_beta_groups)
     group = groups.find { |item| item.id == group.id } || group
     code, link = tf_redeem_from(group)
@@ -277,6 +408,26 @@ platform :ios do
 
     if build
       UI.success("Сборка #{build.version} id=#{build.id} state=#{build.processing_state}")
+      begin
+        Spaceship::ConnectAPI.patch_builds(
+          build_id: build.id,
+          attributes: { usesNonExemptEncryption: false }
+        )
+        UI.success("usesNonExemptEncryption=false")
+      rescue StandardError => e
+        UI.important("encryption: #{e.message}")
+        tf_asc(
+          :patch,
+          "/v1/builds/#{build.id}",
+          {
+            data: {
+              type: "builds",
+              id: build.id,
+              attributes: { usesNonExemptEncryption: false }
+            }
+          }
+        )
+      end
       begin
         Spaceship::ConnectAPI.post_beta_app_review_submissions(build_id: build.id)
         UI.success("Отправлено на Beta Review")
@@ -319,7 +470,12 @@ platform :ios do
         file.puts ""
         file.puts link
         file.puts ""
-        file.puts "На iPhone: TestFlight → Redeem → вставь код (или открой ссылку)."
+        file.puts "Открой ссылку в Safari, не вводи в Redeem."
+        file.puts ""
+        file.puts "Если TestFlight пишет «не принимает тестировщиков»: " \
+                  "ещё нет одобренной внешней сборки. Safari → " \
+                  "https://appstoreconnect.apple.com/apps/#{app.id}/testflight " \
+                  "→ Test Information → телефон, затем Run workflow **iOS TestFlight code**."
       end
     end
   end

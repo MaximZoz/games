@@ -82,6 +82,10 @@ void main() {
     expect(fastfile, contains('TESTFLIGHT_CODE'));
     expect(fastfile, contains('tf_models'));
     expect(fastfile, contains('tf_redeem_from'));
+    expect(fastfile, contains('tf_asc'));
+    expect(fastfile, contains('usesNonExemptEncryption'));
+    expect(fastfile, contains('betaRecruitmentCriteria'));
+    expect(fastfile, contains('TESTFLIGHT_CONTACT_PHONE'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
@@ -100,6 +104,7 @@ void main() {
     expect(codeWf, contains('fastlane ios public_code'));
     expect(codeWf, contains('runs-on: ubuntu-latest'));
     expect(codeWf, contains('com.zozugames.app.dev'));
+    expect(codeWf, contains('TESTFLIGHT_CONTACT_PHONE'));
     final appFw = File('ios/Flutter/AppFrameworkInfo.plist').readAsStringSync();
     expect(appFw, contains('<key>MinimumOSVersion</key>'));
     expect(appFw, contains('<string>13.0</string>'));

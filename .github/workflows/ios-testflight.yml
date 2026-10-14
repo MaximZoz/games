@@ -18,6 +18,8 @@ on:
       - cursor/fix-lobby-search-size-27ec
     paths:
       - 'client/**'
+      - '!client/ios/fastlane/**'
+      - '!client/test/**'
       - '.github/workflows/ios-testflight.yml'
   workflow_dispatch:
     inputs:
