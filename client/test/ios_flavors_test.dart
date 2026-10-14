@@ -81,6 +81,7 @@ void main() {
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('want_readonly'));
+    expect(fastfile, contains('ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")'));
     expect(fastfile, contains('flutter", "build", "ipa"'));
     expect(info, contains('ITSAppUsesNonExemptEncryption'));
   });

@@ -10,7 +10,9 @@ platform :ios do
     flavor = ENV.fetch("FLAVOR")
     bundle_id = ENV.fetch("BUNDLE_ID")
     team_id = ENV.fetch("APPLE_TEAM_ID")
-    key_path = ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH")
+    key_path = ENV["ASC_KEY_FILE"]
+    key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"] if key_path.nil? || key_path.empty?
+    UI.user_error!("Нет файла API-ключа (ASC_KEY_FILE)") if key_path.nil? || key_path.empty?
     api_base = ENV.fetch("API_BASE")
     build_number = ENV.fetch("BUILD_NUMBER")
     build_name = ENV.fetch("BUILD_NAME")
@@ -32,6 +34,9 @@ platform :ios do
       duration: 1200,
       in_house: false
     )
+    # Иначе produce/match видят и api_key, и APP_STORE_CONNECT_API_KEY_PATH.
+    ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")
+    ENV.delete("APP_STORE_CONNECT_API_KEY")
 
     app_name = flavor == "dev" ? "Zozu Games DEV" : "Zozu Games"
     app_sku = flavor == "dev" ? "zozugames-dev" : "zozugames"
