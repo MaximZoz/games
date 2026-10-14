@@ -1,6 +1,6 @@
 # iOS → TestFlight без Mac (Zozu Games)
 
-Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-15`), как Android AAB заливается в Play Internal.
+Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-26` + Xcode 26 / iOS 26 SDK), как Android AAB заливается в Play Internal. С апреля 2026 App Store Connect не принимает SDK старше iOS 26.
 
 На iPhone ставишь приложение **TestFlight** из App Store и ставишь сборку оттуда.
 
@@ -158,6 +158,9 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `readonly` / `No code signing identity` | не жми Re-run на старом прогоне `main`. Actions → iOS TestFlight → **Run workflow** с ветки `cursor/fix-lobby-search-size-27ec`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
 | `match` / git push | не удаляй ветку `match-certs`; у workflow есть `contents: write` |
+| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — новый push на эту ветку |
+| `Invalid MinimumOSVersion` / `App.framework` | в `client/ios/Flutter/AppFrameworkInfo.plist` должен быть `MinimumOSVersion` 13.0 |
+| `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
 
 Лог Actions: job **release**, шаг **Build IPA and upload to TestFlight**.
 

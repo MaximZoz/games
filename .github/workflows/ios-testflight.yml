@@ -15,6 +15,7 @@ on:
     branches:
       - main
       - develop
+      - cursor/fix-lobby-search-size-27ec
     paths:
       - 'client/**'
       - '.github/workflows/ios-testflight.yml'
@@ -41,7 +42,7 @@ concurrency:
 
 jobs:
   release:
-    runs-on: macos-15
+    runs-on: macos-26
     permissions:
       contents: write
     defaults:
@@ -75,7 +76,12 @@ jobs:
           fi
 
           BUILD_NUMBER=$((10000 + ${{ github.run_number }}))
-          BUILD_NAME="0.1.0-${TARGET}.${{ github.run_number }}"
+          # CFBundleShortVersionString: не больше трёх чисел (не 0.1.0-dev.10).
+          BUILD_NAME="0.1.0"
+          if [[ ! "$BUILD_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::BUILD_NAME должен быть три числа (например 0.1.0), сейчас $BUILD_NAME"
+            exit 1
+          fi
           BUILD_ID="$(printf '%s' '${{ github.sha }}' | cut -c1-7)"
           APP_VERSION="${BUILD_NAME}+${BUILD_NUMBER}"
 
@@ -120,6 +126,33 @@ jobs:
           fi
 
       - uses: actions/checkout@v5
+
+      - name: Select Xcode 26
+        working-directory: .
+        run: |
+          set -euo pipefail
+          ls /Applications | grep -i xcode || true
+          selected=""
+          for candidate in /Applications/Xcode_26.6.app /Applications/Xcode_26.app /Applications/Xcode.app; do
+            if [ -d "$candidate" ]; then
+              selected="$candidate"
+              break
+            fi
+          done
+          if [ -z "$selected" ]; then
+            selected="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)"
+          fi
+          if [ -z "$selected" ] || [ ! -d "$selected" ]; then
+            echo "::error::На раннере нет Xcode 26 — App Store требует iOS 26 SDK с апреля 2026"
+            exit 1
+          fi
+          sudo xcode-select -s "$selected"
+          xcodebuild -version
+          version="$(xcodebuild -version | head -1)"
+          if [[ ! "$version" =~ ^Xcode\ 26 ]]; then
+            echo "::error::Нужен Xcode 26 (iOS 26 SDK), сейчас: $version"
+            exit 1
+          fi
 
       - uses: subosito/flutter-action@v2
         with:

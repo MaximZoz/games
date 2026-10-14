@@ -62,7 +62,7 @@ void main() {
     final fastfile = File('ios/fastlane/Fastfile').readAsStringSync();
     final info = File('ios/Runner/Info.plist').readAsStringSync();
 
-    expect(workflow, contains('runs-on: macos-15'));
+    expect(workflow, contains('runs-on: macos-26'));
     expect(workflow, contains('com.zozugames.app.dev'));
     expect(workflow, contains('com.zozugames.app'));
     expect(workflow, contains('https://multigameszozu-dev.fly.dev'));
@@ -87,6 +87,12 @@ void main() {
     expect(fastfile, isNot(contains('"--"')),
         reason: 'flutter build ipa treats -- args as a target file');
     expect(info, contains('ITSAppUsesNonExemptEncryption'));
+    expect(workflow, contains('BUILD_NAME="0.1.0"'));
+    expect(workflow, contains('Select Xcode 26'));
+    expect(workflow, contains('Xcode_26'));
+    final appFw = File('ios/Flutter/AppFrameworkInfo.plist').readAsStringSync();
+    expect(appFw, contains('<key>MinimumOSVersion</key>'));
+    expect(appFw, contains('<string>13.0</string>'));
   });
 
   test('iOS delegates compile on Flutter 3.27', () {
