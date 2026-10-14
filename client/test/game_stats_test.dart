@@ -20,13 +20,31 @@ void _unit() {
         'win_rate': 0.5,
         'total_duration_sec': 3600,
         'top_won': [
-          {'opponent_id': 'u1', 'display_name': 'Alice', 'won': 4, 'drawn': 0, 'lost': 1},
+          {
+            'opponent_id': 'u1',
+            'display_name': 'Alice',
+            'won': 4,
+            'drawn': 0,
+            'lost': 1
+          },
         ],
         'top_drawn': [
-          {'opponent_id': 'u3', 'display_name': 'Cara', 'won': 0, 'drawn': 5, 'lost': 0},
+          {
+            'opponent_id': 'u3',
+            'display_name': 'Cara',
+            'won': 0,
+            'drawn': 5,
+            'lost': 0
+          },
         ],
         'top_lost': [
-          {'opponent_id': 'u2', 'display_name': 'Bob', 'won': 0, 'drawn': 1, 'lost': 3},
+          {
+            'opponent_id': 'u2',
+            'display_name': 'Bob',
+            'won': 0,
+            'drawn': 1,
+            'lost': 3
+          },
         ],
         'games': [
           {
@@ -36,13 +54,31 @@ void _unit() {
             'lost': 3,
             'total_duration_sec': 900,
             'top_won': [
-              {'opponent_id': 'u1', 'display_name': 'Alice', 'won': 4, 'drawn': 0, 'lost': 1},
+              {
+                'opponent_id': 'u1',
+                'display_name': 'Alice',
+                'won': 4,
+                'drawn': 0,
+                'lost': 1
+              },
             ],
             'top_drawn': [
-              {'opponent_id': 'u3', 'display_name': 'Cara', 'won': 0, 'drawn': 2, 'lost': 0},
+              {
+                'opponent_id': 'u3',
+                'display_name': 'Cara',
+                'won': 0,
+                'drawn': 2,
+                'lost': 0
+              },
             ],
             'top_lost': [
-              {'opponent_id': 'u2', 'display_name': 'Bob', 'won': 0, 'drawn': 1, 'lost': 3},
+              {
+                'opponent_id': 'u2',
+                'display_name': 'Bob',
+                'won': 0,
+                'drawn': 1,
+                'lost': 3
+              },
             ],
           },
         ],
@@ -86,7 +122,8 @@ void _unit() {
     });
 
     test('win_rate 0.6 parses correctly', () {
-      final s = GameStats.fromJson({'wins': 6, 'total_played': 10, 'win_rate': 0.6});
+      final s =
+          GameStats.fromJson({'wins': 6, 'total_played': 10, 'win_rate': 0.6});
       expect(s.winRate, 0.6);
       expect(s.losses, 0);
       expect(s.topWon, isEmpty);
@@ -134,7 +171,8 @@ void _unit() {
     });
   });
 
-  test('statsModeOptions keeps canonical durak chips and extra played mode', () {
+  test('statsModeOptions keeps canonical durak chips and extra played mode',
+      () {
     final modes = statsModeOptions('durak', ['9:52']);
     expect(modes, contains('2:36'));
     expect(modes, contains('9:52'));
@@ -331,5 +369,70 @@ void main() {
     expect(find.text('Поражение'), findsOneWidget);
     expect(find.text('Анна'), findsNothing);
     expect(find.text('Илья'), findsNothing);
+  });
+
+  testWidgets('нажатие на соперника в ленте открывает профиль', (tester) async {
+    const stats = GameStats(
+      wins: 1,
+      draws: 0,
+      losses: 0,
+      totalPlayed: 1,
+      winRate: 1,
+      totalDurationSec: 30,
+      topWon: [],
+      topDrawn: [],
+      topLost: [],
+      recent: [
+        RecentGame(
+          gameType: 'chess',
+          outcome: 'win',
+          opponents: [
+            RecentOpponent(
+              opponentId: '22222222-2222-2222-2222-222222222222',
+              displayName: 'Анна',
+              avatarKind: 'preset',
+              avatarValue: '2',
+            ),
+          ],
+        ),
+        RecentGame(
+          gameType: 'chess',
+          outcome: 'loss',
+          opponents: [RecentOpponent(displayName: 'Бот', bot: true)],
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          gameStatsProvider(null).overrideWith((ref) async => stats),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: GameStatsBody()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Анна'), findsOneWidget);
+    expect(find.text('Бот'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey(
+      'recent-player-22222222-2222-2222-2222-222222222222',
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Анна'), findsNWidgets(2));
+    expect(find.byTooltip('Добавить в друзья'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Закрыть'));
+    await tester.pumpAndSettle();
+    expect(find.text('Анна'), findsOneWidget);
+    expect(find.byTooltip('Добавить в друзья'), findsNothing);
+
+    await tester.tap(find.text('Бот'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Добавить в друзья'), findsNothing);
   });
 }

@@ -13,6 +13,10 @@ import (
 type RecentOpponent struct {
 	OpponentID  string `json:"opponent_id,omitempty"`
 	DisplayName string `json:"display_name"`
+	AvatarKind  string `json:"avatar_kind,omitempty"`
+	AvatarValue string `json:"avatar_value,omitempty"`
+	FrameCode   string `json:"frame_code,omitempty"`
+	FrameColor  string `json:"frame_color,omitempty"`
 	Bot         bool   `json:"bot,omitempty"`
 }
 
@@ -109,7 +113,7 @@ func ListRecentGames(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, 
 		return nil, err
 	}
 	games := pickRecentBuckets(groupRecentGames(userID, raw, len(raw)+1), limit)
-	if err := fillRecentNames(ctx, pool, games); err != nil {
+	if err := fillRecentProfiles(ctx, pool, games); err != nil {
 		return nil, err
 	}
 	return games, nil
@@ -252,7 +256,30 @@ func recentOpponents(userID uuid.UUID, rows []recentRow) []RecentOpponent {
 	return out
 }
 
-func fillRecentNames(ctx context.Context, pool *pgxpool.Pool, games []RecentGame) error {
+type recentProfile struct {
+	Name        string
+	AvatarKind  string
+	AvatarValue string
+}
+
+func fillRecentProfiles(ctx context.Context, pool *pgxpool.Pool, games []RecentGame) error {
+	ids := recentOpponentIDs(games)
+	if len(ids) == 0 {
+		return nil
+	}
+	profiles, err := fetchRecentProfiles(ctx, pool, ids)
+	if err != nil {
+		return err
+	}
+	frames, err := EquippedFramesMap(ctx, pool, ids)
+	if err != nil {
+		return err
+	}
+	applyRecentProfiles(games, profiles, frames)
+	return nil
+}
+
+func recentOpponentIDs(games []RecentGame) []uuid.UUID {
 	ids := make([]uuid.UUID, 0)
 	seen := map[uuid.UUID]bool{}
 	for _, g := range games {
@@ -268,13 +295,35 @@ func fillRecentNames(ctx context.Context, pool *pgxpool.Pool, games []RecentGame
 			ids = append(ids, id)
 		}
 	}
-	if len(ids) == 0 {
-		return nil
-	}
-	names, err := fetchDisplayNames(ctx, pool, ids)
+	return ids
+}
+
+func fetchRecentProfiles(ctx context.Context, pool *pgxpool.Pool, ids []uuid.UUID) (map[uuid.UUID]recentProfile, error) {
+	out := make(map[uuid.UUID]recentProfile, len(ids))
+	rows, err := pool.Query(ctx, `
+		SELECT id, COALESCE(display_name, ''), COALESCE(avatar_kind, 'letter'), avatar_value
+		FROM users WHERE id = ANY($1)
+	`, ids)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	defer rows.Close()
+	for rows.Next() {
+		var id uuid.UUID
+		var profile recentProfile
+		var avatar *string
+		if err := rows.Scan(&id, &profile.Name, &profile.AvatarKind, &avatar); err != nil {
+			return nil, err
+		}
+		if avatar != nil {
+			profile.AvatarValue = *avatar
+		}
+		out[id] = profile
+	}
+	return out, rows.Err()
+}
+
+func applyRecentProfiles(games []RecentGame, profiles map[uuid.UUID]recentProfile, frames map[uuid.UUID]EquippedFrame) {
 	for gi := range games {
 		for oi := range games[gi].Opponents {
 			o := &games[gi].Opponents[oi]
@@ -285,8 +334,15 @@ func fillRecentNames(ctx context.Context, pool *pgxpool.Pool, games []RecentGame
 			if err != nil {
 				continue
 			}
-			o.DisplayName = names[id]
+			if profile, ok := profiles[id]; ok {
+				o.DisplayName = profile.Name
+				o.AvatarKind = profile.AvatarKind
+				o.AvatarValue = profile.AvatarValue
+			}
+			if frame, ok := frames[id]; ok {
+				o.FrameCode = frame.Code
+				o.FrameColor = frame.Color
+			}
 		}
 	}
-	return nil
 }
