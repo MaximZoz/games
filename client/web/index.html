@@ -34,11 +34,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Zozu Games">
   <meta name="theme-color" content="#E8ECF4">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png?v=2">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png?v=3">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png?v=2"/>
-  <link rel="shortcut icon" type="image/png" href="favicon.png?v=2"/>
+  <link rel="icon" type="image/png" href="favicon.png?v=3"/>
+  <link rel="shortcut icon" type="image/png" href="favicon.png?v=3"/>
 
   <title>Zozu Games</title>
   <link rel="manifest" href="manifest.json">
@@ -204,7 +204,7 @@
   <script>
     // Ранняя регистрация push SW (до Flutter) — критично для iOS PWA.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/push-sw.js?v=14', { scope: '/' }).catch(function () {});
+      navigator.serviceWorker.register('/push-sw.js?v=15', { scope: '/' }).catch(function () {});
     }
   </script>
   <script>

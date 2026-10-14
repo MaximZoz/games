@@ -23,19 +23,19 @@ void main() {
     }
   });
 
-  test('веб-файлы ссылаются на иконки с cache-busting и содержат favicon.ico', () {
+  test('веб-файлы ссылаются на иконки с cache-busting и содержат favicon.ico',
+      () {
     final indexHtml = File('web/index.html').readAsStringSync();
-    expect(indexHtml, contains('href="favicon.png?v=2"'));
-    expect(indexHtml, contains('href="icons/Icon-192.png?v=2"'));
+    expect(indexHtml, contains('href="favicon.png?v=3"'));
+    expect(indexHtml, contains('href="icons/Icon-192.png?v=3"'));
 
     final manifest = File('web/manifest.json').readAsStringSync();
-    expect(manifest, contains('"icons/Icon-192.png?v=2"'));
-    expect(manifest, contains('"icons/Icon-512.png?v=2"'));
-    expect(manifest, contains('"icons/Icon-maskable-192.png?v=2"'));
-    expect(manifest, contains('"icons/Icon-maskable-512.png?v=2"'));
+    expect(manifest, contains('"icons/Icon-192.png?v=3"'));
+    expect(manifest, contains('"icons/Icon-512.png?v=3"'));
+    expect(manifest, contains('"icons/Icon-maskable-192.png?v=3"'));
+    expect(manifest, contains('"icons/Icon-maskable-512.png?v=3"'));
 
     expect(File('web/favicon.ico').existsSync(), isTrue);
     expect(File('web/favicon.png').existsSync(), isTrue);
   });
 }
-

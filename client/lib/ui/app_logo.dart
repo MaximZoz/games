@@ -13,8 +13,9 @@ enum ZozuLogoStyle {
   maskable,
 }
 
-/// Логотип Zozu Games: яркая индиго-фиолетовая плитка и два скошенных
-/// крыла игровой кости, сложенных в букву «Z» с золотой фишкой в центре.
+/// Логотип Zozu Games: яркая индиго-фиолетовая плитка, золотая игровая карта
+/// с короной и наклонённый белый игральный кубик — чистый символ настольных,
+/// карточных и костяных мини-игр без букв.
 class ZozuAppLogo extends StatelessWidget {
   const ZozuAppLogo({
     super.key,
@@ -78,40 +79,40 @@ class ZozuAppLogoPainter extends CustomPainter {
           begin: Alignment(-0.9, -0.95),
           end: Alignment(0.95, 0.95),
           colors: [
-            Color(0xFF312E81),
+            Color(0xFF2E1065),
             Color(0xFF4F46E5),
-            Color(0xFF6D28D9),
-            Color(0xFF9333EA),
+            Color(0xFF7C3AED),
+            Color(0xFFA855F7),
           ],
           stops: [0.0, 0.38, 0.74, 1.0],
         ).createShader(rect),
     );
 
-    // Мягкое верхнее свечение и тёплый отсвет снизу.
+    // Мягкое бирюзово-лавандовое свечение сверху и тёплый отсвет снизу.
     canvas.drawCircle(
-      Offset(s * 0.24, s * 0.18),
+      Offset(s * 0.24, s * 0.20),
       s * 0.56,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFFA5B4FC).withValues(alpha: 0.42),
-            const Color(0xFFA5B4FC).withValues(alpha: 0.0),
+            const Color(0xFF818CF8).withValues(alpha: 0.44),
+            const Color(0xFF818CF8).withValues(alpha: 0.0),
           ],
         ).createShader(
-          Rect.fromCircle(center: Offset(s * 0.24, s * 0.18), radius: s * 0.56),
+          Rect.fromCircle(center: Offset(s * 0.24, s * 0.20), radius: s * 0.56),
         ),
     );
     canvas.drawCircle(
-      Offset(s * 0.82, s * 0.86),
-      s * 0.48,
+      Offset(s * 0.80, s * 0.84),
+      s * 0.50,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFFF472B6).withValues(alpha: 0.26),
+            const Color(0xFFF472B6).withValues(alpha: 0.30),
             const Color(0xFFF472B6).withValues(alpha: 0.0),
           ],
         ).createShader(
-          Rect.fromCircle(center: Offset(s * 0.82, s * 0.86), radius: s * 0.48),
+          Rect.fromCircle(center: Offset(s * 0.80, s * 0.84), radius: s * 0.50),
         ),
     );
 
@@ -127,9 +128,9 @@ class ZozuAppLogoPainter extends CustomPainter {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.white.withValues(alpha: 0.36),
-              Colors.white.withValues(alpha: 0.06),
-              const Color(0xFFC4B5FD).withValues(alpha: 0.22),
+              Colors.white.withValues(alpha: 0.38),
+              Colors.white.withValues(alpha: 0.08),
+              const Color(0xFFC4B5FD).withValues(alpha: 0.24),
             ],
           ).createShader(rect),
       );
@@ -145,138 +146,194 @@ class ZozuAppLogoPainter extends CustomPainter {
     canvas.scale(markScale);
     canvas.translate(-s * 0.5, -s * 0.5);
 
-    _paintZMark(canvas, s);
+    _paintGamesEmblem(canvas, s);
     canvas.restore();
   }
 
-  void _paintZMark(Canvas canvas, double s) {
-    // Буква Z из двух игровых плиток и яркой золотой перекладины:
-    // верхняя и нижняя плашки со скошенным краем + диагональный золотой луч,
-    // плюс круглые точки кости/домино.
-    final topBar = _roundedPolygon([
-      Offset(s * 0.21, s * 0.21),
-      Offset(s * 0.79, s * 0.21),
-      Offset(s * 0.69, s * 0.37),
-      Offset(s * 0.21, s * 0.37),
-    ], s * 0.055);
+  void _paintGamesEmblem(Canvas canvas, double s) {
+    // 1) Задняя золотая игровая карта с короной (наклонена влево).
+    _paintGoldCard(canvas, s);
 
-    final bottomBar = _roundedPolygon([
-      Offset(s * 0.31, s * 0.63),
-      Offset(s * 0.79, s * 0.63),
-      Offset(s * 0.79, s * 0.79),
-      Offset(s * 0.21, s * 0.79),
-    ], s * 0.055);
+    // 2) Передний белый игральный кубик с 5 точками (наклонён вправо).
+    _paintWhiteDie(canvas, s);
 
-    final diagBar = _roundedPolygon([
-      Offset(s * 0.60, s * 0.21),
-      Offset(s * 0.79, s * 0.21),
-      Offset(s * 0.40, s * 0.79),
-      Offset(s * 0.21, s * 0.79),
-    ], s * 0.052);
-
-    // Мягкая тень под знаком.
-    if (s >= 28) {
-      final shadowPaint = Paint()
-        ..color = const Color(0xFF1E1B4B).withValues(alpha: 0.38)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.026);
-      canvas.save();
-      canvas.translate(0, s * 0.024);
-      canvas.drawPath(topBar, shadowPaint);
-      canvas.drawPath(bottomBar, shadowPaint);
-      canvas.drawPath(diagBar, shadowPaint);
-      canvas.restore();
-    }
-
-    // Белые игровые плашки сверху и снизу (как кости домино / карты).
-    final barBounds = Rect.fromLTWH(s * 0.2, s * 0.2, s * 0.6, s * 0.6);
-    final whitePaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xFFFFFFFF),
-          Color(0xFFEEF2FF),
-          Color(0xFFE0E7FF),
-        ],
-      ).createShader(barBounds);
-
-    canvas.drawPath(topBar, whitePaint);
-    canvas.drawPath(bottomBar, whitePaint);
-
-    // Небольшая тень от диагонали на белые плашки для объёма.
-    if (s >= 28) {
-      final overlapShadow = Paint()
-        ..color = const Color(0xFF312E81).withValues(alpha: 0.24)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.018);
-      canvas.drawPath(diagBar.shift(Offset(0, s * 0.01)), overlapShadow);
-    }
-
-    // Золотая диагональ — как победный ход и золотая монета Zozu Games.
-    final goldPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [
-          Color(0xFFFFF3B0),
-          Color(0xFFFFD147),
-          Color(0xFFF59E0B),
-          Color(0xFFEA580C),
-        ],
-        stops: [0.0, 0.34, 0.76, 1.0],
-      ).createShader(barBounds);
-    canvas.drawPath(diagBar, goldPaint);
-
-    // Тонкий светлый блик по золотой диагонали.
-    if (s >= 32) {
+    // 3) Яркая четырёхлучевая звезда-искра сверху справа.
+    if (s >= 24) {
+      final sparkCenter = Offset(s * 0.78, s * 0.23);
+      final spark = _fourPointStar(sparkCenter, s * 0.064, s * 0.020);
       canvas.drawPath(
-        diagBar,
+        spark,
         Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1.0, s * 0.011)
-          ..color = const Color(0xFFFFFBEB).withValues(alpha: 0.62),
+          ..shader = RadialGradient(
+            colors: const [Color(0xFFFFFFFF), Color(0xFFFDE68A)],
+          ).createShader(
+            Rect.fromCircle(center: sparkCenter, radius: s * 0.068),
+          ),
+      );
+    }
+  }
+
+  void _paintGoldCard(Canvas canvas, double s) {
+    final center = Offset(s * 0.39, s * 0.45);
+    final cardW = s * 0.42;
+    final cardH = s * 0.50;
+    final cardRect = Rect.fromCenter(
+      center: Offset.zero,
+      width: cardW,
+      height: cardH,
+    );
+    final cardRRect = RRect.fromRectAndRadius(
+      cardRect,
+      Radius.circular(s * 0.095),
+    );
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(-0.24);
+
+    if (s >= 28) {
+      canvas.drawRRect(
+        cardRRect.shift(Offset(0, s * 0.024)),
+        Paint()
+          ..color = const Color(0xFF1E1B4B).withValues(alpha: 0.42)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.026),
       );
     }
 
-    // Точки игровой кости на верхней и нижней плашках + центральная искра.
-    final pipPaint = Paint()..color = const Color(0xFF4338CA);
-    final pipR = s * 0.032;
-    canvas.drawCircle(Offset(s * 0.31, s * 0.29), pipR, pipPaint);
-    canvas.drawCircle(Offset(s * 0.42, s * 0.29), pipR, pipPaint);
-    canvas.drawCircle(Offset(s * 0.58, s * 0.71), pipR, pipPaint);
-    canvas.drawCircle(Offset(s * 0.69, s * 0.71), pipR, pipPaint);
+    canvas.drawRRect(
+      cardRRect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFFF7C2),
+            Color(0xFFFFD447),
+            Color(0xFFF59E0B),
+            Color(0xFFEA580C),
+          ],
+          stops: [0.0, 0.34, 0.74, 1.0],
+        ).createShader(cardRect),
+    );
 
-    // Белая четырёхлучевая звезда-блик в центре золотой грани.
-    final star =
-        _fourPointStar(Offset(s * 0.50, s * 0.50), s * 0.068, s * 0.022);
-    canvas.drawPath(star, Paint()..color = const Color(0xFFFFFFFF));
+    if (s >= 32) {
+      canvas.drawRRect(
+        cardRRect.deflate(s * 0.006),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.0, s * 0.012)
+          ..color = const Color(0xFFFFFBEB).withValues(alpha: 0.72),
+      );
+    }
+
+    // Небольшая корона/ромб в верхнем левом углу карты.
+    final diamond = _diamondPath(
+      Offset(-cardW * 0.23, -cardH * 0.20),
+      s * 0.068,
+      s * 0.084,
+    );
+    canvas.drawPath(diamond, Paint()..color = const Color(0xFF7C2D12));
+    canvas.drawPath(
+      _diamondPath(
+        Offset(-cardW * 0.23, -cardH * 0.20),
+        s * 0.056,
+        s * 0.070,
+      ),
+      Paint()..color = const Color(0xFFFFFBEB),
+    );
+
+    canvas.restore();
   }
 
-  static Path _roundedPolygon(List<Offset> pts, double radius) {
-    final path = Path();
-    final n = pts.length;
-    for (var i = 0; i < n; i++) {
-      final prev = pts[(i - 1 + n) % n];
-      final curr = pts[i];
-      final next = pts[(i + 1) % n];
+  void _paintWhiteDie(Canvas canvas, double s) {
+    final center = Offset(s * 0.58, s * 0.56);
+    final dieSize = s * 0.46;
+    final dieRect = Rect.fromCenter(
+      center: Offset.zero,
+      width: dieSize,
+      height: dieSize,
+    );
+    final dieRRect = RRect.fromRectAndRadius(
+      dieRect,
+      Radius.circular(s * 0.115),
+    );
 
-      final v1 = prev - curr;
-      final v2 = next - curr;
-      final l1 = v1.distance;
-      final l2 = v2.distance;
-      final r = math.min(radius, math.min(l1, l2) * 0.45);
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(0.19);
 
-      final p1 = curr + v1 * (r / l1);
-      final p2 = curr + v2 * (r / l2);
-
-      if (i == 0) {
-        path.moveTo(p1.dx, p1.dy);
-      } else {
-        path.lineTo(p1.dx, p1.dy);
-      }
-      path.quadraticBezierTo(curr.dx, curr.dy, p2.dx, p2.dy);
+    // Глубокая тень кубика поверх золотой карты.
+    if (s >= 24) {
+      canvas.drawRRect(
+        dieRRect.shift(Offset(-s * 0.012, s * 0.026)),
+        Paint()
+          ..color = const Color(0xFF1E1B4B).withValues(alpha: 0.46)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.028),
+      );
     }
-    path.close();
-    return path;
+
+    canvas.drawRRect(
+      dieRRect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFFFFFF),
+            Color(0xFFF5F7FF),
+            Color(0xFFE0E7FF),
+          ],
+          stops: [0.0, 0.62, 1.0],
+        ).createShader(dieRect),
+    );
+
+    if (s >= 32) {
+      canvas.drawRRect(
+        dieRRect.deflate(s * 0.006),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.0, s * 0.012)
+          ..color = Colors.white,
+      );
+    }
+
+    // Пять точек на грани кубика: 4 индиго по углам и золотая/коралловая в центре.
+    final off = dieSize * 0.255;
+    final pipR = s * 0.038;
+    final cornerPipPaint = Paint()..color = const Color(0xFF4338CA);
+    for (final pt in [
+      Offset(-off, -off),
+      Offset(off, -off),
+      Offset(-off, off),
+      Offset(off, off),
+    ]) {
+      canvas.drawCircle(pt, pipR, cornerPipPaint);
+    }
+
+    final centerPipR = s * 0.046;
+    canvas.drawCircle(
+      Offset.zero,
+      centerPipR,
+      Paint()
+        ..shader = RadialGradient(
+          colors: const [
+            Color(0xFFFB7185),
+            Color(0xFFE11D48),
+          ],
+        ).createShader(
+            Rect.fromCircle(center: Offset.zero, radius: centerPipR)),
+    );
+
+    canvas.restore();
+  }
+
+  static Path _diamondPath(Offset c, double rx, double ry) {
+    return Path()
+      ..moveTo(c.dx, c.dy - ry)
+      ..lineTo(c.dx + rx, c.dy)
+      ..lineTo(c.dx, c.dy + ry)
+      ..lineTo(c.dx - rx, c.dy)
+      ..close();
   }
 
   static Path _fourPointStar(Offset c, double outerR, double innerR) {
