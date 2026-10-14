@@ -80,6 +80,8 @@ void main() {
     expect(fastfile, contains('lane :public_code'));
     expect(fastfile, contains('public_link_enabled'));
     expect(fastfile, contains('TESTFLIGHT_CODE'));
+    expect(fastfile, contains('tf_models'));
+    expect(fastfile, contains('tf_redeem_from'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));

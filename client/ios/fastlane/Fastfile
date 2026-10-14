@@ -2,6 +2,27 @@
 # Секреты и шаги: docs/IOS_TESTFLIGHT.md
 # Локально без Mac не запускается — только GitHub Actions (macos).
 
+def tf_models(value)
+  return [] if value.nil?
+  return value if value.is_a?(Array)
+  return value.to_models if value.respond_to?(:to_models)
+  return value.to_a if value.respond_to?(:to_a) && !value.is_a?(String)
+  [value]
+end
+
+def tf_redeem_from(group)
+  return ["", ""] if group.nil?
+  code = ""
+  code = group.public_link_id.to_s if group.respond_to?(:public_link_id)
+  link = ""
+  link = group.public_link.to_s if group.respond_to?(:public_link)
+  if code.empty? && link =~ %r{join/([^/?#]+)}
+    code = Regexp.last_match(1)
+  end
+  link = "https://testflight.apple.com/join/#{code}" if link.empty? && !code.empty?
+  [code, link]
+end
+
 default_platform(:ios)
 
 platform :ios do
@@ -184,35 +205,19 @@ platform :ios do
     UI.success("App Store Connect: #{bundle_id} id=#{app.id}")
 
     begin
-      Spaceship::ConnectAPI.patch_beta_app_review_detail(
-        app_id: app.id,
-        attributes: {
-          contactEmail: "noreply@zozugames.com",
-          contactFirstName: "Zozu",
-          contactLastName: "Games",
-          demoAccountRequired: false,
-          notes: "DEV build. Register in the app or sign in. Play vs bot."
-        }
-      )
-    rescue StandardError => e
-      UI.important("beta review detail: #{e.message}")
-    end
-
-    begin
       Spaceship::ConnectAPI.post_beta_app_localizations(
         app_id: app.id,
         attributes: {
           locale: "en-US",
           feedbackEmail: "noreply@zozugames.com",
-          description: "Zozu Games DEV — board games vs bot or online.",
-          whatsNew: "TestFlight redeem install"
+          description: "Zozu Games DEV — board games vs bot or online."
         }
       )
     rescue StandardError => e
       UI.important("beta localization: #{e.message}")
     end
 
-    groups = app.get_beta_groups || []
+    groups = tf_models(app.get_beta_groups)
     group = groups.find do |item|
       item.name == group_name && item.is_internal_group != true
     end
@@ -226,7 +231,7 @@ platform :ios do
         public_link_limit_enabled: true,
         public_link_limit: 100
       )
-      group = created.is_a?(Array) ? created.first : created
+      group = tf_models(created).first
     end
     UI.user_error!("Не удалось создать группу #{group_name}") if group.nil?
 
@@ -242,12 +247,23 @@ platform :ios do
       end
     end
 
-    builds = Spaceship::ConnectAPI.get_builds(
-      filter: { app: app.id },
-      sort: "-uploadedDate",
-      includes: "buildBetaDetail",
-      limit: 15
-    ) || []
+    groups = tf_models(app.get_beta_groups)
+    group = groups.find { |item| item.id == group.id } || group
+    code, link = tf_redeem_from(group)
+    UI.message("Группа #{group.name} id=#{group.id} public=#{group.public_link_enabled} code=#{code}")
+
+    builds = []
+    begin
+      builds = tf_models(
+        app.get_builds(
+          includes: "buildBetaDetail",
+          limit: 15,
+          sort: "-uploadedDate"
+        )
+      )
+    rescue StandardError => e
+      UI.important("get_builds: #{e.message}")
+    end
     UI.message("Сборок: #{builds.size}")
     builds.each do |item|
       UI.message(
@@ -258,33 +274,30 @@ platform :ios do
       item.expired != true && (item.processing_state.nil? || item.processing_state == "VALID")
     end
     build ||= builds.find { |item| item.expired != true }
-    UI.user_error!("Нет обработанной сборки в TestFlight") if build.nil?
-    UI.success("Сборка #{build.version} id=#{build.id} state=#{build.processing_state}")
 
-    begin
-      Spaceship::ConnectAPI.post_beta_app_review_submissions(build_id: build.id)
-      UI.success("Отправлено на Beta Review")
-    rescue StandardError => e
-      UI.important("beta review: #{e.message}")
+    if build
+      UI.success("Сборка #{build.version} id=#{build.id} state=#{build.processing_state}")
+      begin
+        Spaceship::ConnectAPI.post_beta_app_review_submissions(build_id: build.id)
+        UI.success("Отправлено на Beta Review")
+      rescue StandardError => e
+        UI.important("beta review: #{e.message}")
+      end
+      begin
+        Spaceship::ConnectAPI.add_beta_groups_to_build(
+          build_id: build.id,
+          beta_group_ids: [group.id]
+        )
+        UI.success("Сборка добавлена в группу #{group_name}")
+      rescue StandardError => e
+        UI.important("add build to group: #{e.message}")
+      end
+      groups = tf_models(app.get_beta_groups)
+      group = groups.find { |item| item.id == group.id } || group
+      code, link = tf_redeem_from(group)
+    else
+      UI.important("Нет обработанной сборки — печатаю код группы, если он уже есть")
     end
-
-    begin
-      Spaceship::ConnectAPI.add_beta_groups_to_build(
-        build_id: build.id,
-        beta_group_ids: [group.id]
-      )
-      UI.success("Сборка добавлена в группу #{group_name}")
-    rescue StandardError => e
-      UI.important("add build to group: #{e.message}")
-    end
-
-    group = (app.get_beta_groups || []).find { |item| item.id == group.id } || group
-    code = group.public_link_id.to_s
-    link = group.public_link.to_s
-    if code.empty? && link =~ %r{join/([^/?#]+)}
-      code = Regexp.last_match(1)
-    end
-    link = "https://testflight.apple.com/join/#{code}" if link.empty? && !code.empty?
 
     if code.empty?
       UI.user_error!(
