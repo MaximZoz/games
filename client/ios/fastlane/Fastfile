@@ -366,8 +366,8 @@ platform :ios do
             type: "betaRecruitmentCriteria",
             attributes: {
               deviceFamilyOsVersionFilters: [
-                { deviceFamily: "IPHONE", minimumOsInclusive: "13.0" },
-                { deviceFamily: "IPAD", minimumOsInclusive: "13.0" }
+                { deviceFamily: "IPHONE", minimumOsInclusive: "15.0" },
+                { deviceFamily: "IPAD", minimumOsInclusive: "15.0" }
               ]
             },
             relationships: {
