@@ -24,7 +24,7 @@ Workflow: `.github/workflows/ios-testflight.yml`
 3. API-ключ App Store Connect (роль **Admin**) + Team ID
 4. Пять секретов в GitHub
 5. Запустить workflow **iOS TestFlight**, target `dev` (заливка IPA)
-6. Взять код из **iOS TestFlight code** и Redeem в приложении TestFlight
+6. Ссылку взять из Summary у **iOS TestFlight** (job **link**) и открыть в Safari
 
 ## 1. Идентификаторы (один раз)
 
@@ -107,7 +107,7 @@ Capabilities (Push, Sign in with Apple) не нужны для первой ус
 
 1. GitHub → **Actions** → **iOS TestFlight**
 2. **Run workflow**
-3. Branch: эта ветка (пока не влито в `develop`) или `develop`
+3. Branch: `develop` (DEV) или `main` (прод)
 4. Flavor: **dev**
 5. Run
 
@@ -131,7 +131,7 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 **Не вводи код в TestFlight → Redeem.** Это поле для кодов App Store (только цифры/другой формат). Наш `3U9jPUVa` туда не вводится.
 
 1. На iPhone открой **Safari** (не TestFlight)
-2. Вставь ссылку вида `https://testflight.apple.com/join/…` из Actions → **iOS TestFlight code** → Summary
+2. Вставь ссылку вида `https://testflight.apple.com/join/…` из Actions → **iOS TestFlight** → job **link** → Summary
 3. Safari предложит открыть TestFlight — Open
 4. Install у **Zozu Games DEV**
 
@@ -141,10 +141,10 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 2. Слева **Test Information**
 3. Contact Information → телефон (свой, настоящий)
 4. Save
-5. GitHub → Actions → **iOS TestFlight code** → Run workflow → в поле телефона те же цифры (или пусто, если уже сохранил в ASC)
-6. Подожди письмо Ready to Test (обычно несколько часов) и снова открой ту же ссылку `testflight.apple.com/join/…`
+5. Если ссылку нужно снова напечатать: Actions → **iOS TestFlight** → Run workflow → включи **только ссылка**
+6. Подожди письмо Ready to Test и открой ту же ссылку `testflight.apple.com/join/…`
 
-Новый код без пересборки IPA: Actions → **iOS TestFlight code** → Run workflow → `dev`.
+Один workflow: job **release** собирает IPA, job **link** печатает ссылку. Новую IPA не жми без нужды.
 
 Первая сборка иногда спрашивает Export Compliance. В приложении уже стоит `ITSAppUsesNonExemptEncryption=false` (только обычный HTTPS). Если ASC всё равно спросит: encryption yes, only HTTPS / exempt.
 
@@ -167,10 +167,10 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
 | `не может его создать` / `does not allow CREATE` | API-ключ не умеет New App. Создай вручную: App Store Connect → Apps → + → iOS, Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev` |
 | `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
-| `readonly` / `No code signing identity` | не жми Re-run на старом прогоне `main`. Actions → iOS TestFlight → **Run workflow** с ветки `cursor/fix-lobby-search-size-27ec`, flavor **dev** |
+| `readonly` / `No code signing identity` | не жми Re-run на старом прогоне. Actions → iOS TestFlight → **Run workflow** с `develop`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
 | `match` / git push | не удаляй ветку `match-certs`; у workflow есть `contents: write` |
-| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — новый push на эту ветку |
+| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — дождись вливания в `develop` / `main` |
 | `Invalid MinimumOSVersion` / `App.framework` | в `client/ios/Flutter/AppFrameworkInfo.plist` должен быть `MinimumOSVersion` 13.0 |
 | `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
 

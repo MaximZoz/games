@@ -63,6 +63,10 @@ void main() {
     final info = File('ios/Runner/Info.plist').readAsStringSync();
 
     expect(workflow, contains('runs-on: macos-26'));
+    expect(workflow, contains('branches: [main, develop]'));
+    expect(workflow, isNot(contains('cursor/fix-lobby-search-size-27ec')));
+    expect(workflow, contains("'.github/workflows/ios-testflight.yml'"));
+    expect(workflow, isNot(contains('!client/')));
     expect(workflow, contains('com.zozugames.app.dev'));
     expect(workflow, contains('com.zozugames.app'));
     expect(workflow, contains('https://multigameszozu-dev.fly.dev'));
@@ -101,12 +105,10 @@ void main() {
     expect(workflow, contains('BUILD_NAME="0.1.0"'));
     expect(workflow, contains('Select Xcode 26'));
     expect(workflow, contains('Xcode_26'));
-    final codeWf =
-        File('../.github/workflows/ios-testflight-code.yml').readAsStringSync();
-    expect(codeWf, contains('fastlane ios public_code'));
-    expect(codeWf, contains('runs-on: ubuntu-latest'));
-    expect(codeWf, contains('com.zozugames.app.dev'));
-    expect(codeWf, contains('TESTFLIGHT_CONTACT_PHONE'));
+    expect(workflow, contains('fastlane ios public_code'));
+    expect(workflow, contains('runs-on: ubuntu-latest'));
+    expect(workflow, contains('code_only:'));
+    expect(File('../.github/workflows/ios-testflight-code.yml').existsSync(), isFalse);
     final appFw = File('ios/Flutter/AppFrameworkInfo.plist').readAsStringSync();
     expect(appFw, contains('<key>MinimumOSVersion</key>'));
     expect(appFw, contains('<string>13.0</string>'));
