@@ -48,10 +48,33 @@ platform :ios do
         language: "en-US",
         sku: app_sku,
         team_id: team_id,
-        skip_itc: false
+        skip_itc: true
       )
     rescue StandardError => e
       UI.important("produce: #{e.message}")
+    end
+
+    begin
+      existing = Spaceship::ConnectAPI::App.find(bundle_id)
+      if existing
+        UI.success("App Store Connect: #{bundle_id} уже есть")
+      else
+        UI.message("Создаю #{app_name} (#{bundle_id}) в App Store Connect")
+        Spaceship::ConnectAPI::App.create(
+          name: app_name,
+          version_string: "1.0",
+          sku: app_sku,
+          primary_locale: "en-US",
+          bundle_id: bundle_id,
+          platforms: ["IOS"]
+        )
+        sleep(5)
+      end
+    rescue StandardError => e
+      UI.user_error!(
+        "Нет приложения #{bundle_id} в App Store Connect: #{e.message}. " \
+        "Создай New App вручную: https://appstoreconnect.apple.com/apps"
+      )
     end
 
     match(
@@ -136,6 +159,7 @@ platform :ios do
     begin
       upload_to_testflight(
         api_key: api_key,
+        app_identifier: bundle_id,
         ipa: ipa,
         skip_waiting_for_build_processing: true,
         changelog: "#{flavor} #{build_name} #{build_id}"
