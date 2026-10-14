@@ -802,6 +802,103 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesChess => 'شطرنج';
 
   @override
+  String get gamesDomino => 'دومينو';
+
+  @override
+  String get gamesDominoModeKozel => 'التيس';
+
+  @override
+  String get gamesDominoModeClassic => 'كلاسيك';
+
+  @override
+  String get gamesDominoModeSea => 'بحري';
+
+  @override
+  String get rulesDominoDeal => 'لكل لاعب 7 قطع. مع لاعبين أو ثلاثة تبقى البقية في الاحتياط، ومع أربعة يكون الاحتياط فارغًا.';
+
+  @override
+  String get rulesDominoOpen => 'تبدأ الجولة الأولى بأصغر دبل من 1-1 حتى 6-6 ثم 0-0. إن لم يوجد دبل تبدأ أعلى قطعة ويجب لعبها.';
+
+  @override
+  String get rulesDominoPlay => 'تُوضع القطعة على طرف مفتوح بالرقم نفسه. الدبل على الطرف لا يغيّر ذلك الرقم.';
+
+  @override
+  String get rulesDominoDraw => 'إن لم تستطع اللعب فاسحب قطعة قطعة حتى تستطيع أو يفرغ الاحتياط. يمكن أخذ آخر قطعة. إن بقي بلا لعب فمرّر.';
+
+  @override
+  String get rulesDominoScore => 'في نهاية الجولة يسجّل كل لاعب مجموع قطعه. من فرغت يده يسجّل 0. حتى 101: من يبلغها هو التيس ويخسر.';
+
+  @override
+  String get rulesDominoFish => 'سمكة: الاحتياط فارغ ولا أحد يستطيع الوضع. أقل مجموع منفرد يسجّل 0 والباقون مجموعهم. إن تساوى الأدنى سجّل الجميع.';
+
+  @override
+  String get rulesDominoMatch => 'إن تجاوز عدة لاعبين 101 في جولة واحدة فالتيس هو الأعلى. الفائزون هم الأقل. إن تعادَل الجميع فهي تعادل.';
+
+  @override
+  String get rulesDominoOffline => 'دون اتصال: أنت والبوتات. البوت يعدّ الأرقام ولا ينظر إلى الأيدي المخفية.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'الوضع: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'لاعبان أو ثلاثة يأخذون 7، وأربعة يأخذون 5. الباقي في السوق.';
+
+  @override
+  String get rulesDominoClassicOpen => 'تبدأ اليد الأولى بالدبل 6 ثم الصفر ثم الدبل الأصغر. بلا دبل تُلعب أعلى قطعة.';
+
+  @override
+  String get rulesDominoClassicScore => 'من يفرغ يده يسجّل مجموع خصومه. أول من يبلغ 100 يفوز.';
+
+  @override
+  String get rulesDominoClassicFish => 'عند الانسداد يسجّل الأخف إذا كان وحيداً الفرق مع كل يد أخرى. عند التعادل لا تُسجَّل نقاط.';
+
+  @override
+  String get rulesDominoClassicMatch => 'من يتساوى في الأعلى يتقاسم الفوز. إن تساوى الجميع فهي تعادل.';
+
+  @override
+  String get rulesDominoSeaSame => 'التوزيع والافتتاح والسحب كما في التيس. السلسلة بطرفين.';
+
+  @override
+  String get rulesDominoSeaScore => 'يسجّل فقط صاحب أثقل يد. أقل من 25 لا يُسجَّل.';
+
+  @override
+  String get rulesDominoSeaWipe => 'إذا كان لدى اثنين 25 أو أكثر فلا يُسجَّل أحد في هذه اليد.';
+
+  @override
+  String get rulesDominoSeaBlank => 'لعب 0-0 ينهي اليد فوراً: أثقل خصم إذا كان وحيداً يُسجَّل له 75. عند التعادل لا أحد.';
+
+  @override
+  String get rulesDominoSeaSix => 'إن أُغلقت اليد بآخر قطعة 6-6 يُسجَّل للخاسر 100 ويُصفَّر رصيد من أغلق.';
+
+  @override
+  String get rulesDominoSeaMatch => 'المباراة حتى 125. من يبلغها يخسر.';
+
+  @override
+  String get dominoBoneyard => 'الاحتياط';
+
+  @override
+  String get dominoChooseEnd => 'اختر طرفًا';
+
+  @override
+  String get dominoFish => 'سمكة';
+
+  @override
+  String get dominoYouGoat => 'أنت التيس';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'التيس — $name';
+  }
+
+  @override
+  String get dominoLeft => 'يسار';
+
+  @override
+  String get dominoRight => 'يمين';
+
+  @override
   String get gamesChessModeClassic => 'كلاسيكي';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'آخر المباريات';
+
+  @override
+  String get statsOutcomeWin => 'فوز';
+
+  @override
+  String get statsOutcomeLoss => 'خسارة';
+
+  @override
+  String get statsOutcomeDraw => 'تعادل';
+
+  @override
+  String get statsAllModes => 'كل الأوضاع';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'لعبة';
+
+  @override
+  String get statsSelectMode => 'الوضع';
+
+  @override
+  String get statsRecentEmpty => 'لا توجد مباريات بعد';
 }

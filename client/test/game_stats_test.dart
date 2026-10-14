@@ -1,7 +1,15 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/stats_modes.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
+import 'package:multigames_client/screens/game_stats_screen.dart';
 
-void main() {
+import 'test_locale.dart';
+
+void _unit() {
   group('GameStats', () {
     test('fromJson parses aggregated stats and opponent lists', () {
       final json = {
@@ -89,7 +97,75 @@ void main() {
       expect(s.wins, 0);
       expect(s.totalPlayed, 0);
       expect(s.topWon, isEmpty);
+      expect(s.recent, isEmpty);
+      expect(s.modes, isEmpty);
     });
+
+    test('fromJson parses recent games and modes', () {
+      final s = GameStats.fromJson({
+        'wins': 1,
+        'total_played': 1,
+        'modes': [
+          {
+            'game_type': 'durak',
+            'mode': '2:36',
+            'won': 1,
+            'drawn': 0,
+            'lost': 0,
+          },
+        ],
+        'recent': [
+          {
+            'game_type': 'durak',
+            'mode': '2:36',
+            'outcome': 'win',
+            'opponents': [
+              {'opponent_id': 'u1', 'display_name': 'Анна'},
+              {'display_name': 'Бот', 'bot': true},
+            ],
+          },
+        ],
+      });
+      expect(s.modes, hasLength(1));
+      expect(s.modes.first.mode, '2:36');
+      expect(s.recent, hasLength(1));
+      expect(s.recent.first.outcome, 'win');
+      expect(s.recent.first.opponents.last.bot, isTrue);
+    });
+  });
+
+  test('statsModeOptions keeps canonical durak chips and extra played mode', () {
+    final modes = statsModeOptions('durak', ['9:52']);
+    expect(modes, contains('2:36'));
+    expect(modes, contains('9:52'));
+    expect(statsModeOptions('uno', const []), isEmpty);
+  });
+
+  test('statsRecentSlice filters by game and mode', () {
+    const recent = [
+      RecentGame(gameType: 'chess', mode: 'classic', outcome: 'win'),
+      RecentGame(gameType: 'chess', mode: 'blitz', outcome: 'loss'),
+      RecentGame(gameType: 'uno', outcome: 'draw'),
+    ];
+    expect(
+      statsRecentSlice(recent, game: '', mode: '').map((g) => g.gameType),
+      ['chess', 'chess', 'uno'],
+    );
+    expect(
+      statsRecentSlice(recent, game: 'chess', mode: '').length,
+      2,
+    );
+    expect(
+      statsRecentSlice(recent, game: 'chess', mode: 'blitz').single.outcome,
+      'loss',
+    );
+    expect(statsRecentSlice(recent, game: 'durak', mode: ''), isEmpty);
+  });
+
+  test('statsModeLabel uses players and deck', () {
+    final l10n = lookupAppLocalizations(const Locale('ru'));
+    expect(statsModeLabel('durak', '3:52', l10n), '3 · 52');
+    expect(statsModeLabel('chess', 'blitz', l10n), 'Блиц');
   });
 
   group('HeadToHead', () {
@@ -159,5 +235,101 @@ void main() {
       expect(o.won, 1);
       expect(o.drawn, 0);
     });
+  });
+}
+
+void main() {
+  setUp(setUpTestLocaleRu);
+
+  _unit();
+
+  testWidgets('два переключателя и лента внутри карточки', (tester) async {
+    const stats = GameStats(
+      wins: 2,
+      draws: 1,
+      losses: 1,
+      totalPlayed: 4,
+      winRate: 0.5,
+      totalDurationSec: 120,
+      topWon: [],
+      topDrawn: [],
+      topLost: [],
+      games: [
+        GameTypeScore(gameType: 'chess', won: 2, drawn: 1, lost: 1),
+      ],
+      modes: [
+        GameModeScore(
+          gameType: 'chess',
+          mode: 'blitz',
+          won: 1,
+          drawn: 0,
+          lost: 0,
+        ),
+      ],
+      recent: [
+        RecentGame(
+          gameType: 'chess',
+          mode: 'classic',
+          outcome: 'win',
+          opponents: [RecentOpponent(displayName: 'Анна')],
+        ),
+        RecentGame(
+          gameType: 'chess',
+          mode: 'blitz',
+          outcome: 'loss',
+          opponents: [RecentOpponent(displayName: 'Бот', bot: true)],
+        ),
+        RecentGame(
+          gameType: 'chess',
+          mode: 'rapid',
+          outcome: 'draw',
+          opponents: [RecentOpponent(displayName: 'Илья')],
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          gameStatsProvider(null).overrideWith((ref) async => stats),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: GameStatsBody()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Последние партии'), findsOneWidget);
+    expect(find.text('Игра'), findsOneWidget);
+    expect(find.text('Режим'), findsOneWidget);
+    expect(find.text('Победа'), findsOneWidget);
+    expect(find.text('Поражение'), findsOneWidget);
+    expect(find.text('Ничья'), findsOneWidget);
+    expect(find.text('Анна'), findsOneWidget);
+    expect(find.text('Блиц'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('stats-mode-select')));
+    await tester.pumpAndSettle();
+    expect(find.text('Блиц'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('stats-game-select')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Шахматы'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Анна'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('stats-mode-select')));
+    await tester.pumpAndSettle();
+    expect(find.text('Блиц'), findsOneWidget);
+    await tester.tap(find.text('Блиц'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsWidgets);
+    expect(find.text('Поражение'), findsOneWidget);
+    expect(find.text('Анна'), findsNothing);
+    expect(find.text('Илья'), findsNothing);
   });
 }

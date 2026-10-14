@@ -802,6 +802,103 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesChess => 'Chess';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Goat';
+
+  @override
+  String get gamesDominoModeClassic => 'Classic';
+
+  @override
+  String get gamesDominoModeSea => 'Sea';
+
+  @override
+  String get rulesDominoDeal => 'Each player gets 7 tiles. With 2 or 3 players the rest form the boneyard; with 4 the boneyard is empty.';
+
+  @override
+  String get rulesDominoOpen => 'The first round starts with the lowest double from 1-1 through 6-6, then 0-0. If there is no double, the highest tile starts, and it must be played.';
+
+  @override
+  String get rulesDominoPlay => 'Play a tile that matches an open end. A double on an end keeps that number.';
+
+  @override
+  String get rulesDominoDraw => 'If you cannot play, draw one tile at a time until you can or the boneyard is empty. The last tile may be taken. If you still cannot play, pass.';
+
+  @override
+  String get rulesDominoScore => 'At the end of a round each player scores the pips left in hand. Going out scores 0. The match goes to 101: whoever reaches it is the goat and loses.';
+
+  @override
+  String get rulesDominoFish => 'Fish: the boneyard is empty and nobody can play. The unique lowest pip sum scores 0; everyone else scores their own sum. If the lowest sum is shared, everyone scores it.';
+
+  @override
+  String get rulesDominoMatch => 'If several players cross 101 in one round, the highest score is the goat. Winners are those with the lowest score. If everyone ties, the match is a draw.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: you and bots. The bot counts suits and does not look at hidden hands.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Mode: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Two or three players get 7 tiles, four players get 5. The rest is the boneyard.';
+
+  @override
+  String get rulesDominoClassicOpen => 'The first hand opens with double 6, then the blank, then lower doubles. If there is no double, the highest tile must be played.';
+
+  @override
+  String get rulesDominoClassicScore => 'The player who goes out scores the pips left with the opponents. First to 100 wins the match.';
+
+  @override
+  String get rulesDominoClassicFish => 'On a block, the unique lightest hand scores the difference against each other hand. A shared minimum scores nothing.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Players who share the highest score all win. If every score is equal, the match is a draw.';
+
+  @override
+  String get rulesDominoSeaSame => 'The deal, opening and draw match Goat. The chain has two ends.';
+
+  @override
+  String get rulesDominoSeaScore => 'Only the heaviest hand records points. Less than 25 is not recorded.';
+
+  @override
+  String get rulesDominoSeaWipe => 'If two players both have 25 or more, nobody records that hand.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Playing 0-0 ends the hand at once: the unique heaviest opponent is charged 75. A tie charges nobody.';
+
+  @override
+  String get rulesDominoSeaSix => 'Going out with 6-6 charges the loser 100 and resets the closer\'s match score.';
+
+  @override
+  String get rulesDominoSeaMatch => 'The match goes to 125. The player who reaches it loses.';
+
+  @override
+  String get dominoBoneyard => 'Boneyard';
+
+  @override
+  String get dominoChooseEnd => 'Choose an end';
+
+  @override
+  String get dominoFish => 'Fish';
+
+  @override
+  String get dominoYouGoat => 'You are the goat';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Goat — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Left';
+
+  @override
+  String get dominoRight => 'Right';
+
+  @override
   String get gamesChessModeClassic => 'Classic';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Recent games';
+
+  @override
+  String get statsOutcomeWin => 'Win';
+
+  @override
+  String get statsOutcomeLoss => 'Loss';
+
+  @override
+  String get statsOutcomeDraw => 'Draw';
+
+  @override
+  String get statsAllModes => 'All modes';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Game';
+
+  @override
+  String get statsSelectMode => 'Mode';
+
+  @override
+  String get statsRecentEmpty => 'No games yet';
 }

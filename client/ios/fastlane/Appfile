@@ -1,0 +1,2 @@
+app_identifier(ENV["BUNDLE_ID"] || "com.zozugames.app.dev")
+team_id(ENV["APPLE_TEAM_ID"]) if ENV["APPLE_TEAM_ID"]

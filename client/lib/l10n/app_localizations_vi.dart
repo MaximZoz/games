@@ -802,6 +802,103 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesChess => 'Cờ vua';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Dê';
+
+  @override
+  String get gamesDominoModeClassic => 'Cổ điển';
+
+  @override
+  String get gamesDominoModeSea => 'Biển';
+
+  @override
+  String get rulesDominoDeal => 'Mỗi người 7 quân. 2 hoặc 3 người thì phần còn lại ở nọc, 4 người thì nọc trống.';
+
+  @override
+  String get rulesDominoOpen => 'Ván đầu bắt đầu bằng đôi nhỏ nhất từ 1-1 đến 6-6, rồi 0-0. Không có đôi thì quân lớn nhất, và phải đánh quân đó.';
+
+  @override
+  String get rulesDominoPlay => 'Đặt quân vào đầu mở cùng số. Đôi ở đầu không đổi số đó.';
+
+  @override
+  String get rulesDominoDraw => 'Không đánh được thì bốc từng quân cho đến khi đánh được hoặc hết nọc. Quân cuối vẫn bốc được. Vẫn không có nước thì bỏ lượt.';
+
+  @override
+  String get rulesDominoScore => 'Hết ván mỗi người ghi tổng quân còn lại. Ai hết quân ghi 0. Đến 101: ai chạm là dê và thua.';
+
+  @override
+  String get rulesDominoFish => 'Cá: nọc trống và không ai đặt được. Tổng nhỏ nhất duy nhất ghi 0, người khác ghi tổng của mình. Nếu mức nhỏ nhất bằng nhau thì tất cả đều ghi.';
+
+  @override
+  String get rulesDominoMatch => 'Nếu nhiều người vượt 101 trong một ván, dê là điểm cao nhất. Người điểm thấp nhất thắng. Tất cả hòa nhau thì hòa.';
+
+  @override
+  String get rulesDominoOffline => 'Ngoại tuyến: bạn và bot. Bot đếm số và không nhìn bài úp.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Chế độ: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Hai hoặc ba người được 7 quân, bốn người được 5. Phần còn lại là kho.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Ván đầu mở bằng kép 6, rồi 0-0 và các kép nhỏ hơn. Không có kép thì phải đánh quân lớn nhất.';
+
+  @override
+  String get rulesDominoClassicScore => 'Người hết quân ghi tổng điểm đối thủ. Ai tới 100 trước thắng.';
+
+  @override
+  String get rulesDominoClassicFish => 'Khi bí, tay nhẹ nhất duy nhất ghi hiệu với từng tay khác. Hòa mức tối thiểu thì không ghi điểm.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Cùng điểm cao nhất thì chia thắng. Nếu mọi người bằng nhau là hòa.';
+
+  @override
+  String get rulesDominoSeaSame => 'Chia, mở và bốc như Dê. Chuỗi có hai đầu.';
+
+  @override
+  String get rulesDominoSeaScore => 'Chỉ tay nặng nhất được ghi điểm. Dưới 25 không ghi.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Nếu hai người cùng từ 25 trở lên, ván đó không ai được ghi.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Đánh 0-0 kết thúc ván ngay: đối thủ nặng nhất duy nhất bị ghi 75. Hòa thì không ai bị ghi.';
+
+  @override
+  String get rulesDominoSeaSix => 'Kết thúc bằng quân 6-6 cuối thì người thua bị ghi 100, điểm trận của người đóng về 0.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Trận đến 125. Ai đạt thì thua.';
+
+  @override
+  String get dominoBoneyard => 'Nọc';
+
+  @override
+  String get dominoChooseEnd => 'Chọn một đầu';
+
+  @override
+  String get dominoFish => 'Cá';
+
+  @override
+  String get dominoYouGoat => 'Bạn là dê';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Dê — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Trái';
+
+  @override
+  String get dominoRight => 'Phải';
+
+  @override
   String get gamesChessModeClassic => 'Cổ điển';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Ván gần đây';
+
+  @override
+  String get statsOutcomeWin => 'Thắng';
+
+  @override
+  String get statsOutcomeLoss => 'Thua';
+
+  @override
+  String get statsOutcomeDraw => 'Hòa';
+
+  @override
+  String get statsAllModes => 'Mọi chế độ';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Trò chơi';
+
+  @override
+  String get statsSelectMode => 'Chế độ';
+
+  @override
+  String get statsRecentEmpty => 'Chưa có ván nào';
 }

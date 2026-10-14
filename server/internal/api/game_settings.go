@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"multigames/server/internal/checkers"
+	"multigames/server/internal/domino"
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/store"
@@ -43,7 +44,8 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["max_players"] = s.MaxPlayers
 		out["game_mode"] = s.GameMode
 	}
-	if s.GameType == store.GameTypePoker || s.GameType == store.GameTypeUno {
+	if s.GameType == store.GameTypePoker || s.GameType == store.GameTypeUno ||
+		s.GameType == store.GameTypeDomino {
 		out["max_players"] = s.MaxPlayers
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
@@ -85,6 +87,8 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 		return normalizeCheckersSettings(body)
 	case store.GameTypeChess:
 		return normalizeChessSettings(body)
+	case store.GameTypeDomino:
+		return normalizeDominoSettings(body)
 	default:
 		return store.UserGameSettings{}, "unsupported game_type"
 	}
@@ -280,6 +284,38 @@ func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, s
 	}, ""
 }
 
+func normalizeDominoSettings(body gameSettingsBody) (store.UserGameSettings, string) {
+	if !validTurnTimeSec[body.TurnTimeSec] {
+		return store.UserGameSettings{}, "invalid turn_time_sec"
+	}
+	maxPlayers := body.MaxPlayers
+	// 1 = мгновенная партия с ботом; 2–4 — обычное лобби.
+	if maxPlayers < 1 || maxPlayers > 4 {
+		maxPlayers = 2
+	}
+	stake := body.StakeBronze
+	if stake < 2 {
+		stake = 2
+	}
+	rawMode := body.GameMode
+	if strings.TrimSpace(rawMode) == "" {
+		rawMode = body.Variant
+	}
+	mode := domino.NormalizeMode(rawMode)
+	return store.UserGameSettings{
+		GameType:             store.GameTypeDomino,
+		TurnTimeSec:          body.TurnTimeSec,
+		GridSize:             3,
+		Variant:              mode,
+		SwapRule:             false,
+		FirstMoveRestriction: false,
+		StakeBronze:          stake,
+		DeckSize:             28,
+		MaxPlayers:           maxPlayers,
+		GameMode:             mode,
+	}, ""
+}
+
 func normalizeChessMode(raw string) string {
 	switch strings.TrimSpace(strings.ToLower(raw)) {
 	case "rapid":
@@ -378,6 +414,16 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		s.GameMode = "classic"
 		s.Variant = "classic"
+	} else if gameType == store.GameTypeDomino {
+		if s.MaxPlayers < 1 || s.MaxPlayers > 4 {
+			s.MaxPlayers = 2
+		}
+		rawMode := s.GameMode
+		if strings.TrimSpace(rawMode) == "" {
+			rawMode = s.Variant
+		}
+		s.GameMode = domino.NormalizeMode(rawMode)
+		s.Variant = s.GameMode
 	} else if gameType == store.GameTypeNardy {
 		s.MaxPlayers = 2
 		if s.GameMode != "long" {

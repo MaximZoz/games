@@ -8,6 +8,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/chess/chess_rules.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
@@ -137,6 +138,16 @@ class UserGameSettings {
     gameMode: 'classic',
   );
 
+  static const dominoDefaults = UserGameSettings(
+    gameType: 'domino',
+    turnTimeSec: 60,
+    variant: 'kozel',
+    stakeBronze: 2,
+    deckSize: 28,
+    maxPlayers: 2,
+    gameMode: 'kozel',
+  );
+
   static const nardyDefaults = UserGameSettings(
     gameType: 'nardy',
     turnTimeSec: 60,
@@ -163,6 +174,8 @@ class UserGameSettings {
         return pokerDefaults;
       case 'uno':
         return unoDefaults;
+      case 'domino':
+        return dominoDefaults;
       case 'nardy':
         return nardyDefaults;
       case 'checkers':
@@ -252,6 +265,22 @@ class UserGameSettings {
         gameMode: 'classic',
       );
     }
+    if (gameType == 'domino') {
+      final rawMode = (modeRaw == null || modeRaw.isEmpty)
+          ? json['variant']?.toString()
+          : gameMode;
+      final mode = dominoNormalizeMode(rawMode);
+      return UserGameSettings(
+        gameType: 'domino',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: mode,
+        gridSize: 3,
+        stakeBronze: stake < 2 ? 2 : stake,
+        deckSize: 28,
+        maxPlayers: maxP.clamp(1, 4),
+        gameMode: mode,
+      );
+    }
     if (gameType == 'nardy') {
       final mode = gameMode == 'long' ? 'long' : 'short';
       return UserGameSettings(
@@ -333,6 +362,13 @@ class UserGameSettings {
       out['deck_size'] = 108;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
+    } else if (gameType == 'domino') {
+      final mode = dominoNormalizeMode(gameMode);
+      out['variant'] = mode;
+      out['grid_size'] = 3;
+      out['deck_size'] = 28;
+      out['max_players'] = maxPlayers;
+      out['game_mode'] = mode;
     } else if (gameType == 'nardy' ||
         gameType == 'checkers' ||
         gameType == 'chess') {
@@ -702,6 +738,8 @@ class LobbyItem {
   bool get isPoker => gameType == 'poker';
 
   bool get isUno => gameType == 'uno';
+
+  bool get isDomino => gameType == 'domino';
 
   bool get isNardy => gameType == 'nardy';
 
@@ -1523,6 +1561,8 @@ class GameStats {
     required this.topDrawn,
     required this.topLost,
     this.games = const [],
+    this.modes = const [],
+    this.recent = const [],
   });
 
   final int wins;
@@ -1537,6 +1577,12 @@ class GameStats {
 
   /// Разбивка по типам игр.
   final List<GameTypeScore> games;
+
+  /// Разбивка по режиму внутри типа игры.
+  final List<GameModeScore> modes;
+
+  /// Последние партии (уже склеенные столы).
+  final List<RecentGame> recent;
 
   bool get isEmpty => totalPlayed == 0;
 
@@ -1560,7 +1606,26 @@ class GameStats {
       topDrawn: _opponentList(json['top_drawn']),
       topLost: _opponentList(json['top_lost']),
       games: games,
+      modes: _modeList(json['modes']),
+      recent: _recentList(json['recent']),
     );
+  }
+
+  static List<GameModeScore> _modeList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => GameModeScore.fromJson(Map<String, dynamic>.from(e)))
+        .where((g) => g.mode.isNotEmpty && !g.isEmpty)
+        .toList(growable: false);
+  }
+
+  static List<RecentGame> _recentList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => RecentGame.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
   }
 
   static List<OpponentStat> _opponentList(dynamic raw) {
@@ -1635,6 +1700,99 @@ class GameTypeScore {
       topWon: GameStats._opponentList(json['top_won']),
       topDrawn: GameStats._opponentList(json['top_drawn']),
       topLost: GameStats._opponentList(json['top_lost']),
+    );
+  }
+}
+
+/// Статистика одного режима внутри типа игры.
+class GameModeScore {
+  const GameModeScore({
+    required this.gameType,
+    required this.mode,
+    required this.won,
+    required this.drawn,
+    required this.lost,
+    this.totalDurationSec = 0,
+    this.topWon = const [],
+    this.topDrawn = const [],
+    this.topLost = const [],
+  });
+
+  final String gameType;
+  final String mode;
+  final int won;
+  final int drawn;
+  final int lost;
+  final int totalDurationSec;
+  final List<OpponentStat> topWon;
+  final List<OpponentStat> topDrawn;
+  final List<OpponentStat> topLost;
+
+  bool get isEmpty => won == 0 && drawn == 0 && lost == 0;
+
+  factory GameModeScore.fromJson(Map<String, dynamic> json) {
+    return GameModeScore(
+      gameType: json['game_type'] as String? ?? '',
+      mode: json['mode'] as String? ?? '',
+      won: (json['won'] as num?)?.toInt() ?? 0,
+      drawn: (json['drawn'] as num?)?.toInt() ?? 0,
+      lost: (json['lost'] as num?)?.toInt() ?? 0,
+      totalDurationSec: (json['total_duration_sec'] as num?)?.toInt() ?? 0,
+      topWon: GameStats._opponentList(json['top_won']),
+      topDrawn: GameStats._opponentList(json['top_drawn']),
+      topLost: GameStats._opponentList(json['top_lost']),
+    );
+  }
+}
+
+/// Соперник в карточке последней партии.
+class RecentOpponent {
+  const RecentOpponent({
+    required this.displayName,
+    this.opponentId = '',
+    this.bot = false,
+  });
+
+  final String opponentId;
+  final String displayName;
+  final bool bot;
+
+  factory RecentOpponent.fromJson(Map<String, dynamic> json) {
+    return RecentOpponent(
+      opponentId: json['opponent_id'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? '',
+      bot: json['bot'] as bool? ?? false,
+    );
+  }
+}
+
+/// Последняя партия: исход и соперники.
+class RecentGame {
+  const RecentGame({
+    required this.gameType,
+    required this.outcome,
+    this.mode = '',
+    this.opponents = const [],
+  });
+
+  final String gameType;
+  final String mode;
+  final String outcome;
+  final List<RecentOpponent> opponents;
+
+  factory RecentGame.fromJson(Map<String, dynamic> json) {
+    final raw = json['opponents'];
+    final opponents = raw is List
+        ? raw
+            .whereType<Map>()
+            .map((e) => RecentOpponent.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false)
+        : const <RecentOpponent>[];
+    return RecentGame(
+      gameType: json['game_type'] as String? ?? 'tictactoe',
+      mode: json['mode'] as String? ?? '',
+      outcome: json['outcome'] as String? ?? 'draw',
+      opponents: opponents,
     );
   }
 }

@@ -802,6 +802,103 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesChess => 'Scacchi';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'La Capra';
+
+  @override
+  String get gamesDominoModeClassic => 'Classica';
+
+  @override
+  String get gamesDominoModeSea => 'Marino';
+
+  @override
+  String get rulesDominoDeal => 'Ognuno riceve 7 tessere. In 2 o 3 il resto è la riserva; in 4 la riserva è vuota.';
+
+  @override
+  String get rulesDominoOpen => 'La prima mano inizia dal doppio più basso, da 1-1 a 6-6, poi 0-0. Senza doppi parte la tessera più alta, e va giocata.';
+
+  @override
+  String get rulesDominoPlay => 'Si gioca una tessera su un’estremità con lo stesso numero. Un doppio in cima non cambia quel numero.';
+
+  @override
+  String get rulesDominoDraw => 'Se non puoi giocare, pesca una tessera alla volta finché puoi o finché la riserva è vuota. Si può prendere l’ultima. Se ancora non giochi, passi.';
+
+  @override
+  String get rulesDominoScore => 'A fine mano ognuno segna la somma delle tessere rimaste. Chi esce segna 0. Si arriva a 101: chi la raggiunge è la capra e perde.';
+
+  @override
+  String get rulesDominoFish => 'Pesce: riserva vuota e nessuno può giocare. La somma strettamente più bassa segna 0; gli altri segnano la propria. Se il minimo è di tutti, segnano tutti.';
+
+  @override
+  String get rulesDominoMatch => 'Se più giocatori superano 101 nella stessa mano, la capra è il punteggio più alto. Vincono quelli col punteggio più basso. Se sono tutti pari, è patta.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: tu e i bot. Il bot conta i numeri e non guarda le mani nascoste.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modalità: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'In due o tre si danno 7 tessere, in quattro 5. Il resto è il tallone.';
+
+  @override
+  String get rulesDominoClassicOpen => 'La prima mano apre col doppio 6, poi lo zero, poi i doppi minori. Senza doppi si gioca la tessera più alta.';
+
+  @override
+  String get rulesDominoClassicScore => 'Chi esce segna la somma delle tessere avversarie. Il primo a 100 vince la partita.';
+
+  @override
+  String get rulesDominoClassicFish => 'Al blocco, la mano più leggera, se è unica, segna la differenza con ogni altra. In parità non si segna.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Chi condivide il punteggio più alto vince insieme. Se tutti sono pari, è patta.';
+
+  @override
+  String get rulesDominoSeaSame => 'Distribuzione, apertura e pesca come ne La Capra. La catena ha due estremità.';
+
+  @override
+  String get rulesDominoSeaScore => 'Segna solo la mano più pesante. Sotto 25 non si scrive.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Se due giocatori hanno 25 o più, nessuno segna quella mano.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Giocare 0-0 chiude la mano: l’avversario più pesante, se unico, prende 75. In parità nessuno.';
+
+  @override
+  String get rulesDominoSeaSix => 'Uscire con 6-6 assegna 100 al perdente e azzera il punteggio di partita di chi chiude.';
+
+  @override
+  String get rulesDominoSeaMatch => 'La partita arriva a 125. Chi li raggiunge perde.';
+
+  @override
+  String get dominoBoneyard => 'Riserva';
+
+  @override
+  String get dominoChooseEnd => 'Scegli un’estremità';
+
+  @override
+  String get dominoFish => 'Pesce';
+
+  @override
+  String get dominoYouGoat => 'Sei la capra';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'La capra — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Sinistra';
+
+  @override
+  String get dominoRight => 'Destra';
+
+  @override
   String get gamesChessModeClassic => 'Classico';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Ultime partite';
+
+  @override
+  String get statsOutcomeWin => 'Vittoria';
+
+  @override
+  String get statsOutcomeLoss => 'Sconfitta';
+
+  @override
+  String get statsOutcomeDraw => 'Pareggio';
+
+  @override
+  String get statsAllModes => 'Tutte le modalità';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Gioco';
+
+  @override
+  String get statsSelectMode => 'Modalità';
+
+  @override
+  String get statsRecentEmpty => 'Ancora nessuna partita';
 }

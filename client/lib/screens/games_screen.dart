@@ -14,6 +14,9 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
+import 'package:multigames_client/games/domino/domino_provider.dart';
+import 'package:multigames_client/games/domino/domino_rules.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
@@ -40,6 +43,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/domino_game_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
 import 'package:multigames_client/ui/widgets/chess_game_icon.dart';
@@ -788,6 +792,42 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
       return;
     }
+    if (inv.gameType == 'domino') {
+      try {
+        final res = await ref.read(dominoRepositoryProvider).joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'domino',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'domino');
+          if (context.mounted) {
+            context.go('/games/domino/game/${res.gameId}');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'domino',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/domino/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
+      return;
+    }
     if (inv.gameType == 'nardy') {
       try {
         final res = await ref.read(nardyRepositoryProvider).joinLobby(lobbyId);
@@ -1007,6 +1047,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         l10n: context.l10n,
       ));
     }
+    if (inv.isDomino) {
+      return rulesTextLines(dominoRuleLines(
+        players: inv.maxPlayers,
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        mode: inv.durakMode,
+        l10n: context.l10n,
+      ));
+    }
     if (inv.isNardy) {
       return rulesTextLines(nardyRuleLines(
         gameMode: inv.durakMode,
@@ -1129,6 +1178,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         await ref.read(pokerRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'uno') {
         await ref.read(unoRepositoryProvider).declineLobby(lobbyId);
+      } else if (gameType == 'domino') {
+        await ref.read(dominoRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'nardy') {
         await ref.read(nardyRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'checkers') {
@@ -1330,6 +1381,52 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             context,
             lobbyId: lobbyId,
             gameType: 'uno',
+            mode: mode,
+          );
+        }
+      } on GamesException catch (error) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(error)
+              ? finishCurrentGameMessage
+              : formatUserError(error),
+          kind: AppSnackKind.error,
+        );
+      } catch (error) {
+        if (context.mounted) {
+          showAppSnackBar(
+            context,
+            message: formatUserError(error),
+            kind: AppSnackKind.error,
+          );
+        }
+      }
+      return;
+    }
+    if (gameType == 'domino') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res = await ref.read(dominoRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'domino',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'domino');
+          context.go('/games/domino/game/${res.gameId}');
+          return;
+        }
+        if (res.joined) {
+          _goLobbyScreen(
+            context,
+            lobbyId: lobbyId,
+            gameType: 'domino',
             mode: mode,
           );
         }
@@ -1600,6 +1697,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             turnTimeSec: lobby.turnTimeSec,
             stakeBronze: lobby.stakeBronze,
           ));
+        } else if (lobby.isDomino) {
+          body = rulesTextLines(dominoRuleLines(
+            players: lobby.maxPlayers,
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+            mode: lobby.gameMode,
+            l10n: context.l10n,
+          ));
         } else if (lobby.isNardy) {
           body = rulesTextLines(nardyRuleLines(
             gameMode: lobby.gameMode,
@@ -1696,6 +1801,7 @@ class _GamesPageContent extends ConsumerWidget {
         context.l10n.gamesBattleship,
         context.l10n.gamesPoker,
         context.l10n.gamesUno,
+        context.l10n.gamesDomino,
         context.l10n.gamesNardy,
         context.l10n.gamesCheckers,
         context.l10n.gamesChess,
@@ -1744,6 +1850,10 @@ class _GamesPageContent extends ConsumerWidget {
           stakeOptionsList: stakeOptionsList,
         ),
         _UnoGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+        _DominoGameCard(
           isOffline: isOffline,
           stakeOptionsList: stakeOptionsList,
         ),

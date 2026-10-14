@@ -151,7 +151,7 @@ chmod +x launcher/setup_fly_redis.sh
 - **Windows (Desktop):** в окне клиента замените команду на  
   `flutter run -d windows`
 - **Android:** `flutter run -d android --flavor dev` (или `--flavor prod`) — см. `docs/ANDROID_PLAY_INTERNAL.md`
-- **iOS:** `flutter run -d ios`
+- **iOS:** `flutter run -d ios --flavor dev` (или `--flavor prod`) — см. `docs/IOS_TESTFLIGHT.md`
 
 Или отредактируйте в скрипте строку с `flutter run -d ...` под нужное устройство.
 

@@ -26,6 +26,11 @@ Flutter/flutter_assets/
 Flutter/flutter_export_environment.sh
 ServiceDefinitions.json
 Runner/GeneratedPluginRegistrant.*
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/README.md
+AuthKey*.p8
+ci_export_options.plist
 
 # Exceptions to above rules.
 !default.mode1v3

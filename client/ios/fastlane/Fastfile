@@ -1,0 +1,128 @@
+# Сборка flavor и загрузка IPA в TestFlight.
+# Секреты и шаги: docs/IOS_TESTFLIGHT.md
+# Локально без Mac не запускается — только GitHub Actions (macos).
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build --flavor and upload to TestFlight"
+  lane :beta do
+    flavor = ENV.fetch("FLAVOR")
+    bundle_id = ENV.fetch("BUNDLE_ID")
+    team_id = ENV.fetch("APPLE_TEAM_ID")
+    key_path = ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH")
+    api_base = ENV.fetch("API_BASE")
+    build_number = ENV.fetch("BUILD_NUMBER")
+    build_name = ENV.fetch("BUILD_NAME")
+    build_id = ENV.fetch("BUILD_ID")
+    app_version = ENV.fetch("APP_VERSION")
+
+    UI.message("TestFlight: flavor=#{flavor} bundle=#{bundle_id} #{build_name}+#{build_number}")
+
+    setup_ci if ENV["CI"]
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+      key_filepath: key_path,
+      duration: 1200,
+      in_house: false
+    )
+
+    match(
+      type: "appstore",
+      app_identifier: [bundle_id],
+      api_key: api_key,
+      readonly: ENV["MATCH_READONLY"] == "true",
+      git_url: ENV.fetch("MATCH_GIT_URL"),
+      git_branch: ENV.fetch("MATCH_GIT_BRANCH", "match-certs"),
+      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+      force: ENV["MATCH_FORCE"] == "true"
+    )
+
+    profile_env = "sigh_#{bundle_id}_appstore_profile-name"
+    profile_name = ENV[profile_env]
+    profile_name = "match AppStore #{bundle_id}" if profile_name.nil? || profile_name.empty?
+    UI.message("Provisioning profile: #{profile_name}")
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Runner.xcodeproj",
+      team_id: team_id,
+      targets: ["Runner"],
+      bundle_identifier: bundle_id,
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name,
+      build_configurations: ["Release-#{flavor}", "Release"]
+    )
+
+    export_plist = File.expand_path("ci_export_options.plist")
+    File.write(
+      export_plist,
+      <<~XML
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+          <key>method</key>
+          <string>app-store</string>
+          <key>teamID</key>
+          <string>#{team_id}</string>
+          <key>signingStyle</key>
+          <string>manual</string>
+          <key>signingCertificate</key>
+          <string>Apple Distribution</string>
+          <key>compileBitcode</key>
+          <false/>
+          <key>uploadSymbols</key>
+          <true/>
+          <key>provisioningProfiles</key>
+          <dict>
+            <key>#{bundle_id}</key>
+            <string>#{profile_name}</string>
+          </dict>
+        </dict>
+        </plist>
+      XML
+    )
+
+    Dir.chdir("..") do
+      sh(
+        "flutter", "build", "ipa",
+        "--release",
+        "--flavor", flavor,
+        "--build-number", build_number,
+        "--build-name", build_name,
+        "--export-options-plist", export_plist,
+        "--dart-define=API_BASE=#{api_base}",
+        "--dart-define=BUILD_ID=#{build_id}",
+        "--dart-define=APP_VERSION=#{app_version}",
+        "--",
+        "CODE_SIGN_STYLE=Manual",
+        "CODE_SIGN_IDENTITY=Apple Distribution",
+        "DEVELOPMENT_TEAM=#{team_id}",
+        "PROVISIONING_PROFILE_SPECIFIER=#{profile_name}"
+      )
+    end
+
+    ipas = Dir[File.expand_path("../build/ios/ipa/*.ipa")]
+    UI.user_error!("IPA не собрался в client/build/ios/ipa/") if ipas.empty?
+    ipa = ipas.max_by { |path| File.mtime(path) }
+    UI.success("IPA: #{ipa}")
+
+    begin
+      upload_to_testflight(
+        api_key: api_key,
+        ipa: ipa,
+        skip_waiting_for_build_processing: true,
+        changelog: "#{flavor} #{build_name} #{build_id}"
+      )
+    rescue StandardError => e
+      UI.user_error!(
+        "Не удалось залить в TestFlight: #{e.message}. " \
+        "Создай приложение с Bundle ID #{bundle_id} в App Store Connect " \
+        "и проверь секреты — docs/IOS_TESTFLIGHT.md"
+      )
+    end
+  end
+end

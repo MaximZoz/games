@@ -802,6 +802,103 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesChess => 'Ajedrez';
 
   @override
+  String get gamesDomino => 'Dominó';
+
+  @override
+  String get gamesDominoModeKozel => 'El Chivo';
+
+  @override
+  String get gamesDominoModeClassic => 'Clásica';
+
+  @override
+  String get gamesDominoModeSea => 'Marino';
+
+  @override
+  String get rulesDominoDeal => 'Cada uno recibe 7 fichas. Con 2 o 3 jugadores el resto es el pozo; con 4 el pozo está vacío.';
+
+  @override
+  String get rulesDominoOpen => 'La primera mano la abre el doble más bajo, de 1-1 a 6-6, y luego 0-0. Si no hay dobles, abre la ficha más alta y hay que jugarla.';
+
+  @override
+  String get rulesDominoPlay => 'Se coloca una ficha en un extremo con el mismo número. Un doble en el extremo no cambia ese número.';
+
+  @override
+  String get rulesDominoDraw => 'Si no puedes jugar, roba de una en una hasta poder o hasta vaciar el pozo. Se puede tomar la última ficha. Si aún no hay jugada, pasas.';
+
+  @override
+  String get rulesDominoScore => 'Al final de la mano cada uno anota la suma de sus fichas. Quien se queda sin fichas anota 0. La partida llega a 101: quien lo alcanza es el chivo y pierde.';
+
+  @override
+  String get rulesDominoFish => 'Pescado: el pozo está vacío y nadie puede colocar. La suma estrictamente menor anota 0; los demás anotan la suya. Si el mínimo es de todos, anotan todos.';
+
+  @override
+  String get rulesDominoMatch => 'Si varios pasan de 101 en la misma mano, el chivo es la puntuación más alta. Ganan quienes tienen la más baja. Si todos empatan, es empate.';
+
+  @override
+  String get rulesDominoOffline => 'Sin conexión: tú y bots. El bot cuenta los números y no mira las manos ocultas.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Modo: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Dos o tres jugadores reciben 7 fichas; cuatro, 5. El resto es el pozo.';
+
+  @override
+  String get rulesDominoClassicOpen => 'La primera mano abre con el doble 6, luego el blanco y los dobles menores. Si no hay doble, se juega la ficha más alta.';
+
+  @override
+  String get rulesDominoClassicScore => 'Quien se queda sin fichas anota los puntos de los rivales. El primero en llegar a 100 gana.';
+
+  @override
+  String get rulesDominoClassicFish => 'En el bloqueo, la mano más ligera, si es única, anota la diferencia con cada otra. Si hay empate, nadie anota.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Quienes empatan en el máximo se reparten la victoria. Si todos están iguales, hay empate.';
+
+  @override
+  String get rulesDominoSeaSame => 'Reparto, apertura y robo como en El Chivo. La cadena tiene dos extremos.';
+
+  @override
+  String get rulesDominoSeaScore => 'Solo anota la mano más pesada. Menos de 25 no se anota.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Si dos jugadores tienen 25 o más, nadie anota esa mano.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Jugar 0-0 cierra la mano: al rival más pesado, si es único, se le anotan 75. Si hay empate, a nadie.';
+
+  @override
+  String get rulesDominoSeaSix => 'Salir con 6-6 anota 100 al perdedor y pone a cero el marcador de partida de quien cierra.';
+
+  @override
+  String get rulesDominoSeaMatch => 'La partida llega a 125. Quien los alcanza pierde.';
+
+  @override
+  String get dominoBoneyard => 'Pozo';
+
+  @override
+  String get dominoChooseEnd => 'Elige un extremo';
+
+  @override
+  String get dominoFish => 'Pescado';
+
+  @override
+  String get dominoYouGoat => 'Eres el chivo';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'El chivo — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Izquierda';
+
+  @override
+  String get dominoRight => 'Derecha';
+
+  @override
   String get gamesChessModeClassic => 'Clásico';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Últimas partidas';
+
+  @override
+  String get statsOutcomeWin => 'Victoria';
+
+  @override
+  String get statsOutcomeLoss => 'Derrota';
+
+  @override
+  String get statsOutcomeDraw => 'Tablas';
+
+  @override
+  String get statsAllModes => 'Todos los modos';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Juego';
+
+  @override
+  String get statsSelectMode => 'Modo';
+
+  @override
+  String get statsRecentEmpty => 'Aún no hay partidas';
 }

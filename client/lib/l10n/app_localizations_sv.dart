@@ -802,6 +802,103 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesChess => 'Schack';
 
   @override
+  String get gamesDomino => 'Domino';
+
+  @override
+  String get gamesDominoModeKozel => 'Geten';
+
+  @override
+  String get gamesDominoModeClassic => 'Klassisk';
+
+  @override
+  String get gamesDominoModeSea => 'Hav';
+
+  @override
+  String get rulesDominoDeal => 'Alla får 7 brickor. Vid 2 eller 3 ligger resten i högen; vid 4 är högen tom.';
+
+  @override
+  String get rulesDominoOpen => 'Första given börjar med lägsta dubbel från 1-1 till 6-6, sedan 0-0. Utan dubbel börjar högsta brickan och den måste läggas.';
+
+  @override
+  String get rulesDominoPlay => 'Lägg en bricka mot en öppen ände med samma tal. En dubbel i änden ändrar inte talet.';
+
+  @override
+  String get rulesDominoDraw => 'Kan du inte lägga, dra en i taget tills du kan eller högen är slut. Sista brickan får tas. Går det ändå inte, passa.';
+
+  @override
+  String get rulesDominoScore => 'I slutet av given skriver var och en summan av kvarvarande brickor. Den som går ut skriver 0. Till 101: den som når dit är geten och förlorar.';
+
+  @override
+  String get rulesDominoFish => 'Fisk: högen är tom och ingen kan lägga. Den unikt lägsta summan är 0, övriga skriver sin. Är minimum gemensamt skriver alla.';
+
+  @override
+  String get rulesDominoMatch => 'Passerar flera 101 i samma giv är högsta poängen geten. Vinnare är lägsta poängen. Är alla lika är det oavgjort.';
+
+  @override
+  String get rulesDominoOffline => 'Offline: du och bottar. Botten räknar tal och tittar inte på dolda händer.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Läge: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Två eller tre spelare får 7 brickor, fyra får 5. Resten är högen.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Första given öppnas med dubbel-6, sedan nollan och lägre dubblar. Utan dubbel måste högsta brickan.';
+
+  @override
+  String get rulesDominoClassicScore => 'Den som går ut skriver motståndarnas ögon. Först till 100 vinner.';
+
+  @override
+  String get rulesDominoClassicFish => 'Vid fisk skriver den unikt lättaste handen skillnaden mot varje annan. Delat minimum ger inget.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Delad högsta poäng delar vinsten. Är alla lika är det oavgjort.';
+
+  @override
+  String get rulesDominoSeaSame => 'Giv, öppning och drag som i Geten. Kedjan har två ändar.';
+
+  @override
+  String get rulesDominoSeaScore => 'Bara den tyngsta handen skriver poäng. Under 25 skrivs inget.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Har två spelare 25 eller mer skriver ingen den given.';
+
+  @override
+  String get rulesDominoSeaBlank => '0-0 avslutar given genast: den unikt tyngsta motståndaren får 75. Vid lika får ingen.';
+
+  @override
+  String get rulesDominoSeaSix => 'Att gå ut med 6-6 ger förloraren 100 och nollställer stängarens matchpoäng.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Matchen går till 125. Den som når dit förlorar.';
+
+  @override
+  String get dominoBoneyard => 'Hög';
+
+  @override
+  String get dominoChooseEnd => 'Välj en ände';
+
+  @override
+  String get dominoFish => 'Fisk';
+
+  @override
+  String get dominoYouGoat => 'Du är geten';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Geten — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Vänster';
+
+  @override
+  String get dominoRight => 'Höger';
+
+  @override
   String get gamesChessModeClassic => 'Klassiskt';
 
   @override
@@ -3188,4 +3285,33 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Senaste partier';
+
+  @override
+  String get statsOutcomeWin => 'Vinst';
+
+  @override
+  String get statsOutcomeLoss => 'Förlust';
+
+  @override
+  String get statsOutcomeDraw => 'Oavgjort';
+
+  @override
+  String get statsAllModes => 'Alla lägen';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Spel';
+
+  @override
+  String get statsSelectMode => 'Läge';
+
+  @override
+  String get statsRecentEmpty => 'Inga partier än';
 }

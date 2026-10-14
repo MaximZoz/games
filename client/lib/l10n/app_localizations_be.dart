@@ -802,6 +802,103 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesChess => 'Шахматы';
 
   @override
+  String get gamesDomino => 'Даміно';
+
+  @override
+  String get gamesDominoModeKozel => 'Казёл';
+
+  @override
+  String get gamesDominoModeClassic => 'Класіка';
+
+  @override
+  String get gamesDominoModeSea => 'Марскі';
+
+  @override
+  String get rulesDominoDeal => 'Раздаюць па 7 костак. Пры дваіх і траіх астатнія ляжаць у базары, пры чацвярых базар пусты.';
+
+  @override
+  String get rulesDominoOpen => 'Першы кон пачынае малодшы дубль ад 1-1 да 6-6, потым 0-0. Калі дублёў няма — старэйшая костка. Яе і трэба паставіць.';
+
+  @override
+  String get rulesDominoPlay => 'Костку кладуць да адкрытага канца з тым самым лікам. Дубль на канцы не мяняе гэты лік.';
+
+  @override
+  String get rulesDominoDraw => 'Калі хадзіць няма чым, бяруць з базару па адной, пакуль не з’явіцца прыдатная або базар не скончыцца. Апошнюю костку можна ўзяць. Калі хадоў усё роўна няма — пас.';
+
+  @override
+  String get rulesDominoScore => 'У канцы кону кожны запісвае суму сваіх костак. Хто выйшаў — 0. Партыя да 101: хто набраў, той казёл і прайграў.';
+
+  @override
+  String get rulesDominoFish => 'Рыба: базар пусты і ніхто не можа прыставіць. У каго ачкоў строга менш за ўсіх — 0, астатнія пішуць сваю суму. Калі мінімум ва ўсіх аднолькавы, пішуць усе.';
+
+  @override
+  String get rulesDominoMatch => 'Калі некалькі перайшлі 101 за адзін кон, казёл — у каго больш. Пераможцы — з найменшым лікам. Калі ўсе зраўняліся — нічыя.';
+
+  @override
+  String get rulesDominoOffline => 'Офлайн: вы і боты. Бот лічыць масці і не падглядвае ў чужыя рукі.';
+
+  @override
+  String rulesDominoMode(String mode) {
+    return 'Рэжым: $mode';
+  }
+
+  @override
+  String get rulesDominoClassicDeal => 'Дваім і траім раздаюць па 7 костак, чацвярым — па 5. Астатняе ляжыць у базары.';
+
+  @override
+  String get rulesDominoClassicOpen => 'Першы кон пачынае дубль 6-6, потым 0-0 і далей дублі па змяншэнні. Калі дублёў няма — старэйшая костка. Яе і трэба паставіць.';
+
+  @override
+  String get rulesDominoClassicScore => 'Хто выйшаў, запісвае суму костак супернікаў. Партыя да 100: хто першым набраў — выйграў.';
+
+  @override
+  String get rulesDominoClassicFish => 'Рыба: у каго ачкоў строга менш за ўсіх, запісвае розніцу з кожнай чужой рукой. Калі мінімум у некалькіх — ачкі не пішуцца.';
+
+  @override
+  String get rulesDominoClassicMatch => 'Аднолькавы найвышэйшы лік дзеліць перамогу. Калі лік ва ўсіх роўны — нічыя.';
+
+  @override
+  String get rulesDominoSeaSame => 'Раздача, першы ход і дабор — як у рэжыме «Казёл». Ланцужок на два канцы.';
+
+  @override
+  String get rulesDominoSeaScore => 'Ачкі піша толькі той, у каго ў канцы кону больш за ўсіх на руках. Менш за 25 не запісваецца.';
+
+  @override
+  String get rulesDominoSeaWipe => 'Калі 25 і больш адразу ў дваіх, гэты кон нікому не пішацца.';
+
+  @override
+  String get rulesDominoSeaBlank => 'Выкладзены 0-0 адразу заканчвае кон: гульцу з самай цяжкай рукой пішуць 75. Калі такіх двое — не пішуць нікому.';
+
+  @override
+  String get rulesDominoSeaSix => 'Калі кон закрыты апошняй косткай 6-6, прайграўшаму пішуць 100, а ў таго, хто закрыў, лік партыі скідаецца.';
+
+  @override
+  String get rulesDominoSeaMatch => 'Партыя да 125. Хто набраў — прайграў.';
+
+  @override
+  String get dominoBoneyard => 'Базар';
+
+  @override
+  String get dominoChooseEnd => 'Абярыце канец';
+
+  @override
+  String get dominoFish => 'Рыба';
+
+  @override
+  String get dominoYouGoat => 'Вы казёл';
+
+  @override
+  String dominoGoatNamed(String name) {
+    return 'Казёл — $name';
+  }
+
+  @override
+  String get dominoLeft => 'Злева';
+
+  @override
+  String get dominoRight => 'Справа';
+
+  @override
   String get gamesChessModeClassic => 'Класіка';
 
   @override
@@ -3194,4 +3291,33 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get collectionCondGenVintage => 'vintage';
+
+  @override
+  String get statsRecentTitle => 'Апошнія партыі';
+
+  @override
+  String get statsOutcomeWin => 'Перамога';
+
+  @override
+  String get statsOutcomeLoss => 'Параза';
+
+  @override
+  String get statsOutcomeDraw => 'Нічыя';
+
+  @override
+  String get statsAllModes => 'Усе рэжымы';
+
+  @override
+  String statsDurakChip(int players, String deck) {
+    return '$players · $deck';
+  }
+
+  @override
+  String get statsSelectGame => 'Гульня';
+
+  @override
+  String get statsSelectMode => 'Рэжым';
+
+  @override
+  String get statsRecentEmpty => 'Пакуль няма партый';
 }
