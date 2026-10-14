@@ -79,6 +79,7 @@ void main() {
     }
     expect(fastfile, contains('upload_to_testflight'));
     expect(fastfile, contains('match('));
+    expect(fastfile, contains('produce('));
     expect(fastfile, contains('want_readonly'));
     expect(fastfile, contains('flutter", "build", "ipa"'));
     expect(info, contains('ITSAppUsesNonExemptEncryption'));

@@ -38,7 +38,7 @@ on:
 # develop и main не отменяют друг друга (разные Bundle ID / flavor).
 concurrency:
   group: ios-testflight-${{ github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   release:
