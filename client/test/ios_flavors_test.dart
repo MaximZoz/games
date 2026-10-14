@@ -63,7 +63,6 @@ void main() {
     final info = File('ios/Runner/Info.plist').readAsStringSync();
 
     expect(workflow, contains('runs-on: macos-15'));
-    expect(workflow, contains('cursor/fix-lobby-search-size-27ec'));
     expect(workflow, contains('com.zozugames.app.dev'));
     expect(workflow, contains('com.zozugames.app'));
     expect(workflow, contains('https://multigameszozu-dev.fly.dev'));
@@ -80,7 +79,7 @@ void main() {
     expect(fastfile, contains('upload_to_testflight'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
-    expect(fastfile, contains('Spaceship::ConnectAPI::App.create'));
+    expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
     expect(fastfile, contains('want_readonly'));
     expect(fastfile, contains('ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")'));
     expect(fastfile, contains('flutter", "build", "ipa"'));

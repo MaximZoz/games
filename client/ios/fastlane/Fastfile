@@ -54,28 +54,16 @@ platform :ios do
       UI.important("produce: #{e.message}")
     end
 
-    begin
-      existing = Spaceship::ConnectAPI::App.find(bundle_id)
-      if existing
-        UI.success("App Store Connect: #{bundle_id} уже есть")
-      else
-        UI.message("Создаю #{app_name} (#{bundle_id}) в App Store Connect")
-        Spaceship::ConnectAPI::App.create(
-          name: app_name,
-          version_string: "1.0",
-          sku: app_sku,
-          primary_locale: "en-US",
-          bundle_id: bundle_id,
-          platforms: ["IOS"]
-        )
-        sleep(5)
-      end
-    rescue StandardError => e
+    existing = Spaceship::ConnectAPI::App.find(bundle_id)
+    unless existing
       UI.user_error!(
-        "Нет приложения #{bundle_id} в App Store Connect: #{e.message}. " \
-        "Создай New App вручную: https://appstoreconnect.apple.com/apps"
+        "В App Store Connect нет приложения #{bundle_id}. " \
+        "API-ключ не может его создать. Safari → " \
+        "https://appstoreconnect.apple.com/apps → + → New App: " \
+        "iOS, имя «#{app_name}», Bundle ID #{bundle_id}, SKU #{app_sku}."
       )
     end
+    UI.success("App Store Connect: #{bundle_id}")
 
     match(
       type: "appstore",
