@@ -85,6 +85,8 @@ void main() {
     expect(fastfile, contains('tf_asc'));
     expect(fastfile, contains('usesNonExemptEncryption'));
     expect(fastfile, contains('betaRecruitmentCriteria'));
+    expect(fastfile, contains('betaBuildLocalizations'));
+    expect(fastfile, contains('betaAppReviewSubmissions'));
     expect(fastfile, contains('TESTFLIGHT_CONTACT_PHONE'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));

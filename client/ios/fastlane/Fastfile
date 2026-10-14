@@ -428,11 +428,59 @@ platform :ios do
           }
         )
       end
+      whats = "DEV TestFlight. Register in the app or play vs bot."
+      loc_code, loc_json = tf_asc(
+        :get,
+        "/v1/betaBuildLocalizations?filter[build]=#{build.id}"
+      )
+      build_locs = loc_json["data"]
+      build_locs = [] unless build_locs.is_a?(Array)
+      if build_locs.empty?
+        tf_asc(
+          :post,
+          "/v1/betaBuildLocalizations",
+          {
+            data: {
+              type: "betaBuildLocalizations",
+              attributes: { locale: "en-US", whatsNew: whats },
+              relationships: {
+                build: { data: { type: "builds", id: build.id } }
+              }
+            }
+          }
+        )
+      else
+        loc = build_locs.first
+        tf_asc(
+          :patch,
+          "/v1/betaBuildLocalizations/#{loc['id']}",
+          {
+            data: {
+              type: "betaBuildLocalizations",
+              id: loc["id"],
+              attributes: { whatsNew: whats }
+            }
+          }
+        )
+      end
       begin
         Spaceship::ConnectAPI.post_beta_app_review_submissions(build_id: build.id)
         UI.success("Отправлено на Beta Review")
       rescue StandardError => e
         UI.important("beta review: #{e.message}")
+        submit_code, = tf_asc(
+          :post,
+          "/v1/betaAppReviewSubmissions",
+          {
+            data: {
+              type: "betaAppReviewSubmissions",
+              relationships: {
+                build: { data: { type: "builds", id: build.id } }
+              }
+            }
+          }
+        )
+        UI.success("Отправлено на Beta Review") if submit_code.between?(200, 299)
       end
       begin
         Spaceship::ConnectAPI.add_beta_groups_to_build(
