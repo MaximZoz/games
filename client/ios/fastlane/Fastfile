@@ -121,12 +121,7 @@ platform :ios do
         "--export-options-plist", export_plist,
         "--dart-define=API_BASE=#{api_base}",
         "--dart-define=BUILD_ID=#{build_id}",
-        "--dart-define=APP_VERSION=#{app_version}",
-        "--",
-        "CODE_SIGN_STYLE=Manual",
-        "CODE_SIGN_IDENTITY=Apple Distribution",
-        "DEVELOPMENT_TEAM=#{team_id}",
-        "PROVISIONING_PROFILE_SPECIFIER=#{profile_name}"
+        "--dart-define=APP_VERSION=#{app_version}"
       )
     end
 
