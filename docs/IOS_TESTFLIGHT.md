@@ -78,7 +78,10 @@ Capabilities (Push, Sign in with Apple) не нужны для первой ус
 7. **Download** — файл `AuthKey_XXXX.p8`. Apple отдаёт его **один раз**
 8. Открой файл в «Файлы» / текстовом редакторе и скопируй **весь** текст, включая
    `-----BEGIN PRIVATE KEY-----` и `-----END PRIVATE KEY-----`
-   Это `APP_STORE_CONNECT_API_KEY`
+   Это `APP_STORE_CONNECT_API_KEY`. Не Key ID и не Issuer ID.
+
+   Если секрет уже создан не тем текстом: карандаш у `APP_STORE_CONNECT_API_KEY` →
+   вставь файл заново → Update secret.
 
 Ключ никуда не коммить и никому не слать.
 
@@ -149,7 +152,7 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 |-----------|-------------|
 | `Нет секрета …` | добавь секрет из таблицы выше |
 | `APPLE_TEAM_ID должен быть 10 символов` | скопируй Team ID из Membership, без пробелов |
-| `BEGIN PRIVATE KEY` | в секрет вставлен не весь `.p8` |
+| `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
 | `No suitable application records were found` / нет приложения | создай app в App Store Connect с тем Bundle ID |
 | `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
