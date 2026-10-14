@@ -359,8 +359,8 @@ self.addEventListener('push', (event) => {
       : '';
   const options = {
     body: body,
-    icon: '/icons/Icon-192.png',
-    badge: '/icons/Icon-192.png',
+    icon: '/icons/Icon-192.png?v=2',
+    badge: '/icons/Icon-192.png?v=2',
     data: {
       url: url,
       kind: data.kind || '',
