@@ -59,7 +59,7 @@ func TestSpaHandler_FaviconAndIconsNoCache(t *testing.T) {
 
 	for _, path := range []string{
 		"/favicon.png",
-		"/favicon.png?v=2",
+		"/favicon.png?v=3",
 		"/favicon.ico",
 		"/icons/Icon-192.png",
 		"/icons/Icon-512.png",
