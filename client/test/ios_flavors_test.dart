@@ -63,6 +63,7 @@ void main() {
     final info = File('ios/Runner/Info.plist').readAsStringSync();
 
     expect(workflow, contains('runs-on: macos-15'));
+    expect(workflow, contains('cursor/fix-lobby-search-size-27ec'));
     expect(workflow, contains('com.zozugames.app.dev'));
     expect(workflow, contains('com.zozugames.app'));
     expect(workflow, contains('https://multigameszozu-dev.fly.dev'));

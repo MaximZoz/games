@@ -12,7 +12,10 @@ name: iOS TestFlight
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
+      - cursor/fix-lobby-search-size-27ec
     paths:
       - 'client/**'
       - '.github/workflows/ios-testflight.yml'
@@ -59,8 +62,7 @@ jobs:
           elif [[ "${{ github.ref_name }}" == "develop" ]]; then
             TARGET="dev"
           else
-            echo "Неизвестная ветка: ${{ github.ref_name }}"
-            exit 1
+            TARGET="dev"
           fi
 
           if [[ "$TARGET" == "prod" ]]; then
