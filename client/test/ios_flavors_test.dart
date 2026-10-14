@@ -63,6 +63,10 @@ void main() {
     final info = File('ios/Runner/Info.plist').readAsStringSync();
 
     expect(workflow, contains('runs-on: macos-26'));
+    expect(workflow, contains('branches: [main, develop]'));
+    expect(workflow, isNot(contains('cursor/fix-lobby-search-size-27ec')));
+    expect(workflow, contains("'.github/workflows/ios-testflight.yml'"));
+    expect(workflow, isNot(contains('!client/')));
     expect(workflow, contains('com.zozugames.app.dev'));
     expect(workflow, contains('com.zozugames.app'));
     expect(workflow, contains('https://multigameszozu-dev.fly.dev'));

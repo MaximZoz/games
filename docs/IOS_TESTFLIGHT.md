@@ -107,7 +107,7 @@ Capabilities (Push, Sign in with Apple) не нужны для первой ус
 
 1. GitHub → **Actions** → **iOS TestFlight**
 2. **Run workflow**
-3. Branch: эта ветка (пока не влито в `develop`) или `develop`
+3. Branch: `develop` (DEV) или `main` (прод)
 4. Flavor: **dev**
 5. Run
 
@@ -167,10 +167,10 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
 | `не может его создать` / `does not allow CREATE` | API-ключ не умеет New App. Создай вручную: App Store Connect → Apps → + → iOS, Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev` |
 | `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
-| `readonly` / `No code signing identity` | не жми Re-run на старом прогоне `main`. Actions → iOS TestFlight → **Run workflow** с ветки `cursor/fix-lobby-search-size-27ec`, flavor **dev** |
+| `readonly` / `No code signing identity` | не жми Re-run на старом прогоне. Actions → iOS TestFlight → **Run workflow** с `develop`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
 | `match` / git push | не удаляй ветку `match-certs`; у workflow есть `contents: write` |
-| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — новый push на эту ветку |
+| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — дождись вливания в `develop` / `main` |
 | `Invalid MinimumOSVersion` / `App.framework` | в `client/ios/Flutter/AppFrameworkInfo.plist` должен быть `MinimumOSVersion` 13.0 |
 | `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
 
