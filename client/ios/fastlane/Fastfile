@@ -125,8 +125,11 @@ platform :ios do
       )
     end
 
-    ipas = Dir[File.expand_path("../build/ios/ipa/*.ipa")]
-    UI.user_error!("IPA не собрался в client/build/ios/ipa/") if ipas.empty?
+    client_root = File.expand_path("../..", __dir__)
+    ipa_dir = File.join(client_root, "build/ios/ipa")
+    ipas = Dir[File.join(ipa_dir, "*.ipa")]
+    UI.message("IPA dir #{ipa_dir}: #{Dir[File.join(ipa_dir, '*')].join(', ')}")
+    UI.user_error!("IPA не собрался в #{ipa_dir}") if ipas.empty?
     ipa = ipas.max_by { |path| File.mtime(path) }
     UI.success("IPA: #{ipa}")
 
