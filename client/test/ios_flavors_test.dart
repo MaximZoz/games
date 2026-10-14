@@ -111,7 +111,12 @@ void main() {
     expect(File('../.github/workflows/ios-testflight-code.yml').existsSync(), isFalse);
     final appFw = File('ios/Flutter/AppFrameworkInfo.plist').readAsStringSync();
     expect(appFw, contains('<key>MinimumOSVersion</key>'));
-    expect(appFw, contains('<string>13.0</string>'));
+    expect(appFw, contains('<string>15.0</string>'));
+    expect(File('ios/Podfile').readAsStringSync(), contains("platform :ios, '15.0'"));
+    expect(
+      File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync(),
+      isNot(contains('IPHONEOS_DEPLOYMENT_TARGET = 13.0')),
+    );
   });
 
   test('iOS delegates compile on Flutter 3.27', () {
