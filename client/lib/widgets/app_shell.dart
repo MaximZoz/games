@@ -1533,7 +1533,7 @@ class _MobileBottomNav extends StatelessWidget {
                         onTap: () => onTap(i),
                         customBorder: const CircleBorder(),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 1),
+                          padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Center(
                             child: _navIcon(
                               navItems[i],
@@ -1622,7 +1622,7 @@ Widget _navIcon(
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
-  final iconSize = selected ? 22.0 : 20.0;
+  final iconSize = selected ? 28.0 : 22.0;
   // Без рамки/заливки у активного — только цвет иконки.
   final baseIcon = Icon(item.icon, color: iconColor, size: iconSize);
 
