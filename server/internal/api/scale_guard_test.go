@@ -134,7 +134,7 @@ func TestOAuthStateRoundTripRedis(t *testing.T) {
 	rdb := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = rdb.Close() })
 	cfg := &OAuthConfig{Rdb: rdb}
-	state, err := cfg.putState("google", "/games", "ref", true)
+	state, err := cfg.putState("google", "/games", "ref", true, "")
 	if err != nil || state == "" {
 		t.Fatal(err)
 	}

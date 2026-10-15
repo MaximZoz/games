@@ -1,3 +1,4 @@
 PRODUCT_BUNDLE_IDENTIFIER=com.zozugames.app.dev
 APP_DISPLAY_NAME=Zozu Games DEV
 FLAVOR=dev
+APP_URL_SCHEME=zozugames-dev

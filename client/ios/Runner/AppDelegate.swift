@@ -9,26 +9,68 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
-    // Свой канал, не пакет sign_in_with_apple: его Swift-регистрация на iOS
-    // молча не вешает method channel (MissingPluginException).
-    if let registrar = self.registrar(forPlugin: "ZozuAppleSignIn") {
-      ZozuAppleSignIn.register(with: registrar)
-    }
+    // Канал нельзя вешать здесь: при UIScene registrarForPlugin попадает
+    // на launch engine, который storyboard-контроллер выбрасывает.
+    // Живой messenger — в SceneDelegate / didBecomeActive.
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+}
+
+func attachZozuAuthChannels() {
+  guard let messenger = zozuFlutterController()?.binaryMessenger else { return }
+  ZozuAppleSignIn.register(messenger: messenger)
+  ZozuSystemAuth.register(messenger: messenger)
+}
+
+func zozuFlutterController() -> FlutterViewController? {
+  let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+  let ordered = scenes.sorted { lhs, _ in lhs.activationState == .foregroundActive }
+  for scene in ordered {
+    for window in scene.windows {
+      if let controller = window.rootViewController as? FlutterViewController {
+        return controller
+      }
+    }
+  }
+  return nil
+}
+
+enum ZozuWindow {
+  static func current() -> UIWindow? {
+    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    let ordered = scenes.sorted { lhs, _ in lhs.activationState == .foregroundActive }
+    for scene in ordered {
+      if let window = scene.windows.first(where: { $0.isKeyWindow }) {
+        return window
+      }
+    }
+    for scene in ordered {
+      if let window = scene.windows.first(where: { !$0.isHidden }) {
+        return window
+      }
+    }
+    return ordered.first?.windows.first
   }
 }
 
 /// Системный лист Apple ID. Канал: com.zozugames/apple_sign_in
 final class ZozuAppleSignIn: NSObject, FlutterPlugin, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+  static let shared = ZozuAppleSignIn()
   private var pending: FlutterResult?
   private var controller: ASAuthorizationController?
 
-  static func register(with registrar: FlutterPluginRegistrar) {
+  static func register(messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(
       name: "com.zozugames/apple_sign_in",
-      binaryMessenger: registrar.messenger()
+      binaryMessenger: messenger
     )
-    registrar.addMethodCallDelegate(ZozuAppleSignIn(), channel: channel)
+    channel.setMethodCallHandler { call, result in
+      shared.handle(call, result: result)
+    }
+  }
+
+  static func register(with registrar: FlutterPluginRegistrar) {
+    register(messenger: registrar.messenger())
   }
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -47,22 +89,25 @@ final class ZozuAppleSignIn: NSObject, FlutterPlugin, ASAuthorizationControllerD
       auth.delegate = self
       auth.presentationContextProvider = self
       controller = auth
-      auth.performRequests()
+      // Синхронный performRequests из method channel часто не показывает лист.
+      DispatchQueue.main.async {
+        auth.performRequests()
+      }
     default:
       result(FlutterMethodNotImplemented)
     }
   }
 
   func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-    // FlutterPluginRegistrar в этом SDK без viewController.
-    for scene in UIApplication.shared.connectedScenes {
-      guard let windowScene = scene as? UIWindowScene else { continue }
-      if let window = windowScene.keyWindow {
-        return window
-      }
-      if let window = windowScene.windows.first {
-        return window
-      }
+    if let window = ZozuWindow.current() {
+      return window
+    }
+    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    if let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first {
+      let window = UIWindow(windowScene: scene)
+      window.frame = scene.coordinateSpace.bounds
+      window.makeKeyAndVisible()
+      return window
     }
     return UIWindow()
   }
@@ -76,6 +121,10 @@ final class ZozuAppleSignIn: NSObject, FlutterPlugin, ASAuthorizationControllerD
       return
     }
     let token = credential.identityToken.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+    if token.isEmpty {
+      finish(FlutterError(code: "empty_token", message: "Sign in with Apple: empty identity token", details: nil))
+      return
+    }
     finish([
       "identityToken": token,
       "email": credential.email ?? "",
@@ -86,17 +135,110 @@ final class ZozuAppleSignIn: NSObject, FlutterPlugin, ASAuthorizationControllerD
 
   func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
     let ns = error as NSError
-    if ns.code == ASAuthorizationError.canceled.rawValue {
+    if ns.domain == ASAuthorizationError.errorDomain && ns.code == ASAuthorizationError.canceled.rawValue {
       finish(nil)
       return
     }
-    finish(FlutterError(code: "apple_auth", message: error.localizedDescription, details: ns.domain))
+    let message = "\(error.localizedDescription) (\(ns.domain) \(ns.code))"
+    finish(FlutterError(code: "apple_auth", message: message, details: ns.domain))
   }
 
   private func finish(_ value: Any?) {
     let callback = pending
     pending = nil
     controller = nil
+    callback?(value)
+  }
+}
+
+/// Системный лист Google (ASWebAuthenticationSession). Канал: com.zozugames/system_auth
+/// Нативный GoogleSignIn на iOS без iOS OAuth client сразу падает, а внешний Safari
+/// открывал сайт. Лист остаётся в приложении и закрывается на zozugames(-dev)://.
+final class ZozuSystemAuth: NSObject, ASWebAuthenticationPresentationContextProviding {
+  static let shared = ZozuSystemAuth()
+  private var session: ASWebAuthenticationSession?
+  private var pending: FlutterResult?
+  private var generation = 0
+
+  static func register(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "com.zozugames/system_auth",
+      binaryMessenger: messenger
+    )
+    channel.setMethodCallHandler { call, result in
+      shared.handle(call, result: result)
+    }
+  }
+
+  func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "start":
+      if pending != nil {
+        result(FlutterError(code: "in_progress", message: "Sign-in sheet already running", details: nil))
+        return
+      }
+      let args = call.arguments as? [String: Any]
+      let rawURL = (args?["url"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+      let scheme = (args?["callbackScheme"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+      guard let url = URL(string: rawURL), url.scheme == "https" || url.scheme == "http" else {
+        result(FlutterError(code: "bad_url", message: "Sign-in sheet: bad url", details: nil))
+        return
+      }
+      guard scheme == "zozugames" || scheme == "zozugames-dev" else {
+        result(FlutterError(code: "bad_scheme", message: "Sign-in sheet: bad callback scheme", details: nil))
+        return
+      }
+      generation += 1
+      let generationAtStart = generation
+      pending = result
+      let session = ASWebAuthenticationSession(url: url, callbackURLScheme: scheme) { _, error in
+        if generationAtStart != self.generation { return }
+        if let error = error as NSError? {
+          if error.domain == ASWebAuthenticationSessionError.errorDomain &&
+            error.code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
+            self.finish(false)
+            return
+          }
+          self.finish(FlutterError(
+            code: "auth_session",
+            message: error.localizedDescription,
+            details: "\(error.domain) \(error.code)"
+          ))
+          return
+        }
+        self.finish(true)
+      }
+      session.presentationContextProvider = self
+      session.prefersEphemeralWebBrowserSession = false
+      self.session = session
+      if !session.start() {
+        finish(FlutterError(code: "start_failed", message: "Sign-in sheet did not start", details: nil))
+      }
+    case "cancel":
+      generation += 1
+      let active = session
+      session = nil
+      let callback = pending
+      pending = nil
+      active?.cancel()
+      callback?(false)
+      result(nil)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+    if let window = ZozuWindow.current() {
+      return window
+    }
+    return UIWindow()
+  }
+
+  private func finish(_ value: Any?) {
+    let callback = pending
+    pending = nil
+    session = nil
     callback?(value)
   }
 }

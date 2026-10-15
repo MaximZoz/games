@@ -209,10 +209,20 @@ class MultiGamesApp extends ConsumerWidget {
             foregroundColor: AppColors.textPrimary,
           ),
         ),
+        // Непрозрачная карточка и чёрный текст. Прозрачный фон + onInverseSurface
+        // давал белый текст на светлом экране — ошибку входа было не прочитать.
         snackBarTheme: const SnackBarThemeData(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+          backgroundColor: AppColors.surfaceCard,
+          elevation: 6,
+          contentTextStyle: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            decoration: TextDecoration.none,
+          ),
+          actionTextColor: AppColors.textPrimary,
+          closeIconColor: AppColors.textPrimary,
         ),
       ),
       routerConfig: router,

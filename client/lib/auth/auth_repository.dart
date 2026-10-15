@@ -482,6 +482,7 @@ class AuthRepository {
     required String provider,
     String? redirect,
     String? ref,
+    String? returnScheme,
   }) async {
     await init();
     final params = <String, String>{'mode': 'poll'};
@@ -489,6 +490,8 @@ class AuthRepository {
     if (r.isNotEmpty) params['redirect'] = r;
     final referral = (ref ?? '').trim();
     if (referral.isNotEmpty) params['ref'] = referral;
+    final scheme = (returnScheme ?? '').trim();
+    if (scheme.isNotEmpty) params['return_scheme'] = scheme;
     final response = await ApiClient.get(
       Uri.parse('$apiBaseUrl/api/auth/oauth/$provider/start')
           .replace(queryParameters: params),
@@ -514,10 +517,14 @@ class AuthRepository {
   Future<Map<String, String>> pollOAuthResult({
     String state = '',
     Duration timeout = const Duration(minutes: 5),
+    bool Function()? isCanceled,
   }) async {
     await init();
     final deadline = DateTime.now().add(timeout);
     while (DateTime.now().isBefore(deadline)) {
+      if (isCanceled?.call() == true) {
+        throw const OauthCanceledException();
+      }
       final params = <String, String>{};
       final s = state.trim();
       if (s.isNotEmpty) params['state'] = s;
@@ -528,6 +535,9 @@ class AuthRepository {
         operation: 'AuthRepository.pollOAuthResult',
       );
       if (response.statusCode == 202) {
+        if (isCanceled?.call() == true) {
+          throw const OauthCanceledException();
+        }
         await Future<void>.delayed(const Duration(milliseconds: 800));
         continue;
       }
@@ -540,6 +550,9 @@ class AuthRepository {
       }
       final status = (body['status'] ?? '').toString();
       if (status == 'pending') {
+        if (isCanceled?.call() == true) {
+          throw const OauthCanceledException();
+        }
         await Future<void>.delayed(const Duration(milliseconds: 800));
         continue;
       }
@@ -1159,6 +1172,11 @@ class AuthException implements Exception {
   AuthException(this.statusCode, this.message);
   @override
   String toString() => message;
+}
+
+/// Пользователь закрыл системный лист входа, пока шёл poll.
+class OauthCanceledException implements Exception {
+  const OauthCanceledException();
 }
 
 class EmailVerificationRequiredException implements Exception {
