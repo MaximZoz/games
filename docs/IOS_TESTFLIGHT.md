@@ -36,13 +36,15 @@ Workflow: `.github/workflows/ios-testflight.yml`
 4. Register
 5. То же для DEV: Description `Zozu Games DEV`, Bundle ID `com.zozugames.app.dev`
 
-Capability **Sign in with Apple** включает CI (`produce` + entitlements). Вручную: Identifier → Sign In with Apple → Enable.
+Capability **Sign in with Apple** включает CI через API (не `produce`: ему нужен Apple ID, которого в GitHub нет). Вручную: Identifier → Sign In with Apple → Enable.
 
 Если такой Bundle ID уже есть у этого Team — не создавай второй.
 
 ## 2. Два приложения в App Store Connect (один раз)
 
-[Apps](https://appstoreconnect.apple.com/apps) → **+** → New App
+Это **не** страница Identifiers. Другой сайт: [Apps](https://appstoreconnect.apple.com/apps) → **+** → New App.
+
+API-ключ приложение не создаёт: `POST /v1/apps` отвечает `The resource 'apps' does not allow 'CREATE'`. Пока записи нет, TestFlight для этого Bundle ID падает сразу.
 
 ### Prod
 - Platforms: **iOS**
@@ -180,8 +182,8 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `Нет секрета …` | добавь секрет из таблицы выше |
 | `APPLE_TEAM_ID должен быть 10 символов` | скопируй Team ID из Membership, без пробелов |
 | `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
-| `не может его создать` / `does not allow CREATE` | CI сам вызывает `App.create`. Если ключ без права CREATE (часто это первое приложение аккаунта) — App Store Connect → Apps → + → iOS. DEV: Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev`. Prod: `com.zozugames.app`, имя Zozu Games, SKU `zozugames` |
-| `Could not find option 'api_key'` у `produce` | у `produce` нет `api_key`; токен берётся из `app_store_connect_api_key`. Дождись вливания правки Fastfile |
+| `нет приложения` / `does not allow CREATE` | Bundle ID в Identifiers уже может быть. Нужна запись на [appstoreconnect.apple.com/apps](https://appstoreconnect.apple.com/apps) → **+** → New App → iOS. DEV: Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev`. Prod: `com.zozugames.app`, имя Zozu Games, SKU `zozugames`. Ключ это сделать не может |
+| `No value found for 'username'` у `produce` | старый прогон. `produce` из lane убран: в CI нет Apple ID |
 | `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
 | `readonly` / `No code signing identity` | не жми Re-run на старом прогоне. Actions → iOS TestFlight → **Run workflow** с `develop`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
