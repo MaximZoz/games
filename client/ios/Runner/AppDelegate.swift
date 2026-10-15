@@ -29,7 +29,8 @@ func registerZozuLivePlugins(on controller: FlutterViewController) {
   if !controller.hasPlugin("SharedPreferencesPlugin") {
     GeneratedPluginRegistrant.register(with: controller)
   }
-  // binaryMessenger в Flutter 3.27 не Optional: guard let не компилируется.
+  // Xcode 26: binaryMessenger — non-optional `any FlutterBinaryMessenger`.
+  // guard let здесь не компилируется.
   let messenger = controller.binaryMessenger
   ZozuAppleSignIn.register(messenger: messenger)
   ZozuSystemAuth.register(messenger: messenger)

@@ -138,13 +138,13 @@ void main() {
     expect(app, contains('GeneratedPluginRegistrant.register'));
     expect(app, contains('SharedPreferencesPlugin'));
     expect(app, contains('com.zozugames/session_store'));
+    expect(app, contains('let messenger = controller.binaryMessenger'));
+    expect(app, isNot(contains('binaryMessenger else')));
     expect(app, contains('ZozuFlutterViewController'));
     expect(app, contains('com.zozugames/apple_sign_in'));
     expect(app, contains('ASAuthorizationAppleIDProvider'));
     expect(app, contains('ZozuAppleSignIn'));
     expect(app, contains('isKeyWindow'));
-    expect(app, contains('let messenger = controller.binaryMessenger'));
-    expect(app, isNot(contains('controller.binaryMessenger else')));
     expect(app, isNot(contains('registrar.viewController')));
     expect(app, isNot(contains('FlutterImplicitEngine')));
     expect(scene, contains('UIWindowSceneDelegate'));
