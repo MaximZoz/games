@@ -96,6 +96,9 @@ void main() {
     expect(fastfile, contains('tf_invite_asc_users'));
     expect(fastfile, contains('is_internal_group: true'));
     expect(fastfile, contains('sign_in_with_apple'));
+    expect(fastfile, contains('tf_ensure_sign_in_with_apple'));
+    expect(fastfile, contains('APPLE_ID_AUTH'));
+    expect(fastfile, contains('com.apple.developer.applesignin'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
@@ -139,6 +142,9 @@ void main() {
     expect(entitlements, contains('com.apple.developer.applesignin'));
     expect(pbx, contains('CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements'));
     expect(fastfile, contains('sign_in_with_apple'));
+    expect(fastfile, contains('tf_ensure_sign_in_with_apple'));
+    expect(fastfile, contains('APPLE_ID_AUTH'));
+    expect(fastfile, contains('com.apple.developer.applesignin'));
     expect(File('pubspec.yaml').readAsStringSync(), contains('sign_in_with_apple'));
   });
 }

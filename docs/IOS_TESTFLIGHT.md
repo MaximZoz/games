@@ -189,6 +189,7 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `Invalid MinimumOSVersion` / `App.framework` | в `client/ios/Flutter/AppFrameworkInfo.plist` должен быть `MinimumOSVersion` 15.0 |
 | `Deployment target too low` / `90068` | приложение целится в iOS 15.0 (с апреля 2027 Apple не примет ниже) |
 | `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
+| `doesn't include the com.apple.developer.applesignin` | Bundle ID был создан раньше capability. CI включает Sign in with Apple и пересобирает профиль. Не жми Re-run старого прогона — дождись вливания в `develop` |
 
 Лог Actions: job **release**, шаг **Build IPA and upload to TestFlight**.
 
