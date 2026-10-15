@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"net/http"
 	"net/url"
 	"strings"
@@ -335,6 +337,235 @@ func (h *AuthHandler) GoogleIDTokenLogin(w http.ResponseWriter, r *http.Request)
 		"redirect":      redirect,
 		"user":          userToResponse(u),
 	})
+}
+
+var appleNativeAudiences = []string{
+	"com.zozugames.app",
+	"com.zozugames.app.dev",
+}
+
+func appleAudienceAllowed(aud string, allowed []string) bool {
+	for _, item := range allowed {
+		if item == aud {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *OAuthConfig) appleAudiences() []string {
+	out := append([]string{}, appleNativeAudiences...)
+	if c != nil {
+		if id := strings.TrimSpace(c.AppleClientID); id != "" {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+// AppleIDTokenLogin — вход по identity token системного Sign in with Apple.
+func (h *AuthHandler) AppleIDTokenLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	var body struct {
+		IdentityToken string `json:"identity_token"`
+		Email         string `json:"email"`
+		GivenName     string `json:"given_name"`
+		FamilyName    string `json:"family_name"`
+		Redirect      string `json:"redirect"`
+		Ref           string `json:"ref"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
+	token := strings.TrimSpace(body.IdentityToken)
+	if token == "" {
+		WriteErr(w, r, http.StatusBadRequest, "identity_token required")
+		return
+	}
+	identity, err := h.verifyAppleIdentityToken(r.Context(), token)
+	if err != nil {
+		log.Printf("[oauth] apple native login verify failed: %v", err)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid apple credential")
+		return
+	}
+	if identity.Email == "" {
+		identity.Email = strings.TrimSpace(body.Email)
+	}
+	if identity.Name == "" {
+		identity.Name = strings.TrimSpace(body.GivenName + " " + body.FamilyName)
+	}
+
+	var referredBy *uuid.UUID
+	if refRaw := strings.TrimSpace(body.Ref); refRaw != "" {
+		if id, parseErr := uuid.Parse(refRaw); parseErr == nil {
+			referredBy = &id
+		}
+	}
+	u, _, err := store.FindOrCreateOAuthUser(
+		r.Context(),
+		h.Pool,
+		"apple",
+		identity.Subject,
+		identity.Email,
+		identity.Name,
+		referredBy,
+	)
+	if err != nil {
+		log.Printf("[oauth] find/create user failed: %v", err)
+		WriteErr(w, r, http.StatusInternalServerError, "oauth user create failed")
+		return
+	}
+	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "oauth session failed")
+		return
+	}
+	redirect := strings.TrimSpace(body.Redirect)
+	if redirect == "" {
+		redirect = "/games"
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"expires_in":    expiresIn,
+		"redirect":      redirect,
+		"user":          userToResponse(u),
+	})
+}
+
+func (h *AuthHandler) verifyAppleIdentityToken(ctx context.Context, idToken string) (*oauthIdentity, error) {
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))
+	token, err := parser.Parse(idToken, func(t *jwt.Token) (any, error) {
+		kid, _ := t.Header["kid"].(string)
+		if kid == "" {
+			return nil, fmt.Errorf("apple jwt: empty kid")
+		}
+		return applePublicKey(ctx, kid)
+	})
+	if err != nil {
+		return nil, err
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("apple jwt: invalid claims")
+	}
+	iss, _ := claims["iss"].(string)
+	if iss != "https://appleid.apple.com" {
+		return nil, fmt.Errorf("apple jwt: iss")
+	}
+	allowed := appleNativeAudiences
+	if h.OAuth != nil {
+		allowed = h.OAuth.appleAudiences()
+	}
+	switch aud := claims["aud"].(type) {
+	case string:
+		if !appleAudienceAllowed(aud, allowed) {
+			return nil, fmt.Errorf("apple jwt: aud")
+		}
+	case []any:
+		okAud := false
+		for _, item := range aud {
+			s, _ := item.(string)
+			if appleAudienceAllowed(s, allowed) {
+				okAud = true
+				break
+			}
+		}
+		if !okAud {
+			return nil, fmt.Errorf("apple jwt: aud")
+		}
+	default:
+		return nil, fmt.Errorf("apple jwt: aud")
+	}
+	sub, _ := claims["sub"].(string)
+	if sub == "" {
+		return nil, fmt.Errorf("apple jwt: empty sub")
+	}
+	email, _ := claims["email"].(string)
+	return &oauthIdentity{Subject: sub, Email: email}, nil
+}
+
+type appleJWKSet struct {
+	Keys []struct {
+		Kid string `json:"kid"`
+		N   string `json:"n"`
+		E   string `json:"e"`
+	} `json:"keys"`
+}
+
+var (
+	appleKeysMu sync.Mutex
+	appleKeys   *appleJWKSet
+	appleKeysAt time.Time
+)
+
+func applePublicKey(ctx context.Context, kid string) (*rsa.PublicKey, error) {
+	set, err := fetchAppleKeys(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range set.Keys {
+		if key.Kid != kid {
+			continue
+		}
+		return jwkRSAPublic(key.N, key.E)
+	}
+	return nil, fmt.Errorf("apple jwk: kid not found")
+}
+
+func fetchAppleKeys(ctx context.Context) (*appleJWKSet, error) {
+	appleKeysMu.Lock()
+	defer appleKeysMu.Unlock()
+	if appleKeys != nil && time.Since(appleKeysAt) < time.Hour {
+		return appleKeys, nil
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://appleid.apple.com/auth/keys", nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("apple jwks: %s", string(raw))
+	}
+	var set appleJWKSet
+	if err := json.Unmarshal(raw, &set); err != nil {
+		return nil, err
+	}
+	if len(set.Keys) == 0 {
+		return nil, fmt.Errorf("apple jwks: empty")
+	}
+	appleKeys = &set
+	appleKeysAt = time.Now()
+	return appleKeys, nil
+}
+
+func jwkRSAPublic(nB64, eB64 string) (*rsa.PublicKey, error) {
+	nBytes, err := base64.RawURLEncoding.DecodeString(nB64)
+	if err != nil {
+		return nil, err
+	}
+	eBytes, err := base64.RawURLEncoding.DecodeString(eB64)
+	if err != nil {
+		return nil, err
+	}
+	e := 0
+	for _, b := range eBytes {
+		e = e<<8 | int(b)
+	}
+	if e == 0 {
+		return nil, fmt.Errorf("apple jwk: empty e")
+	}
+	return &rsa.PublicKey{N: new(big.Int).SetBytes(nBytes), E: e}, nil
 }
 
 func (h *AuthHandler) verifyGoogleIDToken(ctx context.Context, idToken string) (*oauthIdentity, error) {

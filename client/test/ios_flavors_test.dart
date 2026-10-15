@@ -92,6 +92,10 @@ void main() {
     expect(fastfile, contains('betaBuildLocalizations'));
     expect(fastfile, contains('betaAppReviewSubmissions'));
     expect(fastfile, contains('TESTFLIGHT_CONTACT_PHONE'));
+    expect(fastfile, contains('tf_ensure_internal_group'));
+    expect(fastfile, contains('tf_invite_asc_users'));
+    expect(fastfile, contains('is_internal_group: true'));
+    expect(fastfile, contains('sign_in_with_apple'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
@@ -122,9 +126,19 @@ void main() {
   test('iOS delegates compile on Flutter 3.27', () {
     final app = File('ios/Runner/AppDelegate.swift').readAsStringSync();
     final scene = File('ios/Runner/SceneDelegate.swift').readAsStringSync();
+    final pbx = File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync();
+    final fastfile = File('ios/fastlane/Fastfile').readAsStringSync();
     expect(app, contains('GeneratedPluginRegistrant.register'));
     expect(app, isNot(contains('FlutterImplicitEngine')));
     expect(scene, contains('UIWindowSceneDelegate'));
     expect(scene, isNot(contains('FlutterSceneDelegate')));
+    expect(scene, contains('openURLContexts'));
+    expect(scene, contains('FlutterAppDelegate'));
+
+    final entitlements = File('ios/Runner/Runner.entitlements').readAsStringSync();
+    expect(entitlements, contains('com.apple.developer.applesignin'));
+    expect(pbx, contains('CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements'));
+    expect(fastfile, contains('sign_in_with_apple'));
+    expect(File('pubspec.yaml').readAsStringSync(), contains('sign_in_with_apple'));
   });
 }

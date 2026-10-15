@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/apple_native_sign_in.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
@@ -19,6 +20,26 @@ bool get _useNativeGoogleSignIn =>
     !kIsWeb &&
     (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS);
+
+bool get _useNativeAppleSignIn =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+/// iOS: Apple всегда первой (Guideline 4.8), даже если сервер её не отдал.
+List<String> visibleOAuthProviders(
+  List<String> fromServer, {
+  required bool isIos,
+}) {
+  final seen = <String>{};
+  final out = <String>[];
+  if (isIos) {
+    out.add('apple');
+    seen.add('apple');
+  }
+  for (final provider in fromServer) {
+    if (seen.add(provider)) out.add(provider);
+  }
+  return out;
+}
 
 final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
   return ref.watch(authRepositoryProvider).fetchOAuthProviders();
@@ -108,7 +129,11 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (providers) {
-        if (providers.isEmpty) return const SizedBox.shrink();
+        final shown = visibleOAuthProviders(
+          providers,
+          isIos: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS,
+        );
+        if (shown.isEmpty) return const SizedBox.shrink();
         final l10n = context.l10n;
         final repo = ref.read(authRepositoryProvider);
         return Padding(
@@ -133,14 +158,14 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                 ],
               ),
               const SizedBox(height: 16),
-              for (var i = 0; i < providers.length; i++) ...[
+              for (var i = 0; i < shown.length; i++) ...[
                 if (i > 0) const SizedBox(height: 10),
                 GamepadActionBlock(
                   outlined: true,
                   radius: AppRadius.button,
                   onActivate: _busyProvider != null
                       ? () {}
-                      : () => _startProvider(context, providers[i], repo),
+                      : () => _startProvider(context, shown[i], repo),
                   child: SizedBox(
                     height: 48,
                     width: double.infinity,
@@ -154,15 +179,15 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                       ),
                       onPressed: _busyProvider != null
                           ? null
-                          : () => _startProvider(context, providers[i], repo),
-                      child: _busyProvider == providers[i]
+                          : () => _startProvider(context, shown[i], repo),
+                      child: _busyProvider == shown[i]
                           ? const SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              _label(l10n, providers[i]),
+                              _label(l10n, shown[i]),
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w600,
@@ -264,11 +289,70 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   }
 
   Future<void> _startNative(BuildContext context, String provider) async {
+    if (provider == 'apple' && _useNativeAppleSignIn) {
+      await _startNativeApple();
+      return;
+    }
     if (provider == 'google' && _useNativeGoogleSignIn) {
       await _startNativeGoogle();
       return;
     }
     await _startNativeBrowserPoll(provider);
+  }
+
+  /// iOS: системный лист Apple ID (Настройки → Apple ID), без Safari.
+  Future<void> _startNativeApple() async {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final redirect = widget.redirect;
+    setState(() => _busyProvider = 'apple');
+    try {
+      final native = await signInWithAppleNative();
+      if (native == null) return;
+      if (!mounted) return;
+      await ref
+          .read(authStateProvider.notifier)
+          .loginWithAppleIdToken(
+            identityToken: native.identityToken,
+            email: native.email,
+            givenName: native.givenName,
+            familyName: native.familyName,
+            redirect: redirect,
+            ref: widget.refCode,
+          )
+          .timeout(const Duration(seconds: 25));
+      if (!mounted) return;
+      final dest = safeAuthRedirect(redirect) ?? '/games';
+      context.go(dest);
+    } on TimeoutException {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+    } on AppleSignInUnavailableException catch (e) {
+      debugPrint('Sign in with Apple unavailable: $e');
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.oauthError), duration: const Duration(seconds: 5)),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message), duration: const Duration(seconds: 5)),
+      );
+    } catch (e) {
+      debugPrint('Sign in with Apple failed: $e');
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.oauthError}: $e'),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } finally {
+      if (mounted && _busyProvider == 'apple') {
+        setState(() => _busyProvider = null);
+      }
+    }
   }
 
   /// Google на Android/iOS: только нативный Sign-In (без браузера).
@@ -328,6 +412,15 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     } on GoogleIdTokenMissingException catch (e) {
       debugPrint('Google native credential missing: $e');
       if (!mounted) return;
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            duration: const Duration(seconds: 8),
+          ),
+        );
+        return;
+      }
       messenger.showSnackBar(
         SnackBar(
           content: Text(

@@ -1518,7 +1518,7 @@ class _MobileBottomNav extends StatelessWidget {
     final label = navItems[safeIndex].label;
     return ExcludeFocus(
       child: Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
+      padding: const EdgeInsets.fromLTRB(2, 2, 2, 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1533,7 +1533,7 @@ class _MobileBottomNav extends StatelessWidget {
                         onTap: () => onTap(i),
                         customBorder: const CircleBorder(),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 1),
                           child: Center(
                             child: _navIcon(
                               navItems[i],
@@ -1552,7 +1552,7 @@ class _MobileBottomNav extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           // Симметричная подпись: линия — текст — линия (тот же стиль, что splash).
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),
@@ -1622,7 +1622,7 @@ Widget _navIcon(
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
-  final iconSize = selected ? 24.0 : 22.0;
+  final iconSize = selected ? 22.0 : 20.0;
   // Без рамки/заливки у активного — только цвет иконки.
   final baseIcon = Icon(item.icon, color: iconColor, size: iconSize);
 

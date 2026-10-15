@@ -36,7 +36,7 @@ Workflow: `.github/workflows/ios-testflight.yml`
 4. Register
 5. То же для DEV: Description `Zozu Games DEV`, Bundle ID `com.zozugames.app.dev`
 
-Capabilities (Push, Sign in with Apple) не нужны для первой установки.
+Capability **Sign in with Apple** включает CI (`produce` + entitlements). Вручную: Identifier → Sign In with Apple → Enable.
 
 Если такой Bundle ID уже есть у этого Team — не создавай второй.
 
@@ -124,7 +124,22 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 
 Если match/сертификат сломался: Run workflow → **force_match**.
 
-## 6. Поставить на iPhone (только ссылка)
+## 6. Поставить на iPhone
+
+### Свой Apple ID разработчика (без кода, без Review)
+
+Кнопка **«Использовать код»** в пустом TestFlight — не для себя. Кода у разработчика нет.
+
+1. Safari → [Zozu Games DEV / TestFlight](https://appstoreconnect.apple.com/apps/6822534284/testflight)
+2. Слева **Внутреннее тестирование** (не Redeem)
+3. Открой группу. Вкладка **Тестировщики** → **+** → свой пользователь App Store Connect
+4. Вкладка **Сборки** → **+** → последняя **Completed** / «Готово к отправке» (например 10023)
+5. Почта этого Apple ID: письмо TestFlight → открой ссылку из письма
+6. На iPhone: Настройки → имя = тот же Apple ID. TestFlight потяни вниз → **Zozu Games DEV** → Install
+
+Если в TestFlight всё ещё заставка «разработчик должен пригласить» — на телефоне другой Apple ID. Тогда либо войди в TestFlight тем же аккаунтом, что в App Store Connect, либо добавь телефонный Apple ID в Users and Access и снова в Тестировщики.
+
+### Чужой телефон / публичная ссылка
 
 Список в TestFlight пустой, если на телефоне другой Apple ID — так и должно быть. Почту не добавляем.
 
@@ -177,18 +192,26 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 
 Лог Actions: job **release**, шаг **Build IPA and upload to TestFlight**.
 
-## 9. Google Sign-In (не блокирует установку)
+## 9. Вход на iPhone (Apple и Google)
 
-На iOS вход через Google — нативный `google_sign_in`.
+**Sign in with Apple** — системный лист того же Apple ID, что в Настройках.
+Плагин `sign_in_with_apple`, кнопка выше Google. Сервер проверяет identity
+token через JWKS Apple (`POST /api/auth/oauth/apple/id-token`).
+Web-секреты `APPLE_*` для этого не нужны.
 
-В [Google Cloud](https://console.cloud.google.com/) того же проекта, что Web Client ID:
+**Google** — плагин `google_sign_in` (тот же Gmail, что на телефоне), не Safari.
 
-1. Credentials → **Create OAuth client ID** → тип **iOS**
-2. Bundle ID: `com.zozugames.app` и отдельно `.dev`
+Если лоадер крутится и окно не открывается:
+
+1. `SceneDelegate` должен прокидывать URL в `FlutterAppDelegate` (уже в репо)
+2. В [Google Cloud](https://console.cloud.google.com/) того же проекта, что Web Client ID:
+   - Credentials → **Create OAuth client ID** → тип **iOS**
+   - Bundle ID: `com.zozugames.app` и отдельно `.dev`
+   - `GIDClientID` и `REVERSED_CLIENT_ID` (URL Types) в `Info.plist`
 3. `GoogleService-Info.plist` **не коммить**
-4. `REVERSED_CLIENT_ID` потом в URL Types
 
-Без этого кнопка Google на iOS не войдёт. Сборка и TestFlight от этого не зависят.
+Без iOS OAuth client кнопка Google на iPhone не завершит вход.
+Сборка и TestFlight от этого не зависят. Sign in with Apple при этом работает.
 
 ## 10. Если появится Mac
 

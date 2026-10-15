@@ -63,6 +63,59 @@ def tf_contact_phone
   ENV.fetch("TESTFLIGHT_CONTACT_PHONE", "").gsub(/\D/, "")
 end
 
+def tf_ensure_internal_group(app)
+  groups = tf_models(app.get_beta_groups)
+  internal = groups.find { |item| item.is_internal_group == true }
+  if internal.nil?
+    UI.message("Создаю внутреннюю группу Internal")
+    created = app.create_beta_group(
+      group_name: "Internal",
+      is_internal_group: true,
+      public_link_enabled: false,
+      has_access_to_all_builds: true
+    )
+    internal = tf_models(created).first
+  end
+  UI.user_error!("Нет внутренней TestFlight-группы") if internal.nil?
+  internal
+end
+
+def tf_invite_asc_users(internal)
+  _code, json = tf_asc(:get, "/v1/users?limit=50")
+  users = json["data"]
+  users = [] unless users.is_a?(Array)
+  UI.message("ASC users: #{users.size}")
+  users.each do |user|
+    attrs = user["attributes"] || {}
+    email = attrs["username"].to_s
+    next if email.empty? || !email.include?("@")
+    first = attrs["firstName"].to_s
+    first = "Zozu" if first.empty?
+    last = attrs["lastName"].to_s
+    last = "Games" if last.empty?
+    invite_code, = tf_asc(
+      :post,
+      "/v1/betaTesters",
+      {
+        data: {
+          type: "betaTesters",
+          attributes: {
+            email: email,
+            firstName: first,
+            lastName: last
+          },
+          relationships: {
+            betaGroups: {
+              data: [{ type: "betaGroups", id: internal.id }]
+            }
+          }
+        }
+      }
+    )
+    UI.message("invite #{email} → #{invite_code}")
+  end
+end
+
 default_platform(:ios)
 
 platform :ios do
@@ -109,7 +162,10 @@ platform :ios do
         language: "en-US",
         sku: app_sku,
         team_id: team_id,
-        skip_itc: true
+        skip_itc: true,
+        enable_services: {
+          sign_in_with_apple: "on"
+        }
       )
     rescue StandardError => e
       UI.important("produce: #{e.message}")
@@ -134,7 +190,8 @@ platform :ios do
       git_url: ENV.fetch("MATCH_GIT_URL"),
       git_branch: ENV.fetch("MATCH_GIT_BRANCH", "match-certs"),
       git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-      force: ENV["MATCH_FORCE"] == "true"
+      # force обновляет профиль, чтобы в нём был Sign in with Apple.
+      force: want_readonly ? false : true
     )
 
     profile_env = "sigh_#{bundle_id}_appstore_profile-name"
@@ -482,12 +539,20 @@ platform :ios do
         )
         UI.success("Отправлено на Beta Review") if submit_code.between?(200, 299)
       end
+      group_ids = [group.id]
+      begin
+        internal = tf_ensure_internal_group(app)
+        group_ids << internal.id
+        tf_invite_asc_users(internal)
+      rescue StandardError => e
+        UI.important("internal group: #{e.message}")
+      end
       begin
         Spaceship::ConnectAPI.add_beta_groups_to_build(
           build_id: build.id,
-          beta_group_ids: [group.id]
+          beta_group_ids: group_ids.uniq
         )
-        UI.success("Сборка добавлена в группу #{group_name}")
+        UI.success("Сборка добавлена в группы #{group_ids.uniq.join(',')}")
       rescue StandardError => e
         UI.important("add build to group: #{e.message}")
       end
