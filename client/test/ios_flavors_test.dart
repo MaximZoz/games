@@ -104,6 +104,8 @@ void main() {
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
+    expect(fastfile, contains('Spaceship::ConnectAPI::App.create'));
+    expect(fastfile, contains('tf_ensure_asc_app'));
     expect(fastfile, contains('want_readonly'));
     expect(fastfile, contains('ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")'));
     expect(fastfile, contains('flutter", "build", "ipa"'));
@@ -136,6 +138,8 @@ void main() {
     expect(app, contains('GeneratedPluginRegistrant.register'));
     expect(app, contains('SharedPreferencesPlugin'));
     expect(app, contains('com.zozugames/session_store'));
+    expect(app, contains('let messenger = controller.binaryMessenger'));
+    expect(app, isNot(contains('binaryMessenger else')));
     expect(app, contains('ZozuFlutterViewController'));
     expect(app, contains('com.zozugames/apple_sign_in'));
     expect(app, contains('ASAuthorizationAppleIDProvider'));

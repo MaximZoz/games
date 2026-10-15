@@ -416,7 +416,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       subtitle: context.l10n.shopEmojiPriceUses(
         formatRewardBronze(item.priceBronze),
       ),
-      onBuy: () => unawaited(_buy(item)),
+      onBuy: () => _buy(item),
       buyLabel: context.l10n.shopBuy,
     );
   }

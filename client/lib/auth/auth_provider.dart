@@ -304,7 +304,12 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
       emailVerified: user.emailVerified,
     );
     state = AsyncValue.data(updated);
-    await _ref.read(authRepositoryProvider).updateStoredUser(updated);
+    // Диск не должен держать «…» на кнопке: баланс в тулбаре уже новый.
+    unawaited(() async {
+      try {
+        await _ref.read(authRepositoryProvider).updateStoredUser(updated);
+      } catch (_) {}
+    }());
   }
 
   /// Забирает ежедневную награду по серии дней. После успеха обновляет balance.

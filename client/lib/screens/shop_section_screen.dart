@@ -8,6 +8,7 @@ import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
+import 'package:multigames_client/shop/shop_buy_slot.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -299,29 +300,12 @@ class _ShopItemCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (item.owned)
-            Text(
-              l10n.shopOwned,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2E7D32),
-                  ) ??
-                  const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2E7D32),
-                  ),
-            )
-          else
-            TextButton(
-              onPressed: busy ? null : onBuy,
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              child: Text(busy ? '…' : l10n.shopBuy),
-            ),
+          ShopBuySlot(
+            once: item.boughtOnce,
+            owned: item.owned,
+            busy: busy,
+            onBuy: onBuy,
+          ),
         ],
       ),
       );

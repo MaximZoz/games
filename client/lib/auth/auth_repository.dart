@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -8,6 +9,7 @@ import 'package:multigames_client/auth/session_storage_stub.dart'
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/shared_prefs_guard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyAccessToken = 'access_token';
@@ -205,11 +207,8 @@ class AuthRepository {
   Future<void> init() async {
     if (_prefs != null) return;
     // Ранее prefs могли упасть один раз (Safari) — пробуем снова.
-    try {
-      _prefs = await SharedPreferences.getInstance();
-    } catch (_) {
-      _prefs = null;
-    }
+    // Зависший getInstance не должен держать кнопку «Купить» на «…».
+    _prefs = await sharedPreferencesOrNull();
   }
 
   Future<AuthResult> register({
@@ -712,7 +711,9 @@ class AuthRepository {
     await init();
     if (_prefs == null) return;
     try {
-      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
+      await _prefs!
+          .setString(_keyUser, jsonEncode(user.toJson()))
+          .timeout(sharedPrefsTimeout);
     } catch (_) {}
   }
 
@@ -988,7 +989,9 @@ class AuthRepository {
     await init();
     if (_prefs == null) return;
     try {
-      await _prefs!.setString(_keyUser, jsonEncode(user.toJson()));
+      await _prefs!
+          .setString(_keyUser, jsonEncode(user.toJson()))
+          .timeout(sharedPrefsTimeout);
     } catch (_) {}
   }
 
@@ -1014,14 +1017,22 @@ class AuthRepository {
         continue;
       }
       try {
-        await _prefs!.setString(_keyAccessToken, accessToken);
-        await _prefs!.setString(_keyRefreshToken, refreshToken);
-        await _prefs!.setString(_keyUser, userJson);
-        await _prefs!.reload();
+        await _prefs!
+            .setString(_keyAccessToken, accessToken)
+            .timeout(sharedPrefsTimeout);
+        await _prefs!
+            .setString(_keyRefreshToken, refreshToken)
+            .timeout(sharedPrefsTimeout);
+        await _prefs!
+            .setString(_keyUser, userJson)
+            .timeout(sharedPrefsTimeout);
+        await _prefs!.reload().timeout(sharedPrefsTimeout);
         final okAccess = _prefs!.getString(_keyAccessToken) == accessToken;
         final okRefresh = refreshToken.isEmpty ||
             _prefs!.getString(_keyRefreshToken) == refreshToken;
         if (okAccess && okRefresh) return;
+      } on TimeoutException {
+        return;
       } catch (_) {
         // QuotaExceeded / private mode — пробуем ещё раз.
         _prefs = null;
@@ -1073,9 +1084,15 @@ class AuthRepository {
       await init();
       if (_prefs == null) return;
       try {
-        await _prefs!.setString(_keyAccessToken, access);
-        await _prefs!.setString(_keyRefreshToken, refresh);
-        await _prefs!.setString(_keyUser, userJson!);
+        await _prefs!
+            .setString(_keyAccessToken, access)
+            .timeout(sharedPrefsTimeout);
+        await _prefs!
+            .setString(_keyRefreshToken, refresh)
+            .timeout(sharedPrefsTimeout);
+        await _prefs!
+            .setString(_keyUser, userJson!)
+            .timeout(sharedPrefsTimeout);
       } catch (_) {}
     }
   }

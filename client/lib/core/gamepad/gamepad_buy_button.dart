@@ -9,11 +9,13 @@ class GamepadBuyButton extends StatelessWidget {
     required this.onPressed,
     required this.label,
     this.autofocus = true,
+    this.busy = false,
   });
 
   final VoidCallback onPressed;
   final String label;
   final bool autofocus;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +24,11 @@ class GamepadBuyButton extends StatelessWidget {
       outlined: false,
       radius: AppRadius.button,
       borderWidth: 2.2,
-      onActivate: onPressed,
+      onActivate: busy ? null : onPressed,
       child: Builder(
         builder: (context) {
           return FilledButton(
-            onPressed: onPressed,
+            onPressed: busy ? null : onPressed,
             style: AppButtonStyles.of(
               minimumSize: const Size(168, 48),
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
@@ -38,7 +40,7 @@ class GamepadBuyButton extends StatelessWidget {
                 GamepadFocusBlock.buttonSide(context),
               ),
             ),
-            child: Text(label),
+            child: Text(busy ? '…' : label),
           );
         },
       ),
