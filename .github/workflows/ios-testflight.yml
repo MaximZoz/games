@@ -167,6 +167,31 @@ jobs:
         working-directory: client
         run: flutter pub get
 
+      - name: Write GoogleService-Info.plist (optional FCM)
+        working-directory: client
+        env:
+          IOS_GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_PLIST }}
+          IOS_GOOGLE_SERVICE_INFO_PLIST_DEV: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_PLIST_DEV }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          flavor="${{ steps.target.outputs.flavor }}"
+          bundle="${{ steps.target.outputs.bundle_id }}"
+          plist="${IOS_GOOGLE_SERVICE_INFO_PLIST:-}"
+          if [[ "$flavor" == "dev" && -n "${IOS_GOOGLE_SERVICE_INFO_PLIST_DEV:-}" ]]; then
+            plist="$IOS_GOOGLE_SERVICE_INFO_PLIST_DEV"
+          fi
+          if [[ -z "$plist" ]]; then
+            echo "No GoogleService-Info.plist secret — closed-app FCM will be off in this IPA"
+            exit 0
+          fi
+          if ! printf '%s' "$plist" | grep -Fq "<string>${bundle}</string>"; then
+            echo "GoogleService-Info.plist has no BUNDLE_ID ${bundle} — skip FCM for $flavor"
+            exit 0
+          fi
+          printf '%s' "$plist" > ios/Runner/GoogleService-Info.plist
+          echo "Wrote ios/Runner/GoogleService-Info.plist"
+
       - name: Write App Store Connect API key
         working-directory: .
         env:

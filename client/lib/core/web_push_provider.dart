@@ -146,7 +146,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     return null;
   }
 
-  /// Web Push (PWA) + FCM (Android), если уведомления включены.
+  /// Web Push (PWA) + FCM (Android и iPhone), если уведомления включены.
   Future<void> ensurePushForSession() async {
     await ensureActiveSubscription();
     await ensureAndroidDevicePush();
@@ -419,7 +419,7 @@ class WebPushCategoriesNotifier extends StateNotifier<WebPushCategoryPrefs> {
 /// Поддержка Web Push (для UI).
 bool get isWebPushSupported => browser_push.browserPushSupported();
 
-/// Настройки уведомлений: web push или локальные на Android.
+/// Настройки уведомлений: web push или локальные на Android и iPhone.
 bool get isPushSettingsAvailable =>
     isWebPushSupported || localNotificationsSupported();
 

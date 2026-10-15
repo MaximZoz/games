@@ -190,6 +190,7 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `Deployment target too low` / `90068` | приложение целится в iOS 15.0 (с апреля 2027 Apple не примет ниже) |
 | `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
 | `doesn't include the com.apple.developer.applesignin` | Bundle ID был создан раньше capability. CI включает Sign in with Apple и пересобирает профиль. Не жми Re-run старого прогона — дождись вливания в `develop` |
+| `aps-environment` / Push | CI включает Push Notifications и пересобирает профиль. Если ошибка осталась — Identifiers → Push Notifications → Enable, затем Run workflow → `force_match` |
 
 Лог Actions: job **release**, шаг **Build IPA and upload to TestFlight**.
 
@@ -200,21 +201,39 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 Сервер проверяет identity token через JWKS Apple
 (`POST /api/auth/oauth/apple/id-token`). Web-секреты `APPLE_*` для этого не нужны.
 
-**Google** — плагин `google_sign_in` (тот же Gmail, что на телефоне), не Safari.
+**Google** — системный лист в приложении (схема `zozugames` или `zozugames-dev`), не уход на сайт. Плагин `google_sign_in` на iPhone не вызывается: без отдельного iOS OAuth client он падает сразу.
 
 Если лоадер крутится и окно не открывается:
 
 1. `SceneDelegate` должен прокидывать URL в `FlutterAppDelegate` (уже в репо)
-2. В [Google Cloud](https://console.cloud.google.com/) того же проекта, что Web Client ID:
-   - Credentials → **Create OAuth client ID** → тип **iOS**
-   - Bundle ID: `com.zozugames.app` и отдельно `.dev`
-   - `GIDClientID` и `REVERSED_CLIENT_ID` (URL Types) в `Info.plist`
-3. `GoogleService-Info.plist` **не коммить**
+2. На сервере должен быть `GOOGLE_CLIENT_ID` (Web client). Отдельный iOS OAuth client для этого листа не нужен.
 
-Без iOS OAuth client кнопка Google на iPhone не завершит вход.
-Сборка и TestFlight от этого не зависят. Sign in with Apple при этом работает.
+## 10. Уведомления на iPhone
 
-## 10. Если появится Mac
+Пока приложение открыто или свёрнуто, баннер рисует само приложение (как на Android). Когда процесс убит, баннер приходит через FCM. Для этого нужны три вещи. Без `GoogleService-Info.plist` в IPA закрытое приложение молчит, локальные баннеры при живом сокете остаются.
+
+| Что | Куда |
+|-----|------|
+| `GoogleService-Info.plist` с `BUNDLE_ID` этой сборки | секрет GitHub, CI кладёт его в IPA |
+| Push Notifications на Bundle ID | CI включает сам и пересобирает профиль |
+| `FCM_SERVICE_ACCOUNT_JSON` | уже на Fly, тот же секрет, что для Android |
+
+Секреты Actions:
+
+| Секрет | Файл |
+|--------|------|
+| `IOS_GOOGLE_SERVICE_INFO_PLIST` | plist прод, `BUNDLE_ID` = `com.zozugames.app` |
+| `IOS_GOOGLE_SERVICE_INFO_PLIST_DEV` | plist DEV, `BUNDLE_ID` = `com.zozugames.app.dev` |
+
+Firebase → тот же проект, что Android → Add app → iOS → скачать plist. В git файл не класть.
+
+В файле должен быть ровно `<string>com.zozugames.app</string>` или `.dev`. Чужой Bundle ID CI не подставит.
+
+После зелёного **iOS TestFlight** поставь сборку, войди, разреши уведомления. Свёрнутое приложение показывает баннер сразу. Закрытое — после того, как в логе сборки есть `Wrote ios/Runner/GoogleService-Info.plist`.
+
+В Apple Developer у Bundle ID должен быть ключ APNs (Firebase → Cloud Messaging → Apple app → APNs Authentication Key). Без ключа FCM не доставит баннер на iPhone, хотя токен приложение получит.
+
+## 11. Если появится Mac
 
 ```bash
 cd client

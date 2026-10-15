@@ -1,6 +1,6 @@
 # MultiGames
 
-Монорепозиторий: Flutter-клиент (Web / Android / PWA) и Go API для онлайн-мини-игр.
+Монорепозиторий: Flutter-клиент (Web / Android / iPhone / PWA) и Go API для онлайн-мини-игр.
 
 ```text
 Flutter (Riverpod, go_router)
@@ -19,7 +19,7 @@ Go (net/http, pgx, JWT)
 
 **Аккаунт.** Регистрация и вход (email + refresh JWT), подтверждение почты, сброс пароля, OAuth Google / Apple / Yandex / VK, профиль (ник, возраст, пол, «о себе», аватар, до 3 фото). Заморозка проверяется на refresh, на каждом защищённом запросе и на WebSocket; сессии замороженного сбрасываются. Логин, регистрация, сброс пароля и подключение сокета ограничены по IP (общий счётчик в Redis, ответ `429`).
 
-**Соцсеть.** Друзья и заявки, чаты (текст, фото, правки, ответы, блокировка), онлайн-статус, push (PWA + Android FCM). Рассылка чатов, друзей и presence, а также OAuth state, идут через Redis — несколько машин на Fly видят одно состояние.
+**Соцсеть.** Друзья и заявки, чаты (текст, фото, правки, ответы, блокировка), онлайн-статус, push (PWA, Android и iPhone через FCM). Рассылка чатов, друзей и presence, а также OAuth state, идут через Redis — несколько машин на Fly видят одно состояние.
 
 **Партии.** Ход закрывается локом `gamelock:{id}` (в том числе ход бота), два запроса не перезаписывают доску. Список открытых лобби читается из индекса `idx:lobbies`.
 
@@ -107,7 +107,7 @@ cd client && flutter run -d chrome
 ```
 
 Главное в `.env`: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET`.  
-Почта — `RESEND_API_KEY` или `SMTP_*`. OAuth — `*_CLIENT_ID` / `*_CLIENT_SECRET`. Push — `VAPID_*`, на Android ещё `FCM_SERVICE_ACCOUNT_JSON`.
+Почта — `RESEND_API_KEY` или `SMTP_*`. OAuth — `*_CLIENT_ID` / `*_CLIENT_SECRET`. Push — `VAPID_*` и `FCM_SERVICE_ACCOUNT_JSON` (Android и iPhone). В IPA кладётся `GoogleService-Info.plist` из секрета CI.
 
 Без Redis сервер стартует, но лобби и партии недоступны.
 

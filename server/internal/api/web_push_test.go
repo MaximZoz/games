@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 )
@@ -24,6 +25,47 @@ func TestShouldDropFCMToken(t *testing.T) {
 	body := []byte(`{"error":{"status":"NOT_FOUND","details":[{"errorCode":"UNREGISTERED"}]}}`)
 	if !shouldDropFCMToken(http.StatusBadRequest, body) {
 		t.Fatal("UNREGISTERED should drop")
+	}
+}
+
+func TestBuildFCMMessageReachesIOS(t *testing.T) {
+	raw, err := json.Marshal(buildFCMMessage("tok", PushPayload{
+		Title: "Алёна",
+		Body:  "Пойдём в домино",
+		URL:   "/games/domino/lobby/1",
+		Tag:   "lobby_1",
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var msg map[string]any
+	if err := json.Unmarshal(raw, &msg); err != nil {
+		t.Fatal(err)
+	}
+	apns, _ := msg["apns"].(map[string]any)
+	if apns == nil {
+		t.Fatal("нет apns")
+	}
+	headers, _ := apns["headers"].(map[string]any)
+	if headers["apns-priority"] != "10" {
+		t.Fatalf("priority=%v", headers["apns-priority"])
+	}
+	payload, _ := apns["payload"].(map[string]any)
+	aps, _ := payload["aps"].(map[string]any)
+	if aps["sound"] != "default" {
+		t.Fatalf("sound=%v", aps["sound"])
+	}
+	if aps["thread-id"] != "lobby_1" {
+		t.Fatalf("thread=%v", aps["thread-id"])
+	}
+	alert, _ := aps["alert"].(map[string]any)
+	if alert["title"] != "Алёна" || alert["body"] != "Пойдём в домино" {
+		t.Fatalf("alert=%v", alert)
+	}
+	android, _ := msg["android"].(map[string]any)
+	note, _ := android["notification"].(map[string]any)
+	if note["channel_id"] != "zozu_events" {
+		t.Fatalf("android channel=%v", note["channel_id"])
 	}
 }
 
