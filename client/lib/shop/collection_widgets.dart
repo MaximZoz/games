@@ -177,7 +177,7 @@ Future<void> showCollectionFullscreen(
   String? subtitle,
   ValueNotifier<String>? subtitleListenable,
   Widget? bottomAction,
-  VoidCallback? onBuy,
+  FutureOr<void> Function()? onBuy,
   String? buyLabel,
   CollectionCondition? condition,
   DateTime? acquiredAt,
@@ -234,7 +234,7 @@ class _CollectionFullscreen extends StatefulWidget {
   final String? subtitle;
   final ValueNotifier<String>? subtitleListenable;
   final Widget? bottomAction;
-  final VoidCallback? onBuy;
+  final FutureOr<void> Function()? onBuy;
   final String? buyLabel;
   final CollectionCondition? condition;
   final DateTime? acquiredAt;
@@ -255,6 +255,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   late List<CollectionElixirButton> _actions;
   Timer? _tick;
   bool _closed = false;
+  bool _buying = false;
 
   @override
   void initState() {
@@ -365,13 +366,23 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
       });
     }
 
-    void buy() => widget.onBuy?.call();
+    Future<void> buy() async {
+      final action = widget.onBuy;
+      if (action == null || _buying) return;
+      setState(() => _buying = true);
+      try {
+        await action();
+      } finally {
+        if (mounted) setState(() => _buying = false);
+      }
+    }
 
     final hasChoices = widget.onBuy != null || _actions.isNotEmpty;
     final action = widget.onBuy == null
         ? widget.bottomAction
         : GamepadBuyButton(
-            onPressed: buy,
+            onPressed: () => unawaited(buy()),
+            busy: _buying,
             label: widget.buyLabel ?? context.l10n.shopBuy,
           );
 
@@ -389,7 +400,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
             return true;
           }
           if (widget.onBuy != null) {
-            buy();
+            unawaited(buy());
           } else {
             close();
           }
