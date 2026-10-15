@@ -1196,6 +1196,10 @@ class AppShell extends ConsumerWidget {
     // Scaffold обнуляет padding.bottom у bottomNavigationBar — поэтому inset
     // берём из viewPadding, а не из SafeArea(padding).
     final bottomInset = media.viewPadding.bottom;
+    // Полный home-indicator inset (~34) оставлял пустоту под иконками.
+    // 12 хватает, чтобы подпись не села на полоску Home, фон всё равно до низа.
+    final navBottomGap =
+        bottomInset <= 0 ? 0.0 : (bottomInset > 16 ? 12.0 : bottomInset);
     // Оболочка сама сдвигает контент на клавиатуру, поэтому панель под ней
     // не должна занимать высоту — иначе между вводом и клавиатурой щель.
     final collapseNavForKeyboard = shellOwnsKeyboardInset && keyboardOpen;
@@ -1233,7 +1237,7 @@ class AppShell extends ConsumerWidget {
                         ),
                       ),
                       // Заливка под home indicator — до скруглённых углов.
-                      SizedBox(height: bottomInset),
+                      SizedBox(height: navBottomGap),
                     ],
                   ),
                 ),
@@ -1518,7 +1522,7 @@ class _MobileBottomNav extends StatelessWidget {
     final label = navItems[safeIndex].label;
     return ExcludeFocus(
       child: Padding(
-      padding: const EdgeInsets.fromLTRB(2, 2, 2, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1532,18 +1536,15 @@ class _MobileBottomNav extends StatelessWidget {
                       child: InkWell(
                         onTap: () => onTap(i),
                         customBorder: const CircleBorder(),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Center(
-                            child: _navIcon(
-                              navItems[i],
-                              unreadChats,
-                              incomingFriends,
-                              gamesMyTurn,
-                              gameInvitesCount,
-                              homeBadgeCount,
-                              selected: i == safeIndex,
-                            ),
+                        child: Center(
+                          child: _navIcon(
+                            navItems[i],
+                            unreadChats,
+                            incomingFriends,
+                            gamesMyTurn,
+                            gameInvitesCount,
+                            homeBadgeCount,
+                            selected: i == safeIndex,
                           ),
                         ),
                       ),
@@ -1552,7 +1553,6 @@ class _MobileBottomNav extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 2),
           // Симметричная подпись: линия — текст — линия (тот же стиль, что splash).
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),

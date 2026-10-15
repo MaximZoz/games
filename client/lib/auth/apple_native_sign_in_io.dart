@@ -1,8 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AppleNativeSignInResult {
   const AppleNativeSignInResult({
@@ -27,56 +25,47 @@ class AppleSignInUnavailableException implements Exception {
   String toString() => message;
 }
 
-bool get isAppleSignInSupported =>
-    Platform.isIOS || Platform.isMacOS;
+bool get isAppleSignInSupported => Platform.isIOS;
 
-bool _isCanceled(Object e) {
-  if (e is SignInWithAppleAuthorizationException) {
-    return e.code == AuthorizationErrorCode.canceled;
-  }
-  if (e is PlatformException) {
-    final code = e.code.toLowerCase();
-    final msg = (e.message ?? '').toLowerCase();
-    return code.contains('cancel') || msg.contains('cancel');
-  }
-  return false;
+const _channel = MethodChannel('com.zozugames/apple_sign_in');
+
+bool _isCanceled(PlatformException e) {
+  final code = e.code.toLowerCase();
+  final msg = (e.message ?? '').toLowerCase();
+  return code.contains('cancel') || msg.contains('cancel');
 }
 
-/// Системный лист Apple ID (тот же аккаунт, что в Настройках iPhone).
+/// Системный лист Apple ID через канал в AppDelegate (AuthenticationServices).
 Future<AppleNativeSignInResult?> signInWithAppleNative() async {
   if (!isAppleSignInSupported) {
     throw AppleSignInUnavailableException();
   }
-  final available = await SignInWithApple.isAvailable();
-  if (!available) {
-    throw AppleSignInUnavailableException();
-  }
-
   try {
-    final cred = await SignInWithApple.getAppleIDCredential(
-      scopes: [
-        AppleIDAuthorizationScopes.email,
-        AppleIDAuthorizationScopes.fullName,
-      ],
-    );
-    final token = (cred.identityToken ?? '').trim();
+    final raw = await _channel.invokeMapMethod<String, dynamic>('signIn');
+    if (raw == null) return null;
+    final token = (raw['identityToken'] ?? '').toString().trim();
     if (token.isEmpty) {
       throw AppleSignInUnavailableException(
         'Sign in with Apple: empty identity token',
       );
     }
+    String? text(String key) {
+      final value = (raw[key] ?? '').toString().trim();
+      return value.isEmpty ? null : value;
+    }
+
     return AppleNativeSignInResult(
       identityToken: token,
-      email: cred.email,
-      givenName: cred.givenName,
-      familyName: cred.familyName,
+      email: text('email'),
+      givenName: text('givenName'),
+      familyName: text('familyName'),
     );
-  } on SignInWithAppleAuthorizationException catch (e) {
-    if (_isCanceled(e)) return null;
-    debugPrint('Sign in with Apple failed: $e');
-    rethrow;
   } on PlatformException catch (e) {
     if (_isCanceled(e)) return null;
-    rethrow;
+    throw AppleSignInUnavailableException(e.message ?? e.code);
+  } on MissingPluginException {
+    throw AppleSignInUnavailableException(
+      'Sign in with Apple: native channel is not registered',
+    );
   }
 }

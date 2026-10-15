@@ -196,9 +196,9 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 ## 9. Вход на iPhone (Apple и Google)
 
 **Sign in with Apple** — системный лист того же Apple ID, что в Настройках.
-Плагин `sign_in_with_apple`, кнопка выше Google. Сервер проверяет identity
-token через JWKS Apple (`POST /api/auth/oauth/apple/id-token`).
-Web-секреты `APPLE_*` для этого не нужны.
+Канал в `AppDelegate` (`com.zozugames/apple_sign_in`), кнопка выше Google.
+Сервер проверяет identity token через JWKS Apple
+(`POST /api/auth/oauth/apple/id-token`). Web-секреты `APPLE_*` для этого не нужны.
 
 **Google** — плагин `google_sign_in` (тот же Gmail, что на телефоне), не Safari.
 
