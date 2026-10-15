@@ -137,6 +137,8 @@ void main() {
     expect(app, contains('com.zozugames/apple_sign_in'));
     expect(app, contains('ASAuthorizationAppleIDProvider'));
     expect(app, contains('ZozuAppleSignIn'));
+    expect(app, contains('keyWindow'));
+    expect(app, isNot(contains('registrar.viewController')));
     expect(app, isNot(contains('FlutterImplicitEngine')));
     expect(scene, contains('UIWindowSceneDelegate'));
     expect(scene, isNot(contains('FlutterSceneDelegate')));

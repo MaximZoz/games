@@ -20,7 +20,6 @@ import UIKit
 
 /// Системный лист Apple ID. Канал: com.zozugames/apple_sign_in
 final class ZozuAppleSignIn: NSObject, FlutterPlugin, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
-  private let registrar: FlutterPluginRegistrar
   private var pending: FlutterResult?
   private var controller: ASAuthorizationController?
 
@@ -29,12 +28,7 @@ final class ZozuAppleSignIn: NSObject, FlutterPlugin, ASAuthorizationControllerD
       name: "com.zozugames/apple_sign_in",
       binaryMessenger: registrar.messenger()
     )
-    let instance = ZozuAppleSignIn(registrar: registrar)
-    registrar.addMethodCallDelegate(instance, channel: channel)
-  }
-
-  init(registrar: FlutterPluginRegistrar) {
-    self.registrar = registrar
+    registrar.addMethodCallDelegate(ZozuAppleSignIn(), channel: channel)
   }
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -60,22 +54,17 @@ final class ZozuAppleSignIn: NSObject, FlutterPlugin, ASAuthorizationControllerD
   }
 
   func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-    if let window = registrar.viewController?.view.window {
-      return window
-    }
+    // FlutterPluginRegistrar в этом SDK без viewController.
     for scene in UIApplication.shared.connectedScenes {
       guard let windowScene = scene as? UIWindowScene else { continue }
-      for window in windowScene.windows where window.isKeyWindow {
+      if let window = windowScene.keyWindow {
         return window
       }
-    }
-    for scene in UIApplication.shared.connectedScenes {
-      guard let windowScene = scene as? UIWindowScene else { continue }
       if let window = windowScene.windows.first {
         return window
       }
     }
-    return ASPresentationAnchor()
+    return UIWindow()
   }
 
   func authorizationController(
