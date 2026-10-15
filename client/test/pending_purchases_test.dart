@@ -1,5 +1,37 @@
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _QuietAuth extends AuthRepository {
+  @override
+  Future<AuthUser?> getStoredUser() async => null;
+
+  @override
+  Future<AuthUser?> fetchCurrentUser() async => null;
+}
+
+class _FakeShop extends ShopRepository {
+  _FakeShop() : super(AuthRepository());
+
+  int buys = 0;
+
+  @override
+  Future<ShopBuyResult> buy(String code) async {
+    buys++;
+    return const ShopBuyResult(balanceBronze: 7, quantity: 2);
+  }
+
+  @override
+  Future<List<ShopItem>> listShop() async => const [];
+}
 
 void main() {
   test('PendingPurchase сериализуется с title', () {
@@ -21,6 +53,45 @@ void main() {
     });
     expect(restored.code, 'hat_1');
     expect(restored.title, '');
+  });
+
+  test('покупка не зависает, если в очереди уже есть позиция', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({
+      'pending_shop_purchases': jsonEncode([
+        {
+          'code': 'elixir_stuck',
+          'title': 'Stuck',
+          'queued_at_ms': 1,
+        },
+      ]),
+    });
+    final shop = _FakeShop();
+    final container = ProviderContainer(
+      overrides: [
+        offlineModeProvider.overrideWith(
+          (ref) => OfflineModeNotifier(autostart: false),
+        ),
+        authRepositoryProvider.overrideWithValue(_QuietAuth()),
+        shopRepositoryProvider.overrideWithValue(shop),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final result = await container
+        .read(pendingPurchasesProvider.notifier)
+        .buyOrQueue('elixir_new')
+        .timeout(const Duration(seconds: 2));
+
+    expect(result.balanceBronze, 7);
+    expect(result.quantity, 2);
+    for (var i = 0;
+        i < 40 && container.read(pendingPurchasesProvider).isNotEmpty;
+        i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    expect(container.read(pendingPurchasesProvider), isEmpty);
+    expect(shop.buys, 2);
   });
 
   test('PendingPurchaseFlushNotice.isEmpty', () {

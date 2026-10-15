@@ -97,7 +97,7 @@ final isOfflineProvider = Provider<bool>((ref) {
 });
 
 class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
-  OfflineModeNotifier()
+  OfflineModeNotifier({bool autostart = true})
       : super(OfflineModeState(
           preference: OfflinePreference.online,
           deviceOnline: readDeviceOnline(),
@@ -109,7 +109,8 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
     );
     _resumeObserver = _AppResumeObserver(_onAppResumed);
     WidgetsBinding.instance.addObserver(_resumeObserver);
-    _init();
+    // В тестах очередь покупок не должна дергать сеть и таймеры проб.
+    if (autostart) _init();
   }
 
   late final OfflineReachability _reachability;

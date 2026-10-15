@@ -22,6 +22,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/ui/widgets/snug_bottom_list.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 
@@ -98,6 +99,7 @@ class _ShopElixirsScreenState extends ConsumerState<ShopElixirsScreen> {
           ],
         ),
         body: SafeArea(
+          bottom: false,
           child: elixirs.isEmpty
               ? Center(
                   child: Text(
@@ -117,15 +119,11 @@ class _ShopElixirsScreenState extends ConsumerState<ShopElixirsScreen> {
                       ),
                       mobileBuilder: (_) => const SizedBox.shrink(),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: elixirEffectOrder.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) => _effectTile(
-                        context,
-                        elixirEffectOrder[index],
-                        elixirs,
-                      ),
+                  : SnugBottomList(
+                      children: [
+                        for (final effect in elixirEffectOrder)
+                          _effectTile(context, effect, elixirs),
+                      ],
                     ),
         ),
       ),
@@ -203,6 +201,14 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
     });
   }
 
+  Future<void> _joinCatalog() async {
+    try {
+      final fresh = await ref.read(shopCatalogProvider.future);
+      if (!mounted) return;
+      setState(() => _items = fresh);
+    } catch (_) {}
+  }
+
   Future<void> _reloadSilent() async {
     try {
       final items = ref.read(isOfflineProvider)
@@ -236,10 +242,9 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
     setState(() => _buyInFlight.add(item.code));
     try {
       await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
-      ref.invalidate(inventoryListProvider);
-      ref.invalidate(shopCatalogProvider);
-      final fresh = await ref.read(shopCatalogProvider.future);
-      if (mounted) setState(() => _items = fresh);
+      // buyOrQueue уже инвалидирует каталог и инвентарь. Не ждём полный
+      // список магазина: иначе «…» висит ещё один круг до сервера.
+      unawaited(_joinCatalog());
       return true;
     } catch (e) {
       if (!mounted) return false;
@@ -305,6 +310,7 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
           title: Text(elixirGroupTitle(l10n, widget.effect)),
         ),
         body: SafeArea(
+          bottom: false,
           child: group.isEmpty
               ? Center(
                   child: Text(
@@ -321,12 +327,10 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
                           _card(context, group[index]),
                       mobileBuilder: (_) => const SizedBox.shrink(),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: group.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) =>
-                          _card(context, group[index]),
+                  : SnugBottomList(
+                      children: [
+                        for (final item in group) _card(context, item),
+                      ],
                     ),
         ),
       ),

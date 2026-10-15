@@ -62,7 +62,8 @@ void main() {
     expect(find.text('Вход'), findsOneWidget);
     expect(find.byType(SingleChildScrollView), findsWidgets);
 
-    final boxes = tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox));
+    final boxes =
+        tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox));
     final hasFullWidth = boxes.any((b) => b.constraints.maxWidth == 390);
     expect(hasFullWidth, isTrue);
   });
@@ -112,6 +113,22 @@ void main() {
 
     expect(find.text('Вход'), findsOneWidget);
     expect(mobileBottomNav(), findsNothing);
+  });
+
+  testWidgets('Phone bottom nav does not clip a badge above the icons',
+      (tester) async {
+    await openGuestProfileOnPhone(tester);
+    var clipsBadge = false;
+    tester.element(mobileBottomNav()).visitAncestorElements((ancestor) {
+      if (ancestor.widget is ClipRect) {
+        clipsBadge = true;
+        return false;
+      }
+      if (ancestor.widget is Scaffold) return false;
+      return true;
+    });
+    expect(clipsBadge, isFalse);
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
   });
 
   testWidgets('Phone bottom nav label follows selected tab', (tester) async {

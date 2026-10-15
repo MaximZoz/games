@@ -18,6 +18,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/ui/widgets/snug_bottom_list.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
@@ -136,6 +137,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
           ],
         ),
         body: SafeArea(
+          bottom: false,
           child: orderedSets.isEmpty
               ? Center(
                   child: Text(
@@ -163,16 +165,11 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                     alignment: Alignment.topCenter,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 520),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        itemCount: orderedSets.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) =>
-                            _buildCollectionSetTile(
-                          context,
-                          orderedSets[index],
-                          bySet,
-                        ),
+                      child: SnugBottomList(
+                        children: [
+                          for (final set in orderedSets)
+                            _buildCollectionSetTile(context, set, bySet),
+                        ],
                       ),
                     ),
                   ),
@@ -354,6 +351,14 @@ class _ShopCollectionGroupScreenState
     } catch (_) {}
   }
 
+  Future<void> _joinCatalog() async {
+    try {
+      final fresh = await ref.read(shopCatalogProvider.future);
+      if (!mounted) return;
+      setState(() => _items = fresh);
+    } catch (_) {}
+  }
+
   Future<bool> _buy(
     ShopItem item, {
     bool confirm = true,
@@ -386,13 +391,10 @@ class _ShopCollectionGroupScreenState
       final wasOffline = ref.read(isOfflineProvider);
       await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
       if (!wasOffline) {
-        ref.invalidate(inventoryListProvider);
-        ref.invalidate(shopCatalogProvider);
         ref.invalidate(collectionIncomeProvider);
-        try {
-          final fresh = await ref.read(shopCatalogProvider.future);
-          if (mounted) setState(() => _items = fresh);
-        } catch (_) {}
+        // Каталог уже перечитывает buyOrQueue. Диалог «куплено» не ждёт
+        // этот ответ — иначе кнопка стоит на «…» весь повторный запрос.
+        unawaited(_joinCatalog());
       }
       if (!mounted) return false;
       if (wasOffline) {
@@ -477,6 +479,7 @@ class _ShopCollectionGroupScreenState
           ],
         ),
         body: SafeArea(
+          bottom: false,
           child: groupItems.isEmpty
               ? Center(
                   child: Text(
@@ -583,14 +586,11 @@ class _ShopCollectionGroupScreenState
     );
 
     if (!useDesktopTiles(context)) {
-      return ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        itemCount: groupItems.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          if (index == 0) return progress;
-          return _collectionShopCardFor(groupItems[index - 1]);
-        },
+      return SnugBottomList(
+        children: [
+          progress,
+          for (final item in groupItems) _collectionShopCardFor(item),
+        ],
       );
     }
 
