@@ -14,6 +14,7 @@ void main() {
     await openGuestProfileOnPhone(tester);
 
     expect(mobileBottomNav(), findsOneWidget);
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
     expect(find.byType(BottomNavigationBar), findsNothing);
     expect(find.byType(NavigationRail), findsNothing);
     // Одна подпись — текущий таб (Профиль).

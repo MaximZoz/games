@@ -421,6 +421,41 @@ class AuthRepository {
     return _handleAuthResponse(response);
   }
 
+  /// Вход через системный Sign in with Apple (identity token).
+  Future<AuthResult> loginWithAppleIdToken({
+    required String identityToken,
+    String? email,
+    String? givenName,
+    String? familyName,
+    String? redirect,
+    String? ref,
+  }) async {
+    await init();
+    final token = identityToken.trim();
+    if (token.isEmpty) {
+      throw AuthException(400, LocaleService.l10n.oauthError);
+    }
+    final payload = <String, dynamic>{'identity_token': token};
+    final mail = (email ?? '').trim();
+    if (mail.isNotEmpty) payload['email'] = mail;
+    final given = (givenName ?? '').trim();
+    if (given.isNotEmpty) payload['given_name'] = given;
+    final family = (familyName ?? '').trim();
+    if (family.isNotEmpty) payload['family_name'] = family;
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) payload['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) payload['ref'] = referral;
+
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/oauth/apple/id-token'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+      operation: 'AuthRepository.loginWithAppleIdToken',
+    );
+    return _handleAuthResponse(response);
+  }
+
   String oauthStartUrl({
     required String provider,
     String? redirect,

@@ -196,6 +196,27 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     state = AsyncValue.data(result.user);
   }
 
+  Future<void> loginWithAppleIdToken({
+    required String identityToken,
+    String? email,
+    String? givenName,
+    String? familyName,
+    String? redirect,
+    String? ref,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.loginWithAppleIdToken(
+      identityToken: identityToken,
+      email: email,
+      givenName: givenName,
+      familyName: familyName,
+      redirect: redirect,
+      ref: ref,
+    );
+    state = AsyncValue.data(result.user);
+  }
+
   Future<void> _enablePushForNewUser() async {
     try {
       await _ref.read(webPushEnabledProvider.notifier).enableForNewUser();

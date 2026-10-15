@@ -30,6 +30,8 @@ dependencies:
   # Google Sign-In на Android/iOS (аккаунт устройства / Play).
   google_sign_in: ^6.2.2
   google_sign_in_platform_interface: ^2.5.0
+  # Sign in with Apple — системный Apple ID на iPhone (Guideline 4.8).
+  sign_in_with_apple: ^6.1.4
   # Google Play In-App Updates (только Android; web использует reloadApp).
   in_app_update: ^4.2.3
   url_launcher: ^6.3.1

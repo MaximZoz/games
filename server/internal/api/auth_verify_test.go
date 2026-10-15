@@ -84,6 +84,51 @@ func TestGoogleIDTokenLogin_EmptyCredentialAndCode(t *testing.T) {
 	}
 }
 
+func TestAppleIDTokenLogin_MethodNotAllowed(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/oauth/apple/id-token", nil)
+	rec := httptest.NewRecorder()
+	h.AppleIDTokenLogin(rec, req)
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestAppleIDTokenLogin_EmptyToken(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/oauth/apple/id-token", bytes.NewReader([]byte(`{}`)))
+	rec := httptest.NewRecorder()
+	h.AppleIDTokenLogin(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestAppleIDTokenLogin_InvalidToken(t *testing.T) {
+	h := authHandlerForValidation(t)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/oauth/apple/id-token", bytes.NewReader([]byte(`{"identity_token":"not-a-jwt"}`)))
+	rec := httptest.NewRecorder()
+	h.AppleIDTokenLogin(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestAppleAudienceAllowed(t *testing.T) {
+	allowed := []string{"com.zozugames.app", "com.zozugames.app.dev"}
+	if !appleAudienceAllowed("com.zozugames.app.dev", allowed) {
+		t.Fatal("dev bundle must be allowed")
+	}
+	if appleAudienceAllowed("com.other.app", allowed) {
+		t.Fatal("foreign aud must be rejected")
+	}
+	cfg := &OAuthConfig{AppleClientID: "com.zozugames.service"}
+	got := cfg.appleAudiences()
+	if !appleAudienceAllowed("com.zozugames.service", got) {
+		t.Fatalf("services id missing from %v", got)
+	}
+}
+
 func TestGenerateEmailCode(t *testing.T) {
 	code, err := generateEmailCode()
 	if err != nil {

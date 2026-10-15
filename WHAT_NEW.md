@@ -10,6 +10,9 @@
 - iOS: если TestFlight «не принимает тестировщиков» — нужна Test Information и Beta Review, не новый IPA
 - iOS: один Actions **iOS TestFlight** — как Play: вливание в `develop` → DEV, в `main` → прод
 - iOS: минимальная версия системы 15.0 — иначе с апреля 2027 Apple не примет сборку
+- iOS: своя установка из TestFlight — внутренняя группа, без кода Redeem
+- iOS: «Войти через Apple» системным Apple ID, кнопка выше Google; Google больше не зависает на лоадере
+- iPhone: нижнее меню ниже; выбранная иконка крупнее остальных
 - Геймпад: в поле левый стик и крест выбирают символы на клавиатуре, правый стик двигает курсор
 - Геймпад: тап или фокус в поле ввода открывает клавиатуру контроллера, системная не выезжает
 - Шашки: русские и поддавки — лобби, поиск, инвайт, бот, ничья, сдача, реванш и статистика, как в других играх
@@ -101,6 +104,9 @@
 - iOS: “not accepting testers” means Test Information / Beta Review is missing, not a new IPA
 - iOS: one Actions workflow **iOS TestFlight** — same as Play: merge to `develop` → DEV, `main` → prod
 - iOS: minimum system version is 15.0 — from April 2027 Apple rejects lower targets
+- iOS: install on the developer iPhone via the Internal TestFlight group, no redeem code
+- iOS: Sign in with Apple uses the system Apple ID and sits above Google; Google no longer sticks on a spinner
+- iPhone: bottom tab bar sits lower; the selected icon is larger than the others
 - Gamepad: in a text field the left stick and D-pad pick keys; the right stick moves the caret
 - Gamepad: focusing a text field opens the controller keyboard; the system keyboard stays hidden
 - Checkers: Russian and giveaway — lobby, search, invite, bot, draw, resign, rematch and stats, same chrome as the other games

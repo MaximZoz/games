@@ -177,10 +177,12 @@ GET /api/auth/oauth/{provider}/start   // редирект на авториза
 GET /api/auth/oauth/{provider}/callback // обработка кода от провайдера
 GET /api/auth/oauth/poll?state=<state>  // поллинг результата входа (для popup-флоу)
 POST /api/auth/oauth/google/id-token    // вход по Google ID Token (GIS)
+POST /api/auth/oauth/apple/id-token     // вход по Sign in with Apple identity token
 ```
 
 `{provider}` ∈ `google | apple | yandex | vk`. Кнопки скрыты, пока не заданы
-соответствующие `*_CLIENT_ID` / `*_CLIENT_SECRET`. Redirect URI:
+соответствующие `*_CLIENT_ID` / `*_CLIENT_SECRET`. На iOS кнопка Apple
+показывается всегда (системный аккаунт). Redirect URI:
 `{PUBLIC_BASE_URL}/api/auth/oauth/{provider}/callback`.
 
 ---

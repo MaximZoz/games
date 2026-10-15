@@ -525,6 +525,7 @@ func main() {
 	mux.HandleFunc("/api/auth/oauth/providers", authHandler.OAuthProviders)
 	mux.HandleFunc("/api/auth/oauth/poll", authHandler.OAuthPoll)
 	mux.HandleFunc("/api/auth/oauth/google/id-token", authHandler.GoogleIDTokenLogin)
+	mux.HandleFunc("/api/auth/oauth/apple/id-token", authHandler.AppleIDTokenLogin)
 	mux.HandleFunc("/api/auth/oauth/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.HasSuffix(path, "/start") {
@@ -536,6 +537,10 @@ func main() {
 			return
 		}
 		if strings.HasSuffix(path, "/id-token") {
+			if strings.Contains(path, "/apple/") {
+				authHandler.AppleIDTokenLogin(w, r)
+				return
+			}
 			authHandler.GoogleIDTokenLogin(w, r)
 			return
 		}
