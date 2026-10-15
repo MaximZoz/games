@@ -134,6 +134,9 @@ void main() {
     final pbx = File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync();
     final fastfile = File('ios/fastlane/Fastfile').readAsStringSync();
     expect(app, contains('GeneratedPluginRegistrant.register'));
+    expect(app, contains('com.zozugames/apple_sign_in'));
+    expect(app, contains('ASAuthorizationAppleIDProvider'));
+    expect(app, contains('ZozuAppleSignIn'));
     expect(app, isNot(contains('FlutterImplicitEngine')));
     expect(scene, contains('UIWindowSceneDelegate'));
     expect(scene, isNot(contains('FlutterSceneDelegate')));
@@ -149,6 +152,13 @@ void main() {
     expect(fastfile, contains('com.apple.developer.applesignin'));
     expect(fastfile, contains('UserData/Provisioning Profiles'));
     expect(fastfile, contains('appstore_profile-path'));
-    expect(File('pubspec.yaml').readAsStringSync(), contains('sign_in_with_apple'));
+    expect(
+      File('pubspec.yaml').readAsStringSync(),
+      isNot(contains('sign_in_with_apple:')),
+    );
+    expect(
+      File('lib/auth/apple_native_sign_in_io.dart').readAsStringSync(),
+      contains('com.zozugames/apple_sign_in'),
+    );
   });
 }
