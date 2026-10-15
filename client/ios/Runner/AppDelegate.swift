@@ -17,9 +17,70 @@ import UIKit
 }
 
 func attachZozuAuthChannels() {
-  guard let messenger = zozuFlutterController()?.binaryMessenger else { return }
+  guard let controller = zozuFlutterController() else { return }
+  registerZozuLivePlugins(on: controller)
+}
+
+/// Storyboard создаёт свой FlutterViewController после didFinishLaunching.
+/// GeneratedPluginRegistrant в AppDelegate попадает в пустой registrar
+/// (AppDelegate.window ещё nil) — SharedPreferences молчит: сессия не
+/// переживает перезапуск, чекбоксы не пишутся, покупка ждёт getInstance.
+func registerZozuLivePlugins(on controller: FlutterViewController) {
+  if !controller.hasPlugin("SharedPreferencesPlugin") {
+    GeneratedPluginRegistrant.register(with: controller)
+  }
+  guard let messenger = controller.binaryMessenger else { return }
   ZozuAppleSignIn.register(messenger: messenger)
   ZozuSystemAuth.register(messenger: messenger)
+  ZozuSessionStore.register(messenger: messenger)
+}
+
+/// Живой FlutterViewController из storyboard. Плагины вешаем в awakeFromNib,
+/// до launchEngine в viewDidLoad — иначе первый getInstance уже ушёл в пустоту.
+final class ZozuFlutterViewController: FlutterViewController {
+  override func awakeFromNib() {
+    super.awakeFromNib()
+    registerZozuLivePlugins(on: self)
+  }
+}
+
+/// Сессия в UserDefaults напрямую, без плагина shared_preferences.
+/// Канал: com.zozugames/session_store
+final class ZozuSessionStore: NSObject {
+  static let accessKey = "zozu.session.access_token"
+  static let refreshKey = "zozu.session.refresh_token"
+  static let userKey = "zozu.session.user"
+
+  static func register(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "com.zozugames/session_store",
+      binaryMessenger: messenger
+    )
+    channel.setMethodCallHandler { call, result in
+      let defaults = UserDefaults.standard
+      switch call.method {
+      case "read":
+        result([
+          "access_token": defaults.string(forKey: accessKey) ?? "",
+          "refresh_token": defaults.string(forKey: refreshKey) ?? "",
+          "user": defaults.string(forKey: userKey) ?? "",
+        ])
+      case "write":
+        let args = call.arguments as? [String: Any] ?? [:]
+        defaults.set((args["access_token"] as? String) ?? "", forKey: accessKey)
+        defaults.set((args["refresh_token"] as? String) ?? "", forKey: refreshKey)
+        defaults.set((args["user"] as? String) ?? "", forKey: userKey)
+        result(true)
+      case "clear":
+        defaults.removeObject(forKey: accessKey)
+        defaults.removeObject(forKey: refreshKey)
+        defaults.removeObject(forKey: userKey)
+        result(true)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
 }
 
 func zozuFlutterController() -> FlutterViewController? {

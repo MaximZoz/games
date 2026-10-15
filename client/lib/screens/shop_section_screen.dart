@@ -101,16 +101,17 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
     if (!ok || !mounted) return;
 
     _buyInFlight.add(item.code);
-    final previous = _items;
-    setState(() {
-      _items = [
-        for (final it in _items)
-          if (it.code == item.code) it.copyWith(owned: true) else it,
-      ];
-    });
+    setState(() {});
     try {
       final wasOffline = ref.read(isOfflineProvider);
       await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
+      if (!mounted) return;
+      setState(() {
+        _items = [
+          for (final it in _items)
+            if (it.code == item.code) it.copyWith(owned: true) else it,
+        ];
+      });
       if (!wasOffline) {
         ref.invalidate(inventoryListProvider);
         ref.invalidate(inventoryCapabilitiesProvider);
@@ -129,7 +130,6 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      setState(() => _items = previous);
       showAppSnackBar(
         context,
         message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),

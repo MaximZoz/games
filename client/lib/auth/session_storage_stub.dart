@@ -1,4 +1,6 @@
-/// Non-web: резервное хранилище сессии не используется.
+import 'dart:async';
+
+/// Заглушка, если нет ни браузера, ни dart:io.
 void writeSessionBackup({
   required String accessToken,
   required String refreshToken,
@@ -11,3 +13,7 @@ void clearSessionBackup() {}
     readSessionBackup() {
   return null;
 }
+
+Future<void> ensureSessionBackupLoaded() async {}
+
+Future<void> flushSessionBackup() async {}

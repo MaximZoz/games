@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:web/web.dart' as web;
 
 /// Резерв в localStorage напрямую — если SharedPreferences на Safari
@@ -46,3 +48,7 @@ void clearSessionBackup() {
     return null;
   }
 }
+
+Future<void> ensureSessionBackupLoaded() async {}
+
+Future<void> flushSessionBackup() async {}

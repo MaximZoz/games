@@ -69,15 +69,24 @@ class SoundEnabledNotifier extends StateNotifier<bool> {
     _load();
   }
 
+  int _rev = 0;
+
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(_keySoundEnabled) ?? true;
+    final rev = _rev;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (rev != _rev) return;
+      state = prefs.getBool(_keySoundEnabled) ?? true;
+    } catch (_) {}
   }
 
   Future<void> set(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keySoundEnabled, value);
+    _rev++;
     state = value;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keySoundEnabled, value);
+    } catch (_) {}
   }
 }
 
@@ -89,16 +98,26 @@ class PrefBoolNotifier extends StateNotifier<bool> {
 
   final String _key;
   final bool defaultValue;
+  int _rev = 0;
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(_key) ?? defaultValue;
+    final rev = _rev;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (rev != _rev) return;
+      state = prefs.getBool(_key) ?? defaultValue;
+    } catch (_) {}
   }
 
   Future<void> set(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_key, value);
+    _rev++;
+    // Сразу, не после SharedPreferences: на iOS канал prefs может не ответить,
+    // и галочка иначе остаётся нажатой без смены.
     state = value;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_key, value);
+    } catch (_) {}
   }
 }
 

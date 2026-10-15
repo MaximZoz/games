@@ -381,22 +381,25 @@ class _ShopCollectionGroupScreenState
     }
 
     _buyInFlight.add(item.code);
-    setState(() {
-      _items = [
-        for (final it in _items)
-          if (it.code == item.code) it.copyWith(owned: true) else it,
-      ];
-    });
+    setState(() {});
     try {
       final wasOffline = ref.read(isOfflineProvider);
       await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
+      if (!mounted) return false;
+      // «Есть» только после ответа. Раньше галочка ставилась сразу, а монеты
+      // ждали запрос — при обрыве коллекция числилась купленной без списания.
+      setState(() {
+        _items = [
+          for (final it in _items)
+            if (it.code == item.code) it.copyWith(owned: true) else it,
+        ];
+      });
       if (!wasOffline) {
         ref.invalidate(collectionIncomeProvider);
         // Каталог уже перечитывает buyOrQueue. Диалог «куплено» не ждёт
         // этот ответ — иначе кнопка стоит на «…» весь повторный запрос.
         unawaited(_joinCatalog());
       }
-      if (!mounted) return false;
       if (wasOffline) {
         showAppSnackBar(
           context,
@@ -413,12 +416,6 @@ class _ShopCollectionGroupScreenState
       return true;
     } catch (e) {
       if (!mounted) return false;
-      setState(() {
-        _items = [
-          for (final it in _items)
-            if (it.code == item.code) it.copyWith(owned: false) else it,
-        ];
-      });
       showAppSnackBar(
         context,
         message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
