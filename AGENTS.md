@@ -81,5 +81,8 @@ errors.
   the Web client ID as `serverClientId` and `POST .../google/id-token`;
   Android OAuth clients (package + SHA-1) must exist in the same Google Cloud
   project — see `docs/ANDROID_PLAY_INTERNAL.md` §8.
+  On iOS, Sign in with Apple is a native channel in `AppDelegate`
+  (`com.zozugames/apple_sign_in`), sits above Google, and posts the identity
+  token to `POST .../apple/id-token` (bundle id audience).
 - The server reports messages via the internal i18n package
   (`internal/i18n`); error strings are localized by `Accept-Language`.

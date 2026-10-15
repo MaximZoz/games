@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,8 +9,10 @@ import 'package:multigames_client/games/stats_modes.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/shimmer_animation_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
@@ -261,9 +265,8 @@ class _StatsDeckState extends State<_StatsDeck> {
       game: _game,
       mode: mode,
     );
-    final gameValue = _game.isEmpty
-        ? l10n.statsAllGames
-        : localizedGameTypeName(_game, l10n);
+    final gameValue =
+        _game.isEmpty ? l10n.statsAllGames : localizedGameTypeName(_game, l10n);
     final modeValue =
         mode.isEmpty ? l10n.statsAllModes : statsModeLabel(_game, mode, l10n);
     return ListView(
@@ -423,9 +426,8 @@ class _StatsSelect extends StatelessWidget {
             child: Text(
               option.label,
               style: TextStyle(
-                fontWeight: option.id == selectedId
-                    ? FontWeight.w700
-                    : FontWeight.w500,
+                fontWeight:
+                    option.id == selectedId ? FontWeight.w700 : FontWeight.w500,
                 color: option.id == selectedId
                     ? AppColors.accentStart
                     : AppColors.textPrimary,
@@ -532,9 +534,10 @@ class _StatsSelectBar extends StatelessWidget {
 }
 
 class _RecentRow extends StatelessWidget {
-  const _RecentRow({required this.game});
+  const _RecentRow({required this.game, required this.narrow});
 
   final RecentGame game;
+  final bool narrow;
 
   @override
   Widget build(BuildContext context) {
@@ -545,6 +548,9 @@ class _RecentRow extends StatelessWidget {
       'loss' => l10n.statsOutcomeLoss,
       _ => l10n.statsOutcomeDraw,
     };
+    final players = game.opponents.isEmpty
+        ? [const RecentOpponent(displayName: '', bot: true)]
+        : game.opponents;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -552,19 +558,23 @@ class _RecentRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          GameTypeIcon(gameType: game.gameType, size: 18, color: tone.foreground),
-          const SizedBox(width: 10),
+          GameTypeIcon(
+            gameType: game.gameType,
+            size: 18,
+            color: tone.foreground,
+          ),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              _recentNames(game, l10n),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (final opponent in players)
+                  _RecentPlayerChip(opponent: opponent, narrow: narrow),
+              ],
             ),
           ),
           const SizedBox(width: 8),
@@ -582,6 +592,77 @@ class _RecentRow extends StatelessWidget {
   }
 }
 
+class _RecentPlayerChip extends ConsumerWidget {
+  const _RecentPlayerChip({required this.opponent, required this.narrow});
+
+  final RecentOpponent opponent;
+  final bool narrow;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final name = opponent.bot
+        ? l10n.gameBot
+        : (opponent.displayName.trim().isEmpty
+            ? l10n.commonPlayer
+            : opponent.displayName.trim());
+    final id = opponent.opponentId.trim();
+    final openable = !opponent.bot && id.isNotEmpty;
+    final chip = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GamePlayerAvatar(
+          displayName: name,
+          avatarKind: opponent.bot ? 'letter' : opponent.avatarKind,
+          avatarValue: opponent.bot ? null : opponent.avatarValue,
+          frameCode: opponent.bot ? null : opponent.frameCode,
+          frameColor: opponent.bot ? null : opponent.frameColor,
+          compact: true,
+        ),
+        const SizedBox(width: 6),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: narrow ? 96 : 140),
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+    if (!openable) return chip;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: ValueKey('recent-player-$id'),
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          unawaited(showUserProfileDialog(
+            context: context,
+            ref: ref,
+            userId: id,
+            displayName: name,
+            avatarKind: opponent.avatarKind,
+            avatarValue: opponent.avatarValue,
+            frameCode: opponent.frameCode,
+            frameColor: opponent.frameColor,
+            messageFrom: 'stats',
+          ));
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          child: chip,
+        ),
+      ),
+    );
+  }
+}
+
 _StatColor _outcomeTone(String outcome) {
   switch (outcome) {
     case 'win':
@@ -591,15 +672,6 @@ _StatColor _outcomeTone(String outcome) {
     default:
       return const _StatColor._(Color(0xFFF9A825), Color(0xFFFFF8E1));
   }
-}
-
-String _recentNames(RecentGame game, AppLocalizations l10n) {
-  if (game.opponents.isEmpty) return l10n.gameBot;
-  return game.opponents.map((o) {
-    if (o.bot) return l10n.gameBot;
-    final name = o.displayName.trim();
-    return name.isEmpty ? l10n.commonPlayer : name;
-  }).join(', ');
 }
 
 class _EmptyStats extends StatelessWidget {
@@ -837,7 +909,7 @@ class _GameStatsBlock extends StatelessWidget {
           else
             for (var i = 0; i < recent.length; i++) ...[
               if (i > 0) const SizedBox(height: 6),
-              _RecentRow(game: recent[i]),
+              _RecentRow(game: recent[i], narrow: narrow),
             ],
         ],
       ),

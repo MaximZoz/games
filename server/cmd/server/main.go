@@ -181,6 +181,10 @@ func spaHandler(webRoot fs.FS) http.Handler {
 			fsPath = "index.html"
 		}
 		f, err := sub.Open(fsPath)
+		if err != nil && fsPath == "favicon.ico" {
+			fsPath = "favicon.png"
+			f, err = sub.Open(fsPath)
+		}
 		if err != nil {
 			// SPA fallback: любой неизвестный путь — index.html
 			index, _ := sub.Open("index.html")
@@ -232,13 +236,19 @@ func spaHandler(webRoot fs.FS) http.Handler {
 		// и не видит ни новый UI, ни диалог «есть обновление».
 		switch fsPath {
 		case "index.html",
+			"oauth_done.html",
 			"flutter.js",
 			"flutter_bootstrap.js",
 			"main.dart.js",
 			"flutter_service_worker.js",
 			"push-sw.js",
 			"manifest.json",
-			"version.json":
+			"version.json",
+			"favicon.png",
+			"favicon.ico":
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+		if strings.HasPrefix(fsPath, "icons/") {
 			w.Header().Set("Cache-Control", "no-cache")
 		}
 		if fsPath == "push-sw.js" {
@@ -515,6 +525,7 @@ func main() {
 	mux.HandleFunc("/api/auth/oauth/providers", authHandler.OAuthProviders)
 	mux.HandleFunc("/api/auth/oauth/poll", authHandler.OAuthPoll)
 	mux.HandleFunc("/api/auth/oauth/google/id-token", authHandler.GoogleIDTokenLogin)
+	mux.HandleFunc("/api/auth/oauth/apple/id-token", authHandler.AppleIDTokenLogin)
 	mux.HandleFunc("/api/auth/oauth/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.HasSuffix(path, "/start") {
@@ -526,6 +537,10 @@ func main() {
 			return
 		}
 		if strings.HasSuffix(path, "/id-token") {
+			if strings.Contains(path, "/apple/") {
+				authHandler.AppleIDTokenLogin(w, r)
+				return
+			}
 			authHandler.GoogleIDTokenLogin(w, r)
 			return
 		}

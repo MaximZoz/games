@@ -14,6 +14,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/ui/widgets/snug_bottom_list.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
@@ -100,16 +101,17 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
     if (!ok || !mounted) return;
 
     _buyInFlight.add(item.code);
-    final previous = _items;
-    setState(() {
-      _items = [
-        for (final it in _items)
-          if (it.code == item.code) it.copyWith(owned: true) else it,
-      ];
-    });
+    setState(() {});
     try {
       final wasOffline = ref.read(isOfflineProvider);
       await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
+      if (!mounted) return;
+      setState(() {
+        _items = [
+          for (final it in _items)
+            if (it.code == item.code) it.copyWith(owned: true) else it,
+        ];
+      });
       if (!wasOffline) {
         ref.invalidate(inventoryListProvider);
         ref.invalidate(inventoryCapabilitiesProvider);
@@ -128,7 +130,6 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      setState(() => _items = previous);
       showAppSnackBar(
         context,
         message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
@@ -170,6 +171,7 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
           ),
         ),
         body: SafeArea(
+          bottom: false,
           child: section.isEmpty
               ? Center(
                   child: Text(
@@ -200,19 +202,15 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
                     alignment: Alignment.topCenter,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 520),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        itemCount: section.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final item = section[index];
-                          return _ShopItemCard(
-                            item: item,
-                            busy: _buyInFlight.contains(item.code),
-                            onBuy: () => _buy(item),
-                          );
-                        },
+                      child: SnugBottomList(
+                        children: [
+                          for (final item in section)
+                            _ShopItemCard(
+                              item: item,
+                              busy: _buyInFlight.contains(item.code),
+                              onBuy: () => _buy(item),
+                            ),
+                        ],
                       ),
                     ),
                   ),

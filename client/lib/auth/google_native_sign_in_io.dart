@@ -89,20 +89,78 @@ bool isGoogleDeveloperError(Object e) {
   return false;
 }
 
-/// Вход через Google-аккаунт на устройстве (тот же, что в Play Store).
-///
-/// Берём `idToken` / `serverAuthCode` из [GoogleSignInUserData] через
-/// platform `signIn()` — **без** `account.authentication` / getTokens
-/// (на Android getTokens часто зависает).
-Future<GoogleNativeSignInResult?> signInWithGoogleNative({
-  required String serverClientId,
-}) async {
-  if (!Platform.isAndroid && !Platform.isIOS) return null;
-  final webClientId = serverClientId.trim();
-  if (webClientId.isEmpty) return null;
+GoogleNativeSignInResult? _resultFromTokens({
+  String? idToken,
+  String? serverAuthCode,
+  String? email,
+}) {
+  final token = idToken?.trim();
+  final code = serverAuthCode?.trim();
+  final result = GoogleNativeSignInResult(
+    idToken: (token != null && token.isNotEmpty) ? token : null,
+    serverAuthCode: (code != null && code.isNotEmpty) ? code : null,
+  );
+  if (result.hasCredential) {
+    debugPrint(
+      'Google Sign-In: email=$email '
+      'idToken=${result.idToken != null} '
+      'serverAuthCode=${result.serverAuthCode != null}',
+    );
+    return result;
+  }
+  return null;
+}
 
-  // Инициализация с serverClientId (requestIdToken на Android).
-  final gsi = _googleSignInFor(webClientId);
+/// iOS: [GoogleSignIn.signIn] показывает системный лист Gmail.
+/// Platform `signIn()` на iOS часто зависает: Scene не прокидывал URL.
+Future<GoogleNativeSignInResult?> _signInWithGoogleIos(GoogleSignIn gsi) async {
+  GoogleSignInAccount? account;
+  try {
+    account = await gsi.signIn().timeout(const Duration(seconds: 60));
+  } on TimeoutException {
+    throw GoogleIdTokenMissingException(
+      'Google Sign-In: timeout after account picker',
+    );
+  } on PlatformException catch (e) {
+    if (_isCanceled(e)) return null;
+    if (isGoogleDeveloperError(e)) {
+      debugPrint('Google Sign-In DEVELOPER_ERROR (10): $e');
+      throw GoogleSignInDeveloperErrorException();
+    }
+    rethrow;
+  }
+  if (account == null) return null;
+
+  GoogleSignInAuthentication auth;
+  try {
+    auth = await account.authentication.timeout(const Duration(seconds: 20));
+  } on TimeoutException {
+    throw GoogleIdTokenMissingException(
+      'Google Sign-In: iOS tokens timeout',
+    );
+  }
+
+  final result = _resultFromTokens(
+    idToken: auth.idToken,
+    serverAuthCode: account.serverAuthCode,
+    email: account.email,
+  );
+  if (result != null) return result;
+  debugPrint(
+    'Google Sign-In: email=${account.email} but empty idToken/serverAuthCode '
+    '(iOS OAuth client / GIDClientID / URL scheme)',
+  );
+  throw GoogleIdTokenMissingException(
+    'Google Sign-In: empty idToken. В Google Cloud нужен iOS OAuth client '
+    'с Bundle ID com.zozugames.app(.dev) и GIDClientID / URL scheme в Info.plist.',
+  );
+}
+
+/// Android: platform `signIn()` — без `account.authentication` / getTokens
+/// (на Android getTokens часто зависает).
+Future<GoogleNativeSignInResult?> _signInWithGoogleAndroid(
+  GoogleSignIn gsi,
+) async {
   await gsi.isSignedIn();
 
   GoogleSignInUserData? userData;
@@ -125,23 +183,12 @@ Future<GoogleNativeSignInResult?> signInWithGoogleNative({
 
   if (userData == null) return null;
 
-  final idToken = userData.idToken?.trim();
-  final serverAuthCode = userData.serverAuthCode?.trim();
-  final result = GoogleNativeSignInResult(
-    idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
-    serverAuthCode:
-        (serverAuthCode != null && serverAuthCode.isNotEmpty) ? serverAuthCode : null,
+  final result = _resultFromTokens(
+    idToken: userData.idToken,
+    serverAuthCode: userData.serverAuthCode,
+    email: userData.email,
   );
-
-  if (result.hasCredential) {
-    debugPrint(
-      'Google Sign-In: email=${userData.email} '
-      'idToken=${result.idToken != null} '
-      'serverAuthCode=${result.serverAuthCode != null}',
-    );
-    return result;
-  }
-
+  if (result != null) return result;
   debugPrint(
     'Google Sign-In: email=${userData.email} but empty idToken/serverAuthCode '
     '(SHA-1 App Signing / Web Client ID / GCP project?)',
@@ -149,6 +196,21 @@ Future<GoogleNativeSignInResult?> signInWithGoogleNative({
   throw GoogleIdTokenMissingException(
     'Google Sign-In: empty idToken/serverAuthCode (SHA-1 App Signing / Web Client ID)',
   );
+}
+
+/// Вход через Google-аккаунт на устройстве (тот же, что в Play Store / Gmail).
+Future<GoogleNativeSignInResult?> signInWithGoogleNative({
+  required String serverClientId,
+}) async {
+  if (!Platform.isAndroid && !Platform.isIOS) return null;
+  final webClientId = serverClientId.trim();
+  if (webClientId.isEmpty) return null;
+
+  final gsi = _googleSignInFor(webClientId);
+  if (Platform.isIOS) {
+    return _signInWithGoogleIos(gsi);
+  }
+  return _signInWithGoogleAndroid(gsi);
 }
 
 /// Совместимость: только id_token.

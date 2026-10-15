@@ -30,10 +30,31 @@ type fcmMessageRequest struct {
 }
 
 type fcmMessage struct {
-	Token        string               `json:"token"`
-	Notification *fcmNotification     `json:"notification,omitempty"`
-	Data         map[string]string    `json:"data,omitempty"`
-	Android      *fcmAndroid          `json:"android,omitempty"`
+	Token        string            `json:"token"`
+	Notification *fcmNotification  `json:"notification,omitempty"`
+	Data         map[string]string `json:"data,omitempty"`
+	Android      *fcmAndroid       `json:"android,omitempty"`
+	APNS         *fcmAPNS          `json:"apns,omitempty"`
+}
+
+type fcmAPNS struct {
+	Headers map[string]string `json:"headers,omitempty"`
+	Payload *fcmAPNSPayload   `json:"payload,omitempty"`
+}
+
+type fcmAPNSPayload struct {
+	Aps *fcmAps `json:"aps,omitempty"`
+}
+
+type fcmAps struct {
+	Alert    *fcmApsAlert `json:"alert,omitempty"`
+	Sound    string       `json:"sound,omitempty"`
+	ThreadID string       `json:"thread-id,omitempty"`
+}
+
+type fcmApsAlert struct {
+	Title string `json:"title,omitempty"`
+	Body  string `json:"body,omitempty"`
 }
 
 type fcmNotification struct {
@@ -63,6 +84,40 @@ type fcmErrorBody struct {
 			ErrorCode string `json:"errorCode"`
 		} `json:"details"`
 	} `json:"error"`
+}
+
+func buildFCMMessage(token string, payload PushPayload) fcmMessage {
+	thread := strings.TrimSpace(payload.Tag)
+	aps := &fcmAps{
+		Alert: &fcmApsAlert{Title: payload.Title, Body: payload.Body},
+		Sound: "default",
+	}
+	if thread != "" {
+		aps.ThreadID = thread
+	}
+	return fcmMessage{
+		Token: token,
+		Notification: &fcmNotification{
+			Title: payload.Title,
+			Body:  payload.Body,
+		},
+		Data: fcmDataFromPayload(payload),
+		Android: &fcmAndroid{
+			Priority: "high",
+			Notification: &fcmAndroidNotification{
+				ChannelID:   "zozu_events",
+				Icon:        "ic_stat_notify",
+				Tag:         payload.Tag,
+				ClickAction: "FLUTTER_NOTIFICATION_CLICK",
+				Sound:       "default",
+				Color:       "#6366F1",
+			},
+		},
+		APNS: &fcmAPNS{
+			Headers: map[string]string{"apns-priority": "10"},
+			Payload: &fcmAPNSPayload{Aps: aps},
+		},
+	}
 }
 
 func fcmDataFromPayload(payload PushPayload) map[string]string {
@@ -225,8 +280,6 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 		client = http.DefaultClient
 	}
 
-	data := fcmDataFromPayload(payload)
-
 	const maxParallel = 8
 	sem := make(chan struct{}, maxParallel)
 	var wg sync.WaitGroup
@@ -245,25 +298,9 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 				log.Printf("fcm: token: %v", err)
 				return
 			}
-			body, err := json.Marshal(fcmMessageRequest{Message: fcmMessage{
-				Token: tok.Token,
-				Notification: &fcmNotification{
-					Title: payload.Title,
-					Body:  payload.Body,
-				},
-				Data: data,
-				Android: &fcmAndroid{
-					Priority: "high",
-					Notification: &fcmAndroidNotification{
-						ChannelID:   "zozu_events",
-						Icon:        "ic_stat_notify",
-						Tag:         payload.Tag,
-						ClickAction: "FLUTTER_NOTIFICATION_CLICK",
-						Sound:       "default",
-						Color:       "#6366F1",
-					},
-				},
-			}})
+			body, err := json.Marshal(fcmMessageRequest{
+				Message: buildFCMMessage(tok.Token, payload),
+			})
 			if err != nil {
 				return
 			}

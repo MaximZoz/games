@@ -2,6 +2,286 @@
 # Секреты и шаги: docs/IOS_TESTFLIGHT.md
 # Локально без Mac не запускается — только GitHub Actions (macos).
 
+def tf_models(value)
+  return [] if value.nil?
+  return value if value.is_a?(Array)
+  return value.to_models if value.respond_to?(:to_models)
+  return value.to_a if value.respond_to?(:to_a) && !value.is_a?(String)
+  [value]
+end
+
+def tf_redeem_from(group)
+  return ["", ""] if group.nil?
+  code = ""
+  code = group.public_link_id.to_s if group.respond_to?(:public_link_id)
+  link = ""
+  link = group.public_link.to_s if group.respond_to?(:public_link)
+  if code.empty? && link =~ %r{join/([^/?#]+)}
+    code = Regexp.last_match(1)
+  end
+  link = "https://testflight.apple.com/join/#{code}" if link.empty? && !code.empty?
+  [code, link]
+end
+
+def tf_jwt
+  token = Spaceship::ConnectAPI.token
+  UI.user_error!("Нет ASC token") if token.nil?
+  token.refresh! if token.respond_to?(:expired?) && token.expired?
+  return token.text if token.respond_to?(:text)
+  token.to_s
+end
+
+def tf_asc(method, path, body = nil)
+  require "net/http"
+  require "json"
+  uri = URI("https://api.appstoreconnect.apple.com#{path}")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  request = case method
+            when :get then Net::HTTP::Get.new(uri)
+            when :post then Net::HTTP::Post.new(uri)
+            when :patch then Net::HTTP::Patch.new(uri)
+            else
+              UI.user_error!("ASC method #{method}")
+            end
+  request["Authorization"] = "Bearer #{tf_jwt}"
+  request["Content-Type"] = "application/json"
+  request.body = JSON.generate(body) if body
+  response = http.request(request)
+  parsed = {}
+  parsed = JSON.parse(response.body) unless response.body.to_s.empty?
+  UI.message("ASC #{method.upcase} #{path} → #{response.code}")
+  if parsed["errors"].is_a?(Array)
+    parsed["errors"].each do |error|
+      UI.important("#{error['title']}: #{error['detail']}")
+    end
+  end
+  [response.code.to_i, parsed]
+end
+
+def tf_contact_phone
+  ENV.fetch("TESTFLIGHT_CONTACT_PHONE", "").gsub(/\D/, "")
+end
+
+def tf_ensure_internal_group(app)
+  groups = tf_models(app.get_beta_groups)
+  internal = groups.find { |item| item.is_internal_group == true }
+  if internal.nil?
+    UI.message("Создаю внутреннюю группу Internal")
+    created = app.create_beta_group(
+      group_name: "Internal",
+      is_internal_group: true,
+      public_link_enabled: false,
+      has_access_to_all_builds: true
+    )
+    internal = tf_models(created).first
+  end
+  UI.user_error!("Нет внутренней TestFlight-группы") if internal.nil?
+  internal
+end
+
+def tf_invite_asc_users(internal)
+  _code, json = tf_asc(:get, "/v1/users?limit=50")
+  users = json["data"]
+  users = [] unless users.is_a?(Array)
+  UI.message("ASC users: #{users.size}")
+  users.each do |user|
+    attrs = user["attributes"] || {}
+    email = attrs["username"].to_s
+    next if email.empty? || !email.include?("@")
+    first = attrs["firstName"].to_s
+    first = "Zozu" if first.empty?
+    last = attrs["lastName"].to_s
+    last = "Games" if last.empty?
+    invite_code, = tf_asc(
+      :post,
+      "/v1/betaTesters",
+      {
+        data: {
+          type: "betaTesters",
+          attributes: {
+            email: email,
+            firstName: first,
+            lastName: last
+          },
+          relationships: {
+            betaGroups: {
+              data: [{ type: "betaGroups", id: internal.id }]
+            }
+          }
+        }
+      }
+    )
+    UI.message("invite #{email} → #{invite_code}")
+  end
+end
+
+# produce не трогает уже существующий Bundle ID («already exists, nothing to do»),
+# поэтому Sign in with Apple включаем сами. Иначе match собирает профиль без entitlement.
+def tf_ensure_sign_in_with_apple(bundle_id)
+  require "uri"
+  query = URI.encode_www_form([["filter[identifier]", bundle_id], ["limit", "5"]])
+  _code, json = tf_asc(:get, "/v1/bundleIds?#{query}")
+  rows = json["data"]
+  rows = [] unless rows.is_a?(Array)
+  row = rows.find { |item| item.dig("attributes", "identifier") == bundle_id } || rows.first
+  if row.nil?
+    UI.user_error!(
+      "В Apple Developer нет Bundle ID #{bundle_id}. " \
+      "Identifiers → + → App ID и включи Sign in with Apple."
+    )
+  end
+  resource_id = row["id"]
+  # ?limit= на relationship Apple отвечает 400, поэтому capabilities через include.
+  _cap_code, cap_json = tf_asc(
+    :get,
+    "/v1/bundleIds/#{resource_id}?include=bundleIdCapabilities"
+  )
+  caps = cap_json["included"]
+  caps = [] unless caps.is_a?(Array)
+  if caps.any? { |cap| cap.dig("attributes", "capabilityType") == "APPLE_ID_AUTH" }
+    UI.message("Sign in with Apple уже включён: #{bundle_id}")
+    return false
+  end
+  payload = {
+    data: {
+      type: "bundleIdCapabilities",
+      attributes: {
+        capabilityType: "APPLE_ID_AUTH",
+        settings: [
+          {
+            key: "APPLE_ID_AUTH_APP_CONSENT",
+            options: [{ key: "PRIMARY_APP_CONSENT" }]
+          }
+        ]
+      },
+      relationships: {
+        bundleId: { data: { type: "bundleIds", id: resource_id } }
+      }
+    }
+  }
+  post_code, = tf_asc(:post, "/v1/bundleIdCapabilities", payload)
+  if post_code == 400 || post_code == 422
+    payload[:data][:attributes].delete(:settings)
+    post_code, = tf_asc(:post, "/v1/bundleIdCapabilities", payload)
+  end
+  if post_code == 409
+    UI.message("Sign in with Apple уже включён: #{bundle_id}")
+    return false
+  end
+  unless post_code.between?(200, 299)
+    UI.user_error!(
+      "Не удалось включить Sign in with Apple на #{bundle_id} (HTTP #{post_code}). " \
+      "Safari → developer.apple.com → Identifiers → #{bundle_id} → " \
+      "Sign In with Apple → Enable. Потом Actions → iOS TestFlight → " \
+      "Run workflow → force_match."
+    )
+  end
+  UI.success("Sign in with Apple включён: #{bundle_id}")
+  true
+end
+
+# Тот же приём, что Sign in with Apple: produce не включает Push на уже
+# существующем Bundle ID, и match тогда собирает профиль без aps-environment.
+def tf_ensure_push_notifications(bundle_id)
+  require "uri"
+  query = URI.encode_www_form([["filter[identifier]", bundle_id], ["limit", "5"]])
+  _code, json = tf_asc(:get, "/v1/bundleIds?#{query}")
+  rows = json["data"]
+  rows = [] unless rows.is_a?(Array)
+  row = rows.find { |item| item.dig("attributes", "identifier") == bundle_id } || rows.first
+  if row.nil?
+    UI.user_error!(
+      "В Apple Developer нет Bundle ID #{bundle_id}. " \
+      "Identifiers → + → App ID и включи Push Notifications."
+    )
+  end
+  resource_id = row["id"]
+  _cap_code, cap_json = tf_asc(
+    :get,
+    "/v1/bundleIds/#{resource_id}?include=bundleIdCapabilities"
+  )
+  caps = cap_json["included"]
+  caps = [] unless caps.is_a?(Array)
+  if caps.any? { |cap| cap.dig("attributes", "capabilityType") == "PUSH_NOTIFICATIONS" }
+    UI.message("Push Notifications уже включены: #{bundle_id}")
+    return false
+  end
+  payload = {
+    data: {
+      type: "bundleIdCapabilities",
+      attributes: { capabilityType: "PUSH_NOTIFICATIONS" },
+      relationships: {
+        bundleId: { data: { type: "bundleIds", id: resource_id } }
+      }
+    }
+  }
+  post_code, = tf_asc(:post, "/v1/bundleIdCapabilities", payload)
+  if post_code == 409
+    UI.message("Push Notifications уже включены: #{bundle_id}")
+    return false
+  end
+  unless post_code.between?(200, 299)
+    UI.user_error!(
+      "Не удалось включить Push Notifications на #{bundle_id} (HTTP #{post_code}). " \
+      "Safari → developer.apple.com → Identifiers → #{bundle_id} → " \
+      "Push Notifications → Enable. Потом Actions → iOS TestFlight → " \
+      "Run workflow → force_match."
+    )
+  end
+  UI.success("Push Notifications включены: #{bundle_id}")
+  true
+end
+
+def tf_match_appstore(bundle_id:, api_key:, readonly:, force:)
+  match(
+    type: "appstore",
+    app_identifier: [bundle_id],
+    api_key: api_key,
+    readonly: readonly,
+    git_url: ENV.fetch("MATCH_GIT_URL"),
+    git_branch: ENV.fetch("MATCH_GIT_BRANCH", "match-certs"),
+    git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+    force: force
+  )
+end
+
+def tf_decode_mobileprovision(path)
+  require "shellwords"
+  return "" if path.nil? || path.empty? || !File.exist?(path)
+  `security cms -D -i #{Shellwords.escape(path)} 2>/dev/null`.to_s
+end
+
+# Xcode 16+ кладёт профиль в UserData, не в MobileDevice.
+# sigh пишет путь в ENV sigh_<bundle>_appstore_profile-path.
+def tf_profile_has_apple_sign_in?(profile_name, bundle_id)
+  path = ENV["sigh_#{bundle_id}_appstore_profile-path"].to_s
+  if path.empty? || !File.exist?(path)
+    dirs = [
+      File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles"),
+      File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
+    ]
+    path = dirs.flat_map { |dir|
+      Dir.exist?(dir) ? Dir[File.join(dir, "*.mobileprovision")] : []
+    }.find { |item| tf_decode_mobileprovision(item).include?(profile_name) }.to_s
+  end
+  xml = tf_decode_mobileprovision(path)
+  if xml.empty?
+    UI.important("Не прочитан профиль «#{profile_name}» (#{path})")
+    return false
+  end
+  keys = xml.scan(%r{<key>([^<]+)</key>}).flatten.uniq
+  UI.message("Профиль #{File.basename(path)}: #{keys.join(', ')}")
+  has_apple = xml.include?("com.apple.developer.applesignin")
+  has_push = xml.include?("aps-environment")
+  unless has_apple && has_push
+    UI.important(
+      "Профиль без нужных entitlement: apple=#{has_apple} push=#{has_push}"
+    )
+  end
+  has_apple && has_push
+end
+
 default_platform(:ios)
 
 platform :ios do
@@ -10,7 +290,9 @@ platform :ios do
     flavor = ENV.fetch("FLAVOR")
     bundle_id = ENV.fetch("BUNDLE_ID")
     team_id = ENV.fetch("APPLE_TEAM_ID")
-    key_path = ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH")
+    key_path = ENV["ASC_KEY_FILE"]
+    key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"] if key_path.nil? || key_path.empty?
+    UI.user_error!("Нет файла API-ключа (ASC_KEY_FILE)") if key_path.nil? || key_path.empty?
     api_base = ENV.fetch("API_BASE")
     build_number = ENV.fetch("BUILD_NUMBER")
     build_name = ENV.fetch("BUILD_NAME")
@@ -19,7 +301,11 @@ platform :ios do
 
     UI.message("TestFlight: flavor=#{flavor} bundle=#{bundle_id} #{build_name}+#{build_number}")
 
+    # setup_ci всегда ставит MATCH_READONLY=true — первый прогон тогда
+    # не может создать Apple Distribution. Запоминаем флаг до setup_ci.
+    want_readonly = ENV["MATCH_READONLY"] == "true"
     setup_ci if ENV["CI"]
+    ENV["MATCH_READONLY"] = want_readonly ? "true" : "false"
 
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
@@ -28,22 +314,68 @@ platform :ios do
       duration: 1200,
       in_house: false
     )
+    # Иначе produce/match видят и api_key, и APP_STORE_CONNECT_API_KEY_PATH.
+    ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")
+    ENV.delete("APP_STORE_CONNECT_API_KEY")
 
-    match(
-      type: "appstore",
-      app_identifier: [bundle_id],
+    app_name = flavor == "dev" ? "Zozu Games DEV" : "Zozu Games"
+    app_sku = flavor == "dev" ? "zozugames-dev" : "zozugames"
+    begin
+      produce(
+        api_key: api_key,
+        app_identifier: bundle_id,
+        app_name: app_name,
+        language: "en-US",
+        sku: app_sku,
+        team_id: team_id,
+        skip_itc: true,
+        enable_services: {
+          sign_in_with_apple: "on"
+        }
+      )
+    rescue StandardError => e
+      UI.important("produce: #{e.message}")
+    end
+
+    existing = Spaceship::ConnectAPI::App.find(bundle_id)
+    unless existing
+      UI.user_error!(
+        "В App Store Connect нет приложения #{bundle_id}. " \
+        "API-ключ не может его создать. Safari → " \
+        "https://appstoreconnect.apple.com/apps → + → New App: " \
+        "iOS, имя «#{app_name}», Bundle ID #{bundle_id}, SKU #{app_sku}."
+      )
+    end
+    UI.success("App Store Connect: #{bundle_id}")
+
+    apple_just_enabled = tf_ensure_sign_in_with_apple(bundle_id)
+    push_just_enabled = tf_ensure_push_notifications(bundle_id)
+    tf_match_appstore(
+      bundle_id: bundle_id,
       api_key: api_key,
-      readonly: ENV["MATCH_READONLY"] == "true",
-      git_url: ENV.fetch("MATCH_GIT_URL"),
-      git_branch: ENV.fetch("MATCH_GIT_BRANCH", "match-certs"),
-      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-      force: ENV["MATCH_FORCE"] == "true"
+      readonly: want_readonly,
+      force: !want_readonly && (apple_just_enabled || push_just_enabled || ENV["MATCH_FORCE"] == "true")
     )
 
     profile_env = "sigh_#{bundle_id}_appstore_profile-name"
     profile_name = ENV[profile_env]
     profile_name = "match AppStore #{bundle_id}" if profile_name.nil? || profile_name.empty?
     UI.message("Provisioning profile: #{profile_name}")
+    if !want_readonly && !tf_profile_has_apple_sign_in?(profile_name, bundle_id)
+      UI.important("Профиль без Sign in with Apple или Push — пересоздаю")
+      tf_match_appstore(
+        bundle_id: bundle_id,
+        api_key: api_key,
+        readonly: false,
+        force: true
+      )
+    end
+    unless want_readonly || tf_profile_has_apple_sign_in?(profile_name, bundle_id)
+      UI.user_error!(
+        "Профиль «#{profile_name}» всё ещё без Sign in with Apple или Push. " \
+        "Identifiers → #{bundle_id} → Sign In with Apple и Push Notifications, затем force_match."
+      )
+    end
 
     update_code_signing_settings(
       use_automatic_signing: false,
@@ -96,23 +428,22 @@ platform :ios do
         "--export-options-plist", export_plist,
         "--dart-define=API_BASE=#{api_base}",
         "--dart-define=BUILD_ID=#{build_id}",
-        "--dart-define=APP_VERSION=#{app_version}",
-        "--",
-        "CODE_SIGN_STYLE=Manual",
-        "CODE_SIGN_IDENTITY=Apple Distribution",
-        "DEVELOPMENT_TEAM=#{team_id}",
-        "PROVISIONING_PROFILE_SPECIFIER=#{profile_name}"
+        "--dart-define=APP_VERSION=#{app_version}"
       )
     end
 
-    ipas = Dir[File.expand_path("../build/ios/ipa/*.ipa")]
-    UI.user_error!("IPA не собрался в client/build/ios/ipa/") if ipas.empty?
+    client_root = File.expand_path("../..", __dir__)
+    ipa_dir = File.join(client_root, "build/ios/ipa")
+    ipas = Dir[File.join(ipa_dir, "*.ipa")]
+    UI.message("IPA dir #{ipa_dir}: #{Dir[File.join(ipa_dir, '*')].join(', ')}")
+    UI.user_error!("IPA не собрался в #{ipa_dir}") if ipas.empty?
     ipa = ipas.max_by { |path| File.mtime(path) }
     UI.success("IPA: #{ipa}")
 
     begin
       upload_to_testflight(
         api_key: api_key,
+        app_identifier: bundle_id,
         ipa: ipa,
         skip_waiting_for_build_processing: true,
         changelog: "#{flavor} #{build_name} #{build_id}"
@@ -123,6 +454,320 @@ platform :ios do
         "Создай приложение с Bundle ID #{bundle_id} в App Store Connect " \
         "и проверь секреты — docs/IOS_TESTFLIGHT.md"
       )
+    end
+  end
+
+  desc "Публичный Redeem-код TestFlight, без новой сборки IPA"
+  lane :public_code do
+    bundle_id = ENV.fetch("BUNDLE_ID")
+    group_name = ENV.fetch("TESTFLIGHT_GROUP", "Redeem")
+    key_path = ENV["ASC_KEY_FILE"]
+    key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"] if key_path.nil? || key_path.empty?
+    UI.user_error!("Нет файла API-ключа (ASC_KEY_FILE)") if key_path.nil? || key_path.empty?
+
+    app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+      key_filepath: key_path,
+      duration: 1200,
+      in_house: false
+    )
+    ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")
+    ENV.delete("APP_STORE_CONNECT_API_KEY")
+
+    app = Spaceship::ConnectAPI::App.find(bundle_id)
+    UI.user_error!("Нет приложения #{bundle_id} в App Store Connect") if app.nil?
+    UI.success("App Store Connect: #{bundle_id} id=#{app.id}")
+
+    loc_code, loc_json = tf_asc(:get, "/v1/betaAppLocalizations?filter[app]=#{app.id}")
+    UI.message("betaAppLocalizations HTTP #{loc_code}")
+    locales = loc_json["data"] || []
+    loc_attrs = {
+      locale: "en-US",
+      feedbackEmail: "noreply@zozugames.com",
+      description: "Zozu Games DEV — board games vs bot or online. Register in the app or play vs bot."
+    }
+    if locales.empty?
+      tf_asc(
+        :post,
+        "/v1/betaAppLocalizations",
+        {
+          data: {
+            type: "betaAppLocalizations",
+            attributes: loc_attrs,
+            relationships: {
+              app: { data: { type: "apps", id: app.id } }
+            }
+          }
+        }
+      )
+    else
+      loc = locales.first
+      tf_asc(
+        :patch,
+        "/v1/betaAppLocalizations/#{loc['id']}",
+        {
+          data: {
+            type: "betaAppLocalizations",
+            id: loc["id"],
+            attributes: {
+              feedbackEmail: loc_attrs[:feedbackEmail],
+              description: loc_attrs[:description]
+            }
+          }
+        }
+      )
+    end
+
+    review_code, review_json = tf_asc(:get, "/v1/betaAppReviewDetails?filter[app]=#{app.id}")
+    UI.message("betaAppReviewDetails HTTP #{review_code}")
+    review = (review_json["data"] || []).first
+    if review
+      attrs = review["attributes"] || {}
+      UI.message(
+        "review contact email=#{attrs['contactEmail']} phone=#{attrs['contactPhone']} " \
+        "demo=#{attrs['demoAccountRequired']}"
+      )
+      patch_attrs = {
+        contactEmail: "noreply@zozugames.com",
+        contactFirstName: "Zozu",
+        contactLastName: "Games",
+        demoAccountRequired: false,
+        notes: "DEV build. Register in the app or sign in. Play vs bot."
+      }
+      phone = tf_contact_phone
+      patch_attrs[:contactPhone] = phone unless phone.empty?
+      if phone.empty? && attrs["contactPhone"].to_s.empty?
+        UI.important(
+          "Нет contactPhone — Apple не примет внешних тестеров. " \
+          "Safari → https://appstoreconnect.apple.com/apps/#{app.id}/testflight " \
+          "→ Test Information → телефон. Потом Actions → iOS TestFlight → Run, «только ссылка»."
+        )
+      else
+        tf_asc(
+          :patch,
+          "/v1/betaAppReviewDetails/#{review['id']}",
+          {
+            data: {
+              type: "betaAppReviewDetails",
+              id: review["id"],
+              attributes: patch_attrs
+            }
+          }
+        )
+      end
+    end
+
+    groups = tf_models(app.get_beta_groups)
+    group = groups.find do |item|
+      item.name == group_name && item.is_internal_group != true
+    end
+    group ||= groups.find { |item| item.name == group_name }
+    if group.nil?
+      UI.message("Создаю группу #{group_name}")
+      created = app.create_beta_group(
+        group_name: group_name,
+        is_internal_group: false,
+        public_link_enabled: true,
+        public_link_limit_enabled: true,
+        public_link_limit: 100
+      )
+      group = tf_models(created).first
+    end
+    UI.user_error!("Не удалось создать группу #{group_name}") if group.nil?
+
+    unless group.public_link_enabled
+      begin
+        group.update(
+          public_link_enabled: true,
+          public_link_limit_enabled: true,
+          public_link_limit: 100
+        )
+      rescue StandardError => e
+        UI.important("enable public link: #{e.message}")
+      end
+    end
+
+    crit_code, crit_json = tf_asc(:get, "/v1/betaGroups/#{group.id}/betaRecruitmentCriteria")
+    crit_data = crit_json["data"]
+    crit_empty = crit_data.nil? || (crit_data.is_a?(Array) && crit_data.empty?)
+    UI.message("recruitment HTTP #{crit_code} empty=#{crit_empty}")
+    if crit_empty
+      tf_asc(
+        :post,
+        "/v1/betaRecruitmentCriteria",
+        {
+          data: {
+            type: "betaRecruitmentCriteria",
+            attributes: {
+              deviceFamilyOsVersionFilters: [
+                { deviceFamily: "IPHONE", minimumOsInclusive: "15.0" },
+                { deviceFamily: "IPAD", minimumOsInclusive: "15.0" }
+              ]
+            },
+            relationships: {
+              betaGroup: { data: { type: "betaGroups", id: group.id } }
+            }
+          }
+        }
+      )
+    end
+
+    groups = tf_models(app.get_beta_groups)
+    group = groups.find { |item| item.id == group.id } || group
+    code, link = tf_redeem_from(group)
+    UI.message("Группа #{group.name} id=#{group.id} public=#{group.public_link_enabled} code=#{code}")
+
+    builds = []
+    begin
+      builds = tf_models(
+        app.get_builds(
+          includes: "buildBetaDetail",
+          limit: 15,
+          sort: "-uploadedDate"
+        )
+      )
+    rescue StandardError => e
+      UI.important("get_builds: #{e.message}")
+    end
+    UI.message("Сборок: #{builds.size}")
+    builds.each do |item|
+      UI.message(
+        "  build #{item.version} state=#{item.processing_state} expired=#{item.expired}"
+      )
+    end
+    build = builds.find do |item|
+      item.expired != true && (item.processing_state.nil? || item.processing_state == "VALID")
+    end
+    build ||= builds.find { |item| item.expired != true }
+
+    if build
+      UI.success("Сборка #{build.version} id=#{build.id} state=#{build.processing_state}")
+      begin
+        Spaceship::ConnectAPI.patch_builds(
+          build_id: build.id,
+          attributes: { usesNonExemptEncryption: false }
+        )
+        UI.success("usesNonExemptEncryption=false")
+      rescue StandardError => e
+        UI.important("encryption: #{e.message}")
+        tf_asc(
+          :patch,
+          "/v1/builds/#{build.id}",
+          {
+            data: {
+              type: "builds",
+              id: build.id,
+              attributes: { usesNonExemptEncryption: false }
+            }
+          }
+        )
+      end
+      whats = "DEV TestFlight. Register in the app or play vs bot."
+      loc_code, loc_json = tf_asc(
+        :get,
+        "/v1/betaBuildLocalizations?filter[build]=#{build.id}"
+      )
+      build_locs = loc_json["data"]
+      build_locs = [] unless build_locs.is_a?(Array)
+      if build_locs.empty?
+        tf_asc(
+          :post,
+          "/v1/betaBuildLocalizations",
+          {
+            data: {
+              type: "betaBuildLocalizations",
+              attributes: { locale: "en-US", whatsNew: whats },
+              relationships: {
+                build: { data: { type: "builds", id: build.id } }
+              }
+            }
+          }
+        )
+      else
+        loc = build_locs.first
+        tf_asc(
+          :patch,
+          "/v1/betaBuildLocalizations/#{loc['id']}",
+          {
+            data: {
+              type: "betaBuildLocalizations",
+              id: loc["id"],
+              attributes: { whatsNew: whats }
+            }
+          }
+        )
+      end
+      begin
+        Spaceship::ConnectAPI.post_beta_app_review_submissions(build_id: build.id)
+        UI.success("Отправлено на Beta Review")
+      rescue StandardError => e
+        UI.important("beta review: #{e.message}")
+        submit_code, = tf_asc(
+          :post,
+          "/v1/betaAppReviewSubmissions",
+          {
+            data: {
+              type: "betaAppReviewSubmissions",
+              relationships: {
+                build: { data: { type: "builds", id: build.id } }
+              }
+            }
+          }
+        )
+        UI.success("Отправлено на Beta Review") if submit_code.between?(200, 299)
+      end
+      group_ids = [group.id]
+      begin
+        internal = tf_ensure_internal_group(app)
+        group_ids << internal.id
+        tf_invite_asc_users(internal)
+      rescue StandardError => e
+        UI.important("internal group: #{e.message}")
+      end
+      begin
+        Spaceship::ConnectAPI.add_beta_groups_to_build(
+          build_id: build.id,
+          beta_group_ids: group_ids.uniq
+        )
+        UI.success("Сборка добавлена в группы #{group_ids.uniq.join(',')}")
+      rescue StandardError => e
+        UI.important("add build to group: #{e.message}")
+      end
+      groups = tf_models(app.get_beta_groups)
+      group = groups.find { |item| item.id == group.id } || group
+      code, link = tf_redeem_from(group)
+    else
+      UI.important("Нет обработанной сборки — печатаю код группы, если он уже есть")
+    end
+
+    if code.empty?
+      UI.user_error!(
+        "Публичная ссылка ещё не включилась. Первая внешняя сборка идёт на Beta Review. " \
+        "Подожди письмо от Apple или Safari → App Store Connect → приложение → " \
+        "TestFlight → External Testing → Enable Public Link."
+      )
+    end
+
+    UI.success("TESTFLIGHT_CODE=#{code}")
+    UI.success("TESTFLIGHT_URL=#{link}")
+    puts "::notice::TestFlight Redeem: #{code} — #{link}"
+    summary = ENV["GITHUB_STEP_SUMMARY"]
+    if summary && !summary.empty?
+      File.open(summary, "a") do |file|
+        file.puts "## TestFlight Redeem"
+        file.puts ""
+        file.puts "Код: `#{code}`"
+        file.puts ""
+        file.puts link
+        file.puts ""
+        file.puts "Открой ссылку в Safari, не вводи в Redeem."
+        file.puts ""
+        file.puts "Если TestFlight пишет «не принимает тестировщиков»: " \
+                  "ещё нет одобренной внешней сборки. Safari → " \
+                  "https://appstoreconnect.apple.com/apps/#{app.id}/testflight " \
+                  "→ Test Information → телефон, затем Run **iOS TestFlight** с «только ссылка»."
+      end
     end
   end
 end

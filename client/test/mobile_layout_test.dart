@@ -14,6 +14,7 @@ void main() {
     await openGuestProfileOnPhone(tester);
 
     expect(mobileBottomNav(), findsOneWidget);
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
     expect(find.byType(BottomNavigationBar), findsNothing);
     expect(find.byType(NavigationRail), findsNothing);
     // Одна подпись — текущий таб (Профиль).
@@ -61,7 +62,8 @@ void main() {
     expect(find.text('Вход'), findsOneWidget);
     expect(find.byType(SingleChildScrollView), findsWidgets);
 
-    final boxes = tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox));
+    final boxes =
+        tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox));
     final hasFullWidth = boxes.any((b) => b.constraints.maxWidth == 390);
     expect(hasFullWidth, isTrue);
   });
@@ -111,6 +113,42 @@ void main() {
 
     expect(find.text('Вход'), findsOneWidget);
     expect(mobileBottomNav(), findsNothing);
+  });
+
+  testWidgets('Phone bottom nav does not leave a home-indicator gap above icons',
+      (tester) async {
+    tester.view.viewPadding = const FakeViewPadding(top: 47, bottom: 34);
+    tester.view.padding = const FakeViewPadding(top: 47, bottom: 34);
+    addTearDown(tester.view.resetViewPadding);
+    addTearDown(tester.view.resetPadding);
+
+    await openGuestProfileOnPhone(tester);
+    tester.view.viewPadding = const FakeViewPadding(top: 47, bottom: 34);
+    tester.view.padding = const FakeViewPadding(top: 47, bottom: 34);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final nav = tester.getRect(mobileBottomNav());
+    final scroll = tester.getRect(find.byType(Scrollable));
+    // Раньше SafeArea повторял home indicator (~34) над уже стоящим меню.
+    expect(nav.top - scroll.bottom, lessThan(8));
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
+  });
+
+  testWidgets('Phone bottom nav does not clip a badge above the icons',
+      (tester) async {
+    await openGuestProfileOnPhone(tester);
+    var clipsBadge = false;
+    tester.element(mobileBottomNav()).visitAncestorElements((ancestor) {
+      if (ancestor.widget is ClipRect) {
+        clipsBadge = true;
+        return false;
+      }
+      if (ancestor.widget is Scaffold) return false;
+      return true;
+    });
+    expect(clipsBadge, isFalse);
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
   });
 
   testWidgets('Phone bottom nav label follows selected tab', (tester) async {

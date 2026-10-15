@@ -74,6 +74,12 @@ void main() {
       expect(url, contains('pwa=1'));
       expect(url, isNot(contains('navigate=1')));
     });
+
+    test('apple start URL uses apple provider path', () {
+      final repo = AuthRepository();
+      final url = repo.oauthStartUrl(provider: 'apple', poll: true);
+      expect(url, contains('/api/auth/oauth/apple/start'));
+    });
   });
 
   group('AuthRepository (storage)', () {

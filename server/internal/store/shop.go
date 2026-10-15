@@ -74,29 +74,18 @@ type BuyResult struct {
 
 // ListShopItems returns catalog with owned flag for user.
 func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]ShopItemView, error) {
+	// Один LEFT JOIN вместо четырёх подзапросов на каждую строку каталога:
+	// после покупки клиент перечитывает весь магазин.
 	rows, err := pool.Query(ctx, `
 		SELECT s.code, s.kind, s.title, s.description, s.price_bronze, s.payload,
 		       s.stock_remaining, s.sort_order,
-		       EXISTS (
-		         SELECT 1 FROM user_inventory u
-		         WHERE u.user_id = $1 AND u.item_code = s.code
-		       ) AS owned,
-		       COALESCE((
-		         SELECT to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-		         FROM user_inventory u
-		         WHERE u.user_id = $1 AND u.item_code = s.code
-		       ), ''),
-		       COALESCE((
-		         SELECT u.condition_shift
-		         FROM user_inventory u
-		         WHERE u.user_id = $1 AND u.item_code = s.code
-		       ), 0),
-		       COALESCE((
-		         SELECT to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-		         FROM user_inventory u
-		         WHERE u.user_id = $1 AND u.item_code = s.code
-		       ), '')
+		       (u.item_code IS NOT NULL) AS owned,
+		       COALESCE(to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), ''),
+		       COALESCE(u.condition_shift, 0),
+		       COALESCE(to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '')
 		FROM shop_items s
+		LEFT JOIN user_inventory u
+		  ON u.item_code = s.code AND u.user_id = $1
 		WHERE s.active = TRUE
 		ORDER BY s.sort_order, s.code`, userID)
 	if err != nil {
@@ -233,11 +222,13 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 	var kind string
 	var payload []byte
 	var active bool
+	// Строку каталога не блокируем: цена и вид не меняются, остаток не
+	// списывается. FOR UPDATE ставил всех покупателей одного кода в очередь
+	// друг за другом. Деньги защищает UPDATE баланса ниже.
 	err = tx.QueryRow(ctx, `
 		SELECT price_bronze, kind, payload, active
 		FROM shop_items
-		WHERE code = $1
-		FOR UPDATE`, code).Scan(&price, &kind, &payload, &active)
+		WHERE code = $1`, code).Scan(&price, &kind, &payload, &active)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrShopItemUnknown

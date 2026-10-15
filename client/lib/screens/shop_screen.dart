@@ -125,6 +125,7 @@ class ShopScreen extends ConsumerWidget {
           ),
         ),
         body: SafeArea(
+          bottom: false,
           child: FocusScope(
             child: tiles
                 ? DesktopTileGrid(

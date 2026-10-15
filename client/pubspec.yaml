@@ -30,6 +30,8 @@ dependencies:
   # Google Sign-In на Android/iOS (аккаунт устройства / Play).
   google_sign_in: ^6.2.2
   google_sign_in_platform_interface: ^2.5.0
+  # Sign in with Apple — свой канал в AppDelegate (пакет sign_in_with_apple
+  # на iOS давал MissingPluginException).
   # Google Play In-App Updates (только Android; web использует reloadApp).
   in_app_update: ^4.2.3
   url_launcher: ^6.3.1

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/session_storage_stub.dart'
     if (dart.library.html) 'package:multigames_client/auth/session_storage_web.dart'
+    if (dart.library.io) 'package:multigames_client/auth/session_storage_io.dart'
     as session_storage;
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -421,6 +422,41 @@ class AuthRepository {
     return _handleAuthResponse(response);
   }
 
+  /// Вход через системный Sign in with Apple (identity token).
+  Future<AuthResult> loginWithAppleIdToken({
+    required String identityToken,
+    String? email,
+    String? givenName,
+    String? familyName,
+    String? redirect,
+    String? ref,
+  }) async {
+    await init();
+    final token = identityToken.trim();
+    if (token.isEmpty) {
+      throw AuthException(400, LocaleService.l10n.oauthError);
+    }
+    final payload = <String, dynamic>{'identity_token': token};
+    final mail = (email ?? '').trim();
+    if (mail.isNotEmpty) payload['email'] = mail;
+    final given = (givenName ?? '').trim();
+    if (given.isNotEmpty) payload['given_name'] = given;
+    final family = (familyName ?? '').trim();
+    if (family.isNotEmpty) payload['family_name'] = family;
+    final r = (redirect ?? '').trim();
+    if (r.isNotEmpty) payload['redirect'] = r;
+    final referral = (ref ?? '').trim();
+    if (referral.isNotEmpty) payload['ref'] = referral;
+
+    final response = await ApiClient.post(
+      Uri.parse('$apiBaseUrl/api/auth/oauth/apple/id-token'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+      operation: 'AuthRepository.loginWithAppleIdToken',
+    );
+    return _handleAuthResponse(response);
+  }
+
   String oauthStartUrl({
     required String provider,
     String? redirect,
@@ -447,6 +483,7 @@ class AuthRepository {
     required String provider,
     String? redirect,
     String? ref,
+    String? returnScheme,
   }) async {
     await init();
     final params = <String, String>{'mode': 'poll'};
@@ -454,6 +491,8 @@ class AuthRepository {
     if (r.isNotEmpty) params['redirect'] = r;
     final referral = (ref ?? '').trim();
     if (referral.isNotEmpty) params['ref'] = referral;
+    final scheme = (returnScheme ?? '').trim();
+    if (scheme.isNotEmpty) params['return_scheme'] = scheme;
     final response = await ApiClient.get(
       Uri.parse('$apiBaseUrl/api/auth/oauth/$provider/start')
           .replace(queryParameters: params),
@@ -479,10 +518,14 @@ class AuthRepository {
   Future<Map<String, String>> pollOAuthResult({
     String state = '',
     Duration timeout = const Duration(minutes: 5),
+    bool Function()? isCanceled,
   }) async {
     await init();
     final deadline = DateTime.now().add(timeout);
     while (DateTime.now().isBefore(deadline)) {
+      if (isCanceled?.call() == true) {
+        throw const OauthCanceledException();
+      }
       final params = <String, String>{};
       final s = state.trim();
       if (s.isNotEmpty) params['state'] = s;
@@ -493,6 +536,9 @@ class AuthRepository {
         operation: 'AuthRepository.pollOAuthResult',
       );
       if (response.statusCode == 202) {
+        if (isCanceled?.call() == true) {
+          throw const OauthCanceledException();
+        }
         await Future<void>.delayed(const Duration(milliseconds: 800));
         continue;
       }
@@ -505,6 +551,9 @@ class AuthRepository {
       }
       final status = (body['status'] ?? '').toString();
       if (status == 'pending') {
+        if (isCanceled?.call() == true) {
+          throw const OauthCanceledException();
+        }
         await Future<void>.delayed(const Duration(milliseconds: 800));
         continue;
       }
@@ -590,19 +639,21 @@ class AuthRepository {
   Future<String?> getAccessToken() async {
     String? token = _memoryAccessToken;
     if (token == null || token.isEmpty) {
-      await init();
-      if (_prefs != null) {
-        try {
-          // Safari: подтянуть актуальные значения из localStorage.
-          await _prefs!.reload();
-          token = _prefs!.getString(_keyAccessToken);
-        } catch (_) {
-          token = null;
-        }
-      }
+      // Сначала backup: на iOS SharedPreferences может не ответить, а токены
+      // уже лежат в UserDefaults.
+      await _restoreFromBackupIfNeeded();
+      token = _memoryAccessToken;
       if (token == null || token.isEmpty) {
-        await _restoreFromBackupIfNeeded();
-        token = _memoryAccessToken;
+        await init();
+        if (_prefs != null) {
+          try {
+            // Safari: подтянуть актуальные значения из localStorage.
+            await _prefs!.reload();
+            token = _prefs!.getString(_keyAccessToken);
+          } catch (_) {
+            token = null;
+          }
+        }
         if (token == null || token.isEmpty) {
           try {
             token = _prefs?.getString(_keyAccessToken);
@@ -669,6 +720,9 @@ class AuthRepository {
   Future<AuthUser?> peekStoredUser() async {
     if (_memoryUser != null) return _memoryUser;
 
+    await _restoreFromBackupIfNeeded();
+    if (_memoryUser != null) return _memoryUser;
+
     await init();
     if (_prefs != null) {
       String? jsonStr;
@@ -688,7 +742,6 @@ class AuthRepository {
       }
     }
 
-    await _restoreFromBackupIfNeeded();
     return _memoryUser;
   }
 
@@ -702,6 +755,7 @@ class AuthRepository {
     _memoryUser = null;
     _refreshInFlight = null;
     session_storage.clearSessionBackup();
+    await session_storage.flushSessionBackup();
 
     await init();
     if (_prefs == null) return;
@@ -944,12 +998,14 @@ class AuthRepository {
     required AuthUser user,
   }) async {
     final userJson = jsonEncode(user.toJson());
-    // Всегда дублируем в localStorage — переживает закрытие вкладки в Safari PWA.
+    // Web: localStorage. iOS: UserDefaults на живом messenger — SharedPreferences
+    // при UIScene может не записать токены, и после перезапуска снова «Регистрация».
     session_storage.writeSessionBackup(
       accessToken: accessToken,
       refreshToken: refreshToken,
       userJson: userJson,
     );
+    await session_storage.flushSessionBackup();
 
     for (var attempt = 0; attempt < 3; attempt++) {
       await init();
@@ -976,8 +1032,9 @@ class AuthRepository {
     // уже записан — сессия должна пережить закрытие вкладки.
   }
 
-  /// Если prefs пусты, но backup в localStorage есть — восстанавливаем.
+  /// Если prefs пусты, но backup (localStorage / iOS UserDefaults) есть — восстанавливаем.
   Future<void> _restoreFromBackupIfNeeded() async {
+    await session_storage.ensureSessionBackupLoaded();
     final backup = session_storage.readSessionBackup();
     if (backup == null) return;
     final access = backup.accessToken;
@@ -1124,6 +1181,11 @@ class AuthException implements Exception {
   AuthException(this.statusCode, this.message);
   @override
   String toString() => message;
+}
+
+/// Пользователь закрыл системный лист входа, пока шёл poll.
+class OauthCanceledException implements Exception {
+  const OauthCanceledException();
 }
 
 class EmailVerificationRequiredException implements Exception {

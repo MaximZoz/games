@@ -15,8 +15,9 @@ StreamSubscription<FcmPushMessage>? _openedSub;
 StreamSubscription<FcmPushMessage>? _foregroundSub;
 var _listeningTaps = false;
 
-bool _androidNavEnabled() =>
-    Platform.isAndroid && !Platform.environment.containsKey('FLUTTER_TEST');
+bool _phoneNavEnabled() =>
+    (Platform.isAndroid || Platform.isIOS) &&
+    !Platform.environment.containsKey('FLUTTER_TEST');
 
 void _go(String raw, {String? tag}) {
   final path = normalizeAppPath(raw);
@@ -75,7 +76,7 @@ Future<void> _consumePendingLaunches() async {
 }
 
 void _ensureTapListeners() {
-  if (_listeningTaps || !_androidNavEnabled()) return;
+  if (_listeningTaps || !_phoneNavEnabled()) return;
   _listeningTaps = true;
   setLocalNotificationTapHandler(_onLocalPayload);
   _openedSub = fcmOpenedAppMessages().listen((msg) => _goFromData(msg.data));
@@ -91,7 +92,7 @@ void _ensureTapListeners() {
 
 /// Слушает тап по FCM / локальному баннеру → `router.go`, как PWA.
 void installPushNotificationNavigation(PushNotificationNavHandler onNavigate) {
-  if (!_androidNavEnabled()) return;
+  if (!_phoneNavEnabled()) return;
   uninstallPushNotificationNavigation();
   _onNavigate = onNavigate;
   _ensureTapListeners();
@@ -116,7 +117,7 @@ void uninstallPushNotificationNavigation() {
 void reportPushSwActiveRoute(String path) {
   final normalized = normalizeAppPath(path);
   _lastReportedPath = normalized;
-  if (!_androidNavEnabled()) return;
+  if (!_phoneNavEnabled()) return;
   final tag = tagFromPath(normalized);
   if (tag == null) return;
   unawaited(cancelLocalNotificationsForPath(normalized, tag: tag));

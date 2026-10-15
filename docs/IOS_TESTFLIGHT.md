@@ -1,6 +1,6 @@
 # iOS → TestFlight без Mac (Zozu Games)
 
-Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-15`), как Android AAB заливается в Play Internal.
+Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-26` + Xcode 26 / iOS 26 SDK), как Android AAB заливается в Play Internal. С апреля 2026 App Store Connect не принимает SDK старше iOS 26.
 
 На iPhone ставишь приложение **TestFlight** из App Store и ставишь сборку оттуда.
 
@@ -23,8 +23,8 @@ Workflow: `.github/workflows/ios-testflight.yml`
 2. Два приложения в App Store Connect
 3. API-ключ App Store Connect (роль **Admin**) + Team ID
 4. Пять секретов в GitHub
-5. Запустить workflow **iOS TestFlight**, target `dev`
-6. Подождать Processing и открыть сборку в приложении TestFlight
+5. Запустить workflow **iOS TestFlight**, target `dev` (заливка IPA)
+6. Ссылку взять из Summary у **iOS TestFlight** (job **link**) и открыть в Safari
 
 ## 1. Идентификаторы (один раз)
 
@@ -36,7 +36,7 @@ Workflow: `.github/workflows/ios-testflight.yml`
 4. Register
 5. То же для DEV: Description `Zozu Games DEV`, Bundle ID `com.zozugames.app.dev`
 
-Capabilities (Push, Sign in with Apple) не нужны для первой установки.
+Capability **Sign in with Apple** включает CI (`produce` + entitlements). Вручную: Identifier → Sign In with Apple → Enable.
 
 Если такой Bundle ID уже есть у этого Team — не создавай второй.
 
@@ -78,7 +78,10 @@ Capabilities (Push, Sign in with Apple) не нужны для первой ус
 7. **Download** — файл `AuthKey_XXXX.p8`. Apple отдаёт его **один раз**
 8. Открой файл в «Файлы» / текстовом редакторе и скопируй **весь** текст, включая
    `-----BEGIN PRIVATE KEY-----` и `-----END PRIVATE KEY-----`
-   Это `APP_STORE_CONNECT_API_KEY`
+   Это `APP_STORE_CONNECT_API_KEY`. Не Key ID и не Issuer ID.
+
+   Если секрет уже создан не тем текстом: карандаш у `APP_STORE_CONNECT_API_KEY` →
+   вставь файл заново → Update secret.
 
 Ключ никуда не коммить и никому не слать.
 
@@ -104,7 +107,7 @@ Capabilities (Push, Sign in with Apple) не нужны для первой ус
 
 1. GitHub → **Actions** → **iOS TestFlight**
 2. **Run workflow**
-3. Branch: эта ветка (пока не влито в `develop`) или `develop`
+3. Branch: `develop` (DEV) или `main` (прод)
 4. Flavor: **dev**
 5. Run
 
@@ -123,13 +126,40 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 
 ## 6. Поставить на iPhone
 
-1. App Store → приложение **TestFlight** (от Apple), войти тем же Apple ID, что у Developer
-2. App Store Connect → **Zozu Games DEV** → **TestFlight**
-3. Дождись **Processing** (5–30 минут, иногда дольше). Придёт письмо Ready to Test
-4. Ты как Admin / Account Holder уже в Internal Testing — сборка появится в TestFlight
-5. На iPhone открой TestFlight → **Zozu Games DEV** → Install
+### Свой Apple ID разработчика (без кода, без Review)
 
-Другой Apple ID: TestFlight → Internal Testing → добавь email.
+Кнопка **«Использовать код»** в пустом TestFlight — не для себя. Кода у разработчика нет.
+
+1. Safari → [Zozu Games DEV / TestFlight](https://appstoreconnect.apple.com/apps/6822534284/testflight)
+2. Слева **Внутреннее тестирование** (не Redeem)
+3. Открой группу. Вкладка **Тестировщики** → **+** → свой пользователь App Store Connect
+4. Вкладка **Сборки** → **+** → последняя **Completed** / «Готово к отправке» (например 10023)
+5. Почта этого Apple ID: письмо TestFlight → открой ссылку из письма
+6. На iPhone: Настройки → имя = тот же Apple ID. TestFlight потяни вниз → **Zozu Games DEV** → Install
+
+Если в TestFlight всё ещё заставка «разработчик должен пригласить» — на телефоне другой Apple ID. Тогда либо войди в TestFlight тем же аккаунтом, что в App Store Connect, либо добавь телефонный Apple ID в Users and Access и снова в Тестировщики.
+
+### Чужой телефон / публичная ссылка
+
+Список в TestFlight пустой, если на телефоне другой Apple ID — так и должно быть. Почту не добавляем.
+
+**Не вводи код в TestFlight → Redeem.** Это поле для кодов App Store (только цифры/другой формат). Наш `3U9jPUVa` туда не вводится.
+
+1. На iPhone открой **Safari** (не TestFlight)
+2. Вставь ссылку вида `https://testflight.apple.com/join/…` из Actions → **iOS TestFlight** → job **link** → Summary
+3. Safari предложит открыть TestFlight — Open
+4. Install у **Zozu Games DEV**
+
+Если TestFlight пишет **«не принимает новых тестировщиков»** — ссылка верная, но Apple ещё не одобрил **внешнюю** сборку (Beta Review). Один раз в Safari:
+
+1. https://appstoreconnect.apple.com/apps/6822534284/testflight
+2. Слева **Test Information**
+3. Contact Information → телефон (свой, настоящий)
+4. Save
+5. Если ссылку нужно снова напечатать: Actions → **iOS TestFlight** → Run workflow → включи **только ссылка**
+6. Подожди письмо Ready to Test и открой ту же ссылку `testflight.apple.com/join/…`
+
+Один workflow: job **release** собирает IPA, job **link** печатает ссылку. Новую IPA не жми без нужды.
 
 Первая сборка иногда спрашивает Export Compliance. В приложении уже стоит `ITSAppUsesNonExemptEncryption=false` (только обычный HTTPS). Если ASC всё равно спросит: encryption yes, only HTTPS / exempt.
 
@@ -149,28 +179,61 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 |-----------|-------------|
 | `Нет секрета …` | добавь секрет из таблицы выше |
 | `APPLE_TEAM_ID должен быть 10 символов` | скопируй Team ID из Membership, без пробелов |
-| `BEGIN PRIVATE KEY` | в секрет вставлен не весь `.p8` |
-| `No suitable application records were found` / нет приложения | создай app в App Store Connect с тем Bundle ID |
+| `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
+| `не может его создать` / `does not allow CREATE` | API-ключ не умеет New App. Создай вручную: App Store Connect → Apps → + → iOS, Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev` |
 | `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
+| `readonly` / `No code signing identity` | не жми Re-run на старом прогоне. Actions → iOS TestFlight → **Run workflow** с `develop`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
 | `match` / git push | не удаляй ветку `match-certs`; у workflow есть `contents: write` |
+| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — дождись вливания в `develop` / `main` |
+| `Invalid MinimumOSVersion` / `App.framework` | в `client/ios/Flutter/AppFrameworkInfo.plist` должен быть `MinimumOSVersion` 15.0 |
+| `Deployment target too low` / `90068` | приложение целится в iOS 15.0 (с апреля 2027 Apple не примет ниже) |
+| `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
+| `doesn't include the com.apple.developer.applesignin` | Bundle ID был создан раньше capability. CI включает Sign in with Apple и пересобирает профиль. Не жми Re-run старого прогона — дождись вливания в `develop` |
+| `aps-environment` / Push | CI включает Push Notifications и пересобирает профиль. Если ошибка осталась — Identifiers → Push Notifications → Enable, затем Run workflow → `force_match` |
 
 Лог Actions: job **release**, шаг **Build IPA and upload to TestFlight**.
 
-## 9. Google Sign-In (не блокирует установку)
+## 9. Вход на iPhone (Apple и Google)
 
-На iOS вход через Google — нативный `google_sign_in`.
+**Sign in with Apple** — системный лист того же Apple ID, что в Настройках.
+Канал в `AppDelegate` (`com.zozugames/apple_sign_in`), кнопка выше Google.
+Сервер проверяет identity token через JWKS Apple
+(`POST /api/auth/oauth/apple/id-token`). Web-секреты `APPLE_*` для этого не нужны.
 
-В [Google Cloud](https://console.cloud.google.com/) того же проекта, что Web Client ID:
+**Google** — системный лист в приложении (схема `zozugames` или `zozugames-dev`), не уход на сайт. Плагин `google_sign_in` на iPhone не вызывается: без отдельного iOS OAuth client он падает сразу.
 
-1. Credentials → **Create OAuth client ID** → тип **iOS**
-2. Bundle ID: `com.zozugames.app` и отдельно `.dev`
-3. `GoogleService-Info.plist` **не коммить**
-4. `REVERSED_CLIENT_ID` потом в URL Types
+Если лоадер крутится и окно не открывается:
 
-Без этого кнопка Google на iOS не войдёт. Сборка и TestFlight от этого не зависят.
+1. `SceneDelegate` должен прокидывать URL в `FlutterAppDelegate` (уже в репо)
+2. На сервере должен быть `GOOGLE_CLIENT_ID` (Web client). Отдельный iOS OAuth client для этого листа не нужен.
 
-## 10. Если появится Mac
+## 10. Уведомления на iPhone
+
+Пока приложение открыто или свёрнуто, баннер рисует само приложение (как на Android). Когда процесс убит, баннер приходит через FCM. Для этого нужны три вещи. Без `GoogleService-Info.plist` в IPA закрытое приложение молчит, локальные баннеры при живом сокете остаются.
+
+| Что | Куда |
+|-----|------|
+| `GoogleService-Info.plist` с `BUNDLE_ID` этой сборки | секрет GitHub, CI кладёт его в IPA |
+| Push Notifications на Bundle ID | CI включает сам и пересобирает профиль |
+| `FCM_SERVICE_ACCOUNT_JSON` | уже на Fly, тот же секрет, что для Android |
+
+Секреты Actions:
+
+| Секрет | Файл |
+|--------|------|
+| `IOS_GOOGLE_SERVICE_INFO_PLIST` | plist прод, `BUNDLE_ID` = `com.zozugames.app` |
+| `IOS_GOOGLE_SERVICE_INFO_PLIST_DEV` | plist DEV, `BUNDLE_ID` = `com.zozugames.app.dev` |
+
+Firebase → тот же проект, что Android → Add app → iOS → скачать plist. В git файл не класть.
+
+В файле должен быть ровно `<string>com.zozugames.app</string>` или `.dev`. Чужой Bundle ID CI не подставит.
+
+После зелёного **iOS TestFlight** поставь сборку, войди, разреши уведомления. Свёрнутое приложение показывает баннер сразу. Закрытое — после того, как в логе сборки есть `Wrote ios/Runner/GoogleService-Info.plist`.
+
+В Apple Developer у Bundle ID должен быть ключ APNs (Firebase → Cloud Messaging → Apple app → APNs Authentication Key). Без ключа FCM не доставит баннер на iPhone, хотя токен приложение получит.
+
+## 11. Если появится Mac
 
 ```bash
 cd client

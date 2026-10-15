@@ -79,6 +79,13 @@ final pendingPurchaseFlushNoticeProvider =
 class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
   PendingPurchasesNotifier(this._ref) : super(const []) {
     _ready = _init();
+    // flush() сам ждёт _ready. await flush() внутри _init зацикливает
+    // инициализацию: кнопка «Купить» тогда навсегда остаётся на «…».
+    unawaited(_ready.then((_) {
+      if (!_ref.read(isOfflineProvider) && state.isNotEmpty) {
+        unawaited(flush());
+      }
+    }));
   }
 
   final Ref _ref;
@@ -93,10 +100,6 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
         unawaited(flush());
       }
     });
-    // Старт уже в онлайне с непустой очередью (после перезапуска).
-    if (!_ref.read(isOfflineProvider) && state.isNotEmpty) {
-      await flush();
-    }
   }
 
   Future<void> _load() async {
@@ -123,11 +126,11 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
   }
 
   Future<void> _persist() async {
+    if (!mounted) return;
+    final payload = jsonEncode(state.map((e) => e.toJson()).toList());
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _keyPendingPurchases,
-      jsonEncode(state.map((e) => e.toJson()).toList()),
-    );
+    if (!mounted) return;
+    await prefs.setString(_keyPendingPurchases, payload);
   }
 
   String _displayTitle(PendingPurchase item) {
@@ -139,9 +142,16 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
     );
   }
 
+  /// Очередь с диска не должна держать кнопку «Купить» на «…».
+  Future<void> _awaitReady() async {
+    try {
+      await _ready.timeout(const Duration(seconds: 2));
+    } catch (_) {}
+  }
+
   /// Поставить покупку в очередь (офлайн) или купить сразу (онлайн).
   Future<ShopBuyResult> buyOrQueue(String code) async {
-    await _ready;
+    await _awaitReady();
     final offline = _ref.read(isOfflineProvider);
     final repo = _ref.read(shopRepositoryProvider);
     if (!offline) {
@@ -198,8 +208,8 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
 
   /// Синхронизация с сервером: валидные покупки применяются, ошибочные снимаются.
   Future<void> flush() async {
-    await _ready;
-    if (_flushing) return;
+    await _awaitReady();
+    if (!mounted || _flushing) return;
     if (_ref.read(isOfflineProvider)) return;
     if (state.isEmpty) return;
     _flushing = true;
@@ -233,8 +243,10 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
           remaining.add(item);
         }
       }
+      if (!mounted) return;
       state = remaining;
       await _persist();
+      if (!mounted) return;
       _ref.invalidate(shopCatalogProvider);
       _ref.invalidate(inventoryListProvider);
       if (applied.isNotEmpty || failed.isNotEmpty) {

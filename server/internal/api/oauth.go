@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"net/http"
 	"net/url"
 	"strings"
@@ -52,11 +54,12 @@ type OAuthConfig struct {
 }
 
 type oauthState struct {
-	Provider string
-	Redirect string
-	Ref      string
-	FromPWA  bool
-	Expires  time.Time
+	Provider     string
+	Redirect     string
+	Ref          string
+	FromPWA      bool
+	ReturnScheme string
+	Expires      time.Time
 }
 
 type oauthResult struct {
@@ -128,18 +131,19 @@ func (c *OAuthConfig) takeResult(state string) (oauthResult, bool) {
 	return res, true
 }
 
-func (c *OAuthConfig) putState(provider, redirect, ref string, fromPWA bool) (string, error) {
+func (c *OAuthConfig) putState(provider, redirect, ref string, fromPWA bool, returnScheme string) (string, error) {
 	b := make([]byte, 24)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
 	state := base64.RawURLEncoding.EncodeToString(b)
 	st := oauthState{
-		Provider: provider,
-		Redirect: redirect,
-		Ref:      ref,
-		FromPWA:  fromPWA,
-		Expires:  time.Now().Add(10 * time.Minute),
+		Provider:     provider,
+		Redirect:     redirect,
+		Ref:          ref,
+		FromPWA:      fromPWA,
+		ReturnScheme: allowedAppReturnScheme(returnScheme),
+		Expires:      time.Now().Add(10 * time.Minute),
 	}
 	if c != nil && c.Rdb != nil {
 		raw, err := json.Marshal(st)
@@ -192,25 +196,47 @@ func (c *OAuthConfig) takeState(state string) (oauthState, bool) {
 	return s, true
 }
 
-func (c *OAuthConfig) peekFromPWA(state string) bool {
+func (c *OAuthConfig) peekState(state string) (oauthState, bool) {
+	if strings.TrimSpace(state) == "" {
+		return oauthState{}, false
+	}
 	if c != nil && c.Rdb != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		raw, err := c.Rdb.Get(ctx, "oauth:state:"+state).Result()
 		if err != nil {
-			return false
+			return oauthState{}, false
 		}
 		var st oauthState
 		if json.Unmarshal([]byte(raw), &st) != nil || time.Now().After(st.Expires) {
-			return false
+			return oauthState{}, false
 		}
-		return st.FromPWA
+		return st, true
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ensureStates()
 	s, ok := c.states[state]
-	return ok && s.FromPWA && time.Now().Before(s.Expires)
+	if !ok || time.Now().After(s.Expires) {
+		return oauthState{}, false
+	}
+	return s, true
+}
+
+func (c *OAuthConfig) peekFromPWA(state string) bool {
+	st, ok := c.peekState(state)
+	return ok && st.FromPWA
+}
+
+// allowedAppReturnScheme — только свои схемы. Иначе редирект после OAuth
+// ушёл бы на чужой сайт (open redirect).
+func allowedAppReturnScheme(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "zozugames", "zozugames-dev":
+		return strings.ToLower(strings.TrimSpace(raw))
+	default:
+		return ""
+	}
 }
 
 func (c *OAuthConfig) EnabledProviders() []string {
@@ -337,6 +363,238 @@ func (h *AuthHandler) GoogleIDTokenLogin(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+var appleNativeAudiences = []string{
+	"com.zozugames.app",
+	"com.zozugames.app.dev",
+}
+
+func appleAudienceAllowed(aud string, allowed []string) bool {
+	for _, item := range allowed {
+		if item == aud {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *OAuthConfig) appleAudiences() []string {
+	out := append([]string{}, appleNativeAudiences...)
+	if c != nil {
+		if id := strings.TrimSpace(c.AppleClientID); id != "" {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+// AppleIDTokenLogin — вход по identity token системного Sign in with Apple.
+func (h *AuthHandler) AppleIDTokenLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	var body struct {
+		IdentityToken string `json:"identity_token"`
+		Email         string `json:"email"`
+		GivenName     string `json:"given_name"`
+		FamilyName    string `json:"family_name"`
+		Redirect      string `json:"redirect"`
+		Ref           string `json:"ref"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
+	token := strings.TrimSpace(body.IdentityToken)
+	if token == "" {
+		WriteErr(w, r, http.StatusBadRequest, "identity_token required")
+		return
+	}
+	identity, err := h.verifyAppleIdentityToken(r.Context(), token)
+	if err != nil {
+		log.Printf("[oauth] apple native login verify failed: %v", err)
+		WriteErr(w, r, http.StatusUnauthorized, "invalid apple credential")
+		return
+	}
+	if identity.Email == "" {
+		identity.Email = strings.TrimSpace(body.Email)
+	}
+	if identity.Name == "" {
+		identity.Name = strings.TrimSpace(body.GivenName + " " + body.FamilyName)
+	}
+
+	var referredBy *uuid.UUID
+	if refRaw := strings.TrimSpace(body.Ref); refRaw != "" {
+		if id, parseErr := uuid.Parse(refRaw); parseErr == nil {
+			referredBy = &id
+		}
+	}
+	u, _, err := store.FindOrCreateOAuthUser(
+		r.Context(),
+		h.Pool,
+		"apple",
+		identity.Subject,
+		identity.Email,
+		identity.Name,
+		referredBy,
+	)
+	if err != nil {
+		log.Printf("[oauth] find/create user failed: %v", err)
+		WriteErr(w, r, http.StatusInternalServerError, "oauth user create failed")
+		return
+	}
+	accessToken, refreshToken, expiresIn, err := h.issueSessionTokens(r.Context(), u)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "oauth session failed")
+		return
+	}
+	redirect := strings.TrimSpace(body.Redirect)
+	if redirect == "" {
+		redirect = "/games"
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"expires_in":    expiresIn,
+		"redirect":      redirect,
+		"user":          userToResponse(u),
+	})
+}
+
+func (h *AuthHandler) verifyAppleIdentityToken(ctx context.Context, idToken string) (*oauthIdentity, error) {
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS256"}),
+		jwt.WithLeeway(time.Minute),
+	)
+	token, err := parser.Parse(idToken, func(t *jwt.Token) (any, error) {
+		kid, _ := t.Header["kid"].(string)
+		if kid == "" {
+			return nil, fmt.Errorf("apple jwt: empty kid")
+		}
+		return applePublicKey(ctx, kid)
+	})
+	if err != nil {
+		return nil, err
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("apple jwt: invalid claims")
+	}
+	iss, _ := claims["iss"].(string)
+	if iss != "https://appleid.apple.com" {
+		return nil, fmt.Errorf("apple jwt: iss")
+	}
+	allowed := appleNativeAudiences
+	if h.OAuth != nil {
+		allowed = h.OAuth.appleAudiences()
+	}
+	switch aud := claims["aud"].(type) {
+	case string:
+		if !appleAudienceAllowed(aud, allowed) {
+			return nil, fmt.Errorf("apple jwt: aud")
+		}
+	case []any:
+		okAud := false
+		for _, item := range aud {
+			s, _ := item.(string)
+			if appleAudienceAllowed(s, allowed) {
+				okAud = true
+				break
+			}
+		}
+		if !okAud {
+			return nil, fmt.Errorf("apple jwt: aud")
+		}
+	default:
+		return nil, fmt.Errorf("apple jwt: aud")
+	}
+	sub, _ := claims["sub"].(string)
+	if sub == "" {
+		return nil, fmt.Errorf("apple jwt: empty sub")
+	}
+	email, _ := claims["email"].(string)
+	return &oauthIdentity{Subject: sub, Email: email}, nil
+}
+
+type appleJWKSet struct {
+	Keys []struct {
+		Kid string `json:"kid"`
+		N   string `json:"n"`
+		E   string `json:"e"`
+	} `json:"keys"`
+}
+
+var (
+	appleKeysMu sync.Mutex
+	appleKeys   *appleJWKSet
+	appleKeysAt time.Time
+)
+
+func applePublicKey(ctx context.Context, kid string) (*rsa.PublicKey, error) {
+	set, err := fetchAppleKeys(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range set.Keys {
+		if key.Kid != kid {
+			continue
+		}
+		return jwkRSAPublic(key.N, key.E)
+	}
+	return nil, fmt.Errorf("apple jwk: kid not found")
+}
+
+func fetchAppleKeys(ctx context.Context) (*appleJWKSet, error) {
+	appleKeysMu.Lock()
+	defer appleKeysMu.Unlock()
+	if appleKeys != nil && time.Since(appleKeysAt) < time.Hour {
+		return appleKeys, nil
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://appleid.apple.com/auth/keys", nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("apple jwks: %s", string(raw))
+	}
+	var set appleJWKSet
+	if err := json.Unmarshal(raw, &set); err != nil {
+		return nil, err
+	}
+	if len(set.Keys) == 0 {
+		return nil, fmt.Errorf("apple jwks: empty")
+	}
+	appleKeys = &set
+	appleKeysAt = time.Now()
+	return appleKeys, nil
+}
+
+func jwkRSAPublic(nB64, eB64 string) (*rsa.PublicKey, error) {
+	nBytes, err := base64.RawURLEncoding.DecodeString(nB64)
+	if err != nil {
+		return nil, err
+	}
+	eBytes, err := base64.RawURLEncoding.DecodeString(eB64)
+	if err != nil {
+		return nil, err
+	}
+	e := 0
+	for _, b := range eBytes {
+		e = e<<8 | int(b)
+	}
+	if e == 0 {
+		return nil, fmt.Errorf("apple jwk: empty e")
+	}
+	return &rsa.PublicKey{N: new(big.Int).SetBytes(nBytes), E: e}, nil
+}
+
 func (h *AuthHandler) verifyGoogleIDToken(ctx context.Context, idToken string) (*oauthIdentity, error) {
 	req, err := http.NewRequestWithContext(
 		ctx,
@@ -406,7 +664,8 @@ func (h *AuthHandler) OAuthStart(w http.ResponseWriter, r *http.Request) {
 	}
 	ref := strings.TrimSpace(r.URL.Query().Get("ref"))
 	fromPWA := strings.TrimSpace(r.URL.Query().Get("pwa")) == "1"
-	state, err := h.OAuth.putState(provider, redirect, ref, fromPWA)
+	returnScheme := allowedAppReturnScheme(r.URL.Query().Get("return_scheme"))
+	state, err := h.OAuth.putState(provider, redirect, ref, fromPWA, returnScheme)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -518,11 +777,11 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errMsg := r.URL.Query().Get("error"); errMsg != "" {
-		fromPWA := h.OAuth.peekFromPWA(state)
+		peeked, _ := h.OAuth.peekState(state)
 		if state != "" {
 			h.OAuth.putResult(state, oauthResult{Error: "oauth denied: " + errMsg})
 		}
-		h.oauthDonePage(w, r, state, "oauth denied: "+errMsg, fromPWA)
+		h.oauthDonePage(w, r, state, "oauth denied: "+errMsg, peeked.FromPWA, peeked.ReturnScheme)
 		return
 	}
 
@@ -538,7 +797,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	if code == "" {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth code required", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth code required", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth code required", st.FromPWA, st.ReturnScheme)
 		return
 	}
 
@@ -546,7 +805,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] %s exchange failed: %v", provider, err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth exchange failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth exchange failed", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth exchange failed", st.FromPWA, st.ReturnScheme)
 		return
 	}
 
@@ -569,7 +828,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] find/create user failed: %v", err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth user create failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth user create failed", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth user create failed", st.FromPWA, st.ReturnScheme)
 		return
 	}
 	_ = created
@@ -577,7 +836,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	accessToken, refreshToken, _, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth session failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth session failed", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth session failed", st.FromPWA, st.ReturnScheme)
 		return
 	}
 
@@ -587,10 +846,19 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		Redirect:     st.Redirect,
 	})
 	// PWA: oauth_done в Safari не грузит Flutter (pwa=1). Токены забирает poll в standalone.
-	h.oauthDonePage(w, r, state, "", st.FromPWA)
+	h.oauthDonePage(w, r, state, "", st.FromPWA, st.ReturnScheme)
 }
 
-func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, state, errMsg string, fromPWA bool) {
+func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, state, errMsg string, fromPWA bool, returnScheme string) {
+	if scheme := allowedAppReturnScheme(returnScheme); scheme != "" {
+		// Системный лист iOS закрывается на своей схеме и не открывает сайт.
+		dest := scheme + "://oauth-done"
+		if errMsg != "" {
+			dest += "?error=" + url.QueryEscape(errMsg)
+		}
+		http.Redirect(w, r, dest, http.StatusFound)
+		return
+	}
 	front := ""
 	if h.OAuth != nil {
 		front = strings.TrimRight(h.OAuth.FrontendURL, "/")
