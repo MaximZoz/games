@@ -99,6 +99,8 @@ void main() {
     expect(fastfile, contains('tf_ensure_sign_in_with_apple'));
     expect(fastfile, contains('APPLE_ID_AUTH'));
     expect(fastfile, contains('com.apple.developer.applesignin'));
+    expect(fastfile, contains('UserData/Provisioning Profiles'));
+    expect(fastfile, contains('appstore_profile-path'));
     expect(fastfile, contains('match('));
     expect(fastfile, contains('produce('));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
@@ -145,6 +147,8 @@ void main() {
     expect(fastfile, contains('tf_ensure_sign_in_with_apple'));
     expect(fastfile, contains('APPLE_ID_AUTH'));
     expect(fastfile, contains('com.apple.developer.applesignin'));
+    expect(fastfile, contains('UserData/Provisioning Profiles'));
+    expect(fastfile, contains('appstore_profile-path'));
     expect(File('pubspec.yaml').readAsStringSync(), contains('sign_in_with_apple'));
   });
 }
