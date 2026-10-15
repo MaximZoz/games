@@ -12,7 +12,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 
-/// Локальные уведомления на Android, пока приложение в фоне (WS ещё жив).
+/// Локальные уведомления на Android и iPhone, пока приложение в фоне (WS ещё жив).
 /// Как PWA: баннер не рисуем в момент открытия приложения.
 final androidNotifyBridgeProvider = Provider<void>((ref) {
   if (kIsWeb || !localNotificationsSupported()) return;

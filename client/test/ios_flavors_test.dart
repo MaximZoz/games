@@ -137,7 +137,7 @@ void main() {
     expect(app, contains('com.zozugames/apple_sign_in'));
     expect(app, contains('ASAuthorizationAppleIDProvider'));
     expect(app, contains('ZozuAppleSignIn'));
-    expect(app, contains('keyWindow'));
+    expect(app, contains('isKeyWindow'));
     expect(app, isNot(contains('registrar.viewController')));
     expect(app, isNot(contains('FlutterImplicitEngine')));
     expect(scene, contains('UIWindowSceneDelegate'));
@@ -146,7 +146,13 @@ void main() {
     expect(scene, contains('FlutterAppDelegate'));
 
     final entitlements = File('ios/Runner/Runner.entitlements').readAsStringSync();
+    final plist = File('ios/Runner/Info.plist').readAsStringSync();
     expect(entitlements, contains('com.apple.developer.applesignin'));
+    expect(entitlements, contains('aps-environment'));
+    expect(plist, contains('NSPhotoLibraryUsageDescription'));
+    expect(plist, contains('remote-notification'));
+    expect(fastfile, contains('tf_ensure_push_notifications'));
+    expect(fastfile, contains('PUSH_NOTIFICATIONS'));
     expect(pbx, contains('CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements'));
     expect(fastfile, contains('sign_in_with_apple'));
     expect(fastfile, contains('tf_ensure_sign_in_with_apple'));

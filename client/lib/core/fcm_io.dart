@@ -8,7 +8,8 @@ var _initialized = false;
 
 bool _inFlutterTest() => Platform.environment.containsKey('FLUTTER_TEST');
 
-bool fcmSupported() => Platform.isAndroid && !_inFlutterTest();
+bool fcmSupported() =>
+    (Platform.isAndroid || Platform.isIOS) && !_inFlutterTest();
 
 Future<bool> _ensureFirebase() async {
   if (!fcmSupported()) return false;
@@ -52,6 +53,13 @@ Future<String?> ensureFcmToken() async {
   if (settings.authorizationStatus == AuthorizationStatus.denied) {
     return null;
   }
+  // Пока приложение открыто, баннер рисует локальное уведомление из сокета.
+  // Системный баннер FCM нужен в фоне и когда процесс убит — как на Android.
+  await messaging.setForegroundNotificationPresentationOptions(
+    alert: false,
+    badge: false,
+    sound: false,
+  );
   return messaging.getToken();
 }
 

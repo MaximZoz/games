@@ -12,9 +12,9 @@ String? _launchPayload;
 
 bool _inFlutterTest() => Platform.environment.containsKey('FLUTTER_TEST');
 
-/// Только настоящий Android. VM-тесты и desktop плагин не регистрируют.
+/// Телефон (Android и iOS). VM-тесты и desktop плагин не регистрируют.
 bool localNotificationsSupported() =>
-    Platform.isAndroid && !_inFlutterTest();
+    (Platform.isAndroid || Platform.isIOS) && !_inFlutterTest();
 
 void _handleResponse(NotificationResponse response) {
   final payload = response.payload;
@@ -60,7 +60,12 @@ Future<void> initLocalNotifications() async {
   if (_ready || !localNotificationsSupported()) return;
   try {
     const android = AndroidInitializationSettings('@drawable/ic_stat_notify');
-    const settings = InitializationSettings(android: android);
+    const darwin = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const settings = InitializationSettings(android: android, iOS: darwin);
     await _plugin.initialize(
       settings,
       onDidReceiveNotificationResponse: _handleResponse,
@@ -78,7 +83,7 @@ Future<void> initLocalNotifications() async {
         ?.createNotificationChannel(channel);
     _ready = true;
   } catch (_) {
-    // Нет platform instance (тесты / не-Android) — локальные баннеры пропускаем.
+    // Нет platform instance (тесты / desktop) — локальные баннеры пропускаем.
   }
 }
 
@@ -87,6 +92,16 @@ Future<bool> requestLocalNotificationPermission() async {
   await initLocalNotifications();
   if (!_ready) return false;
   try {
+    if (Platform.isIOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      final granted = await ios?.requestPermissions(
+        alert: true,
+        badge: false,
+        sound: true,
+      );
+      return granted ?? false;
+    }
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     final granted = await android?.requestNotificationsPermission();
@@ -147,6 +162,14 @@ Future<void> showLocalNotification({
           ? notificationIdForTag(resolvedTag)
           : DateTime.now().millisecondsSinceEpoch.remainder(1 << 31));
   final details = NotificationDetails(
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentBanner: true,
+      presentList: true,
+      presentSound: true,
+      presentBadge: false,
+      threadIdentifier: resolvedTag,
+    ),
     android: AndroidNotificationDetails(
       'zozu_events',
       'Zozu Games',

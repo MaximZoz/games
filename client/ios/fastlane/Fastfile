@@ -181,6 +181,58 @@ def tf_ensure_sign_in_with_apple(bundle_id)
   true
 end
 
+# Тот же приём, что Sign in with Apple: produce не включает Push на уже
+# существующем Bundle ID, и match тогда собирает профиль без aps-environment.
+def tf_ensure_push_notifications(bundle_id)
+  require "uri"
+  query = URI.encode_www_form([["filter[identifier]", bundle_id], ["limit", "5"]])
+  _code, json = tf_asc(:get, "/v1/bundleIds?#{query}")
+  rows = json["data"]
+  rows = [] unless rows.is_a?(Array)
+  row = rows.find { |item| item.dig("attributes", "identifier") == bundle_id } || rows.first
+  if row.nil?
+    UI.user_error!(
+      "В Apple Developer нет Bundle ID #{bundle_id}. " \
+      "Identifiers → + → App ID и включи Push Notifications."
+    )
+  end
+  resource_id = row["id"]
+  _cap_code, cap_json = tf_asc(
+    :get,
+    "/v1/bundleIds/#{resource_id}?include=bundleIdCapabilities"
+  )
+  caps = cap_json["included"]
+  caps = [] unless caps.is_a?(Array)
+  if caps.any? { |cap| cap.dig("attributes", "capabilityType") == "PUSH_NOTIFICATIONS" }
+    UI.message("Push Notifications уже включены: #{bundle_id}")
+    return false
+  end
+  payload = {
+    data: {
+      type: "bundleIdCapabilities",
+      attributes: { capabilityType: "PUSH_NOTIFICATIONS" },
+      relationships: {
+        bundleId: { data: { type: "bundleIds", id: resource_id } }
+      }
+    }
+  }
+  post_code, = tf_asc(:post, "/v1/bundleIdCapabilities", payload)
+  if post_code == 409
+    UI.message("Push Notifications уже включены: #{bundle_id}")
+    return false
+  end
+  unless post_code.between?(200, 299)
+    UI.user_error!(
+      "Не удалось включить Push Notifications на #{bundle_id} (HTTP #{post_code}). " \
+      "Safari → developer.apple.com → Identifiers → #{bundle_id} → " \
+      "Push Notifications → Enable. Потом Actions → iOS TestFlight → " \
+      "Run workflow → force_match."
+    )
+  end
+  UI.success("Push Notifications включены: #{bundle_id}")
+  true
+end
+
 def tf_match_appstore(bundle_id:, api_key:, readonly:, force:)
   match(
     type: "appstore",
@@ -220,7 +272,14 @@ def tf_profile_has_apple_sign_in?(profile_name, bundle_id)
   end
   keys = xml.scan(%r{<key>([^<]+)</key>}).flatten.uniq
   UI.message("Профиль #{File.basename(path)}: #{keys.join(', ')}")
-  xml.include?("com.apple.developer.applesignin")
+  has_apple = xml.include?("com.apple.developer.applesignin")
+  has_push = xml.include?("aps-environment")
+  unless has_apple && has_push
+    UI.important(
+      "Профиль без нужных entitlement: apple=#{has_apple} push=#{has_push}"
+    )
+  end
+  has_apple && has_push
 end
 
 default_platform(:ios)
@@ -290,11 +349,12 @@ platform :ios do
     UI.success("App Store Connect: #{bundle_id}")
 
     apple_just_enabled = tf_ensure_sign_in_with_apple(bundle_id)
+    push_just_enabled = tf_ensure_push_notifications(bundle_id)
     tf_match_appstore(
       bundle_id: bundle_id,
       api_key: api_key,
       readonly: want_readonly,
-      force: !want_readonly && (apple_just_enabled || ENV["MATCH_FORCE"] == "true")
+      force: !want_readonly && (apple_just_enabled || push_just_enabled || ENV["MATCH_FORCE"] == "true")
     )
 
     profile_env = "sigh_#{bundle_id}_appstore_profile-name"
@@ -302,7 +362,7 @@ platform :ios do
     profile_name = "match AppStore #{bundle_id}" if profile_name.nil? || profile_name.empty?
     UI.message("Provisioning profile: #{profile_name}")
     if !want_readonly && !tf_profile_has_apple_sign_in?(profile_name, bundle_id)
-      UI.important("Профиль без Sign in with Apple — пересоздаю")
+      UI.important("Профиль без Sign in with Apple или Push — пересоздаю")
       tf_match_appstore(
         bundle_id: bundle_id,
         api_key: api_key,
@@ -312,8 +372,8 @@ platform :ios do
     end
     unless want_readonly || tf_profile_has_apple_sign_in?(profile_name, bundle_id)
       UI.user_error!(
-        "Профиль «#{profile_name}» всё ещё без Sign in with Apple. " \
-        "Identifiers → #{bundle_id} → Sign In with Apple, затем force_match."
+        "Профиль «#{profile_name}» всё ещё без Sign in with Apple или Push. " \
+        "Identifiers → #{bundle_id} → Sign In with Apple и Push Notifications, затем force_match."
       )
     end
 

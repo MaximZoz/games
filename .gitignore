@@ -11,6 +11,7 @@ client/*.iml
 client/.idea/
 client/.metadata
 client/ios/Pods/
+client/ios/Runner/GoogleService-Info.plist
 client/ios/.symlinks/
 client/ios/Flutter/Flutter.framework
 client/ios/Flutter/Flutter.podspec
