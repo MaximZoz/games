@@ -561,6 +561,12 @@ class AppShell extends ConsumerWidget {
     final collapseBottomNav = ref.watch(collapseMobileBottomNavProvider);
     final showBottomNav =
         narrow && !narrowLandscape && !inChatRoom && !onAuthScreen;
+    final collapseNavForKeyboard = shellOwnsKeyboardInset && keyboardOpen;
+    // Схлопнутая панель не занимает низ: контенту снова нужен home indicator.
+    final navCollapsed = collapseBottomNav ||
+        profileKeyboard ||
+        collapseNavForKeyboard;
+    final navReservesBottom = showBottomNav && !navCollapsed;
 
     final navItems = _navItems(context, offline: isOffline);
     final selectedIndex = () {
@@ -844,6 +850,12 @@ class AppShell extends ConsumerWidget {
     // никто не отступает — стол игры уезжает под них. Отступаем здесь и
     // убираем padding из MediaQuery, чтобы SafeArea экранов не сдвинули
     // содержимое второй раз.
+    //
+    // removePadding читает MediaQuery контекста оболочки — он над Scaffold
+    // и всё ещё содержит home indicator. В портрете меню уже сидит на этом
+    // вырезе. Если вернуть bottom в ветки, SafeArea каждого экрана оставляет
+    // ~34px пустоты над иконками (на «Настройках» карточка её перекрывает
+    // из‑за clipBehavior: none, на «Играх» видна серая полоса).
     final railVisible =
         !(landscapeKeyboard || hideLandscapeProfileChrome || hideInputChrome);
     final landscapeSafe = landscapeContentSafeArea(
@@ -861,7 +873,7 @@ class AppShell extends ConsumerWidget {
           removeTop: true,
           removeLeft: narrowLandscape,
           removeRight: narrowLandscape,
-          removeBottom: narrowLandscape,
+          removeBottom: narrowLandscape || navReservesBottom,
           // Padding и LayoutBuilder всегда в дереве: при повороте экрана
           // условная обёртка пересоздала бы ветки и сбросила их состояние.
           child: Padding(
@@ -1202,10 +1214,6 @@ class AppShell extends ConsumerWidget {
         bottomInset <= 0 ? 0.0 : (bottomInset > 16 ? 12.0 : bottomInset);
     // Оболочка сама сдвигает контент на клавиатуру, поэтому панель под ней
     // не должна занимать высоту — иначе между вводом и клавиатурой щель.
-    final collapseNavForKeyboard = shellOwnsKeyboardInset && keyboardOpen;
-    final navCollapsed = collapseBottomNav ||
-        profileKeyboard ||
-        collapseNavForKeyboard;
     Widget? bottomNav;
     if (showBottomNav) {
       bottomNav = Align(

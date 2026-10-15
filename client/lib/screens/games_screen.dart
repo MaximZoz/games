@@ -1895,7 +1895,7 @@ class _GamesPageContent extends ConsumerWidget {
                 contentPadding,
                 isOffline ? 12 : 8,
                 contentPadding,
-                isDesktop || phoneLandscape ? 24 : 48,
+                isDesktop || phoneLandscape ? 24 : 16,
               ),
               children: [
                 gameCards(
@@ -2009,7 +2009,12 @@ class _LobbiesPageContent extends ConsumerWidget {
           controller: controller,
           primary: false,
           physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(contentPadding, 8, contentPadding, 48),
+          padding: EdgeInsets.fromLTRB(
+            contentPadding,
+            8,
+            contentPadding,
+            isDesktop || isPhoneLandscape(context) ? 24 : 16,
+          ),
           children: [
         if (obs != null) ...[
           GameObservationCard(

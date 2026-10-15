@@ -115,6 +115,26 @@ void main() {
     expect(mobileBottomNav(), findsNothing);
   });
 
+  testWidgets('Phone bottom nav does not leave a home-indicator gap above icons',
+      (tester) async {
+    tester.view.viewPadding = const FakeViewPadding(top: 47, bottom: 34);
+    tester.view.padding = const FakeViewPadding(top: 47, bottom: 34);
+    addTearDown(tester.view.resetViewPadding);
+    addTearDown(tester.view.resetPadding);
+
+    await openGuestProfileOnPhone(tester);
+    tester.view.viewPadding = const FakeViewPadding(top: 47, bottom: 34);
+    tester.view.padding = const FakeViewPadding(top: 47, bottom: 34);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final nav = tester.getRect(mobileBottomNav());
+    final scroll = tester.getRect(find.byType(Scrollable));
+    // Раньше SafeArea повторял home indicator (~34) над уже стоящим меню.
+    expect(nav.top - scroll.bottom, lessThan(8));
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
+  });
+
   testWidgets('Phone bottom nav does not clip a badge above the icons',
       (tester) async {
     await openGuestProfileOnPhone(tester);
