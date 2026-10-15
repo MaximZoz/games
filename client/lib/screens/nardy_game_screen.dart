@@ -1232,13 +1232,17 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               SizedBox(
                 width: 28,
                 height: 28,
-                child: Checkbox(
-                  value: value,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                  activeColor: AppColors.accentStart,
-                  onChanged: (v) => unawaited(
-                    ref.read(nardyAutoConfirmProvider.notifier).set(v ?? false),
+                child: IgnorePointer(
+                  child: Checkbox(
+                    value: value,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    activeColor: AppColors.accentStart,
+                    onChanged: (v) => unawaited(
+                      ref
+                          .read(nardyAutoConfirmProvider.notifier)
+                          .set(v ?? false),
+                    ),
                   ),
                 ),
               ),

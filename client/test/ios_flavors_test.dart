@@ -134,15 +134,22 @@ void main() {
     final pbx = File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync();
     final fastfile = File('ios/fastlane/Fastfile').readAsStringSync();
     expect(app, contains('GeneratedPluginRegistrant.register'));
+    expect(app, contains('SharedPreferencesPlugin'));
+    expect(app, contains('com.zozugames/session_store'));
+    expect(app, contains('ZozuFlutterViewController'));
     expect(app, contains('com.zozugames/apple_sign_in'));
     expect(app, contains('ASAuthorizationAppleIDProvider'));
     expect(app, contains('ZozuAppleSignIn'));
-    expect(app, contains('keyWindow'));
+    expect(app, contains('isKeyWindow'));
     expect(app, isNot(contains('registrar.viewController')));
     expect(app, isNot(contains('FlutterImplicitEngine')));
     expect(scene, contains('UIWindowSceneDelegate'));
     expect(scene, isNot(contains('FlutterSceneDelegate')));
     expect(scene, contains('openURLContexts'));
+    expect(
+      File('ios/Runner/Base.lproj/Main.storyboard').readAsStringSync(),
+      contains('ZozuFlutterViewController'),
+    );
     expect(scene, contains('FlutterAppDelegate'));
 
     final entitlements = File('ios/Runner/Runner.entitlements').readAsStringSync();

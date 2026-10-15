@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/session_storage_stub.dart'
     if (dart.library.html) 'package:multigames_client/auth/session_storage_web.dart'
+    if (dart.library.io) 'package:multigames_client/auth/session_storage_io.dart'
     as session_storage;
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -638,19 +639,21 @@ class AuthRepository {
   Future<String?> getAccessToken() async {
     String? token = _memoryAccessToken;
     if (token == null || token.isEmpty) {
-      await init();
-      if (_prefs != null) {
-        try {
-          // Safari: подтянуть актуальные значения из localStorage.
-          await _prefs!.reload();
-          token = _prefs!.getString(_keyAccessToken);
-        } catch (_) {
-          token = null;
-        }
-      }
+      // Сначала backup: на iOS SharedPreferences может не ответить, а токены
+      // уже лежат в UserDefaults.
+      await _restoreFromBackupIfNeeded();
+      token = _memoryAccessToken;
       if (token == null || token.isEmpty) {
-        await _restoreFromBackupIfNeeded();
-        token = _memoryAccessToken;
+        await init();
+        if (_prefs != null) {
+          try {
+            // Safari: подтянуть актуальные значения из localStorage.
+            await _prefs!.reload();
+            token = _prefs!.getString(_keyAccessToken);
+          } catch (_) {
+            token = null;
+          }
+        }
         if (token == null || token.isEmpty) {
           try {
             token = _prefs?.getString(_keyAccessToken);
@@ -717,6 +720,9 @@ class AuthRepository {
   Future<AuthUser?> peekStoredUser() async {
     if (_memoryUser != null) return _memoryUser;
 
+    await _restoreFromBackupIfNeeded();
+    if (_memoryUser != null) return _memoryUser;
+
     await init();
     if (_prefs != null) {
       String? jsonStr;
@@ -736,7 +742,6 @@ class AuthRepository {
       }
     }
 
-    await _restoreFromBackupIfNeeded();
     return _memoryUser;
   }
 
@@ -750,6 +755,7 @@ class AuthRepository {
     _memoryUser = null;
     _refreshInFlight = null;
     session_storage.clearSessionBackup();
+    await session_storage.flushSessionBackup();
 
     await init();
     if (_prefs == null) return;
@@ -992,12 +998,14 @@ class AuthRepository {
     required AuthUser user,
   }) async {
     final userJson = jsonEncode(user.toJson());
-    // Всегда дублируем в localStorage — переживает закрытие вкладки в Safari PWA.
+    // Web: localStorage. iOS: UserDefaults на живом messenger — SharedPreferences
+    // при UIScene может не записать токены, и после перезапуска снова «Регистрация».
     session_storage.writeSessionBackup(
       accessToken: accessToken,
       refreshToken: refreshToken,
       userJson: userJson,
     );
+    await session_storage.flushSessionBackup();
 
     for (var attempt = 0; attempt < 3; attempt++) {
       await init();
@@ -1024,8 +1032,9 @@ class AuthRepository {
     // уже записан — сессия должна пережить закрытие вкладки.
   }
 
-  /// Если prefs пусты, но backup в localStorage есть — восстанавливаем.
+  /// Если prefs пусты, но backup (localStorage / iOS UserDefaults) есть — восстанавливаем.
   Future<void> _restoreFromBackupIfNeeded() async {
+    await session_storage.ensureSessionBackupLoaded();
     final backup = session_storage.readSessionBackup();
     if (backup == null) return;
     final access = backup.accessToken;

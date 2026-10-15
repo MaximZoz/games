@@ -1011,10 +1011,16 @@ class _CategoryCheck extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               ExcludeFocus(
-                child: Checkbox(
-                  value: value,
-                  onChanged: (v) => onChanged(v ?? false),
-                  activeColor: AppColors.accentStart,
+                // IgnorePointer: на iOS Checkbox и InkWell делят жест, и тап
+                // пропадает. Галочку переключает только строка.
+                child: IgnorePointer(
+                  child: Checkbox(
+                    value: value,
+                    onChanged: (v) => onChanged(v ?? false),
+                    activeColor: AppColors.accentStart,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
               ),
               Text(

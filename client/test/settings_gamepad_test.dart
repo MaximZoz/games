@@ -48,6 +48,18 @@ void main() {
     expect(_blockFocused(tester, find.byType(Switch).first), isFalse);
   });
 
+  testWidgets('тап по чекбоксу звука игр снимает галочку', (tester) async {
+    await _pumpSettings(tester);
+    final gamesBox = find.descendant(
+      of: find.byKey(const ValueKey('settings-sound-games')),
+      matching: find.byType(Checkbox),
+    );
+    expect(tester.widget<Checkbox>(gamesBox).value, isTrue);
+    await tester.tap(find.byKey(const ValueKey('settings-sound-games')));
+    await tester.pump();
+    expect(tester.widget<Checkbox>(gamesBox).value, isFalse);
+  });
+
   testWidgets('вправо с карточки звука — тумблер, затем чекбокс',
       (tester) async {
     await _pumpSettings(tester);

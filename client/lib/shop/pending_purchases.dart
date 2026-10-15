@@ -142,9 +142,16 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
     );
   }
 
+  /// Очередь с диска не должна держать кнопку «Купить» на «…».
+  Future<void> _awaitReady() async {
+    try {
+      await _ready.timeout(const Duration(seconds: 2));
+    } catch (_) {}
+  }
+
   /// Поставить покупку в очередь (офлайн) или купить сразу (онлайн).
   Future<ShopBuyResult> buyOrQueue(String code) async {
-    await _ready;
+    await _awaitReady();
     final offline = _ref.read(isOfflineProvider);
     final repo = _ref.read(shopRepositoryProvider);
     if (!offline) {
@@ -201,7 +208,7 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
 
   /// Синхронизация с сервером: валидные покупки применяются, ошибочные снимаются.
   Future<void> flush() async {
-    await _ready;
+    await _awaitReady();
     if (!mounted || _flushing) return;
     if (_ref.read(isOfflineProvider)) return;
     if (state.isEmpty) return;
