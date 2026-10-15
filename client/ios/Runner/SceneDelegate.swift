@@ -14,9 +14,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
   func sceneDidBecomeActive(_ scene: UIScene) {
     attachZozuAuthChannels()
+    ZozuPush.apply()
     // Окно storyboard иногда появляется на следующем обороте run loop.
     DispatchQueue.main.async {
       attachZozuAuthChannels()
+      ZozuPush.apply()
     }
   }
 

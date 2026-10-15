@@ -140,6 +140,9 @@ void main() {
     expect(app, contains('SharedPreferencesPlugin'));
     expect(app, contains('com.zozugames/session_store'));
     expect(app, contains('let messenger = controller.binaryMessenger'));
+    expect(app, contains('com.zozugames/push'));
+    expect(app, contains('setAPNSToken'));
+    expect(app, contains('ZozuPush.capture'));
     expect(app, isNot(contains('binaryMessenger else')));
     expect(app, contains('ZozuFlutterViewController'));
     expect(app, contains('com.zozugames/apple_sign_in'));

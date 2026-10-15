@@ -291,7 +291,7 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
             'Authorization': 'Bearer $access',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({'token': token, 'platform': 'android'}),
+          body: jsonEncode({'token': token, 'platform': devicePushPlatform()}),
           operation: 'push_device_register',
         );
       });

@@ -2,7 +2,11 @@ import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
+import 'package:multigames_client/core/device_push_platform.dart';
 import 'package:multigames_client/core/fcm_types.dart';
+
+const _pushChannel = MethodChannel('com.zozugames/push');
 
 var _initialized = false;
 
@@ -10,6 +14,9 @@ bool _inFlutterTest() => Platform.environment.containsKey('FLUTTER_TEST');
 
 bool fcmSupported() =>
     (Platform.isAndroid || Platform.isIOS) && !_inFlutterTest();
+
+String devicePushPlatform() =>
+    devicePushPlatformName(Platform.operatingSystem);
 
 Future<bool> _ensureFirebase() async {
   if (!fcmSupported()) return false;
@@ -44,6 +51,12 @@ FcmPushMessage _wrap(RemoteMessage message) {
 
 Future<String?> ensureFcmToken() async {
   if (!await _ensureFirebase()) return null;
+  if (Platform.isIOS) {
+    // Storyboard-engine не видит APNs-токен, который пришёл в AppDelegate.
+    try {
+      await _pushChannel.invokeMethod<void>('firebaseReady');
+    } catch (_) {}
+  }
   final messaging = FirebaseMessaging.instance;
   final settings = await messaging.requestPermission(
     alert: true,

@@ -45,7 +45,12 @@ final androidNotifyBridgeProvider = Provider<void>((ref) {
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(realtimeEventsProvider,
       (_, next) {
-    if (!shouldShowAndroidTrayBanner(lifecycle.state)) return;
+    if (!shouldShowPhoneTrayBanner(
+      lifecycle.state,
+      ios: defaultTargetPlatform == TargetPlatform.iOS,
+    )) {
+      return;
+    }
     if (!ref.read(webPushEnabledProvider)) return;
     final me = ref.read(authStateProvider).valueOrNull;
     if (me == null) return;
