@@ -64,6 +64,30 @@ func TestGroupRecentGamesLimit(t *testing.T) {
 	}
 }
 
+func TestApplyRecentProfilesKeepsAvatarAndFrame(t *testing.T) {
+	ann := uuid.MustParse("22222222-2222-2222-2222-222222222222")
+	games := []RecentGame{{
+		GameType: "chess",
+		Opponents: []RecentOpponent{
+			{OpponentID: ann.String()},
+			{Bot: true, DisplayName: "Бот"},
+		},
+	}}
+	applyRecentProfiles(games, map[uuid.UUID]recentProfile{
+		ann: {Name: "Анна", AvatarKind: "preset", AvatarValue: "3"},
+	}, map[uuid.UUID]EquippedFrame{
+		ann: {Code: "frame_gold", Color: "#D4AF37"},
+	})
+	got := games[0].Opponents[0]
+	if got.DisplayName != "Анна" || got.AvatarKind != "preset" || got.AvatarValue != "3" ||
+		got.FrameCode != "frame_gold" || got.FrameColor != "#D4AF37" {
+		t.Fatalf("%+v", got)
+	}
+	if !games[0].Opponents[1].Bot || games[0].Opponents[1].AvatarKind != "" {
+		t.Fatalf("bot %+v", games[0].Opponents[1])
+	}
+}
+
 func TestPickRecentBucketsKeepsEachMode(t *testing.T) {
 	games := make([]RecentGame, 0, 15)
 	for i := 0; i < 12; i++ {

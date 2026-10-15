@@ -57,7 +57,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      await self.clients.claim();
+      // После обновления SW не оставляем старые баннеры (в т.ч. админ/поддержка).
+      await closeAllShownNotifications();
+    })(),
+  );
 });
 
 function resolveTargetUrl(raw) {
@@ -95,9 +101,9 @@ function pathFromTag(tag) {
     const lobbyId = t.slice('game_invite_'.length);
     return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
   }
+  // game_turn_<gameId> — URL в payload предпочтителен; иначе вкладка «Игры».
   if (t.startsWith('game_turn_')) {
-    const gameId = t.slice('game_turn_'.length);
-    return gameId ? `/games/tictactoe/game/${gameId}` : '/games';
+    return '/games';
   }
   if (t.startsWith('achievement_')) return '/achievements';
   if (t.startsWith('reward_gift_')) return '/inventory';
@@ -113,10 +119,14 @@ function tagFromPath(path) {
   if (p === '/friends' || p.startsWith('/friends?') || p.startsWith('/friends/')) {
     return 'friend_request';
   }
-  const lobby = p.match(/^\/games\/tictactoe\/lobby\/([^/?#]+)/);
-  if (lobby && lobby[1]) return `game_invite_${lobby[1]}`;
-  const game = p.match(/^\/games\/tictactoe\/game\/([^/?#]+)/);
-  if (game && game[1]) return `game_turn_${game[1]}`;
+  const lobby = p.match(
+    /^\/games\/(tictactoe|durak|battleship|poker)\/lobby\/([^/?#]+)/,
+  );
+  if (lobby && lobby[2]) return `game_invite_${lobby[2]}`;
+  const game = p.match(
+    /^\/games\/(tictactoe|durak|battleship|poker)\/game\/([^/?#]+)/,
+  );
+  if (game && game[2]) return `game_turn_${game[2]}`;
   if (p === '/coins/login' || p.startsWith('/coins/login?')) {
     return 'daily_reward';
   }
@@ -349,8 +359,8 @@ self.addEventListener('push', (event) => {
       : '';
   const options = {
     body: body,
-    icon: '/icons/Icon-192.png',
-    badge: '/icons/Icon-192.png',
+    icon: '/icons/Icon-192.png?v=3',
+    badge: '/icons/Icon-192.png?v=3',
     data: {
       url: url,
       kind: data.kind || '',
