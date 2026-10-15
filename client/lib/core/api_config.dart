@@ -29,6 +29,22 @@ const bool frontendApiLogsEnabled =
 String get apiBaseUrl =>
     _apiBaseUrlRaw.isEmpty ? Uri.base.origin : _apiBaseUrlRaw;
 
+/// Custom scheme, которым сервер закрывает системный лист входа (не сайт).
+/// Dev и prod — разные схемы, чтобы два установленных приложения не перехватывали друг друга.
+String oauthAppReturnSchemeForHost(String host) {
+  final name = host.trim().toLowerCase();
+  if (name == 'localhost' ||
+      name == '127.0.0.1' ||
+      name.contains('-dev.')) {
+    return 'zozugames-dev';
+  }
+  return 'zozugames';
+}
+
+String get oauthAppReturnScheme => oauthAppReturnSchemeForHost(
+      Uri.tryParse(apiBaseUrl)?.host ?? '',
+    );
+
 /// Origin для ссылок «поделиться» (реферал, инвайт в лобби).
 ///
 /// На web — `Uri.base`. На Android/iOS `Uri.base` часто `file://…` → битая ссылка

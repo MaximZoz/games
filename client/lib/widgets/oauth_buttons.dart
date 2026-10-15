@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, debugPrint, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/apple_native_sign_in.dart';
@@ -10,16 +11,47 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/google_native_sign_in.dart';
+import 'package:multigames_client/auth/system_auth_session.dart';
+import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
 
-/// Android/iOS: Google Sign-In (аккаунт устройства / Play Store).
+/// Текст ошибки входа: не прячем причину за общей фразой.
+String readableOauthError(Object error, String fallback) {
+  if (error is AuthException) {
+    final message = error.message.trim();
+    return message.isEmpty ? fallback : message;
+  }
+  if (error is AppleSignInUnavailableException) {
+    final message = error.message.trim();
+    if (message.isEmpty ||
+        message == 'Sign in with Apple is not available') {
+      return fallback;
+    }
+    return message;
+  }
+  if (error is SystemAuthSessionException) {
+    final message = error.message.trim();
+    return message.isEmpty ? fallback : message;
+  }
+  if (error is PlatformException) {
+    final message = (error.message ?? '').trim();
+    if (message.isNotEmpty) return message;
+    final code = error.code.trim();
+    if (code.isNotEmpty) return code;
+  }
+  final raw = error.toString().trim();
+  if (raw.isEmpty || raw == 'null') return fallback;
+  return raw;
+}
+
+/// Android: Google Sign-In аккаунта устройства. На iOS — системный лист,
+/// потому что без iOS OAuth client плагин google_sign_in падает сразу.
 bool get _useNativeGoogleSignIn =>
-    !kIsWeb &&
-    (defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.iOS);
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 bool get _useNativeAppleSignIn =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
@@ -81,6 +113,17 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _showAuthMessage(
+    String message, {
+    AppSnackKind kind = AppSnackKind.error,
+    Duration duration = const Duration(seconds: 6),
+  }) {
+    if (!mounted) return;
+    final text = message.trim();
+    if (text.isEmpty) return;
+    showAppSnackBar(context, message: text, kind: kind, duration: duration);
   }
 
   @override
@@ -238,7 +281,6 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
 
   /// Установленная PWA: state в storage до ухода в Safari, oauth_done не грузит Flutter.
   void _startStandalonePwaOAuth(String provider, AuthRepository repo) {
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busyProvider = provider);
     final startUrl = repo.oauthStartUrl(
       provider: provider,
@@ -250,13 +292,10 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     final started = fetchOAuthPollStartSync(startUrl);
     if (started != null) {
       saveOAuthPendingState(started.state);
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Завершите вход и вернитесь в Zozu Games с экрана «Домой»',
-          ),
-          duration: Duration(seconds: 8),
-        ),
+      _showAuthMessage(
+        'Завершите вход и вернитесь в Zozu Games с экрана «Домой»',
+        kind: AppSnackKind.info,
+        duration: const Duration(seconds: 8),
       );
       openOAuthExternal(started.authorizeUrl);
       return;
@@ -293,6 +332,10 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       await _startNativeApple();
       return;
     }
+    if (provider == 'google' && defaultTargetPlatform == TargetPlatform.iOS) {
+      await _startIosGoogleSheet();
+      return;
+    }
     if (provider == 'google' && _useNativeGoogleSignIn) {
       await _startNativeGoogle();
       return;
@@ -300,11 +343,96 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     await _startNativeBrowserPoll(provider);
   }
 
+  /// iOS: лист Google (аккаунт Safari), без ухода на сайт.
+  Future<void> _startIosGoogleSheet() async {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final redirect = widget.redirect;
+    setState(() => _busyProvider = 'google');
+    try {
+      final scheme = oauthAppReturnScheme;
+      final started = await ref.read(authRepositoryProvider).startOAuthPoll(
+            provider: 'google',
+            redirect: redirect,
+            ref: widget.refCode,
+            returnScheme: scheme,
+          );
+      if (!mounted) return;
+      saveOAuthPendingState(started.state);
+      _pollingState = started.state;
+      var userCanceled = false;
+      Object? sessionError;
+      unawaited(startSystemAuthSession(
+        url: started.authorizeUrl,
+        callbackScheme: scheme,
+      ).then((ok) {
+        userCanceled = !ok;
+      }, onError: (Object error, StackTrace _) {
+        sessionError = error;
+        userCanceled = true;
+      }));
+      final Map<String, String> result;
+      try {
+        result = await ref.read(authRepositoryProvider).pollOAuthResult(
+              state: started.state,
+              isCanceled: () => userCanceled,
+            );
+      } on OauthCanceledException {
+        clearOAuthPendingState();
+        _pollingState = null;
+        final err = sessionError;
+        if (err != null && mounted) {
+          _showAuthMessage(readableOauthError(err, l10n.oauthError));
+        }
+        return;
+      }
+      await cancelSystemAuthSession();
+      clearOAuthPendingState();
+      _pollingState = null;
+      if (!mounted) return;
+      final access = (result['access_token'] ?? '').trim();
+      final refresh = (result['refresh_token'] ?? '').trim();
+      if (access.isEmpty || refresh.isEmpty) {
+        _showAuthMessage(l10n.oauthError);
+        return;
+      }
+      await ref.read(authStateProvider.notifier).loginWithTokens(
+            accessToken: access,
+            refreshToken: refresh,
+          );
+      if (!mounted) return;
+      final dest = safeAuthRedirect(result['redirect']) ??
+          safeAuthRedirect(redirect) ??
+          '/games';
+      context.go(dest);
+    } on AuthException catch (e) {
+      await cancelSystemAuthSession();
+      clearOAuthPendingState();
+      _pollingState = null;
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
+    } on SystemAuthSessionException catch (e) {
+      await cancelSystemAuthSession();
+      clearOAuthPendingState();
+      _pollingState = null;
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
+    } catch (e) {
+      debugPrint('iOS Google sheet failed: $e');
+      await cancelSystemAuthSession();
+      clearOAuthPendingState();
+      _pollingState = null;
+      if (!mounted) return;
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
+    } finally {
+      if (mounted && _busyProvider == 'google') {
+        setState(() => _busyProvider = null);
+      }
+    }
+  }
+
   /// iOS: системный лист Apple ID (Настройки → Apple ID), без Safari.
   Future<void> _startNativeApple() async {
     if (!mounted) return;
     final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final redirect = widget.redirect;
     setState(() => _busyProvider = 'apple');
     try {
@@ -327,27 +455,18 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       context.go(dest);
     } on TimeoutException {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      _showAuthMessage(l10n.oauthError);
     } on AppleSignInUnavailableException catch (e) {
       debugPrint('Sign in with Apple unavailable: $e');
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.oauthError), duration: const Duration(seconds: 5)),
-      );
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
     } on AuthException catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(e.message), duration: const Duration(seconds: 5)),
-      );
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
     } catch (e) {
       debugPrint('Sign in with Apple failed: $e');
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('${l10n.oauthError}: $e'),
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
     } finally {
       if (mounted && _busyProvider == 'apple') {
         setState(() => _busyProvider = null);
@@ -355,12 +474,11 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     }
   }
 
-  /// Google на Android/iOS: только нативный Sign-In (без браузера).
-  /// Браузерный OAuth уводит в веб-версию приложения — не используем.
+  /// Google на Android: только нативный Sign-In (без браузера).
+  /// На iOS Google идёт через системный лист, не через этот плагин.
   Future<void> _startNativeGoogle() async {
     if (!mounted) return;
     final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final redirect = widget.redirect;
     setState(() => _busyProvider = 'google');
     try {
@@ -369,12 +487,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       final clientId = (info.googleClientId ?? '').trim();
       if (clientId.isEmpty) {
         if (!mounted) return;
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(l10n.oauthError),
-            duration: const Duration(seconds: 5),
-          ),
-        );
+        _showAuthMessage(l10n.oauthError);
         return;
       }
 
@@ -398,63 +511,37 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       context.go(dest);
     } on TimeoutException {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      _showAuthMessage(l10n.oauthError);
     } on GoogleSignInDeveloperErrorException catch (e) {
       // Код 10: нужен Android OAuth client + SHA-1 App signing в Google Cloud.
       debugPrint('Google DEVELOPER_ERROR: $e');
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          duration: const Duration(seconds: 12),
-        ),
-      );
+      _showAuthMessage(e.message, duration: const Duration(seconds: 12));
     } on GoogleIdTokenMissingException catch (e) {
       debugPrint('Google native credential missing: $e');
       if (!mounted) return;
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            duration: const Duration(seconds: 8),
-          ),
-        );
-        return;
-      }
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Google Sign-In: нет id_token. Добавь SHA-1 App signing '
-            'в Google Cloud → Android OAuth client '
-            '(com.zozugames.app / .dev).',
-          ),
-          duration: const Duration(seconds: 12),
-        ),
+      _showAuthMessage(
+        defaultTargetPlatform == TargetPlatform.iOS
+            ? e.message
+            : 'Google Sign-In: нет id_token. Добавь SHA-1 App signing '
+                'в Google Cloud → Android OAuth client '
+                '(com.zozugames.app / .dev).',
+        duration: const Duration(seconds: 12),
       );
     } on AuthException catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
     } catch (e) {
       debugPrint('Google native sign-in failed: $e');
       if (!mounted) return;
       if (isGoogleDeveloperError(e)) {
-        final msg = GoogleSignInDeveloperErrorException().message;
-        messenger.showSnackBar(
-          SnackBar(content: Text(msg), duration: const Duration(seconds: 12)),
+        _showAuthMessage(
+          GoogleSignInDeveloperErrorException().message,
+          duration: const Duration(seconds: 12),
         );
         return;
       }
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('${l10n.oauthError}: $e'),
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
     } finally {
       if (mounted && _busyProvider == 'google') {
         setState(() => _busyProvider = null);
@@ -469,7 +556,6 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   }) async {
     if (!mounted) return;
     final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final popup = openOAuthWindowBlank();
     setState(() => _busyProvider = provider);
     try {
@@ -491,12 +577,12 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       closeOAuthWindow(popup);
       clearOAuthPendingState();
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (_) {
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
+    } catch (e) {
       closeOAuthWindow(popup);
       clearOAuthPendingState();
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
     } finally {
       if (mounted) setState(() => _busyProvider = null);
     }
@@ -514,7 +600,6 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       return;
     }
     final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     final redirect = widget.redirect;
     setState(() => _busyProvider ??= providerLabel);
@@ -528,7 +613,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       final access = (result['access_token'] ?? '').trim();
       final refresh = (result['refresh_token'] ?? '').trim();
       if (access.isEmpty || refresh.isEmpty) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+        _showAuthMessage(l10n.oauthError);
         return;
       }
       await ref.read(authStateProvider.notifier).loginWithTokens(
@@ -544,12 +629,12 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       clearOAuthPendingState();
       _pollingState = null;
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (_) {
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
+    } catch (e) {
       clearOAuthPendingState();
       _pollingState = null;
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      _showAuthMessage(readableOauthError(e, l10n.oauthError));
     } finally {
       if (mounted) setState(() => _busyProvider = null);
     }

@@ -8,8 +8,9 @@ enum AppSnackKind { info, success, error }
 ///
 /// В AppShell нижнее меню — в [Scaffold.bottomNavigationBar], поэтому
 /// SnackBar сам встаёт над ним (как задумано в Material).
-/// Не используйте «голый» [SnackBar]: при `ColorScheme.surface: transparent`
-/// стандартный тост почти невидим.
+/// Для ошибок входа и прочих сообщений используйте этот тост:
+/// белая карточка и чёрный текст. Голый [SnackBar] тоже читаемый
+/// (тема задаёт белый фон и чёрный текст), но без иконки.
 void showAppSnackBar(
   BuildContext context, {
   required String message,

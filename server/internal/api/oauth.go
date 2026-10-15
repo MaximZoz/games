@@ -54,11 +54,12 @@ type OAuthConfig struct {
 }
 
 type oauthState struct {
-	Provider string
-	Redirect string
-	Ref      string
-	FromPWA  bool
-	Expires  time.Time
+	Provider     string
+	Redirect     string
+	Ref          string
+	FromPWA      bool
+	ReturnScheme string
+	Expires      time.Time
 }
 
 type oauthResult struct {
@@ -130,18 +131,19 @@ func (c *OAuthConfig) takeResult(state string) (oauthResult, bool) {
 	return res, true
 }
 
-func (c *OAuthConfig) putState(provider, redirect, ref string, fromPWA bool) (string, error) {
+func (c *OAuthConfig) putState(provider, redirect, ref string, fromPWA bool, returnScheme string) (string, error) {
 	b := make([]byte, 24)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
 	state := base64.RawURLEncoding.EncodeToString(b)
 	st := oauthState{
-		Provider: provider,
-		Redirect: redirect,
-		Ref:      ref,
-		FromPWA:  fromPWA,
-		Expires:  time.Now().Add(10 * time.Minute),
+		Provider:     provider,
+		Redirect:     redirect,
+		Ref:          ref,
+		FromPWA:      fromPWA,
+		ReturnScheme: allowedAppReturnScheme(returnScheme),
+		Expires:      time.Now().Add(10 * time.Minute),
 	}
 	if c != nil && c.Rdb != nil {
 		raw, err := json.Marshal(st)
@@ -194,25 +196,47 @@ func (c *OAuthConfig) takeState(state string) (oauthState, bool) {
 	return s, true
 }
 
-func (c *OAuthConfig) peekFromPWA(state string) bool {
+func (c *OAuthConfig) peekState(state string) (oauthState, bool) {
+	if strings.TrimSpace(state) == "" {
+		return oauthState{}, false
+	}
 	if c != nil && c.Rdb != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		raw, err := c.Rdb.Get(ctx, "oauth:state:"+state).Result()
 		if err != nil {
-			return false
+			return oauthState{}, false
 		}
 		var st oauthState
 		if json.Unmarshal([]byte(raw), &st) != nil || time.Now().After(st.Expires) {
-			return false
+			return oauthState{}, false
 		}
-		return st.FromPWA
+		return st, true
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ensureStates()
 	s, ok := c.states[state]
-	return ok && s.FromPWA && time.Now().Before(s.Expires)
+	if !ok || time.Now().After(s.Expires) {
+		return oauthState{}, false
+	}
+	return s, true
+}
+
+func (c *OAuthConfig) peekFromPWA(state string) bool {
+	st, ok := c.peekState(state)
+	return ok && st.FromPWA
+}
+
+// allowedAppReturnScheme — только свои схемы. Иначе редирект после OAuth
+// ушёл бы на чужой сайт (open redirect).
+func allowedAppReturnScheme(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "zozugames", "zozugames-dev":
+		return strings.ToLower(strings.TrimSpace(raw))
+	default:
+		return ""
+	}
 }
 
 func (c *OAuthConfig) EnabledProviders() []string {
@@ -439,7 +463,10 @@ func (h *AuthHandler) AppleIDTokenLogin(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *AuthHandler) verifyAppleIdentityToken(ctx context.Context, idToken string) (*oauthIdentity, error) {
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS256"}),
+		jwt.WithLeeway(time.Minute),
+	)
 	token, err := parser.Parse(idToken, func(t *jwt.Token) (any, error) {
 		kid, _ := t.Header["kid"].(string)
 		if kid == "" {
@@ -637,7 +664,8 @@ func (h *AuthHandler) OAuthStart(w http.ResponseWriter, r *http.Request) {
 	}
 	ref := strings.TrimSpace(r.URL.Query().Get("ref"))
 	fromPWA := strings.TrimSpace(r.URL.Query().Get("pwa")) == "1"
-	state, err := h.OAuth.putState(provider, redirect, ref, fromPWA)
+	returnScheme := allowedAppReturnScheme(r.URL.Query().Get("return_scheme"))
+	state, err := h.OAuth.putState(provider, redirect, ref, fromPWA, returnScheme)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -749,11 +777,11 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errMsg := r.URL.Query().Get("error"); errMsg != "" {
-		fromPWA := h.OAuth.peekFromPWA(state)
+		peeked, _ := h.OAuth.peekState(state)
 		if state != "" {
 			h.OAuth.putResult(state, oauthResult{Error: "oauth denied: " + errMsg})
 		}
-		h.oauthDonePage(w, r, state, "oauth denied: "+errMsg, fromPWA)
+		h.oauthDonePage(w, r, state, "oauth denied: "+errMsg, peeked.FromPWA, peeked.ReturnScheme)
 		return
 	}
 
@@ -769,7 +797,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	if code == "" {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth code required", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth code required", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth code required", st.FromPWA, st.ReturnScheme)
 		return
 	}
 
@@ -777,7 +805,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] %s exchange failed: %v", provider, err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth exchange failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth exchange failed", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth exchange failed", st.FromPWA, st.ReturnScheme)
 		return
 	}
 
@@ -800,7 +828,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] find/create user failed: %v", err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth user create failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth user create failed", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth user create failed", st.FromPWA, st.ReturnScheme)
 		return
 	}
 	_ = created
@@ -808,7 +836,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	accessToken, refreshToken, _, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth session failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth session failed", st.FromPWA)
+		h.oauthDonePage(w, r, state, "oauth session failed", st.FromPWA, st.ReturnScheme)
 		return
 	}
 
@@ -818,10 +846,19 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		Redirect:     st.Redirect,
 	})
 	// PWA: oauth_done в Safari не грузит Flutter (pwa=1). Токены забирает poll в standalone.
-	h.oauthDonePage(w, r, state, "", st.FromPWA)
+	h.oauthDonePage(w, r, state, "", st.FromPWA, st.ReturnScheme)
 }
 
-func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, state, errMsg string, fromPWA bool) {
+func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, state, errMsg string, fromPWA bool, returnScheme string) {
+	if scheme := allowedAppReturnScheme(returnScheme); scheme != "" {
+		// Системный лист iOS закрывается на своей схеме и не открывает сайт.
+		dest := scheme + "://oauth-done"
+		if errMsg != "" {
+			dest += "?error=" + url.QueryEscape(errMsg)
+		}
+		http.Redirect(w, r, dest, http.StatusFound)
+		return
+	}
 	front := ""
 	if h.OAuth != nil {
 		front = strings.TrimRight(h.OAuth.FrontendURL, "/")

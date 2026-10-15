@@ -13,7 +13,7 @@ func TestOAuthDonePageAddsPwaQuery(t *testing.T) {
 	}
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	h.oauthDonePage(rec, req, "abc123", "", true)
+	h.oauthDonePage(rec, req, "abc123", "", true, "")
 	if rec.Code != http.StatusFound {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusFound)
 	}
@@ -35,7 +35,7 @@ func TestOAuthDonePageOmitsPwaForBrowser(t *testing.T) {
 	}
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	h.oauthDonePage(rec, req, "abc123", "", false)
+	h.oauthDonePage(rec, req, "abc123", "", false, "")
 	loc := rec.Header().Get("Location")
 	if strings.Contains(loc, "pwa=1") {
 		t.Fatalf("browser flow should not set pwa=1: %q", loc)
@@ -44,7 +44,7 @@ func TestOAuthDonePageOmitsPwaForBrowser(t *testing.T) {
 
 func TestPutStateFromPWA(t *testing.T) {
 	c := &OAuthConfig{}
-	state, err := c.putState("google", "/games", "", true)
+	state, err := c.putState("google", "/games", "", true, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,5 +54,48 @@ func TestPutStateFromPWA(t *testing.T) {
 	st, ok := c.takeState(state)
 	if !ok || !st.FromPWA {
 		t.Fatalf("takeState FromPWA = %v ok=%v", st.FromPWA, ok)
+	}
+}
+
+func TestOAuthDonePageAppSchemeSkipsWebsite(t *testing.T) {
+	h := &AuthHandler{
+		OAuth: &OAuthConfig{FrontendURL: "https://zozugames.com"},
+	}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	h.oauthDonePage(rec, req, "abc123", "", false, "zozugames-dev")
+	if rec.Code != http.StatusFound {
+		t.Fatalf("status = %d", rec.Code)
+	}
+	if got := rec.Header().Get("Location"); got != "zozugames-dev://oauth-done" {
+		t.Fatalf("location = %q", got)
+	}
+}
+
+func TestOAuthDonePageRejectsForeignScheme(t *testing.T) {
+	h := &AuthHandler{
+		OAuth: &OAuthConfig{FrontendURL: "https://zozugames.com"},
+	}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	h.oauthDonePage(rec, req, "abc123", "", false, "https://evil.example")
+	loc := rec.Header().Get("Location")
+	if strings.Contains(loc, "evil.example") {
+		t.Fatalf("foreign scheme must not redirect: %q", loc)
+	}
+	if !strings.Contains(loc, "https://zozugames.com/oauth_done.html") {
+		t.Fatalf("location = %q", loc)
+	}
+}
+
+func TestAllowedAppReturnScheme(t *testing.T) {
+	if got := allowedAppReturnScheme(" ZozuGames-Dev "); got != "zozugames-dev" {
+		t.Fatalf("dev scheme = %q", got)
+	}
+	if got := allowedAppReturnScheme("zozugames"); got != "zozugames" {
+		t.Fatalf("prod scheme = %q", got)
+	}
+	if got := allowedAppReturnScheme("zozugames-dev.evil"); got != "" {
+		t.Fatalf("prefix attack = %q", got)
 	}
 }
