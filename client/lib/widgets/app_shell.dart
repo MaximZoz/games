@@ -1203,48 +1203,51 @@ class AppShell extends ConsumerWidget {
     // Оболочка сама сдвигает контент на клавиатуру, поэтому панель под ней
     // не должна занимать высоту — иначе между вводом и клавиатурой щель.
     final collapseNavForKeyboard = shellOwnsKeyboardInset && keyboardOpen;
-    final bottomNav = showBottomNav
-        ? ClipRect(
-            child: Align(
-              alignment: Alignment.topCenter,
-              heightFactor:
-                  (collapseBottomNav || profileKeyboard || collapseNavForKeyboard)
-                      ? 0.0
-                      : 1.0,
-              child: IgnorePointer(
-                ignoring: collapseBottomNav ||
-                    profileKeyboard ||
-                    collapseNavForKeyboard,
-                child: ColoredBox(
-                  color: AppColors.surfaceUnified,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      MediaQuery.withNoTextScaling(
-                        child: _MobileBottomNav(
-                          key: const ValueKey('mobile-bottom-nav'),
-                          selectedIndex: selectedIndex,
-                          onTap: navigateWithPrefetch,
-                          offline: isOffline,
-                          unreadChats: unreadChats,
-                          incomingFriends: incomingFriends,
-                          gamesMyTurn: gamesMyTurn,
-                          gameInvitesCount: gameInvitesCount,
-                          homeBadgeCount: homeBadgeCount,
-                          hairlinesOpacity: ref.watch(
-                            bootToolbarHairlinesOpacityProvider,
-                          ),
-                        ),
-                      ),
-                      // Заливка под home indicator — до скруглённых углов.
-                      SizedBox(height: navBottomGap),
-                    ],
+    final navCollapsed = collapseBottomNav ||
+        profileKeyboard ||
+        collapseNavForKeyboard;
+    Widget? bottomNav;
+    if (showBottomNav) {
+      bottomNav = Align(
+        alignment: Alignment.topCenter,
+        heightFactor: navCollapsed ? 0.0 : 1.0,
+        child: IgnorePointer(
+          ignoring: navCollapsed,
+          child: ColoredBox(
+            color: AppColors.surfaceUnified,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MediaQuery.withNoTextScaling(
+                  child: _MobileBottomNav(
+                    key: const ValueKey('mobile-bottom-nav'),
+                    selectedIndex: selectedIndex,
+                    onTap: navigateWithPrefetch,
+                    offline: isOffline,
+                    unreadChats: unreadChats,
+                    incomingFriends: incomingFriends,
+                    gamesMyTurn: gamesMyTurn,
+                    gameInvitesCount: gameInvitesCount,
+                    homeBadgeCount: homeBadgeCount,
+                    hairlinesOpacity: ref.watch(
+                      bootToolbarHairlinesOpacityProvider,
+                    ),
                   ),
                 ),
-              ),
+                // Заливка под home indicator — до скруглённых углов.
+                SizedBox(height: navBottomGap),
+              ],
             ),
-          )
-        : null;
+          ),
+        ),
+      );
+      // ClipRect нужен, только когда панель схлопнута (heightFactor 0):
+      // Align сам детей не обрезает. На открытой панели тот же ClipRect
+      // срезал бейдж, который на 4px выше иконки.
+      if (navCollapsed) {
+        bottomNav = ClipRect(child: bottomNav);
+      }
+    }
 
     final updateState = ref.watch(appUpdateProvider);
     final showUpdateBanner = updateState.updateAvailable &&
@@ -1642,6 +1645,8 @@ Widget _navIcon(
   if (badgeValue <= 0) {
     return baseIcon;
   }
+  // Кружок чуть выше иконки. Высоту панели не увеличиваем — иначе меню
+  // толще. Родитель открытой панели этот выступ не клипует.
   return Stack(
     clipBehavior: Clip.none,
     children: [

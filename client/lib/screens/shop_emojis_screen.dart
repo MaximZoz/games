@@ -18,6 +18,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/ui/widgets/snug_bottom_list.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
@@ -156,6 +157,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
           ),
         ),
         body: SafeArea(
+          bottom: false,
           child: _loading && groupKeys.isEmpty
               ? const Center(
                   child: SizedBox(
@@ -191,16 +193,15 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                         alignment: Alignment.topCenter,
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 520),
-                          child: ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                            itemCount: groupKeys.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 10),
-                            itemBuilder: (context, index) => _emojiGroupTile(
-                              context,
-                              groupKeys[index],
-                              byGroup[groupKeys[index]]!,
-                            ),
+                          child: SnugBottomList(
+                            children: [
+                              for (final key in groupKeys)
+                                _emojiGroupTile(
+                                  context,
+                                  key,
+                                  byGroup[key]!,
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -471,6 +472,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
           ),
         ),
         body: SafeArea(
+          bottom: false,
           child: _loading && emojis.isEmpty
               ? const Center(
                   child: SizedBox(
