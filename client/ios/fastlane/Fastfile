@@ -132,11 +132,12 @@ def tf_ensure_sign_in_with_apple(bundle_id)
     )
   end
   resource_id = row["id"]
+  # ?limit= на relationship Apple отвечает 400, поэтому capabilities через include.
   _cap_code, cap_json = tf_asc(
     :get,
-    "/v1/bundleIds/#{resource_id}/bundleIdCapabilities?limit=50"
+    "/v1/bundleIds/#{resource_id}?include=bundleIdCapabilities"
   )
-  caps = cap_json["data"]
+  caps = cap_json["included"]
   caps = [] unless caps.is_a?(Array)
   if caps.any? { |cap| cap.dig("attributes", "capabilityType") == "APPLE_ID_AUTH" }
     UI.message("Sign in with Apple уже включён: #{bundle_id}")
@@ -164,7 +165,11 @@ def tf_ensure_sign_in_with_apple(bundle_id)
     payload[:data][:attributes].delete(:settings)
     post_code, = tf_asc(:post, "/v1/bundleIdCapabilities", payload)
   end
-  unless post_code.between?(200, 299) || post_code == 409
+  if post_code == 409
+    UI.message("Sign in with Apple уже включён: #{bundle_id}")
+    return false
+  end
+  unless post_code.between?(200, 299)
     UI.user_error!(
       "Не удалось включить Sign in with Apple на #{bundle_id} (HTTP #{post_code}). " \
       "Safari → developer.apple.com → Identifiers → #{bundle_id} → " \
@@ -189,16 +194,33 @@ def tf_match_appstore(bundle_id:, api_key:, readonly:, force:)
   )
 end
 
-def tf_profile_has_apple_sign_in?(profile_name)
+def tf_decode_mobileprovision(path)
   require "shellwords"
-  dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
-  return false unless Dir.exist?(dir)
-  Dir[File.join(dir, "*.mobileprovision")].any? do |path|
-    xml = `security cms -D -i #{Shellwords.escape(path)} 2>/dev/null`
-    next false if xml.nil? || xml.empty?
-    next false unless xml.include?(profile_name)
-    xml.include?("com.apple.developer.applesignin")
+  return "" if path.nil? || path.empty? || !File.exist?(path)
+  `security cms -D -i #{Shellwords.escape(path)} 2>/dev/null`.to_s
+end
+
+# Xcode 16+ кладёт профиль в UserData, не в MobileDevice.
+# sigh пишет путь в ENV sigh_<bundle>_appstore_profile-path.
+def tf_profile_has_apple_sign_in?(profile_name, bundle_id)
+  path = ENV["sigh_#{bundle_id}_appstore_profile-path"].to_s
+  if path.empty? || !File.exist?(path)
+    dirs = [
+      File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles"),
+      File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
+    ]
+    path = dirs.flat_map { |dir|
+      Dir.exist?(dir) ? Dir[File.join(dir, "*.mobileprovision")] : []
+    }.find { |item| tf_decode_mobileprovision(item).include?(profile_name) }.to_s
   end
+  xml = tf_decode_mobileprovision(path)
+  if xml.empty?
+    UI.important("Не прочитан профиль «#{profile_name}» (#{path})")
+    return false
+  end
+  keys = xml.scan(%r{<key>([^<]+)</key>}).flatten.uniq
+  UI.message("Профиль #{File.basename(path)}: #{keys.join(', ')}")
+  xml.include?("com.apple.developer.applesignin")
 end
 
 default_platform(:ios)
@@ -279,7 +301,7 @@ platform :ios do
     profile_name = ENV[profile_env]
     profile_name = "match AppStore #{bundle_id}" if profile_name.nil? || profile_name.empty?
     UI.message("Provisioning profile: #{profile_name}")
-    if !want_readonly && !tf_profile_has_apple_sign_in?(profile_name)
+    if !want_readonly && !tf_profile_has_apple_sign_in?(profile_name, bundle_id)
       UI.important("Профиль без Sign in with Apple — пересоздаю")
       tf_match_appstore(
         bundle_id: bundle_id,
@@ -288,7 +310,7 @@ platform :ios do
         force: true
       )
     end
-    unless want_readonly || tf_profile_has_apple_sign_in?(profile_name)
+    unless want_readonly || tf_profile_has_apple_sign_in?(profile_name, bundle_id)
       UI.user_error!(
         "Профиль «#{profile_name}» всё ещё без Sign in with Apple. " \
         "Identifiers → #{bundle_id} → Sign In with Apple, затем force_match."
