@@ -10,6 +10,7 @@ import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_condition.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
+import 'package:multigames_client/shop/shop_buy_slot.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -382,8 +383,10 @@ class _ShopCollectionGroupScreenState
 
     _buyInFlight.add(item.code);
     setState(() {});
+    var bought = false;
+    var wasOffline = false;
     try {
-      final wasOffline = ref.read(isOfflineProvider);
+      wasOffline = ref.read(isOfflineProvider);
       await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
       if (!mounted) return false;
       // «Есть» только после ответа. Раньше галочка ставилась сразу, а монеты
@@ -394,26 +397,7 @@ class _ShopCollectionGroupScreenState
             if (it.code == item.code) it.copyWith(owned: true) else it,
         ];
       });
-      if (!wasOffline) {
-        ref.invalidate(collectionIncomeProvider);
-        // Каталог уже перечитывает buyOrQueue. Диалог «куплено» не ждёт
-        // этот ответ — иначе кнопка стоит на «…» весь повторный запрос.
-        unawaited(_joinCatalog());
-      }
-      if (wasOffline) {
-        showAppSnackBar(
-          context,
-          message: context.l10n.shopPurchaseQueued,
-          kind: AppSnackKind.success,
-        );
-      } else if (announceOwned) {
-        await showGamepadOwnedDialog(
-          context: context,
-          message:
-              catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
-        );
-      }
-      return true;
+      bought = true;
     } catch (e) {
       if (!mounted) return false;
       showAppSnackBar(
@@ -423,9 +407,29 @@ class _ShopCollectionGroupScreenState
       );
       return false;
     } finally {
+      // «…» снимается до диалога: иначе кнопка висит, пока окно не закроют.
       _buyInFlight.remove(item.code);
       if (mounted) setState(() {});
     }
+    if (!bought || !mounted) return false;
+    if (!wasOffline) {
+      ref.invalidate(collectionIncomeProvider);
+      unawaited(_joinCatalog());
+    }
+    if (wasOffline) {
+      showAppSnackBar(
+        context,
+        message: context.l10n.shopPurchaseQueued,
+        kind: AppSnackKind.success,
+      );
+    } else if (announceOwned) {
+      await showGamepadOwnedDialog(
+        context: context,
+        message:
+            catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
+      );
+    }
+    return true;
   }
 
   @override
@@ -692,19 +696,12 @@ class _CollectionShopCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (item.owned)
-                      Text(
-                        context.l10n.shopHave,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2E7D32),
-                        ),
-                      )
-                    else
-                      FilledButton(
-                        onPressed: busy ? null : onBuy,
-                        child: Text(busy ? '…' : context.l10n.shopBuy),
-                      ),
+                    ShopBuySlot(
+                      once: item.boughtOnce,
+                      owned: item.owned,
+                      busy: busy,
+                      onBuy: onBuy,
+                    ),
                   ],
                 ),
               ),

@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/core/shared_prefs_guard.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyPendingPurchases = 'pending_shop_purchases';
 
@@ -92,6 +93,10 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
   bool _flushing = false;
   late final Future<void> _ready;
 
+  /// Сервер или prefs не должны держать «…» дольше этого.
+  @visibleForTesting
+  static Duration onlineBuyTimeout = const Duration(seconds: 16);
+
   Future<void> _init() async {
     await _load();
     _ref.listen<OfflineModeState>(offlineModeProvider, (prev, next) {
@@ -103,7 +108,11 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await sharedPreferencesOrNull();
+    if (prefs == null) {
+      state = const [];
+      return;
+    }
     final raw = prefs.getString(_keyPendingPurchases);
     if (raw == null || raw.isEmpty) {
       state = const [];
@@ -128,9 +137,17 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
   Future<void> _persist() async {
     if (!mounted) return;
     final payload = jsonEncode(state.map((e) => e.toJson()).toList());
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    await prefs.setString(_keyPendingPurchases, payload);
+    final prefs = await sharedPreferencesOrNull();
+    if (prefs == null || !mounted) return;
+    try {
+      await prefs
+          .setString(_keyPendingPurchases, payload)
+          .timeout(sharedPrefsTimeout);
+    } catch (_) {}
+  }
+
+  Future<ShopBuyResult> _buyOnline(String code) {
+    return _ref.read(shopRepositoryProvider).buy(code).timeout(onlineBuyTimeout);
   }
 
   String _displayTitle(PendingPurchase item) {
@@ -153,9 +170,13 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
   Future<ShopBuyResult> buyOrQueue(String code) async {
     await _awaitReady();
     final offline = _ref.read(isOfflineProvider);
-    final repo = _ref.read(shopRepositoryProvider);
     if (!offline) {
-      final result = await repo.buy(code);
+      final ShopBuyResult result;
+      try {
+        result = await _buyOnline(code);
+      } on TimeoutException {
+        throw AuthException(0, LocaleService.l10n.commonTryLater);
+      }
       await _ref
           .read(authStateProvider.notifier)
           .applyBalance(result.balanceBronze);
@@ -197,7 +218,10 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
         for (final e in catalog)
           if (e.code == code) e.copyWith(owned: true) else e,
       ];
-      await OfflineDiskCache.saveShop(user.id, patched);
+      try {
+        await OfflineDiskCache.saveShop(user.id, patched)
+            .timeout(sharedPrefsTimeout);
+      } catch (_) {}
     }
     // Локальный «успех»: баланс не меняем — сервер применит при flush.
     final balance = user?.balanceBronze ?? 0;
@@ -216,12 +240,11 @@ class PendingPurchasesNotifier extends StateNotifier<List<PendingPurchase>> {
     final applied = <PendingPurchaseFlushItem>[];
     final failed = <PendingPurchaseFlushItem>[];
     try {
-      final repo = _ref.read(shopRepositoryProvider);
       final remaining = <PendingPurchase>[];
       for (final item in List<PendingPurchase>.from(state)) {
         final title = _displayTitle(item);
         try {
-          final result = await repo.buy(item.code);
+          final result = await _buyOnline(item.code);
           await _ref
               .read(authStateProvider.notifier)
               .applyBalance(result.balanceBronze);

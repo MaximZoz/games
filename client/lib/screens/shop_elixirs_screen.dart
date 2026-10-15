@@ -15,6 +15,7 @@ import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/elixir_icon.dart';
 import 'package:multigames_client/shop/elixir_labels.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
+import 'package:multigames_client/shop/shop_buy_slot.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -398,10 +399,9 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
                     ],
                   ),
                 ),
-                FilledButton(
-                  onPressed:
-                      busy ? null : () => _afterBuy(item, closePreview: false),
-                  child: Text(busy ? '…' : l10n.shopBuy),
+                ShopBuySlot(
+                  busy: busy,
+                  onBuy: () => _afterBuy(item, closePreview: false),
                 ),
               ],
             ),

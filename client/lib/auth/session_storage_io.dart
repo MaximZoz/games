@@ -102,7 +102,11 @@ Future<dynamic> _invoke(String method, Object? args) async {
   Object? lastError;
   for (var attempt = 0; attempt < 20; attempt++) {
     try {
-      return await _channel.invokeMethod<dynamic>(method, args);
+      return await _channel
+          .invokeMethod<dynamic>(method, args)
+          .timeout(const Duration(seconds: 2));
+    } on TimeoutException {
+      return null;
     } on MissingPluginException catch (e) {
       lastError = e;
       await Future<void>.delayed(const Duration(milliseconds: 40));

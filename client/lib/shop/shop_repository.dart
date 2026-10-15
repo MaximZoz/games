@@ -39,6 +39,9 @@ class ShopItem {
   bool get isOutOfStock =>
       stockRemaining != null && stockRemaining! <= 0 && !owned;
 
+  /// Коллекции, рамки, ставки и паки — один раз. Эликсиры и смайлики копятся.
+  bool get boughtOnce => kind != 'emoji' && kind != 'elixir';
+
   int? get stakeBronze => _payloadInt('stake_bronze');
   int? get stakeSilver {
     final explicit = _payloadInt('stake_silver');
