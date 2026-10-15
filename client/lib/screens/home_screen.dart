@@ -95,10 +95,13 @@ class HomeScreen extends ConsumerWidget {
         child: Align(
           alignment: Alignment.topCenter,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
               child: ListView.separated(
+                // Нижний зазор только в конце списка, как в настройках.
+                // Снаружи он оставлял пустую полосу над иконками меню.
+                padding: const EdgeInsets.only(bottom: 16),
                 itemCount: cards.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (_, i) => cards[i],
