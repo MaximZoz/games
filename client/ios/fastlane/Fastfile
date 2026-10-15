@@ -116,6 +116,46 @@ def tf_invite_asc_users(internal)
   end
 end
 
+# Первое приложение в аккаунте Apple создаётся только в Safari.
+# Когда DEV уже есть, второе (prod) ключ Admin может завести сам.
+def tf_ensure_asc_app(bundle_id:, app_name:, app_sku:)
+  existing = Spaceship::ConnectAPI::App.find(bundle_id)
+  if existing
+    UI.success("App Store Connect: #{bundle_id}")
+    return existing
+  end
+  UI.message("Создаю #{app_name} (#{bundle_id}) в App Store Connect")
+  create_error = nil
+  begin
+    Spaceship::ConnectAPI::App.create(
+      name: app_name,
+      version_string: "0.1.0",
+      sku: app_sku,
+      primary_locale: "en-US",
+      bundle_id: bundle_id,
+      platforms: ["IOS"]
+    )
+  rescue StandardError => e
+    create_error = e.message.to_s
+    UI.important("App.create: #{create_error}")
+  end
+  existing = Spaceship::ConnectAPI::App.find(bundle_id)
+  if existing.nil? && create_error.nil?
+    sleep(3)
+    existing = Spaceship::ConnectAPI::App.find(bundle_id)
+  end
+  if existing
+    UI.success("App Store Connect: #{bundle_id}")
+    return existing
+  end
+  UI.user_error!(
+    "В App Store Connect нет приложения #{bundle_id}. " \
+    "Ключ не смог его создать. Safari → " \
+    "https://appstoreconnect.apple.com/apps → + → New App: " \
+    "iOS, имя «#{app_name}», Bundle ID #{bundle_id}, SKU #{app_sku}."
+  )
+end
+
 # produce не трогает уже существующий Bundle ID («already exists, nothing to do»),
 # поэтому Sign in with Apple включаем сами. Иначе match собирает профиль без entitlement.
 def tf_ensure_sign_in_with_apple(bundle_id)
@@ -314,15 +354,16 @@ platform :ios do
       duration: 1200,
       in_house: false
     )
-    # Иначе produce/match видят и api_key, и APP_STORE_CONNECT_API_KEY_PATH.
+    # Иначе match видит и api_key, и APP_STORE_CONNECT_API_KEY_PATH.
     ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")
     ENV.delete("APP_STORE_CONNECT_API_KEY")
 
     app_name = flavor == "dev" ? "Zozu Games DEV" : "Zozu Games"
     app_sku = flavor == "dev" ? "zozugames-dev" : "zozugames"
+    # Токен уже стоит app_store_connect_api_key. У produce нет опции api_key
+    # (свежий fastlane падает на ней до создания App ID).
     begin
       produce(
-        api_key: api_key,
         app_identifier: bundle_id,
         app_name: app_name,
         language: "en-US",
@@ -337,16 +378,7 @@ platform :ios do
       UI.important("produce: #{e.message}")
     end
 
-    existing = Spaceship::ConnectAPI::App.find(bundle_id)
-    unless existing
-      UI.user_error!(
-        "В App Store Connect нет приложения #{bundle_id}. " \
-        "API-ключ не может его создать. Safari → " \
-        "https://appstoreconnect.apple.com/apps → + → New App: " \
-        "iOS, имя «#{app_name}», Bundle ID #{bundle_id}, SKU #{app_sku}."
-      )
-    end
-    UI.success("App Store Connect: #{bundle_id}")
+    tf_ensure_asc_app(bundle_id: bundle_id, app_name: app_name, app_sku: app_sku)
 
     apple_just_enabled = tf_ensure_sign_in_with_apple(bundle_id)
     push_just_enabled = tf_ensure_push_notifications(bundle_id)

@@ -180,7 +180,8 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `Нет секрета …` | добавь секрет из таблицы выше |
 | `APPLE_TEAM_ID должен быть 10 символов` | скопируй Team ID из Membership, без пробелов |
 | `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
-| `не может его создать` / `does not allow CREATE` | API-ключ не умеет New App. Создай вручную: App Store Connect → Apps → + → iOS, Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev` |
+| `не может его создать` / `does not allow CREATE` | CI сам вызывает `App.create`. Если ключ без права CREATE (часто это первое приложение аккаунта) — App Store Connect → Apps → + → iOS. DEV: Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev`. Prod: `com.zozugames.app`, имя Zozu Games, SKU `zozugames` |
+| `Could not find option 'api_key'` у `produce` | у `produce` нет `api_key`; токен берётся из `app_store_connect_api_key`. Дождись вливания правки Fastfile |
 | `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
 | `readonly` / `No code signing identity` | не жми Re-run на старом прогоне. Actions → iOS TestFlight → **Run workflow** с `develop`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
