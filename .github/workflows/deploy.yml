@@ -128,6 +128,49 @@ jobs:
             --build-arg "BUILD_ID=${BUILD_ID}" \
             --yes
 
+      # fly deploy при auto_stop=stop завершается на «reached stopped state»
+      # и считает это успехом. Пока машина stopped, прокси не отдаёт тело.
+      - name: Start stopped machines
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="${{ steps.target.outputs.app }}"
+          echo "Машины после deploy:"
+          flyctl machine list -a "$APP"
+          json="$(flyctl machine list -a "$APP" --json)"
+          count="$(printf '%s' "$json" | jq 'length')"
+          if [[ "$count" == "0" ]]; then
+            echo "У приложения нет машин"
+            exit 1
+          fi
+          ids="$(printf '%s' "$json" | jq -r '.[] | select(.state == "stopped" or .state == "created" or .state == "suspended") | .id')"
+          if [[ -n "$ids" ]]; then
+            echo "Стартую: $ids"
+            # shellcheck disable=SC2086
+            if ! flyctl machine start -a "$APP" $ids; then
+              echo "machine start вернул ошибку"
+              flyctl logs -a "$APP" --no-tail || true
+              exit 1
+            fi
+          fi
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18; do
+            json="$(flyctl machine list -a "$APP" --json)"
+            states="$(printf '%s' "$json" | jq -r '[.[].state] | join(",")')"
+            pending="$(printf '%s' "$json" | jq '[.[] | select(.state != "started")] | length')"
+            echo "Состояние ($i): $states"
+            if [[ "$pending" == "0" ]]; then
+              echo "Все машины started"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Машина не перешла в started"
+          flyctl machine list -a "$APP" || true
+          flyctl logs -a "$APP" --no-tail || true
+          exit 1
+
       - name: Smoke check /api/start
         shell: bash
         run: |
@@ -146,3 +189,14 @@ jobs:
           done
           echo "Smoke check не прошёл: $URL"
           exit 1
+
+      - name: Logs if deploy failed
+        if: failure()
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        shell: bash
+        run: |
+          set +e
+          APP="${{ steps.target.outputs.app }}"
+          flyctl machine list -a "$APP"
+          flyctl logs -a "$APP" --no-tail
