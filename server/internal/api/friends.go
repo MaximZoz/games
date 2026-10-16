@@ -220,12 +220,19 @@ func (h *FriendsHandler) List(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+	// Счётчик в том же ответе, что и друзья: отдельный запрос успевал
+	// дорисовать бейдж «Найти друга» уже после списка.
+	payload := map[string]interface{}{
 		"friends":  friendItems,
 		"incoming": incomingItems,
 		"outgoing": outgoingItems,
-	})
+	}
+	if n, err := store.CountUsers(r.Context(), h.Pool); err == nil {
+		payload["users_count"] = n
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(payload)
 }
 
 func (h *FriendsHandler) UsersCount(w http.ResponseWriter, r *http.Request) {
