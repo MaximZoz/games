@@ -115,7 +115,42 @@ void markPushOpenedRoute() {
 bool pushOpenedRouteRecently() {
   final at = _pushOpenedAt;
   if (at == null) return false;
-  return DateTime.now().difference(at) < const Duration(seconds: 5);
+  // Вход в лобби из пуша ждёт сеть: за это время вкладка «Игры»
+  // не должна подменить маршрут своей партией.
+  return DateTime.now().difference(at) < const Duration(seconds: 15);
+}
+
+/// Лобби из пути пуша. null — это не приглашение в стол.
+class PushLobbyRoute {
+  const PushLobbyRoute({required this.gameType, required this.lobbyId});
+
+  final String gameType;
+  final String lobbyId;
+}
+
+PushLobbyRoute? lobbyRouteFromPath(String path) {
+  final bare = normalizeAppPath(path).split('?').first;
+  final match = RegExp(r'^/games/([^/]+)/lobby/([^/]+)$').firstMatch(bare);
+  if (match == null) return null;
+  final gameType = match.group(1) ?? '';
+  final lobbyId = match.group(2) ?? '';
+  if (!_isPathToken(gameType) || !_isPathToken(lobbyId)) return null;
+  return PushLobbyRoute(gameType: gameType, lobbyId: lobbyId);
+}
+
+/// Куда открыть пуш после входа в стол: партия, если она уже идёт,
+/// иначе комната ожидания, а не экран «вас пригласили».
+String pushLobbyDestination({
+  required String gameType,
+  required String lobbyId,
+  String? gameId,
+  bool waitingMore = false,
+}) {
+  final id = (gameId ?? '').trim();
+  if (id.isNotEmpty && !waitingMore) {
+    return '/games/$gameType/game/$id';
+  }
+  return '/games/$gameType/lobby/$lobbyId?mode=invite';
 }
 
 /// Гость по ссылке: без `mode=invite` шапка лобби — «Своя игра».

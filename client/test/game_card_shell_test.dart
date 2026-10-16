@@ -333,6 +333,119 @@ void main() {
     expect(stake.left, lessThan(time.left));
     expect((stake.top - time.top).abs(), lessThan(2));
   });
+
+  testWidgets('на телефоне кнопки крестиков целиком внутри карточки',
+      (tester) async {
+    final overflows = <String>[];
+    for (final width in [300.0, 320.0, 340.0, 360.0, 392.0, 411.0]) {
+      for (final scale in [1.0, 1.15, 1.3]) {
+        tester.view.physicalSize = Size(width, 900);
+        tester.view.devicePixelRatio = 1;
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ru'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(scale),
+              ),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                children: [
+                  gamesHubEqualHeightGrid(
+                    cols: 1,
+                    gap: 16,
+                    tileWidth: width - 48,
+                    tiles: [
+                      _phoneShell(
+                        title: 'Крестики-нолики',
+                        actionsKey: const ValueKey('ttt-actions'),
+                        chips: const [
+                          ('2', Icons.groups_rounded),
+                          ('20 с', Icons.timer_outlined),
+                          ('Классика', Icons.close_rounded),
+                        ],
+                      ),
+                      _phoneShell(
+                        title: 'Дурак',
+                        actionsKey: const ValueKey('durak-actions'),
+                        chips: const [
+                          ('2', Icons.groups_rounded),
+                          ('1 мин', Icons.timer_outlined),
+                          ('Переводной', Icons.swap_horiz_rounded),
+                          ('24 карты', Icons.style_rounded),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        for (final key in const [
+          ValueKey<String>('ttt-actions'),
+          ValueKey<String>('durak-actions'),
+        ]) {
+          final card = tester.getRect(
+            find.ancestor(
+              of: find.byKey(key),
+              matching: find.byType(GradientCard),
+            ),
+          );
+          final actions = tester.getRect(find.byKey(key));
+          if (actions.bottom > card.bottom - 10 || actions.top < card.top) {
+            overflows.add(
+              'w=$width scale=$scale key=$key '
+              'gap=${(card.bottom - actions.bottom).toStringAsFixed(1)}',
+            );
+          }
+        }
+      }
+    }
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    expect(overflows, isEmpty, reason: overflows.join('\n'));
+  });
+}
+
+Widget _phoneShell({
+  required String title,
+  required Key actionsKey,
+  required List<(String, IconData)> chips,
+}) {
+  return GameCardShell(
+    header: GameCardHeader(
+      title: title,
+      icon: Icons.grid_3x3_rounded,
+      onInfoTap: _noop,
+    ),
+    stakeChip: GameCardStakeChip(stakeBronze: 2, onTap: _noop),
+    chips: [
+      for (final chip in chips)
+        GameCardChip(
+          label: chip.$1,
+          icon: chip.$2,
+          onTap: _noop,
+        ),
+    ],
+    actions: KeyedSubtree(
+      key: actionsKey,
+      child: GameCardActionsRow(
+        createLabel: 'Создать игру',
+        creatingLabel: 'Создание…',
+        onCreate: _noop,
+        findLabel: 'Поиск игроков',
+        findingLabel: 'Поиск…',
+        onFind: _noop,
+      ),
+    ),
+  );
 }
 
 void _noop() {}

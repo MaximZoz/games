@@ -64,6 +64,9 @@ func TestBuildFCMMessageReachesIOS(t *testing.T) {
 	if headers["apns-collapse-id"] != "lobby_1" {
 		t.Fatalf("collapse=%v", headers["apns-collapse-id"])
 	}
+	if payload["url"] != "/games/domino/lobby/1" || payload["tag"] != "lobby_1" {
+		t.Fatalf("маршрут должен быть в apns payload, не только в data: %v", payload)
+	}
 	alert, _ := aps["alert"].(map[string]any)
 	if alert["title"] != "Алёна" || alert["body"] != "Пойдём в домино" {
 		t.Fatalf("alert=%v", alert)
