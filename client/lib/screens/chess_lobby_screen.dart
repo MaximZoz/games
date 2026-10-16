@@ -349,6 +349,7 @@ class _ChessLobbyScreenState extends ConsumerState<ChessLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'chess',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

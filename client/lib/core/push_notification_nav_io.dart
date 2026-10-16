@@ -22,6 +22,7 @@ bool _phoneNavEnabled() =>
 void _go(String raw, {String? tag}) {
   final path = normalizeAppPath(raw);
   if (path.isEmpty || path == '/') return;
+  if (pathSpecificity(path) >= 2) markPushOpenedRoute();
   if (_onNavigate == null) {
     if (pathSpecificity(path) > pathSpecificity(_pendingPath ?? '')) {
       _pendingPath = path;

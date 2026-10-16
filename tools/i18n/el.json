@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.",
   "lobbyLinkCopiedHint": "Επικολλήστε τον σε συνομιλία ή μήνυμα σε φίλο",
   "lobbyCopyLinkHint": "Αντιγραφή συνδέσμου στο πρόχειρο",
-  "lobbyCreatorInvites": "Ο/Η {name} σας προσκαλεί να παίξετε",
+  "lobbyCreatorInvites": "Ο/Η {name} σας προσκαλεί να παίξετε {game}",
   "gameOpponentWon": "Νίκησε ο/η {name}",
   "gameOpponentWonTimeout": "Ο χρόνος τελείωσε. Νίκησε ο/η {name}",
   "gameSecondsLeft": "{seconds} δ",

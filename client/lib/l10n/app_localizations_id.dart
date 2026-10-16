@@ -2479,8 +2479,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Salin tautan ke papan klip';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name mengundang Anda bermain';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name mengundang Anda bermain $game';
   }
 
   @override

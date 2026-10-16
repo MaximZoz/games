@@ -340,6 +340,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'durak',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

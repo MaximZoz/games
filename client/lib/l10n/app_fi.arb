@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "Kutsut lähetetty. Odotetaan vastausta.",
   "lobbyLinkCopiedHint": "Liitä se chattiin tai viestiin kaverille",
   "lobbyCopyLinkHint": "Kopioi linkki leikepöydälle",
-  "lobbyCreatorInvites": "{name} kutsuu sinut pelaamaan",
+  "lobbyCreatorInvites": "{name} kutsuu sinut pelaamaan {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

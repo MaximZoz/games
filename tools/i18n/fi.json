@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Kutsut lähetetty. Odotetaan vastausta.",
   "lobbyLinkCopiedHint": "Liitä se chattiin tai viestiin kaverille",
   "lobbyCopyLinkHint": "Kopioi linkki leikepöydälle",
-  "lobbyCreatorInvites": "{name} kutsuu sinut pelaamaan",
+  "lobbyCreatorInvites": "{name} kutsuu sinut pelaamaan {game}",
   "gameOpponentWon": "{name} voitti",
   "gameOpponentWonTimeout": "Aika loppui. {name} voitti",
   "gameSecondsLeft": "{seconds} s",

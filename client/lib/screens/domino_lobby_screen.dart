@@ -286,6 +286,7 @@ class _DominoLobbyScreenState extends ConsumerState<DominoLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'domino',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

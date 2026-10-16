@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Inviti inviati. In attesa di risposta.",
   "lobbyLinkCopiedHint": "Incollalo in una chat o messaggio a un amico",
   "lobbyCopyLinkHint": "Copia il link negli appunti",
-  "lobbyCreatorInvites": "{name} ti invita a giocare",
+  "lobbyCreatorInvites": "{name} ti invita a giocare a {game}",
   "gameOpponentWon": "Ha vinto {name}",
   "gameOpponentWonTimeout": "Tempo scaduto. Ha vinto {name}",
   "gameSecondsLeft": "{seconds} s",

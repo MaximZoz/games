@@ -296,6 +296,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'uno',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

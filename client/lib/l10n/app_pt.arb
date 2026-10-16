@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "Convites enviados. A aguardar resposta.",
   "lobbyLinkCopiedHint": "Cole-o num chat ou mensagem a um amigo",
   "lobbyCopyLinkHint": "Copiar link para a área de transferência",
-  "lobbyCreatorInvites": "{name} convida-o a jogar",
+  "lobbyCreatorInvites": "{name} convida-o a jogar {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

@@ -8,7 +8,15 @@ void main() {
     expect(pathFromTag('friend_request'), '/friends?tab=incoming');
     expect(tagFromPath('/friends?tab=incoming'), 'friend_request');
     expect(pathFromTag('game_invite_lobby1'), '/games/tictactoe/lobby/lobby1');
-    expect(tagFromPath('/games/durak/lobby/lobby1'), 'game_invite_lobby1');
+    expect(
+      pathFromTag('game_invite_uno:L9'),
+      '/games/uno/lobby/L9?mode=invite',
+    );
+    expect(tagFromPath('/games/durak/lobby/lobby1'), 'game_invite_durak:lobby1');
+    expect(
+      tagFromPath('/games/uno/lobby/L9?mode=invite'),
+      'game_invite_uno:L9',
+    );
     expect(pathFromTag('daily_reward'), '/coins/login');
     expect(tagFromPath('/coins/login'), 'daily_reward');
   });
@@ -41,7 +49,18 @@ void main() {
         'title': 'Игра',
         'tag': 'game_invite_1',
       }),
-      '/games/durak/lobby/1',
+      '/games/durak/lobby/1?mode=invite',
+    );
+    expect(
+      pathFromPushData({
+        'game_type': 'uno',
+        'lobby_id': 'L9',
+      }),
+      '/games/uno/lobby/L9?mode=invite',
+    );
+    expect(
+      pathFromPushData({'tag': 'game_invite_domino:abc'}),
+      '/games/domino/lobby/abc?mode=invite',
     );
   });
 
@@ -52,7 +71,7 @@ void main() {
         'tag': 'game_invite_9',
         'title': 'Оля',
       }),
-      '/games/domino/lobby/9',
+      '/games/domino/lobby/9?mode=invite',
     );
     expect(
       pathFromIosTap({

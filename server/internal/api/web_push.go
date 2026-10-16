@@ -27,6 +27,9 @@ type PushPayload struct {
 	Tag    string `json:"tag,omitempty"`
 	Kind   string `json:"kind,omitempty"`
 	ChatID string `json:"chat_id,omitempty"` // fallback deep-link на iOS
+	// Тип и лобби — если iPhone отдал пустой url, клиент всё равно откроет игру.
+	GameType string `json:"game_type,omitempty"`
+	LobbyID  string `json:"lobby_id,omitempty"`
 	// Badge — число на иконке iPhone. В web push не кладём: SW его не читает.
 	Badge int `json:"-"`
 }

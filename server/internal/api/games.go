@@ -4322,17 +4322,30 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	if strings.TrimSpace(gameType) == "" {
 		gameType = "tictactoe"
 	}
-	url := "/games"
-	if lobbyID != "" {
-		url = "/games/" + gameType + "/lobby/" + lobbyID
-	}
+	url, tag := gameInvitePushTarget(gameType, lobbyID)
 	h.Push.NotifyUsers(userIDs, store.WebPushCategoryGames, PushPayload{
-		Title: i18n.Content(lang, "push.game_invite_title"),
-		Body:  i18n.Contentf(lang, "push.game_invite_body", map[string]string{"name": name}),
-		URL:   url,
-		Tag:   "game_invite_" + lobbyID,
-		Kind:  "game_invite",
+		Title:    i18n.Content(lang, "push.game_invite_title"),
+		Body:     i18n.Contentf(lang, "push.game_invite_body", map[string]string{"name": name}),
+		URL:      url,
+		Tag:      tag,
+		Kind:     "game_invite",
+		GameType: gameType,
+		LobbyID:  lobbyID,
 	})
+}
+
+// gameInvitePushTarget — гостевой экран «Войти в игру», не стол хозяина.
+func gameInvitePushTarget(gameType, lobbyID string) (url, tag string) {
+	gameType = strings.TrimSpace(gameType)
+	lobbyID = strings.TrimSpace(lobbyID)
+	if gameType == "" || strings.ContainsAny(gameType, "/?#:&") {
+		gameType = "tictactoe"
+	}
+	if lobbyID == "" {
+		return "/games", "game_invite"
+	}
+	return "/games/" + gameType + "/lobby/" + lobbyID + "?mode=invite",
+		"game_invite_" + gameType + ":" + lobbyID
 }
 
 func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }

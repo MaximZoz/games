@@ -1364,10 +1364,13 @@
   "lobbyInvitesSentWaiting": "Приглашения отправлены. Ожидайте ответа.",
   "lobbyLinkCopiedHint": "Вставьте её в чат или сообщение другу",
   "lobbyCopyLinkHint": "Скопировать ссылку в буфер обмена",
-  "lobbyCreatorInvites": "{name} приглашает вас сыграть",
+  "lobbyCreatorInvites": "{name} приглашает вас сыграть в {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

@@ -351,6 +351,7 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'checkers',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

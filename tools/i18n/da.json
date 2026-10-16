@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Invitationer sendt. Venter på svar.",
   "lobbyLinkCopiedHint": "Indsæt den i en chat eller besked til en ven",
   "lobbyCopyLinkHint": "Kopiér link til udklipsholder",
-  "lobbyCreatorInvites": "{name} inviterer dig til at spille",
+  "lobbyCreatorInvites": "{name} inviterer dig til at spille {game}",
   "gameOpponentWon": "{name} vandt",
   "gameOpponentWonTimeout": "Tiden er gået. {name} vandt",
   "gameSecondsLeft": "{seconds} s",

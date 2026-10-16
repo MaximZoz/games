@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "Inbjudningar skickade. Väntar på svar.",
   "lobbyLinkCopiedHint": "Klistra in den i en chatt eller ett meddelande till en vän",
   "lobbyCopyLinkHint": "Kopiera länk till urklipp",
-  "lobbyCreatorInvites": "{name} bjuder in dig att spela",
+  "lobbyCreatorInvites": "{name} bjuder in dig att spela {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

@@ -2479,8 +2479,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Скопировать ссылку в буфер обмена';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name приглашает вас сыграть';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name приглашает вас сыграть в $game';
   }
 
   @override

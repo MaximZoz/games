@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "招待を送信しました。返信を待っています。",
   "lobbyLinkCopiedHint": "チャットやフレンドへのメッセージに貼り付けてください",
   "lobbyCopyLinkHint": "リンクをクリップボードにコピー",
-  "lobbyCreatorInvites": "{name} があなたをゲームに招待しています",
+  "lobbyCreatorInvites": "{name} があなたを{game}に招待しています",
   "gameOpponentWon": "{name} の勝ち",
   "gameOpponentWonTimeout": "時間切れ。{name} の勝ち",
   "gameSecondsLeft": "{seconds} 秒",

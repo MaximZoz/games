@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Đã gửi lời mời. Đang chờ phản hồi.",
   "lobbyLinkCopiedHint": "Dán vào chat hoặc tin nhắn gửi bạn",
   "lobbyCopyLinkHint": "Sao chép liên kết vào bộ nhớ tạm",
-  "lobbyCreatorInvites": "{name} mời bạn chơi",
+  "lobbyCreatorInvites": "{name} mời bạn chơi {game}",
   "gameOpponentWon": "{name} thắng",
   "gameOpponentWonTimeout": "Hết giờ. {name} thắng",
   "gameSecondsLeft": "{seconds} giây",

@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Uitnodigingen verzonden. Wachten op antwoord.",
   "lobbyLinkCopiedHint": "Plak hem in een chat of bericht naar een vriend",
   "lobbyCopyLinkHint": "Link naar klembord kopiëren",
-  "lobbyCreatorInvites": "{name} nodigt je uit om te spelen",
+  "lobbyCreatorInvites": "{name} nodigt je uit om {game} te spelen",
   "gameOpponentWon": "{name} heeft gewonnen",
   "gameOpponentWonTimeout": "Tijd is om. {name} heeft gewonnen",
   "gameSecondsLeft": "{seconds} s",

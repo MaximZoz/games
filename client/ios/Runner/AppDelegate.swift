@@ -107,7 +107,7 @@ enum ZozuPush {
         out[key] = text
       }
     }
-    for key in ["url", "tag", "chat_id", "title", "body", "payload"] {
+    for key in ["url", "tag", "chat_id", "title", "body", "payload", "game_type", "lobby_id"] {
       put(key, userInfo[key])
     }
     put("url", userInfo["gcm.notification.url"])

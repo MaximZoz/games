@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Davetler gönderildi. Yanıt bekleniyor.",
   "lobbyLinkCopiedHint": "Bir sohbete veya arkadaş mesajına yapıştırın",
   "lobbyCopyLinkHint": "Bağlantıyı panoya kopyala",
-  "lobbyCreatorInvites": "{name} sizi oynamaya davet ediyor",
+  "lobbyCreatorInvites": "{name} sizi {game} oynamaya davet ediyor",
   "gameOpponentWon": "{name} kazandı",
   "gameOpponentWonTimeout": "Süre doldu. {name} kazandı",
   "gameSecondsLeft": "{seconds} sn",
