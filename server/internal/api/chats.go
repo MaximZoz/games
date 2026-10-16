@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -1081,10 +1082,14 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 	if body == "" {
 		body = i18n.Content(lang, "push.new_message")
 	}
+	chatURL := "/chats/" + item.ChatID
+	if strings.TrimSpace(from) != "" {
+		chatURL += "?name=" + url.QueryEscape(from)
+	}
 	h.Push.NotifyUsers(recipients, store.WebPushCategoryChat, PushPayload{
 		Title:  from,
 		Body:   body,
-		URL:    "/chats/" + item.ChatID,
+		URL:    chatURL,
 		Tag:    "chat_" + item.ChatID,
 		Kind:   "chat",
 		ChatID: item.ChatID,

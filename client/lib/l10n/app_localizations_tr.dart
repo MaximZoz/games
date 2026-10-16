@@ -2479,8 +2479,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Bağlantıyı panoya kopyala';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name sizi oynamaya davet ediyor';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name sizi $game oynamaya davet ediyor';
   }
 
   @override

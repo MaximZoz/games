@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Pozvánky odeslány. Čekejte na odpověď.",
   "lobbyLinkCopiedHint": "Vložte ji do chatu nebo zprávy příteli",
   "lobbyCopyLinkHint": "Kopírovat odkaz do schránky",
-  "lobbyCreatorInvites": "{name} vás zve ke hře",
+  "lobbyCreatorInvites": "{name} vás zve ke hře {game}",
   "gameOpponentWon": "Vyhrál {name}",
   "gameOpponentWonTimeout": "Čas vypršel. Vyhrál {name}",
   "gameSecondsLeft": "{seconds} s",

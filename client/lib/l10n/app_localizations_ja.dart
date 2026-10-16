@@ -2479,8 +2479,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get lobbyCopyLinkHint => 'リンクをクリップボードにコピー';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name があなたをゲームに招待しています';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name があなたを$gameに招待しています';
   }
 
   @override

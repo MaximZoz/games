@@ -2479,8 +2479,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Copy link to clipboard';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name invites you to play';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name invites you to play $game';
   }
 
   @override

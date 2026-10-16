@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "Undangan terkirim. Menunggu respons.",
   "lobbyLinkCopiedHint": "Tempel di obrolan atau pesan ke teman",
   "lobbyCopyLinkHint": "Salin tautan ke papan klip",
-  "lobbyCreatorInvites": "{name} mengundang Anda bermain",
+  "lobbyCreatorInvites": "{name} mengundang Anda bermain {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

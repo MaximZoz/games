@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "邀请已发送。等待回复。",
   "lobbyLinkCopiedHint": "将其粘贴到聊天或发给好友的消息中",
   "lobbyCopyLinkHint": "复制链接到剪贴板",
-  "lobbyCreatorInvites": "{name} 邀请您一起玩",
+  "lobbyCreatorInvites": "{name} 邀请您一起玩{game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

@@ -17,6 +17,22 @@ String normalizeAppPath(String raw) {
   return trimmed.startsWith('/') ? trimmed : '/$trimmed';
 }
 
+/// Тег баннера приглашения: тип игры в теге, чтобы iPhone без `url`
+/// открыл Уно, а не крестики.
+String gameInviteNotificationTag({
+  required String gameType,
+  required String lobbyId,
+}) {
+  final id = lobbyId.trim();
+  if (id.isEmpty) return 'game_invite';
+  final gt = gameType.trim();
+  if (!_isPathToken(gt)) return 'game_invite_$id';
+  return 'game_invite_$gt:$id';
+}
+
+bool _isPathToken(String value) =>
+    RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(value);
+
 /// Как `pathFromTag` в `push-sw.js`.
 String? pathFromTag(String tag) {
   final t = tag.trim();
@@ -26,8 +42,18 @@ String? pathFromTag(String tag) {
   }
   if (t == 'friend_request') return '/friends?tab=incoming';
   if (t.startsWith('game_invite_')) {
-    final lobbyId = t.substring('game_invite_'.length);
-    return lobbyId.isEmpty ? '/games' : '/games/tictactoe/lobby/$lobbyId';
+    final rest = t.substring('game_invite_'.length);
+    if (rest.isEmpty) return '/games';
+    final colon = rest.indexOf(':');
+    if (colon > 0 && colon < rest.length - 1) {
+      final gt = rest.substring(0, colon);
+      final id = rest.substring(colon + 1);
+      if (_isPathToken(gt) && _isPathToken(id)) {
+        return '/games/$gt/lobby/$id?mode=invite';
+      }
+    }
+    // Старые баннеры без типа игры — крестики, как раньше.
+    return '/games/tictactoe/lobby/$rest';
   }
   if (t.startsWith('game_turn_')) return '/games';
   if (t.startsWith('achievement_')) return '/achievements';
@@ -47,7 +73,12 @@ String? tagFromPath(String path) {
   final lobby = RegExp(
     r'^/games/([^/?#]+)/lobby/([^/?#]+)',
   ).firstMatch(p);
-  if (lobby != null) return 'game_invite_${lobby.group(2)}';
+  if (lobby != null) {
+    return gameInviteNotificationTag(
+      gameType: lobby.group(1) ?? '',
+      lobbyId: lobby.group(2) ?? '',
+    );
+  }
   final game = RegExp(
     r'^/games/([^/?#]+)/game/([^/?#]+)',
   ).firstMatch(p);
@@ -74,14 +105,75 @@ bool pathsMatch(String current, String target) {
   return a == b;
 }
 
-/// `url` → `chat_id` → `tag`, как в iOS PWA.
+DateTime? _pushOpenedAt;
+
+/// Тап по пушу уже выбрал чат или лобби — не уводить в свою «Своя игра».
+void markPushOpenedRoute() {
+  _pushOpenedAt = DateTime.now();
+}
+
+bool pushOpenedRouteRecently() {
+  final at = _pushOpenedAt;
+  if (at == null) return false;
+  return DateTime.now().difference(at) < const Duration(seconds: 5);
+}
+
+/// Гость по ссылке: без `mode=invite` шапка лобби — «Своя игра».
+String attachLobbyInviteMode(String path) {
+  final normalized = normalizeAppPath(path);
+  final bare = normalized.split('?').first;
+  if (!RegExp(r'^/games/[^/]+/lobby/[^/]+$').hasMatch(bare)) {
+    return normalized;
+  }
+  if (RegExp(r'(^|[?&])mode=').hasMatch(normalized)) return normalized;
+  final sep = normalized.contains('?') ? '&' : '?';
+  return '$normalized${sep}mode=invite';
+}
+
+/// Чат из пуша: имя собеседника в query, чтобы шапка не была «Диалог».
+String attachChatPeerName(String path, String? title) {
+  final normalized = normalizeAppPath(path);
+  final bare = normalized.split('?').first;
+  if (!RegExp(r'^/chats/[^/]+$').hasMatch(bare)) return normalized;
+  if (RegExp(r'(^|[?&])name=').hasMatch(normalized)) return normalized;
+  final name = (title ?? '').trim();
+  if (name.isEmpty) return normalized;
+  final sep = normalized.contains('?') ? '&' : '?';
+  return '$normalized${sep}name=${Uri.encodeQueryComponent(name)}';
+}
+
+/// Тап по баннеру iPhone: поля FCM, а если их нет — payload локального баннера.
+String? pathFromIosTap(Map<String, String> data) {
+  final direct = pathFromPushData(data);
+  if (direct != null && direct.isNotEmpty && direct != '/') return direct;
+  final payload = data['payload']?.trim() ?? '';
+  if (payload.isEmpty) return direct;
+  return pathFromNotificationPayload(payload);
+}
+
+/// `url` → `chat_id` → `game_type`+`lobby_id` → `tag`, как в iOS PWA.
 String? pathFromPushData(Map<String, dynamic> data) {
+  final title = data['title']?.toString();
+  String? path;
   final url = data['url']?.toString().trim() ?? '';
-  if (url.isNotEmpty) return normalizeAppPath(url);
-  final chatId = data['chat_id']?.toString().trim() ?? '';
-  if (chatId.isNotEmpty) return '/chats/$chatId';
-  final tag = data['tag']?.toString() ?? '';
-  return pathFromTag(tag);
+  if (url.isNotEmpty) {
+    path = normalizeAppPath(url);
+  } else {
+    final chatId = data['chat_id']?.toString().trim() ?? '';
+    if (chatId.isNotEmpty && _isPathToken(chatId)) {
+      path = '/chats/$chatId';
+    } else {
+      final gameType = data['game_type']?.toString().trim() ?? '';
+      final lobbyId = data['lobby_id']?.toString().trim() ?? '';
+      if (_isPathToken(gameType) && _isPathToken(lobbyId)) {
+        path = '/games/$gameType/lobby/$lobbyId';
+      } else {
+        path = pathFromTag(data['tag']?.toString() ?? '');
+      }
+    }
+  }
+  if (path == null || path.isEmpty) return null;
+  return attachChatPeerName(attachLobbyInviteMode(path), title);
 }
 
 String? pathFromNotificationPayload(String? payload) {

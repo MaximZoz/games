@@ -338,6 +338,7 @@ class _NardyLobbyScreenState extends ConsumerState<NardyLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'nardy',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

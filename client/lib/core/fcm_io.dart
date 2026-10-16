@@ -76,6 +76,38 @@ Future<String?> ensureFcmToken() async {
   return messaging.getToken();
 }
 
+Map<String, String>? _stringMap(dynamic raw) {
+  if (raw is! Map) return null;
+  final out = <String, String>{};
+  raw.forEach((key, value) {
+    final text = value?.toString().trim() ?? '';
+    if (text.isNotEmpty) out[key.toString()] = text;
+  });
+  if (out.isEmpty) return null;
+  return out;
+}
+
+Future<Map<String, String>?> takeIosNotificationTap() async {
+  if (!Platform.isIOS || !fcmSupported()) return null;
+  try {
+    final raw = await _pushChannel.invokeMethod<dynamic>('takeTap');
+    return _stringMap(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Пока приложение уже запущено, тап приходит сюда.
+/// Аргументы метода, не обратный вызов в тот же канал: иначе взаимная блокировка.
+void listenIosNotificationTaps(void Function(Map<String, String> data) onTap) {
+  if (!Platform.isIOS || !fcmSupported()) return;
+  _pushChannel.setMethodCallHandler((call) async {
+    if (call.method != 'notificationTap') return;
+    final data = _stringMap(call.arguments);
+    if (data != null) onTap(data);
+  });
+}
+
 Stream<String> fcmTokenRefresh() {
   if (!fcmSupported()) return const Stream.empty();
   return FirebaseMessaging.instance.onTokenRefresh;

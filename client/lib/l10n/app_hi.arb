@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "निमंत्रण भेजे गए। उत्तर की प्रतीक्षा।",
   "lobbyLinkCopiedHint": "इसे चैट या मित्र के संदेश में चिपकाएँ",
   "lobbyCopyLinkHint": "लिंक क्लिपबोर्ड पर कॉपी करें",
-  "lobbyCreatorInvites": "{name} आपको खेलने के लिए आमंत्रित करता है",
+  "lobbyCreatorInvites": "{name} आपको {game} खेलने के लिए आमंत्रित करता है",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

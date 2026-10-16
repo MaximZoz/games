@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -69,7 +70,7 @@ AndroidNotifySpec? mapAndroidNotifyEvent(
     return AndroidNotifySpec(
       title: name.isNotEmpty ? name : l10n.settingsPushChat,
       body: body.trim().isEmpty ? l10n.settingsNotifications : body.trim(),
-      url: '/chats/$chatId',
+      url: attachChatPeerName('/chats/$chatId', name),
       tag: 'chat_$chatId',
       chatId: chatId,
     );
@@ -82,12 +83,12 @@ AndroidNotifySpec? mapAndroidNotifyEvent(
     if (gameType.isEmpty) gameType = 'tictactoe';
     final url = lobbyId.isEmpty
         ? '/games'
-        : '/games/$gameType/lobby/$lobbyId';
+        : '/games/$gameType/lobby/$lobbyId?mode=invite';
     return AndroidNotifySpec(
       title: l10n.settingsPushGames,
       body: name.isNotEmpty ? name : l10n.settingsNotifications,
       url: url,
-      tag: lobbyId.isEmpty ? 'game_invite' : 'game_invite_$lobbyId',
+      tag: gameInviteNotificationTag(gameType: gameType, lobbyId: lobbyId),
     );
   }
   if (type == 'friends_updated') {

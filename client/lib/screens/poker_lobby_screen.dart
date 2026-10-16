@@ -327,6 +327,7 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'poker',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

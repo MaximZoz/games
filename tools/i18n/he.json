@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "ההזמנות נשלחו. ממתינים לתשובה.",
   "lobbyLinkCopiedHint": "הדביקו אותו בצ'אט או בהודעה לחבר",
   "lobbyCopyLinkHint": "העתקת קישור ללוח",
-  "lobbyCreatorInvites": "{name} מזמין אתכם לשחק",
+  "lobbyCreatorInvites": "{name} מזמין אתכם לשחק {game}",
   "gameOpponentWon": "{name} ניצח",
   "gameOpponentWonTimeout": "הזמן נגמר. {name} ניצח",
   "gameSecondsLeft": "{seconds} שנ׳",

@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "招待を送信しました。返信を待っています。",
   "lobbyLinkCopiedHint": "チャットやフレンドへのメッセージに貼り付けてください",
   "lobbyCopyLinkHint": "リンクをクリップボードにコピー",
-  "lobbyCreatorInvites": "{name} があなたをゲームに招待しています",
+  "lobbyCreatorInvites": "{name} があなたを{game}に招待しています",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

@@ -23,6 +23,7 @@ import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
 class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
@@ -370,7 +371,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                     Text(
                                       lobby.creatorName.trim().isNotEmpty
                                           ? context.l10n.lobbyCreatorInvites(
-                                              lobby.creatorName)
+                                              lobby.creatorName,
+                                              localizedGameTypeName(
+                                                'tictactoe',
+                                                context.l10n,
+                                              ),
+                                            )
                                           : context.l10n.lobbyInvitedToPlay,
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(

@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "Запрошення надіслано. Очікуйте відповіді.",
   "lobbyLinkCopiedHint": "Вставте її в чат або повідомлення другу",
   "lobbyCopyLinkHint": "Скопіювати посилання в буфер обміну",
-  "lobbyCreatorInvites": "{name} запрошує вас зіграти",
+  "lobbyCreatorInvites": "{name} запрошує вас зіграти в {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

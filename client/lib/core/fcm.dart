@@ -9,6 +9,12 @@ String devicePushPlatform() => impl.devicePushPlatform();
 
 Future<String?> ensureFcmToken() => impl.ensureFcmToken();
 
+Future<Map<String, String>?> takeIosNotificationTap() =>
+    impl.takeIosNotificationTap();
+
+void listenIosNotificationTaps(void Function(Map<String, String> data) onTap) =>
+    impl.listenIosNotificationTaps(onTap);
+
 Stream<String> fcmTokenRefresh() => impl.fcmTokenRefresh();
 
 Future<void> deleteFcmToken() => impl.deleteFcmToken();

@@ -26,6 +26,27 @@ func TestFcmDataFromPayload(t *testing.T) {
 	}
 }
 
+func TestGameInvitePushTarget(t *testing.T) {
+	url, tag := gameInvitePushTarget("uno", "L9")
+	if url != "/games/uno/lobby/L9?mode=invite" || tag != "game_invite_uno:L9" {
+		t.Fatalf("url=%s tag=%s", url, tag)
+	}
+	url, tag = gameInvitePushTarget("bad/type", "")
+	if url != "/games" || tag != "game_invite" {
+		t.Fatalf("empty lobby url=%s tag=%s", url, tag)
+	}
+	data := fcmDataFromPayload(PushPayload{
+		URL:      "/games/uno/lobby/L9?mode=invite",
+		Tag:      "game_invite_uno:L9",
+		Kind:     "game_invite",
+		GameType: "uno",
+		LobbyID:  "L9",
+	})
+	if data["game_type"] != "uno" || data["lobby_id"] != "L9" || data["url"] != "/games/uno/lobby/L9?mode=invite" {
+		t.Fatalf("invite data: %#v", data)
+	}
+}
+
 func TestFCMSecretStatus(t *testing.T) {
 	const good = `{"type":"service_account","project_id":"zozu-games"}`
 	if ok, reason := FCMSecretStatus(good); !ok || reason != "ok" {

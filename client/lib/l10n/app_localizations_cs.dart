@@ -2479,8 +2479,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Kopírovat odkaz do schránky';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name vás zve ke hře';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name vás zve ke hře $game';
   }
 
   @override

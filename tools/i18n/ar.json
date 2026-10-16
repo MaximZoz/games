@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "تم إرسال الدعوات. بانتظار الرد.",
   "lobbyLinkCopiedHint": "الصقه في محادثة أو رسالة لصديق",
   "lobbyCopyLinkHint": "نسخ الرابط إلى الحافظة",
-  "lobbyCreatorInvites": "{name} يدعوك للعب",
+  "lobbyCreatorInvites": "{name} يدعوك للعب {game}",
   "gameOpponentWon": "فاز {name}",
   "gameOpponentWonTimeout": "انتهى الوقت. فاز {name}",
   "gameSecondsLeft": "{seconds} ث",

@@ -378,6 +378,7 @@ func main() {
 		FCMServiceAccountJSON: api.NormalizeFCMServiceAccountJSON(
 			getEnv("FCM_SERVICE_ACCOUNT_JSON", ""),
 		),
+		Rdb: rdb,
 	}
 	if pushSender.Enabled() {
 		log.Printf("Web Push: enabled")

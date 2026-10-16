@@ -2479,8 +2479,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Αντιγραφή συνδέσμου στο πρόχειρο';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return 'Ο/Η $name σας προσκαλεί να παίξετε';
+  String lobbyCreatorInvites(String name, String game) {
+    return 'Ο/Η $name σας προσκαλεί να παίξετε $game';
   }
 
   @override

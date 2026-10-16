@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Takliflar yuborildi. Javob kutilmoqda.",
   "lobbyLinkCopiedHint": "Uni chatga yoki do‘stga xabarga joylashtiring",
   "lobbyCopyLinkHint": "Havolani vaqtinchalik xotiraga nusxalash",
-  "lobbyCreatorInvites": "{name} sizni o‘ynashga taklif qiladi",
+  "lobbyCreatorInvites": "{name} sizni {game} o‘ynashga taklif qiladi",
   "gameOpponentWon": "{name} g‘alaba qozondi",
   "gameOpponentWonTimeout": "Vaqt tugadi. {name} g‘alaba qozondi",
   "gameSecondsLeft": "{seconds} s",
