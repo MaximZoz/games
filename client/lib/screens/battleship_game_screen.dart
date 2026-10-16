@@ -910,6 +910,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GameOpponentCard(
+        userId: oppId,
         displayName: name,
         avatarKind: avatar.kind,
         avatarValue: avatar.value,

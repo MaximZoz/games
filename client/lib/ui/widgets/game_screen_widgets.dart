@@ -192,19 +192,59 @@ const _presetAvatarIcons = <IconData>[
   Icons.face_4_rounded,
   Icons.face_5_rounded,
   Icons.face_6_rounded,
-  Icons.sports_esports_rounded,
-  Icons.pets_rounded,
-  Icons.rocket_launch_rounded,
-  Icons.emoji_emotions_rounded,
+  Icons.man_rounded,
+  Icons.woman_rounded,
+  Icons.elderly_rounded,
+  Icons.elderly_woman_rounded,
+  Icons.person_rounded,
+  Icons.child_care_rounded,
 ];
 
+/// Последний показанный портрет игрока.
+///
+/// Кадр хода иногда приходит без `avatar_kind`: виджет на секунду получает
+/// «letter» и рисует букву. Пока жив процесс, для того же id остаётся фото.
+class PlayerAvatarMemory {
+  PlayerAvatarMemory._();
+
+  static final Map<String, ({String kind, String value})> _byUser = {};
+
+  static bool hasPortrait(String kind, String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return false;
+    if (kind == 'file') return true;
+    if (kind == 'preset') {
+      final idx = int.tryParse(raw);
+      return idx != null && idx >= 0 && idx < _presetAvatarIcons.length;
+    }
+    return false;
+  }
+
+  static void store(String? userId, String kind, String value) {
+    final id = userId?.trim() ?? '';
+    if (id.isEmpty || id.startsWith('bot:')) return;
+    if (!hasPortrait(kind, value)) return;
+    _byUser[id] = (kind: kind, value: value.trim());
+  }
+
+  static ({String kind, String value})? lookup(String? userId) {
+    final id = userId?.trim() ?? '';
+    if (id.isEmpty || id.startsWith('bot:')) return null;
+    return _byUser[id];
+  }
+
+  @visibleForTesting
+  static void clear() => _byUser.clear();
+}
+
 /// Аватар игрока в рамке — общий для экранов партий.
-class GamePlayerAvatar extends StatelessWidget {
+class GamePlayerAvatar extends StatefulWidget {
   const GamePlayerAvatar({
     super.key,
     required this.displayName,
     required this.avatarKind,
     required this.avatarValue,
+    this.userId,
     this.frameCode,
     this.frameColor,
     this.compact = false,
@@ -213,23 +253,67 @@ class GamePlayerAvatar extends StatelessWidget {
   final String displayName;
   final String avatarKind;
   final String? avatarValue;
+  final String? userId;
   final String? frameCode;
   final String? frameColor;
   final bool compact;
 
   @override
+  State<GamePlayerAvatar> createState() => _GamePlayerAvatarState();
+}
+
+class _GamePlayerAvatarState extends State<GamePlayerAvatar> {
+  String? _kind;
+  String? _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _remember(widget.avatarKind, widget.avatarValue);
+  }
+
+  @override
+  void didUpdateWidget(covariant GamePlayerAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId) {
+      _kind = null;
+      _value = null;
+    }
+    _remember(widget.avatarKind, widget.avatarValue);
+  }
+
+  void _remember(String kind, String? value) {
+    if (PlayerAvatarMemory.hasPortrait(kind, value)) {
+      _kind = kind;
+      _value = value;
+      PlayerAvatarMemory.store(widget.userId, kind, value!);
+      return;
+    }
+    final held = PlayerAvatarMemory.lookup(widget.userId);
+    if (held != null) {
+      _kind = held.kind;
+      _value = held.value;
+      return;
+    }
+    if (_kind == null) {
+      _kind = kind;
+      _value = value;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final r = compact ? 18.0 : 22.0;
+    final kind = _kind ?? widget.avatarKind;
+    final value = _value ?? widget.avatarValue;
+    final r = widget.compact ? 18.0 : 22.0;
     Widget avatar;
-    if (avatarKind == 'file' &&
-        avatarValue != null &&
-        avatarValue!.trim().isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(avatarValue);
+    if (kind == 'file' && value != null && value.trim().isNotEmpty) {
+      final img = AvatarMemoryCache.fromAvatarValue(value);
       avatar = img != null
           ? CircleAvatar(radius: r, backgroundImage: img)
           : _letter(r);
-    } else if (avatarKind == 'preset' && avatarValue != null) {
-      final idx = int.tryParse(avatarValue!);
+    } else if (kind == 'preset' && value != null) {
+      final idx = int.tryParse(value);
       avatar = (idx != null && idx >= 0 && idx < _presetAvatarIcons.length)
           ? CircleAvatar(
               radius: r,
@@ -243,17 +327,18 @@ class GamePlayerAvatar extends StatelessWidget {
     }
     return FramedAvatar(
       size: r * 2,
-      borderWidth: compact ? 2.4 : 3.0,
-      frameCode: frameCode,
-      frameColor: frameColor,
+      borderWidth: widget.compact ? 2.4 : 3.0,
+      frameCode: widget.frameCode,
+      frameColor: widget.frameColor,
       animate: false,
       child: avatar,
     );
   }
 
   Widget _letter(double r) {
-    final letter =
-        displayName.trim().isEmpty ? '?' : displayName[0].toUpperCase();
+    final letter = widget.displayName.trim().isEmpty
+        ? '?'
+        : widget.displayName[0].toUpperCase();
     return CircleAvatar(
       radius: r,
       backgroundColor: AppColors.accentSoft,
@@ -262,7 +347,7 @@ class GamePlayerAvatar extends StatelessWidget {
         style: TextStyle(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,
-          fontSize: compact ? 14 : 16,
+          fontSize: widget.compact ? 14 : 16,
         ),
       ),
     );
@@ -341,6 +426,7 @@ class GameOpponentCard extends StatelessWidget {
     required this.displayName,
     required this.avatarKind,
     required this.avatarValue,
+    this.userId,
     this.frameCode,
     this.frameColor,
     this.isBot = false,
@@ -364,6 +450,7 @@ class GameOpponentCard extends StatelessWidget {
   final String displayName;
   final String avatarKind;
   final String? avatarValue;
+  final String? userId;
   final String? frameCode;
   final String? frameColor;
   final bool isBot;
@@ -414,6 +501,7 @@ class GameOpponentCard extends StatelessWidget {
                   displayName: displayName,
                   avatarKind: avatarKind,
                   avatarValue: avatarValue,
+                  userId: userId,
                   frameCode: frameCode,
                   frameColor: frameColor,
                   compact: compact,
@@ -2123,7 +2211,8 @@ Future<bool> confirmSurrenderDialog(BuildContext context) {
 /// Подтверждение ничьей: [accept] — принять предложение соперника.
 ///
 /// «Предложить ничью» и «Отмена» всегда в одну линию, с зазором между ними.
-Future<bool> confirmDrawDialog(BuildContext context, {bool accept = false}) async {
+Future<bool> confirmDrawDialog(BuildContext context,
+    {bool accept = false}) async {
   final l10n = context.l10n;
   final ok = await showDialog<bool>(
     context: context,
@@ -2137,7 +2226,8 @@ Future<bool> confirmDrawDialog(BuildContext context, {bool accept = false}) asyn
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           );
       return AlertDialog(
-        title: Text(accept ? l10n.gameAcceptDrawTitle : l10n.gameOfferDrawTitle),
+        title:
+            Text(accept ? l10n.gameAcceptDrawTitle : l10n.gameOfferDrawTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2629,9 +2719,8 @@ class GameRematchSection extends StatelessWidget {
     final rematch = FramedButton(
       onPressed: isRematching ? null : onRematch,
       icon: Icons.replay_rounded,
-      label: isRematching
-          ? context.l10n.commonCreating
-          : context.l10n.gameRematch,
+      label:
+          isRematching ? context.l10n.commonCreating : context.l10n.gameRematch,
       loading: isRematching,
       expanded: true,
       padding: pad,

@@ -29,7 +29,11 @@ GameStateItem ttt({
 void main() {
   group('full view detection', () {
     test('treats ping-only payloads as incomplete', () {
-      const ping = {'type': 'game_state', 'game_id': 'g1', 'game_type': 'durak'};
+      const ping = {
+        'type': 'game_state',
+        'game_id': 'g1',
+        'game_type': 'durak'
+      };
       expect(hasFullTictactoeView(ping), isFalse);
       expect(hasFullBattleshipView(ping), isFalse);
       expect(hasFullDurakView(ping), isFalse);
@@ -79,6 +83,74 @@ void main() {
       expect(merged.xUserId, 'u1');
       expect(merged.oUserId, 'u2');
       expect(merged.xDisplayName, 'Макс');
+    });
+
+    test('keeps portraits when a move snapshot omits avatar fields', () {
+      final http = GameStateItem.fromJson({
+        'id': 'g1',
+        'board': List.filled(9, ''),
+        'turn': 'x',
+        'status': 'active',
+        'x_user_id': 'u1',
+        'o_user_id': 'u2',
+        't_user_id': 'u3',
+        's_user_id': 'u4',
+        'x_display_name': 'Макс',
+        'o_display_name': 'Анна',
+        'x_avatar_kind': 'preset',
+        'x_avatar_value': '1',
+        'o_avatar_kind': 'file',
+        'o_avatar_value': 'base64,abc',
+        'o_frame_code': 'frame_gold',
+        'o_frame_color': '#ffd700',
+        't_avatar_kind': 'preset',
+        't_avatar_value': '6',
+        's_avatar_kind': 'file',
+        's_avatar_value': 'base64,def',
+      });
+      final ws = GameStateItem.fromJson({
+        'type': 'game_state',
+        'game_id': 'g1',
+        'board': ['x', '', '', '', '', '', '', '', ''],
+        'turn': 'o',
+        'status': 'active',
+        'x_user_id': 'u1',
+        'o_user_id': 'u2',
+        't_user_id': 'u3',
+        's_user_id': 'u4',
+      });
+      expect(ws.oAvatarKnown, isFalse);
+      expect(ws.oAvatarKind, 'letter');
+      final merged = http.mergePreservingIdentity(ws);
+      expect(merged.board[0], 'x');
+      expect(merged.turn, 'o');
+      expect(merged.oAvatarKind, 'file');
+      expect(merged.oAvatarValue, 'base64,abc');
+      expect(merged.xAvatarKind, 'preset');
+      expect(merged.xAvatarValue, '1');
+      expect(merged.tAvatarKind, 'preset');
+      expect(merged.tAvatarValue, '6');
+      expect(merged.sAvatarKind, 'file');
+      expect(merged.sAvatarValue, 'base64,def');
+      expect(merged.oDisplayName, 'Анна');
+      expect(merged.oFrameCode, 'frame_gold');
+      expect(merged.oFrameColor, '#ffd700');
+
+      final explicit = GameStateItem.fromJson({
+        'id': 'g1',
+        'board': ['x', 'o', '', '', '', '', '', '', ''],
+        'turn': 'x',
+        'status': 'active',
+        'x_user_id': 'u1',
+        'o_user_id': 'u2',
+        'o_avatar_kind': 'letter',
+      });
+      final replaced = merged.mergePreservingIdentity(explicit);
+      expect(replaced.board[1], 'o');
+      expect(replaced.oAvatarKind, 'letter');
+      expect(replaced.oAvatarValue, isNull);
+      expect(replaced.xAvatarKind, 'preset');
+      expect(replaced.xAvatarValue, '1');
     });
 
     test('rejects stale HTTP after a newer opponent move', () {
@@ -265,7 +337,8 @@ void main() {
       }
 
       expect(
-        isOlderPoker(poker(hand: 1, street: 'preflop'), poker(hand: 1, street: 'flop')),
+        isOlderPoker(
+            poker(hand: 1, street: 'preflop'), poker(hand: 1, street: 'flop')),
         isTrue,
       );
     });

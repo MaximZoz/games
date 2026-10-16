@@ -1385,6 +1385,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GamePlayerAvatar(
+                    userId: p.id,
                     displayName: _playerName(p),
                     avatarKind: p.avatarKind,
                     avatarValue: p.avatarValue,
@@ -2278,6 +2279,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             onTap: () => unawaited(_showPlayerCard(p)),
             behavior: HitTestBehavior.opaque,
             child: GamePlayerAvatar(
+              userId: p.id,
               displayName: _playerName(p),
               avatarKind: p.avatarKind,
               avatarValue: p.avatarValue,
@@ -2737,6 +2739,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               onTap: () => unawaited(_showPlayerCard(me)),
               behavior: HitTestBehavior.opaque,
               child: GamePlayerAvatar(
+                userId: me.id,
                 displayName: _playerName(me),
                 avatarKind: heroAvatar.kind,
                 avatarValue: heroAvatar.value,
