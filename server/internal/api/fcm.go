@@ -50,6 +50,7 @@ type fcmAps struct {
 	Alert    *fcmApsAlert `json:"alert,omitempty"`
 	Sound    string       `json:"sound,omitempty"`
 	ThreadID string       `json:"thread-id,omitempty"`
+	Badge    *int         `json:"badge,omitempty"`
 }
 
 type fcmApsAlert struct {
@@ -86,6 +87,63 @@ type fcmErrorBody struct {
 	} `json:"error"`
 }
 
+func apnsCollapseID(tag string) string {
+	tag = strings.TrimSpace(tag)
+	if tag == "" {
+		return ""
+	}
+	if len(tag) > 64 {
+		return tag[:64]
+	}
+	return tag
+}
+
+// phoneNotificationBadge — как на Android: один баннер на чат, один на заявки
+// в друзья и по одному на каждое приглашение в игру.
+func phoneNotificationBadge(chatsWithUnread, incomingFriends, gameInvites int) int {
+	if chatsWithUnread < 0 {
+		chatsWithUnread = 0
+	}
+	friends := 0
+	if incomingFriends > 0 {
+		friends = 1
+	}
+	if gameInvites < 0 {
+		gameInvites = 0
+	}
+	return chatsWithUnread + friends + gameInvites
+}
+
+func pushCountsForIconBadge(payload PushPayload) bool {
+	switch strings.TrimSpace(payload.Kind) {
+	case "chat", "game_invite":
+		return true
+	}
+	tag := strings.TrimSpace(payload.Tag)
+	return tag == "friend_request" ||
+		strings.HasPrefix(tag, "chat_") ||
+		strings.HasPrefix(tag, "game_invite")
+}
+
+func (s *WebPushSender) iosBadgeForUser(ctx context.Context, userID uuid.UUID) int {
+	if s == nil || s.Pool == nil {
+		return 0
+	}
+	chats, friends, err := store.CountPhoneBadgeSources(ctx, s.Pool, userID)
+	if err != nil {
+		log.Printf("fcm: badge: %v", err)
+		return 0
+	}
+	invites := 0
+	if s.Rdb != nil {
+		n, err := s.Rdb.SCard(ctx, userInvitesRedisKey(userID.String())).Result()
+		if err == nil && n > 0 {
+			invites = int(n)
+		}
+	}
+	return phoneNotificationBadge(chats, friends, invites)
+}
+
 func buildFCMMessage(token string, payload PushPayload) fcmMessage {
 	thread := strings.TrimSpace(payload.Tag)
 	aps := &fcmAps{
@@ -94,6 +152,15 @@ func buildFCMMessage(token string, payload PushPayload) fcmMessage {
 	}
 	if thread != "" {
 		aps.ThreadID = thread
+	}
+	if payload.Badge > 0 {
+		n := payload.Badge
+		aps.Badge = &n
+	}
+	headers := map[string]string{"apns-priority": "10"}
+	if collapse := apnsCollapseID(thread); collapse != "" {
+		// Как Android tag: новое сообщение того же чата заменяет баннер, а не копит стопку.
+		headers["apns-collapse-id"] = collapse
 	}
 	return fcmMessage{
 		Token: token,
@@ -114,7 +181,7 @@ func buildFCMMessage(token string, payload PushPayload) fcmMessage {
 			},
 		},
 		APNS: &fcmAPNS{
-			Headers: map[string]string{"apns-priority": "10"},
+			Headers: headers,
 			Payload: &fcmAPNSPayload{Aps: aps},
 		},
 	}
@@ -283,6 +350,26 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 	const maxParallel = 8
 	sem := make(chan struct{}, maxParallel)
 	var wg sync.WaitGroup
+	var badgeMu sync.Mutex
+	badgeByUser := map[uuid.UUID]int{}
+	includeBadge := pushCountsForIconBadge(payload)
+	badgeFor := func(id uuid.UUID) int {
+		badgeMu.Lock()
+		if n, ok := badgeByUser[id]; ok {
+			badgeMu.Unlock()
+			return n
+		}
+		badgeMu.Unlock()
+		n := s.iosBadgeForUser(ctx, id)
+		badgeMu.Lock()
+		if prev, ok := badgeByUser[id]; ok {
+			badgeMu.Unlock()
+			return prev
+		}
+		badgeByUser[id] = n
+		badgeMu.Unlock()
+		return n
+	}
 	for _, tok := range tokens {
 		tok := tok
 		if strings.TrimSpace(tok.Token) == "" {
@@ -298,8 +385,14 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 				log.Printf("fcm: token: %v", err)
 				return
 			}
+			messagePayload := payload
+			if includeBadge {
+				if n := badgeFor(tok.UserID); n > 0 {
+					messagePayload.Badge = n
+				}
+			}
 			body, err := json.Marshal(fcmMessageRequest{
-				Message: buildFCMMessage(tok.Token, payload),
+				Message: buildFCMMessage(tok.Token, messagePayload),
 			})
 			if err != nil {
 				return

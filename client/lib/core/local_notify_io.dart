@@ -1,8 +1,11 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart' show Color;
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
+
+const _pushChannel = MethodChannel('com.zozugames/push');
 
 final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 var _ready = false;
@@ -97,7 +100,7 @@ Future<bool> requestLocalNotificationPermission() async {
           IOSFlutterLocalNotificationsPlugin>();
       final granted = await ios?.requestPermissions(
         alert: true,
-        badge: false,
+        badge: true,
         sound: true,
       );
       return granted ?? false;
@@ -121,6 +124,7 @@ Future<void> cancelAllLocalNotifications() async {
   if (!_ready) return;
   try {
     await _plugin.cancelAll();
+    await _iosClearDelivered(all: true);
   } catch (_) {}
 }
 
@@ -136,6 +140,7 @@ Future<void> cancelLocalNotificationsForTag(String tag) async {
   try {
     await _plugin.cancel(0, tag: t);
   } catch (_) {}
+  await _iosClearDelivered(tag: t);
 }
 
 Future<void> cancelLocalNotificationsForPath(String path, {String? tag}) async {
@@ -167,7 +172,7 @@ Future<void> showLocalNotification({
       presentBanner: true,
       presentList: true,
       presentSound: true,
-      presentBadge: false,
+      presentBadge: true,
       threadIdentifier: resolvedTag,
     ),
     android: AndroidNotificationDetails(
@@ -193,5 +198,69 @@ Future<void> showLocalNotification({
       details,
       payload: payload,
     );
+  } catch (_) {}
+}
+
+Future<void> _iosClearDelivered({
+  String? tag,
+  String? prefix,
+  bool all = false,
+  List<String> keep = const [],
+  List<String> tags = const [],
+}) async {
+  if (!Platform.isIOS || !localNotificationsSupported()) return;
+  try {
+    await _pushChannel.invokeMethod<void>('clearDelivered', {
+      'tag': tag ?? '',
+      'prefix': prefix ?? '',
+      'all': all,
+      'keep': keep,
+      'tags': tags,
+    });
+  } catch (_) {}
+}
+
+Future<void> _iosSetBadge(int count) async {
+  if (!Platform.isIOS || !localNotificationsSupported()) return;
+  try {
+    await _pushChannel.invokeMethod<void>('setBadge', {
+      'count': count < 0 ? 0 : count,
+    });
+  } catch (_) {}
+}
+
+/// Снимает с iPhone баннеры, которых в приложении уже нет, и ставит бейдж.
+/// [clearAll] — выход из аккаунта: вся шторка и ноль на иконке.
+/// Ноль в [badge] сам по себе шторку не трогает: список чатов мог ещё не прийти.
+Future<void> syncIosNotificationCenter({
+  required int badge,
+  bool applyBadge = false,
+  bool clearChatThreads = false,
+  List<String> keepChatTags = const [],
+  List<String> dropChatTags = const [],
+  bool clearFriendRequests = false,
+  bool clearGameInvites = false,
+  List<String> keepInviteTags = const [],
+  bool clearAll = false,
+}) async {
+  if (!Platform.isIOS || !localNotificationsSupported()) return;
+  try {
+    if (clearAll) {
+      if (_ready) await _plugin.cancelAll();
+      await _iosClearDelivered(all: true);
+      return;
+    }
+    if (clearChatThreads) {
+      await _iosClearDelivered(prefix: 'chat_', keep: keepChatTags);
+    } else if (dropChatTags.isNotEmpty) {
+      await _iosClearDelivered(tags: dropChatTags);
+    }
+    if (clearFriendRequests) {
+      await _iosClearDelivered(tag: 'friend_request');
+    }
+    if (clearGameInvites) {
+      await _iosClearDelivered(prefix: 'game_invite', keep: keepInviteTags);
+    }
+    if (applyBadge) await _iosSetBadge(badge);
   } catch (_) {}
 }

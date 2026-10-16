@@ -50,7 +50,10 @@ void main() {
       cats: const WebPushCategoryPrefs(),
     );
     expect(spec, isNotNull);
-    expect(spec!.url, '/chats/c1');
+    expect(
+      spec!.url,
+      '/chats/c1?name=${Uri.encodeQueryComponent('Алиса')}',
+    );
     expect(spec.tag, 'chat_c1');
     expect(spec.chatId, 'c1');
     expect(spec.title, 'Алиса');

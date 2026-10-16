@@ -183,6 +183,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   /// Выбор пользователя для этого чата; null — ещё не трогал переключатель.
   bool? _autoTranslatePref;
+  /// Пуш открывает чат без списка: подтягиваем собеседника, чтобы не писать «Диалог».
+  ChatPreviewItem? _fetchedChat;
   final Map<String, String> _translations = <String, String>{};
   bool _translateInFlight = false;
   String? _peerLanguageHint;
@@ -193,6 +195,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         actingAsUserId: widget.actingAsUserId,
         authUserId: ref.read(authStateProvider).valueOrNull?.id,
       );
+
+  Future<void> _fetchChatPreview() async {
+    final wanted = widget.chatID.trim();
+    if (wanted.isEmpty) return;
+    const pageSize = 100;
+    try {
+      for (var offset = 0; offset < 500; offset += pageSize) {
+        final chats = await ref.read(chatsRepositoryProvider).listChats(
+              limit: pageSize,
+              offset: offset,
+            );
+        if (!mounted || widget.chatID.trim() != wanted) return;
+        for (final chat in chats) {
+          if (chat.chatID != wanted) continue;
+          setState(() => _fetchedChat = chat);
+          return;
+        }
+        if (chats.length < pageSize) return;
+      }
+    } catch (_) {}
+  }
 
   void _markReadLocally(String chatId) {
     markChatReadInChatsCache(ref, chatId);
@@ -208,6 +231,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _scrollController.addListener(_onMessagesScroll);
     installKeepSoftKeyboardGuard();
     unawaited(_restoreAutoTranslatePref());
+    unawaited(_fetchChatPreview());
     _loadMessages(initial: true);
     unawaited(_loadCapabilities());
     // Сразу гасим бейдж таба при входе в чат (не ждём ответ markRead).
@@ -223,6 +247,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   void didUpdateWidget(covariant ChatRoomScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.chatID != widget.chatID) {
+      _fetchedChat = null;
       _messages = const [];
       _loading = true;
       _loadingOlder = false;
@@ -240,6 +265,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _autoTranslatePref = null;
       _peerLanguageHint = null;
       unawaited(_restoreAutoTranslatePref());
+      unawaited(_fetchChatPreview());
       _loadMessages(initial: true);
       unawaited(_loadCapabilities());
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2759,9 +2785,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final media = MediaQuery.of(context);
     final narrowLandscape =
         isNarrow(context) && media.size.width > media.size.height;
-    final routeTitle = (widget.peerName ?? '').trim().isEmpty
-        ? context.l10n.chatDialog
-        : widget.peerName!.trim();
+    final routeTitle = (widget.peerName ?? '').trim();
     final chats =
         ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
@@ -2774,6 +2798,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         break;
       }
     }
+    final fetched =
+        _fetchedChat?.chatID == widget.chatID ? _fetchedChat : null;
+    currentChat ??= fetched;
+    listPeer ??= fetched?.user;
     final peerUser = chatRoomPeerUser(
       actingAsUserId: widget.actingAsUserId,
       listPeer: listPeer,

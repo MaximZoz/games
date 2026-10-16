@@ -7,6 +7,12 @@ String devicePushPlatform() => devicePushPlatformName('android');
 
 Future<String?> ensureFcmToken() async => null;
 
+Future<Map<String, String>?> takeIosNotificationTap() async => null;
+
+void listenIosNotificationTaps(
+  void Function(Map<String, String> data) onTap,
+) {}
+
 Stream<String> fcmTokenRefresh() => const Stream.empty();
 
 Future<void> deleteFcmToken() async {}
