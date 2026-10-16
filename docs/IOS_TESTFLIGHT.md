@@ -101,7 +101,7 @@ API-ключ приложение не создаёт: `POST /v1/apps` отве�
 | `APPLE_TEAM_ID` | 10 символов Team ID |
 | `MATCH_PASSWORD` | придумай сам, сохрани |
 
-Сертификаты CI кладёт в ветку `match-certs` (зашифрованы `MATCH_PASSWORD`). Ветку не удаляй.
+Сертификаты CI кладёт в ветку `match-certs` (зашифрованы `MATCH_PASSWORD`). Это не ветка с кодом: там единственная копия ключа Apple Distribution. Ветку не удаляй. Если удалить, следующий прогон не найдёт сертификат, попытается создать новый и упрётся в лимит Apple (3 Distribution). `force_match` старый сертификат не отзывает.
 
 ## 5. Запустить заливку
 
@@ -186,7 +186,7 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `BEGIN PRIVATE KEY` / слишком короткий | в секрет попал Key ID или кусок без `BEGIN PRIVATE KEY`. Открой `.p8` целиком и обнови секрет карандашом |
 | `нет приложения` / `does not allow CREATE` | Bundle ID в Identifiers уже может быть. Нужна запись на [appstoreconnect.apple.com/apps](https://appstoreconnect.apple.com/apps) → **+** → New App → iOS. DEV: Bundle ID `com.zozugames.app.dev`, имя Zozu Games DEV, SKU `zozugames-dev`. Prod: `com.zozugames.app`, имя Zozu Games, SKU `zozugames`. Ключ это сделать не может |
 | `No value found for 'username'` у `produce` | старый прогон. `produce` из lane убран: в CI нет Apple ID |
-| `Could not create another … certificate` | в Developer → Certificates уже 3 Distribution; удали старый или Run с `force_match` |
+| `Could not create another … certificate` / `maximum number of available Distribution` | лимит Apple — 3 Distribution. Не жми `force_match` и не удаляй сертификаты вслепую. Верни ветку `match-certs`: в ней уже есть `.cer` и `.p12`. CI без этой ветки сам останавливается |
 | `readonly` / `No code signing identity` | не жми Re-run на старом прогоне. Actions → iOS TestFlight → **Run workflow** с `develop`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
 | `match` / git push | не удаляй ветку `match-certs`; у workflow есть `contents: write` |
