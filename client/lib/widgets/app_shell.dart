@@ -1150,41 +1150,51 @@ class AppShell extends ConsumerWidget {
                                 viewPadding: media.viewPadding,
                                 phoneLandscape: narrowLandscape,
                                 railVisible: railVisible,
+                                platform: Theme.of(context).platform,
                               ),
                             ),
                             child: _GamepadTabShoulders(
                               axis: Axis.vertical,
                               child: ExcludeFocus(
-                              child: NavigationRail(
-                      selectedIndex: selectedIndex,
-                      onDestinationSelected: navigateWithPrefetch,
-                      backgroundColor: Colors.transparent,
-                      selectedIconTheme:
-                          const IconThemeData(color: AppColors.accentStart),
-                      unselectedIconTheme:
-                          const IconThemeData(color: AppColors.textSecondary),
-                      labelType: narrowLandscape
-                          ? NavigationRailLabelType.none
-                          : NavigationRailLabelType.all,
-                      destinations: navItems.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final item = entry.value;
-                        return NavigationRailDestination(
-                          icon: _navIcon(
-                            item,
-                            unreadChats,
-                            incomingFriends,
-                            gamesMyTurn,
-                            gameInvitesCount,
-                            homeBadgeCount,
-                            selected: index == selectedIndex,
-                          ),
-                          label: Text(item.label),
-                        );
-                      }).toList(),
+                                child: MediaQuery.removePadding(
+                                  context: context,
+                                  removeLeft: narrowLandscape,
+                                  removeBottom: narrowLandscape,
+                                  child: NavigationRail(
+                                    minWidth: narrowLandscape ? 56 : null,
+                                    selectedIndex: selectedIndex,
+                                    onDestinationSelected: navigateWithPrefetch,
+                                    backgroundColor: Colors.transparent,
+                                    selectedIconTheme: const IconThemeData(
+                                      color: AppColors.accentStart,
+                                    ),
+                                    unselectedIconTheme: const IconThemeData(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    labelType: narrowLandscape
+                                        ? NavigationRailLabelType.none
+                                        : NavigationRailLabelType.all,
+                                    destinations:
+                                        navItems.asMap().entries.map((entry) {
+                                      final index = entry.key;
+                                      final item = entry.value;
+                                      return NavigationRailDestination(
+                                        icon: _navIcon(
+                                          item,
+                                          unreadChats,
+                                          incomingFriends,
+                                          gamesMyTurn,
+                                          gameInvitesCount,
+                                          homeBadgeCount,
+                                          selected: index == selectedIndex,
+                                        ),
+                                        label: Text(item.label),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
                         ),
                       ),
                     ),
