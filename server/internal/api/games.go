@@ -3299,15 +3299,14 @@ func (h *GamesHandler) CancelInvite(w http.ResponseWriter, r *http.Request, lobb
 	_ = json.NewEncoder(w).Encode(map[string]any{"cancelled": true})
 }
 
-// applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.
-// Только крестики-нолики — дурак/морской бой ходят через свои apply*Timeout.
+// applyGameTimeout — таймаут только крестиков-ноликов.
+// Чужой game_type (шашки и любая новая игра) иначе получал o_won
+// и уводил вкладку «Игры» на чужой экран.
 func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[string]string) bool {
 	if m["status"] != gameStatusActive {
 		return false
 	}
-	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType ||
-		m["game_type"] == pokerGameType || m["game_type"] == unoGameType ||
-		m["game_type"] == nardyGameType || m["game_type"] == dominoGameType {
+	if !tictactoeTimeoutApplies(m["game_type"]) {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -4433,6 +4432,18 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		}
 		return gid
 	}
+	if res, ok := classifyNonTictactoeActive(gm, userID.String()); ok {
+		switch res.Class {
+		case activeClassObserve:
+			moveActiveToObserving(ctx, h.Rdb, userID, gid)
+			return ""
+		case activeClassPlay:
+			return gid
+		default:
+			clearUserActiveGame(ctx, h.Rdb, userID)
+			return ""
+		}
+	}
 	mark := markForUserID(gm, userID.String())
 	if mark == "" {
 		clearUserActiveGame(ctx, h.Rdb, userID)
@@ -4859,6 +4870,8 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		}
 	} else if gt == battleshipGameType {
 		inGame = battleshipSide(m, userID.String()) != ""
+	} else if ret, ok := classifyNonTictactoeActive(m, userID.String()); ok {
+		inGame = ret.Class == activeClassPlay || ret.Class == activeClassObserve
 	} else {
 		inGame = markForUserID(m, userID.String()) != ""
 	}
@@ -4926,6 +4939,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == store.GameTypeChess {
 				h.applyChessTimeout(ctx, gameID, m)
+			} else if m["game_type"] == store.GameTypeCheckers {
+				h.applyCheckersTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -5120,6 +5135,40 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_type": store.GameTypeChess,
 					}
 				}
+			} else if gt := strings.TrimSpace(m["game_type"]); gt != "" && gt != store.GameTypeTicTacToe {
+				// Шашки и любая новая игра: тип берётся из хеша / RegisterActiveReturn,
+				// а не подменяется на крестики.
+				if res, ok := classifyNonTictactoeActive(m, userID.String()); ok {
+					switch res.Class {
+					case activeClassObserve:
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+					case activeClassClear:
+						clearUserActiveGame(ctx, h.Rdb, userID)
+					default:
+						active = map[string]any{
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"game_type":  res.GameType,
+							"is_my_turn": res.MyTurn,
+						}
+					}
+				} else {
+					myMark := markForUserID(m, userID.String())
+					if myMark == "" {
+						clearUserActiveGame(ctx, h.Rdb, userID)
+					} else if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+					} else {
+						active = map[string]any{
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"is_my_turn": m["turn"] == myMark,
+							"game_type":  gt,
+						}
+					}
+				}
 			} else {
 				myMark := markForUserID(m, userID.String())
 				if myMark == "" {
@@ -5133,7 +5182,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":    gameID,
 						"lobby_id":   m["lobby_id"],
 						"is_my_turn": m["turn"] == myMark,
-						"game_type":  "tictactoe",
+						"game_type":  store.GameTypeTicTacToe,
 					}
 				}
 			}

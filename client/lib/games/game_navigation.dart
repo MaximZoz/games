@@ -50,6 +50,104 @@ String? gameIdFromGamePath(String? location) =>
 String? gameTypeFromGamePath(String? location) =>
     gameRegistry.gameTypeFromPath(location);
 
+/// Путь лобби любой зарегистрированной игры, не только крестиков и дурака.
+bool isRegisteredLobbyPath(String path) {
+  final clean = path.split('?').first;
+  return _lobbyIdFromPath(clean) != null;
+}
+
+/// Если сервер прислал дефолт `tictactoe`, оставляем тип, который игра уже
+/// инжектнула (pin, прошлый active или путь сессии из реестра).
+///
+/// Пустой тип и `tictactoe` — единственные «не инжектнутые» значения.
+/// Новая игра попадает сюда через реестр, без отдельной ветки возврата.
+String keepInjectedGameType({
+  required String incoming,
+  String? injected,
+}) {
+  final raw = incoming.trim();
+  if (raw.isNotEmpty && raw != 'tictactoe') {
+    return gameRegistry.contains(raw) ? raw : normalizeGameType(raw);
+  }
+  final known = injected?.trim() ?? '';
+  if (gameRegistry.contains(known) && known != 'tictactoe') return known;
+  return 'tictactoe';
+}
+
+/// Склеивает ответ GetActive с типом, который экран уже знает.
+///
+/// Иначе шашки (и следующая новая игра) после вкладки «Сообщения»
+/// открывались как крестики с бесконечным лоадером.
+ActiveGameItem? mergeActiveReturn({
+  ActiveGameItem? incoming,
+  ActiveGameItem? previous,
+  String? pinnedGameId,
+  String? pinnedGameType,
+  String? sessionPath,
+}) {
+  if (incoming == null) return null;
+  final lobby = incoming.type == 'lobby';
+  final id = (lobby ? incoming.lobbyId : incoming.gameId)?.trim() ?? '';
+  if (id.isEmpty) return incoming;
+  final injected = _injectedReturnType(
+    id: id,
+    lobby: lobby,
+    previous: previous,
+    pinnedGameId: pinnedGameId,
+    pinnedGameType: pinnedGameType,
+    sessionPath: sessionPath,
+  );
+  final kept = keepInjectedGameType(
+    incoming: incoming.gameType,
+    injected: injected,
+  );
+  if (kept == incoming.gameType) return incoming;
+  return incoming.copyWith(gameType: kept);
+}
+
+String? _injectedReturnType({
+  required String id,
+  required bool lobby,
+  ActiveGameItem? previous,
+  String? pinnedGameId,
+  String? pinnedGameType,
+  String? sessionPath,
+}) {
+  if (!lobby) {
+    final pinId = pinnedGameId?.trim() ?? '';
+    final pinType = pinnedGameType?.trim() ?? '';
+    if (pinId == id &&
+        gameRegistry.contains(pinType) &&
+        pinType != 'tictactoe') {
+      return pinType;
+    }
+    final sessionId = gameIdFromGamePath(sessionPath);
+    final sessionType = gameTypeFromGamePath(sessionPath);
+    if (sessionId == id && sessionType != null && sessionType != 'tictactoe') {
+      return sessionType;
+    }
+  } else {
+    final clean = (sessionPath ?? '').split('?').first;
+    final sessionType = gameTypeFromGamePath(clean);
+    if (sessionType != null &&
+        sessionType != 'tictactoe' &&
+        _lobbyIdFromPath(clean) == id) {
+      return sessionType;
+    }
+  }
+  if (previous == null) return null;
+  final prevLobby = previous.type == 'lobby';
+  if (prevLobby != lobby) return null;
+  final prevId = (lobby ? previous.lobbyId : previous.gameId)?.trim() ?? '';
+  final prevType = previous.gameType.trim();
+  if (prevId == id &&
+      gameRegistry.contains(prevType) &&
+      prevType != 'tictactoe') {
+    return prevType;
+  }
+  return null;
+}
+
 /// Куда вести вкладку «Игры». `null` — остаться на [currentPath].
 ///
 /// Офлайн (`/games/<type>/offline`) и последняя живая партия важнее
@@ -65,18 +163,31 @@ String? resolveGamesTabPath({
   final pathGameId = gameIdFromGamePath(currentPath);
   final pinned = pinnedLiveGameId?.trim() ?? '';
   final observing = observingGameId?.trim() ?? '';
+  final effective = mergeActiveReturn(
+        incoming: active,
+        pinnedGameId: pinnedLiveGameId,
+        pinnedGameType: pinnedLiveGameType,
+        sessionPath: lastSessionPath,
+      ) ??
+      active;
 
   String? liveGameId;
   var liveGameType = 'tictactoe';
-  if (active != null &&
-      active.type == 'game' &&
-      (active.gameId?.trim().isNotEmpty ?? false)) {
-    liveGameId = active.gameId!.trim();
-    liveGameType = normalizeGameType(active.gameType);
+  if (effective != null &&
+      effective.type == 'game' &&
+      (effective.gameId?.trim().isNotEmpty ?? false)) {
+    liveGameId = effective.gameId!.trim();
+    liveGameType = normalizeGameType(effective.gameType);
   } else if (pinned.isNotEmpty) {
     liveGameId = pinned;
+    final sessionType = gameIdFromGamePath(lastSessionPath) == pinned
+        ? gameTypeFromGamePath(lastSessionPath)
+        : null;
+    final explicit = pinnedLiveGameType?.trim() ?? '';
     liveGameType = normalizeGameType(
-      pinnedLiveGameType ?? gameTypeFromGamePath(currentPath),
+      explicit.isNotEmpty
+          ? explicit
+          : (gameTypeFromGamePath(currentPath) ?? sessionType),
     );
   }
   if (liveGameId != null && liveGameId.isNotEmpty) {
@@ -85,9 +196,7 @@ String? resolveGamesTabPath({
     return dest;
   }
 
-  if (pathGameId != null &&
-      observing.isNotEmpty &&
-      pathGameId == observing) {
+  if (pathGameId != null && observing.isNotEmpty && pathGameId == observing) {
     return currentPath == '/games' ? null : '/games';
   }
 
@@ -100,24 +209,22 @@ String? resolveGamesTabPath({
     return last;
   }
 
-  if (active != null &&
-      active.type == 'lobby' &&
-      active.lobbyId != null &&
-      active.lobbyId!.isNotEmpty) {
+  if (effective != null &&
+      effective.type == 'lobby' &&
+      effective.lobbyId != null &&
+      effective.lobbyId!.isNotEmpty) {
     final dest = lobbyPathFor(
-      active.lobbyId!,
-      gameType: normalizeGameType(active.gameType),
+      effective.lobbyId!,
+      gameType: normalizeGameType(effective.gameType),
     );
     if (currentPath == dest || currentPath.startsWith(dest)) return null;
     return lobbyScreenPath(
-      active.lobbyId!,
-      gameType: normalizeGameType(active.gameType),
-      mode: active.mode,
+      effective.lobbyId!,
+      gameType: normalizeGameType(effective.gameType),
+      mode: effective.mode,
     );
   }
-  if (active == null &&
-      (currentPath.startsWith('/games/tictactoe/lobby/') ||
-          currentPath.startsWith('/games/durak/lobby/'))) {
+  if (effective == null && isRegisteredLobbyPath(currentPath)) {
     return null;
   }
   if (currentPath == '/games') return null;

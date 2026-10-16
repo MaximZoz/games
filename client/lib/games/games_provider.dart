@@ -8,6 +8,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/live_game_sync.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
@@ -398,17 +399,15 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
     if (id.isEmpty) return;
     _dismissed.add(id);
     _dropLocal(lobbyId);
-    state = state
-        .where((i) => i.lobbyId != id && i.lobbyId != lobbyId)
-        .toList();
+    state =
+        state.where((i) => i.lobbyId != id && i.lobbyId != lobbyId).toList();
   }
 
   void remove(String lobbyId) {
     _dropLocal(lobbyId);
     final id = lobbyId.trim();
-    state = state
-        .where((i) => i.lobbyId != id && i.lobbyId != lobbyId)
-        .toList();
+    state =
+        state.where((i) => i.lobbyId != id && i.lobbyId != lobbyId).toList();
   }
 
   void removeByCreatorId(String creatorId) {
@@ -621,34 +620,33 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   int get epoch => _epoch;
 
   void _applyObservation(ObservationItem? obs) {
-    // Не затирать durak/poker→tictactoe дефолтом.
+    // Дефолт tictactoe не затирает тип, который игра уже инжектнула.
     if (obs != null) {
       final prev = ref.read(observationGameProvider);
-      final incoming = normalizeGameType(obs.gameType);
-      if (prev != null && prev.gameId == obs.gameId) {
-        final prevGt = normalizeGameType(prev.gameType);
-        if ((prevGt == 'durak' || prevGt == 'poker') && incoming != prevGt) {
-          obs = ObservationItem(
-            gameId: obs.gameId,
-            lobbyId: obs.lobbyId ?? prev.lobbyId,
-            gameType: prevGt,
-          );
-        } else if (incoming != obs.gameType) {
-          obs = ObservationItem(
-            gameId: obs.gameId,
-            lobbyId: obs.lobbyId,
-            gameType: incoming,
-          );
-        }
-      } else if (incoming != obs.gameType) {
+      final same = prev != null && prev.gameId == obs.gameId;
+      final kept = keepInjectedGameType(
+        incoming: obs.gameType,
+        injected: same ? prev.gameType : null,
+      );
+      final lobbyId = obs.lobbyId ?? (same ? prev.lobbyId : null);
+      if (kept != obs.gameType || lobbyId != obs.lobbyId) {
         obs = ObservationItem(
           gameId: obs.gameId,
-          lobbyId: obs.lobbyId,
-          gameType: incoming,
+          lobbyId: lobbyId,
+          gameType: kept,
         );
       }
     }
     ref.read(observationGameProvider.notifier).state = obs;
+  }
+
+  ActiveGameItem? _mergeReturn(
+      ActiveGameItem? incoming, ActiveGameItem? previous) {
+    return mergeActiveReturn(
+      incoming: incoming,
+      previous: previous,
+      sessionPath: ref.read(lastGamesSessionPathProvider),
+    );
   }
 
   @override
@@ -702,7 +700,7 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
     }
     final session = await ref.read(gamesRepositoryProvider).getActiveSession();
     _applyObservation(session.observation);
-    return session.active;
+    return _mergeReturn(session.active, null);
   }
 
   /// Обновить с сервера, не обнуляя кэш на время запроса (гард join не «слепнет»).
@@ -721,8 +719,9 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
       final session =
           await ref.read(gamesRepositoryProvider).getActiveSession();
       _applyObservation(session.observation);
-      state = AsyncValue.data(session.active);
-      return session.active;
+      final merged = _mergeReturn(session.active, previousData);
+      state = AsyncValue.data(merged);
+      return merged;
     } catch (e, st) {
       if (previousData != null) {
         state = AsyncValue.data(previousData);

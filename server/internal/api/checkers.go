@@ -15,6 +15,40 @@ import (
 	"github.com/google/uuid"
 )
 
+func init() {
+	RegisterActiveReturn(store.GameTypeCheckers, checkersActiveReturn)
+}
+
+// checkersActiveReturn — возврат на стол шашек с вкладки «Сообщения».
+// Без этого GetActive отдавал game_type=tictactoe, и клиент открывал
+// крестики с бесконечным лоадером.
+func checkersActiveReturn(hash map[string]string, userID string) (ActiveReturn, bool) {
+	if strings.TrimSpace(hash["game_type"]) != store.GameTypeCheckers {
+		return ActiveReturn{}, false
+	}
+	players := parsePlayerIDsCSV(hash["player_ids"])
+	if len(players) == 0 {
+		return ActiveReturn{}, false
+	}
+	if !stringSliceContains(players, userID) {
+		return ActiveReturn{Clear: true}, true
+	}
+	seat := simple1v1SeatOf(players, userID)
+	state, err := checkers.Decode(hash["state"])
+	if err != nil || hash["status"] != gameStatusActive {
+		actor, aerr := strconv.Atoi(strings.TrimSpace(hash["turn_actor_idx"]))
+		myTurn := aerr == nil && hash["status"] == gameStatusActive && seat >= 0 && seat == actor
+		return ActiveReturn{Play: true, MyTurn: myTurn}, true
+	}
+	if state.IsOver() {
+		return ActiveReturn{Play: true, MyTurn: false}, true
+	}
+	return ActiveReturn{
+		Play:   true,
+		MyTurn: seat >= 0 && seat == state.Turn,
+	}, true
+}
+
 func checkersSpec() simple1v1 {
 	return simple1v1{
 		gameType:      store.GameTypeCheckers,
