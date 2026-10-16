@@ -92,7 +92,10 @@ docker exec -it multigames-postgres psql -U multigames -d multigames -c "\dt"
   `daily_login_streak`, `referred_by`, `collection_income_claimed_at`,
   `email_verified_at`.
 - **`sessions`** — refresh-сессии: `id`, `user_id`, `refresh_token_hash`
-  (SHA-256), `expires_at`, `created_at`.
+  (SHA-256), `expires_at`, `created_at`, `previous_refresh_token_hash`,
+  `previous_refresh_valid_until`. У пользователя может быть несколько живых
+  сессий (телефон и веб). Предыдущий refresh принимается, пока не вышло
+  `previous_refresh_valid_until`.
 - **`oauth_accounts`** — привязки OAuth-провайдеров: `provider`
   (google/apple/yandex/vk), `provider_user_id`, `email`. `UNIQUE(provider, provider_user_id)`.
 - **`pending_registrations`** — незавершённые регистрации (до подтверждения

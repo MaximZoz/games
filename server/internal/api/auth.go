@@ -23,6 +23,10 @@ import (
 const (
 	accessTokenExpire  = 15 * time.Minute
 	refreshTokenExpire = 365 * 24 * time.Hour
+	// previousRefreshGrace — предыдущий refresh ещё принимается, если клиент
+	// не сохранил новый (ответ оборвался). Срок как у самой сессии: одно
+	// потерянное обновление не выкидывает на экран входа даже спустя месяцы.
+	previousRefreshGrace = refreshTokenExpire
 )
 
 type AuthHandler struct {
@@ -31,7 +35,7 @@ type AuthHandler struct {
 	Push      *WebPushSender
 	Mailer    *mailer.Mailer
 	OAuth     *OAuthConfig
-	Hub       *RealtimeHub // опционально: сброс WS на других устройствах
+	Hub       *RealtimeHub // опционально; сокеты при заморозке рвёт admin
 }
 
 type RegisterRequest struct {
@@ -266,25 +270,6 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenHash := refreshTokenHash(req.RefreshToken)
-	session, err := store.GetSessionByRefreshTokenHash(r.Context(), h.Pool, tokenHash)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			if rejectIfFrozen(w, r, h.Pool, userID) {
-				return
-			}
-			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
-			return
-		}
-		// Сбой БД — не разлогинивать клиента.
-		WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
-		return
-	}
-	if session.UserID != userID || time.Now().After(session.ExpiresAt) {
-		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
-		return
-	}
-
 	u, err := store.GetUserByID(r.Context(), h.Pool, userID)
 	if err != nil {
 		WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
@@ -300,30 +285,62 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire, session.ID)
+	now := time.Now()
+	tokenHash := refreshTokenHash(req.RefreshToken)
+	sessionID := uuid.Nil
+	if claims.SessionID != "" {
+		if parsed, parseErr := uuid.Parse(claims.SessionID); parseErr == nil {
+			sessionID = parsed
+		}
+	}
+	if sessionID == uuid.Nil {
+		found, findErr := store.FindSessionIDByPresentedRefresh(r.Context(), h.Pool, tokenHash, now)
+		if findErr != nil {
+			if errors.Is(findErr, pgx.ErrNoRows) {
+				if rejectIfFrozen(w, r, h.Pool, userID) {
+					return
+				}
+				WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+				return
+			}
+			WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
+			return
+		}
+		sessionID = found
+	}
+
+	accessToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, accessTokenExpire, sessionID)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	nextRefreshToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire, session.ID)
+	nextRefreshToken, err := auth.NewJWT(h.JWTSecret, u.ID, u.Email, refreshTokenExpire, sessionID)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
-	err = store.RotateSessionRefreshToken(
+	_, err = store.AcceptRefreshAndRotate(
 		r.Context(),
 		h.Pool,
-		session.ID,
+		sessionID,
+		userID,
+		tokenHash,
 		refreshTokenHash(nextRefreshToken),
-		time.Now().Add(refreshTokenExpire),
+		now.Add(refreshTokenExpire),
+		now.Add(previousRefreshGrace),
+		now,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, store.ErrRefreshTokenRejected) {
+			if rejectIfFrozen(w, r, h.Pool, userID) {
+				return
+			}
 			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 			return
 		}
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		// Сбой БД — не разлогинивать клиента.
+		WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
 		return
 	}
 
@@ -357,14 +374,9 @@ func (h *AuthHandler) issueSessionTokens(ctx context.Context, u *store.User) (
 	expiresIn int,
 	err error,
 ) {
-	// Один пользователь — одна сессия: сбросить остальные устройства.
-	_ = store.DeleteSessionsByUserID(ctx, h.Pool, u.ID)
-	if h.Hub != nil {
-		h.Hub.DisconnectUser(u.ID, map[string]any{
-			"type":    "session_replaced",
-			"message": "logged in elsewhere",
-		})
-	}
+	// Чужие устройства не сбрасываем: телефон и веб держат свои сессии.
+	// Иначе вход на одном из них выкидывает остальные на экран логина.
+	_ = store.DeleteExpiredSessionsByUserID(ctx, h.Pool, u.ID)
 
 	session, err := store.CreateSession(
 		ctx,

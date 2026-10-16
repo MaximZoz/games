@@ -384,7 +384,7 @@ class AppShell extends ConsumerWidget {
         next.whenData((event) {
           final type = event['type'];
           if (type == 'session_replaced' || type == 'account_frozen') {
-            // Другое устройство или заморозка — сессия на этом клиенте мертва.
+            // Заморозка или старый сервер, который гасил остальные устройства.
             unawaited(ref.read(authStateProvider.notifier).logout());
             return;
           }
