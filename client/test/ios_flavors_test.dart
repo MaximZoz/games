@@ -121,6 +121,8 @@ void main() {
     expect(workflow, contains('Select Xcode 26'));
     expect(workflow, contains('Xcode_26'));
     expect(workflow, contains('fastlane ios public_code'));
+    expect(workflow, contains('Нет ветки match-certs'));
+    expect(fastfile, contains('maximum number of available Distribution certificates'));
     expect(workflow, contains('runs-on: ubuntu-latest'));
     expect(workflow, contains('code_only:'));
     expect(File('../.github/workflows/ios-testflight-code.yml').existsSync(),
