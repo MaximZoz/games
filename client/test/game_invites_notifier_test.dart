@@ -152,4 +152,26 @@ void main() {
     );
     expect(merged, isEmpty);
   });
+
+  test('карточка со ссылки не пропадает, если сервер её не знает', () {
+    final link = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Zoz');
+    final now = DateTime(2026, 9, 3, 14, 0, 0);
+    final merged = mergeHydratedGameInvites(
+      snapshot: [link],
+      current: [link],
+      fromServer: const [],
+      localSeenAt: {'L1': now.subtract(const Duration(minutes: 2))},
+      now: now,
+      heldIds: {'L1'},
+    );
+    expect(merged.map((e) => e.lobbyId), ['L1']);
+  });
+
+  test('hold и resolveJoined снимают карточку', () {
+    final n = GameInvitesNotifier();
+    n.hold(invite(lobbyId: 'L1', creatorId: 'c1', name: 'Zoz'));
+    expect(n.state.map((e) => e.lobbyId), ['L1']);
+    n.resolveJoined('L1');
+    expect(n.state, isEmpty);
+  });
 }

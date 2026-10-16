@@ -20,8 +20,7 @@ import 'core/sfx.dart';
 import 'core/push_lobby_join.dart';
 import 'core/push_notification_nav_stub.dart'
     if (dart.library.html) 'core/push_notification_nav_web.dart'
-    if (dart.library.io) 'core/push_notification_nav_io.dart'
-    as push_nav;
+    if (dart.library.io) 'core/push_notification_nav_io.dart' as push_nav;
 import 'router.dart';
 import 'ui/app_theme.dart';
 import 'ui/widgets/css_safe_area.dart';
@@ -94,13 +93,9 @@ final _pushNotificationNavProvider = Provider<void>((ref) {
   var alive = true;
   push_nav.installPushNotificationNavigation((path) {
     unawaited(followNotificationPath(
-      ref: ref,
       go: router.go,
       path: path,
       isAlive: () => alive,
-      // Ссылка из браузера по-прежнему открывает экран гостя.
-      // Пуш на телефоне сразу входит в лобби.
-      joinLobby: !kIsWeb,
       currentLocation: () {
         try {
           return router.routerDelegate.currentConfiguration.uri.toString();
@@ -212,19 +207,23 @@ class MultiGamesApp extends ConsumerWidget {
         textTheme: _textThemeNoUnderline(ThemeData.light().textTheme),
         inputDecorationTheme: InputDecorationTheme(
           filled: false,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.input)),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.input)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.input),
             borderSide: const BorderSide(color: AppColors.accentSoft),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.input),
-            borderSide: const BorderSide(color: AppColors.accentStart, width: 2),
+            borderSide:
+                const BorderSide(color: AppColors.accentStart, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         filledButtonTheme: FilledButtonThemeData(style: AppButtonStyles.of()),
-        outlinedButtonTheme: OutlinedButtonThemeData(style: AppButtonStyles.of()),
+        outlinedButtonTheme:
+            OutlinedButtonThemeData(style: AppButtonStyles.of()),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: AppColors.textPrimary,

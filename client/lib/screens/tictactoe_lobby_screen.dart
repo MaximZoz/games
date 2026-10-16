@@ -10,8 +10,11 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/invite_link_entry.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
+import 'package:multigames_client/games/lobby_guest.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -86,6 +89,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   bool _isJoining = false;
   bool _linkCopied = false;
   bool _missingLobbyHandled = false;
+  bool _guestRedirected = false;
   bool _startingSearch = false;
   Timer? _chatsRefreshTimer;
   Timer? _linkCopiedTimer;
@@ -115,6 +119,13 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     // Не инвалидируем lobbyDetail здесь: invalidate → loading без данных →
     // мигание всего экрана при каждом remount (таб «Игры», query без mode).
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final lobby = ref.read(lobbyDetailProvider(widget.lobbyId)).valueOrNull;
+      final userId = ref.read(authStateProvider).valueOrNull?.id;
+      if (lobby != null && _isGuestInvite(lobby, userId)) {
+        _openInviteList(lobby);
+        return;
+      }
       // Deep-link / чат: если уже в другой партии — всплывашка и назад.
       if (await blockJoinIfBusyAsync(
         context,
@@ -125,9 +136,12 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
         return;
       }
       if (!mounted) return;
-      // Deep-link / push: пользователь уже открыл лобби — убрать карточку
-      // «Вас пригласили» и бейдж в табе «Игры».
-      ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
+      final fresh = ref.read(lobbyDetailProvider(widget.lobbyId)).valueOrNull;
+      final uid = ref.read(authStateProvider).valueOrNull?.id;
+      // Карточку «Вас пригласили» снимаем только у того, кто уже в столе.
+      if (fresh != null && _isKnownMember(fresh, uid)) {
+        ref.read(gameInvitesProvider.notifier).resolveJoined(widget.lobbyId);
+      }
       ref.invalidate(openLobbiesProvider);
       refreshChatsList(ref, force: true).catchError((_) {});
     });
@@ -144,32 +158,67 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     super.dispose();
   }
 
+  bool _linkAsksForInvite() {
+    if (widget.initialMode == 'invite') return true;
+    return widget.fromMessageId?.trim().isNotEmpty == true;
+  }
+
+  bool _isKnownMember(LobbyItem lobby, String? userId) {
+    final id = userId?.trim() ?? '';
+    if (id.isEmpty) return false;
+    return lobbyUserIsMember(
+      userId: id,
+      creatorId: lobby.creatorId,
+      playerIds: lobby.playerIds,
+      players: lobby.players,
+      opponentId: lobby.opponentId,
+    );
+  }
+
+  bool _isGuestInvite(LobbyItem lobby, String? userId) {
+    if (!_linkAsksForInvite()) return false;
+    final id = userId?.trim() ?? '';
+    if (id.isEmpty) return false;
+    return !_isKnownMember(lobby, id);
+  }
+
+  void _openInviteList(LobbyItem lobby) {
+    if (_guestRedirected || !mounted) return;
+    _guestRedirected = true;
+    _rememberGuestInvite(lobby);
+    context.go(gamesLobbiesTabLocation());
+  }
+
+  void _rememberGuestInvite(LobbyItem lobby) {
+    final card = waitingInviteCard(
+      lobbyId: lobby.id.isEmpty ? widget.lobbyId : lobby.id,
+      gameType: 'tictactoe',
+      status: lobby.status,
+      creatorId: lobby.creatorId,
+      creatorName: lobby.creatorName,
+      players: lobby.players,
+      turnTimeSec: lobby.turnTimeSec,
+      stakeBronze: lobby.stakeBronze,
+      maxPlayers: lobby.maxPlayers,
+      variant: lobby.variant,
+      gridSize: lobby.gridSize,
+      swapRule: lobby.swapRule,
+      firstMoveRestriction: lobby.firstMoveRestriction,
+    );
+    if (card == null) return;
+    ref.read(gameInvitesProvider.notifier).hold(card);
+  }
+
   @override
   Widget build(BuildContext context) {
     final lobbyAsync = ref.watch(lobbyDetailProvider(widget.lobbyId));
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final currentUser = ref.watch(authStateProvider).valueOrNull;
+    final lobbyNow = lobbyAsync.valueOrNull;
+    final guestInvite =
+        lobbyNow != null && _isGuestInvite(lobbyNow, currentUser?.id);
 
-    return LobbyGameNavigationWatcher(
-      lobbyId: widget.lobbyId,
-      onRealtimeEvent: (event) {
-        final type = event['type']?.toString();
-        // lobby_updated меняет состав — чаты не трогаем (badge обновится по chat_*).
-        if (type == 'chat_message' || type == 'chat_list_changed') {
-          refreshChatsList(ref, force: true).catchError((_) {});
-        }
-        if (type == 'invite_declined') {
-          final lobbyId = event['lobby_id']?.toString() ?? '';
-          final userId = event['user_id']?.toString() ?? '';
-          if (lobbyId == widget.lobbyId && userId.isNotEmpty && mounted) {
-            setState(() {
-              _invitedFriendIds.remove(userId);
-              _declinedFriendIds.add(userId);
-            });
-          }
-        }
-      },
-      child: SwipeBackScope(
+    final page = SwipeBackScope(
         enabled: !_isLeaving,
         onBack: () => _confirmLeaveLobby(context),
         child: Scaffold(
@@ -269,6 +318,18 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                       lobby.opponentId == uid);
               final isInviteMode = lobby.status == 'waiting_invite';
               final isMatchmakeMode = lobby.status == 'waiting_matchmake';
+              if (_isGuestInvite(lobby, uid)) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _openInviteList(lobby);
+                });
+                return const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.accentStart,
+                  ),
+                );
+              }
               final showMultiLobby = lobby.maxPlayers > 2;
               // Уже вступили (реванш / повторный заход) — не показываем «Войти в игру».
               final showInviteAccept = !isLobbyMember &&
@@ -450,7 +511,29 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
             },
           ),
         ),
-      ),
+      );
+
+    if (lobbyNow == null || guestInvite) return page;
+    return LobbyGameNavigationWatcher(
+      lobbyId: widget.lobbyId,
+      onRealtimeEvent: (event) {
+        final type = event['type']?.toString();
+        // lobby_updated меняет состав — чаты не трогаем (badge обновится по chat_*).
+        if (type == 'chat_message' || type == 'chat_list_changed') {
+          refreshChatsList(ref, force: true).catchError((_) {});
+        }
+        if (type == 'invite_declined') {
+          final lobbyId = event['lobby_id']?.toString() ?? '';
+          final userId = event['user_id']?.toString() ?? '';
+          if (lobbyId == widget.lobbyId && userId.isNotEmpty && mounted) {
+            setState(() {
+              _invitedFriendIds.remove(userId);
+              _declinedFriendIds.add(userId);
+            });
+          }
+        }
+      },
+      child: page,
     );
   }
 

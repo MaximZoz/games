@@ -119,11 +119,17 @@ List<GameInvite> mergeHydratedGameInvites({
   required Map<String, DateTime> localSeenAt,
   required DateTime now,
   Duration grace = kGameInviteHydrateGrace,
+  Set<String> heldIds = const {},
 }) {
   final next = List<GameInvite>.of(fromServer);
   final serverIds = {for (final inv in next) inv.lobbyId};
   for (final inv in current) {
     if (serverIds.contains(inv.lobbyId)) continue;
+    // Ссылка без записи на сервере: карточку держим, пока гость не решит.
+    if (heldIds.contains(inv.lobbyId)) {
+      next.add(inv);
+      continue;
+    }
     final wasKnown = snapshot.any((s) => s.lobbyId == inv.lobbyId);
     if (!wasKnown) {
       next.add(inv);
@@ -262,6 +268,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   GameInvitesNotifier() : super(const []);
 
   final Map<String, DateTime> _localSeenAt = {};
+  final Set<String> _held = {};
   Timer? _poll;
 
   void startPolling(
@@ -286,6 +293,14 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
     _localSeenAt[invite.lobbyId] = DateTime.now();
     if (state.any((i) => i.lobbyId == invite.lobbyId)) return;
     state = [...state, invite];
+  }
+
+  /// Карточка со ссылки: не стирать следующим опросом, если сервер её не знает.
+  void hold(GameInvite invite) {
+    final id = invite.lobbyId.trim();
+    if (id.isEmpty) return;
+    _held.add(id);
+    add(invite);
   }
 
   /// Подтянуть приглашения с сервера (reconnect / F5) — пока лобби ждёт.
@@ -336,6 +351,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
         fromServer: fromServer,
         localSeenAt: _localSeenAt,
         now: now,
+        heldIds: _held,
       );
       if (!gameInviteListsVisuallySame(state, next)) {
         state = next;
@@ -348,6 +364,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
 
   void remove(String lobbyId) {
     _localSeenAt.remove(lobbyId);
+    _held.remove(lobbyId);
     state = state.where((i) => i.lobbyId != lobbyId).toList();
   }
 
@@ -355,6 +372,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
     for (final inv in state) {
       if (inv.creatorId == creatorId) {
         _localSeenAt.remove(inv.lobbyId);
+        _held.remove(inv.lobbyId);
       }
     }
     state = state.where((i) => i.creatorId != creatorId).toList();
@@ -372,6 +390,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
     for (final inv in state) {
       if (inv.lobbyId == lobbyId || inv.creatorId == creatorId) {
         _localSeenAt.remove(inv.lobbyId);
+        _held.remove(inv.lobbyId);
       }
     }
     state = state
@@ -381,6 +400,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
 
   void clear() {
     _localSeenAt.clear();
+    _held.clear();
     state = [];
   }
 }

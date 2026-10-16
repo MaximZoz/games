@@ -32,7 +32,6 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
-import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/domino/domino_provider.dart';
@@ -4465,18 +4464,13 @@ class _ChatInviteCardGateState extends ConsumerState<_ChatInviteCardGate> {
   @override
   Widget build(BuildContext context) {
     if (!_alive) return const SizedBox.shrink();
-    // Пока проверяем — карточка видна; join/GetLobby сами дожмут 404/in_game.
+    // Пока проверяем — карточка видна; GetLobby дожимает 404/in_game.
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         _ChatInviteCard(
           link: widget.link,
           messageId: widget.messageId,
-          onExpired: () {
-            if (!_alive) return;
-            setState(() => _alive = false);
-            widget.onExpired();
-          },
         ),
         const SizedBox(height: 6),
         Row(
@@ -4538,266 +4532,17 @@ Future<bool> _isLobbyInviteExpired(WidgetRef ref, InviteLobbyLink link) async {
   }
 }
 
-class _ChatInviteCard extends ConsumerWidget {
+class _ChatInviteCard extends StatelessWidget {
   const _ChatInviteCard({
     required this.link,
     required this.messageId,
-    this.onExpired,
   });
 
   final InviteLobbyLink link;
   final String messageId;
-  final VoidCallback? onExpired;
-
-  Future<void> _acceptAndGo(BuildContext context, WidgetRef ref) async {
-    final lobbyId = link.lobbyId.trim();
-    if (lobbyId.isEmpty) {
-      if (await blockJoinIfBusyAsync(
-        context,
-        ref,
-        redirectToActive: true,
-      )) {
-        return;
-      }
-      if (context.mounted) context.go(link.appPathFromMessage(messageId));
-      return;
-    }
-    // Чат из партии: ?game=… — дождаться active, иначе join «проскакивает».
-    if (await blockJoinIfBusyAsync(
-      context,
-      ref,
-      targetLobbyId: lobbyId,
-      redirectToActive: true,
-    )) {
-      return;
-    }
-    // Тип из реестра (новые игры — после регистрации дескриптора).
-    final gameType = gameRegistry.contains(link.gameType)
-        ? link.gameType
-        : gameRegistry.normalizeId(link.gameType);
-    try {
-      if (gameType == 'durak') {
-        final result =
-            await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
-        if (!context.mounted) return;
-        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
-        if (result.joined &&
-            result.gameId != null &&
-            result.gameId!.isNotEmpty) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'game',
-                  gameId: result.gameId,
-                  gameType: 'durak',
-                ),
-              );
-          pinBlockingGame(ref, result.gameId!, gameType: 'durak');
-          context.go('/games/durak/game/${result.gameId}');
-          return;
-        }
-        if (result.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'durak',
-                ),
-              );
-          unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-          context.go('/games/durak/lobby/$lobbyId?mode=invite');
-          return;
-        }
-        context.go(link.appPathFromMessage(messageId));
-        return;
-      }
-      if (gameType == 'battleship') {
-        final result =
-            await ref.read(battleshipRepositoryProvider).joinLobby(lobbyId);
-        if (!context.mounted) return;
-        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
-        if (result.joined &&
-            result.gameId != null &&
-            result.gameId!.isNotEmpty) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'game',
-                  gameId: result.gameId,
-                  gameType: 'battleship',
-                ),
-              );
-          pinBlockingGame(ref, result.gameId!, gameType: 'battleship');
-          context.go('/games/battleship/game/${result.gameId}');
-          return;
-        }
-        if (result.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'battleship',
-                ),
-              );
-          unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-          context.go('/games/battleship/lobby/$lobbyId?mode=invite');
-          return;
-        }
-        context.go(link.appPathFromMessage(messageId));
-        return;
-      }
-      if (gameType == 'uno') {
-        final result = await ref.read(unoRepositoryProvider).joinLobby(lobbyId);
-        if (!context.mounted) return;
-        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
-        if (result.joined &&
-            result.gameId != null &&
-            result.gameId!.isNotEmpty) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'game',
-                  gameId: result.gameId,
-                  gameType: 'uno',
-                ),
-              );
-          pinBlockingGame(ref, result.gameId!, gameType: 'uno');
-          context.go('/games/uno/game/${result.gameId}');
-          return;
-        }
-        if (result.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'uno',
-                ),
-              );
-          unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-          context.go('/games/uno/lobby/$lobbyId?mode=invite');
-          return;
-        }
-        context.go(link.appPathFromMessage(messageId));
-        return;
-      }
-      if (gameType == 'domino') {
-        final result =
-            await ref.read(dominoRepositoryProvider).joinLobby(lobbyId);
-        if (!context.mounted) return;
-        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
-        if (result.joined &&
-            result.gameId != null &&
-            result.gameId!.isNotEmpty) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'game',
-                  gameId: result.gameId,
-                  gameType: 'domino',
-                ),
-              );
-          pinBlockingGame(ref, result.gameId!, gameType: 'domino');
-          context.go('/games/domino/game/${result.gameId}');
-          return;
-        }
-        if (result.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'domino',
-                ),
-              );
-          unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-          context.go('/games/domino/lobby/$lobbyId?mode=invite');
-          return;
-        }
-        context.go(link.appPathFromMessage(messageId));
-        return;
-      }
-      final result = await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
-      if (!context.mounted) return;
-      ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
-      if (result.joined && result.waitingMore) {
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(
-                type: 'lobby',
-                lobbyId: lobbyId,
-                gameType: 'tictactoe',
-              ),
-            );
-        ref.invalidate(lobbyDetailProvider(lobbyId));
-        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
-        return;
-      }
-      if (result.joined && result.gameId != null) {
-        context.go('/games/tictactoe/game/${result.gameId}');
-        return;
-      }
-      context.go(link.appPathFromMessage(messageId));
-    } on GamesException catch (e) {
-      if (!context.mounted) return;
-      // 409 при активной партии — только всплывашка; не уводить в старую по URL.
-      if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
-        final active = ref.read(activeGameProvider).valueOrNull;
-        showAppSnackBar(
-          context,
-          message: isFinishCurrentGameError(e) || hasBlockingActiveMatch(active)
-              ? finishCurrentGameMessage
-              : formatUserError(e),
-          kind: AppSnackKind.error,
-        );
-        if (active != null &&
-            (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
-          goToActiveSession(context, active);
-        }
-        return;
-      }
-      if (e.statusCode == 404 ||
-          (e.statusCode == 409 &&
-              e.message.toLowerCase().contains('already started'))) {
-        onExpired?.call();
-        showAppSnackBar(
-          context,
-          message: formatUserError(e),
-          kind: AppSnackKind.error,
-        );
-        return;
-      }
-      if (e.statusCode == 400 &&
-          e.message.toLowerCase().contains('not joinable')) {
-        onExpired?.call();
-        showAppSnackBar(
-          context,
-          message: formatUserError(e),
-          kind: AppSnackKind.error,
-        );
-        return;
-      }
-      showAppSnackBar(
-        context,
-        message: formatUserError(e),
-        kind: AppSnackKind.error,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      final active = ref.read(activeGameProvider).valueOrNull;
-      if (hasBlockingActiveMatch(active)) {
-        showAppSnackBar(
-          context,
-          message: finishCurrentGameMessage,
-          kind: AppSnackKind.error,
-        );
-        goToActiveSession(context, active!);
-        return;
-      }
-      showAppSnackBar(
-        context,
-        message: formatUserError(e),
-        kind: AppSnackKind.error,
-      );
-    }
-  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 280),
@@ -4805,8 +4550,8 @@ class _ChatInviteCard extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          // Сразу join + редирект в лобби (не оставляем «Войти в игру» вручную).
-          onTap: () => unawaited(_acceptAndGo(context, ref)),
+          // Не join: для двоих стол сразу становится партией.
+          onTap: () => context.go(link.appPathFromMessage(messageId)),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             decoration: BoxDecoration(

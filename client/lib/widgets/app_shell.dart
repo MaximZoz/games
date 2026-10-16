@@ -1511,7 +1511,17 @@ const double mobileBottomNavIconPadTop = 8;
 @visibleForTesting
 const double mobileBottomNavIconPadBottom = 6;
 
-class _MobileBottomNav extends StatelessWidget {
+/// Высота полосы иконок. Вся полоса и подпись под ней — одна зона нажатия,
+/// не маленький кружок вокруг глифа.
+const double _navIconBandHeight = 46;
+
+const double _navPillHeight = 34;
+
+const double _navIconSize = 26;
+
+/// Нижняя панель: иконки с переезжающей плашкой, как вкладки Telegram,
+/// и одна подпись снизу.
+class _MobileBottomNav extends StatefulWidget {
   const _MobileBottomNav({
     super.key,
     required this.selectedIndex,
@@ -1536,104 +1546,237 @@ class _MobileBottomNav extends StatelessWidget {
   final double hairlinesOpacity;
 
   @override
+  State<_MobileBottomNav> createState() => _MobileBottomNavState();
+}
+
+class _MobileBottomNavState extends State<_MobileBottomNav>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _move;
+  double _animFrom = 0;
+  double _animTo = 0;
+  double _dragCenter = 0;
+  var _dragging = false;
+  var _dragMoved = false;
+  int _pressedIndex = 0;
+  double _barWidth = 0;
+  int _count = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressedIndex = widget.selectedIndex;
+    _animFrom = widget.selectedIndex.toDouble();
+    _animTo = _animFrom;
+    _dragCenter = _animFrom;
+    _move = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      value: 1,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _MobileBottomNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedIndex != oldWidget.selectedIndex && !_dragging) {
+      _pressedIndex = widget.selectedIndex;
+      _goTo(widget.selectedIndex.toDouble());
+    }
+  }
+
+  @override
+  void dispose() {
+    _move.dispose();
+    super.dispose();
+  }
+
+  double _shownT() {
+    final t = Curves.easeOutCubic.transform(_move.value.clamp(0.0, 1.0));
+    return _animFrom + (_animTo - _animFrom) * t;
+  }
+
+  void _goTo(double target) {
+    final current = _dragging ? _dragCenter : _shownT();
+    _dragging = false;
+    _animFrom = current;
+    _animTo = target;
+    if ((current - target).abs() < 0.02) {
+      _move.value = 1;
+      setState(() {});
+      return;
+    }
+    _move.forward(from: 0);
+    setState(() {});
+  }
+
+  void _pointer(double x, {required bool commit}) {
+    final width = _barWidth;
+    final count = _count;
+    if (width <= 0 || count <= 0) return;
+    final slot = width / count;
+    final index = (x / slot).floor().clamp(0, count - 1);
+    setState(() {
+      _dragging = true;
+      _dragCenter = (x / slot - 0.5).clamp(0.0, (count - 1).toDouble());
+    });
+    if (commit || index != _pressedIndex) {
+      _pressedIndex = index;
+      widget.onTap(index);
+    }
+  }
+
+  void _endDrag() {
+    if (!_dragging) return;
+    _goTo(_pressedIndex.toDouble());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final navItems = _navItems(context, offline: offline);
-    final safeIndex = selectedIndex.clamp(0, navItems.length - 1);
-    final label = navItems[safeIndex].label;
+    final navItems = _navItems(context, offline: widget.offline);
+    final count = navItems.length;
+    final safeIndex = widget.selectedIndex.clamp(0, count - 1);
+    final active = _dragging ? _pressedIndex.clamp(0, count - 1) : safeIndex;
+    final label = navItems[active].label;
     return ExcludeFocus(
       child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(
-              top: mobileBottomNavIconPadTop,
-              bottom: mobileBottomNavIconPadBottom,
-            ),
-            child: _GamepadTabShoulders(
-              axis: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (var i = 0; i < navItems.length; i++)
-                    Expanded(
-                      child: ExcludeFocus(
-                        child: InkWell(
-                          onTap: () => onTap(i),
-                          customBorder: const CircleBorder(),
-                          child: Center(
-                            child: _navIcon(
-                              navItems[i],
-                              unreadChats,
-                              incomingFriends,
-                              gamesMyTurn,
-                              gameInvitesCount,
-                              homeBadgeCount,
-                              selected: i == safeIndex,
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: _GamepadTabShoulders(
+          axis: Axis.horizontal,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (details) {
+              _dragMoved = false;
+              _pointer(details.localPosition.dx, commit: true);
+            },
+            onTapUp: (_) => _endDrag(),
+            onTapCancel: () {
+              if (!_dragMoved) _endDrag();
+            },
+            onHorizontalDragStart: (details) {
+              _dragMoved = true;
+              _pointer(details.localPosition.dx, commit: false);
+            },
+            onHorizontalDragUpdate: (details) {
+              _dragMoved = true;
+              _pointer(details.localPosition.dx, commit: false);
+            },
+            onHorizontalDragEnd: (_) => _endDrag(),
+            onHorizontalDragCancel: _endDrag,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedBuilder(
+                  animation: _move,
+                  builder: (context, _) {
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final width = constraints.maxWidth;
+                        _barWidth = width;
+                        _count = count;
+                        final slot = count == 0 ? width : width / count;
+                        final pillWidth = (slot - 8).clamp(36.0, 56.0);
+                        final travel = _dragging ? _dragCenter : _shownT();
+                        final left = travel * slot + (slot - pillWidth) / 2;
+                        return SizedBox(
+                          height: _navIconBandHeight,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Positioned(
+                                left: left,
+                                top: (_navIconBandHeight - _navPillHeight) / 2,
+                                width: pillWidth,
+                                height: _navPillHeight,
+                                child: const DecoratedBox(
+                                  key: ValueKey('mobile-bottom-nav-pill'),
+                                  decoration: BoxDecoration(
+                                    color: Color(0x296366F1),
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(_navPillHeight / 2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  for (var i = 0; i < count; i++)
+                                    Expanded(
+                                      child: Center(
+                                        child: _navIcon(
+                                          navItems[i],
+                                          widget.unreadChats,
+                                          widget.incomingFriends,
+                                          widget.gamesMyTurn,
+                                          widget.gameInvitesCount,
+                                          widget.homeBadgeCount,
+                                          selected: i == active,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: Row(
+                    key: ValueKey(label),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Transform.translate(
+                        offset: const Offset(0, -3),
+                        child: Opacity(
+                          opacity: widget.hairlinesOpacity.clamp(0.0, 1.0),
+                          child: const BrandAccentHairline(
+                            width: 33,
+                            height: 2.5,
+                            side: BrandAccentHairlineSide.fadeOutsideLeft,
+                          ),
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, -2),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.2,
+                              color: AppColors.accentStart,
+                              height: 1.0,
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          // Симметричная подпись: линия — текст — линия (тот же стиль, что splash).
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 180),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            child: Row(
-              key: ValueKey(label),
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Чуть выше центра строки — visually на уровне середины букв.
-                Transform.translate(
-                  offset: const Offset(0, -3),
-                  child: Opacity(
-                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
-                    child: const BrandAccentHairline(
-                      width: 33,
-                      height: 2.5,
-                      side: BrandAccentHairlineSide.fadeOutsideLeft,
-                    ),
-                  ),
-                ),
-                Transform.translate(
-                  offset: const Offset(0, -2),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                        color: AppColors.accentStart,
-                        height: 1.0,
+                      Transform.translate(
+                        offset: const Offset(0, -3),
+                        child: Opacity(
+                          opacity: widget.hairlinesOpacity.clamp(0.0, 1.0),
+                          child: const BrandAccentHairline(
+                            width: 33,
+                            height: 2.5,
+                            side: BrandAccentHairlineSide.fadeOutsideRight,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                Transform.translate(
-                  offset: const Offset(0, -3),
-                  child: Opacity(
-                    opacity: hairlinesOpacity.clamp(0.0, 1.0),
-                    child: const BrandAccentHairline(
-                      width: 33,
-                      height: 2.5,
-                      side: BrandAccentHairlineSide.fadeOutsideRight,
-                    ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
-    ),
     );
   }
 }
@@ -1648,9 +1791,8 @@ Widget _navIcon(
   bool selected = false,
 }) {
   final iconColor = selected ? AppColors.accentStart : AppColors.textSecondary;
-  final iconSize = selected ? 28.0 : 22.0;
-  // Без рамки/заливки у активного — только цвет иконки.
-  final baseIcon = Icon(item.icon, color: iconColor, size: iconSize);
+  // Один размер у всех: плашка переезжает, глиф не прыгает под палец.
+  final baseIcon = Icon(item.icon, color: iconColor, size: _navIconSize);
 
   var badgeValue = 0;
   if (item.path == '/chats') {

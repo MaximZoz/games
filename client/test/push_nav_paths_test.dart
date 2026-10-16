@@ -12,7 +12,8 @@ void main() {
       pathFromTag('game_invite_uno:L9'),
       '/games/uno/lobby/L9?mode=invite',
     );
-    expect(tagFromPath('/games/durak/lobby/lobby1'), 'game_invite_durak:lobby1');
+    expect(
+        tagFromPath('/games/durak/lobby/lobby1'), 'game_invite_durak:lobby1');
     expect(
       tagFromPath('/games/uno/lobby/L9?mode=invite'),
       'game_invite_uno:L9',
@@ -27,7 +28,8 @@ void main() {
       '/chats/x',
     );
     expect(pathFromPushData({'chat_id': 'y'}), '/chats/y');
-    expect(pathFromPushData({'tag': 'friend_request'}), '/friends?tab=incoming');
+    expect(
+        pathFromPushData({'tag': 'friend_request'}), '/friends?tab=incoming');
   });
 
   test('имя из пуша попадает в шапку чата и не затирает чужой путь', () {
@@ -88,7 +90,8 @@ void main() {
   test('payload json и сырой path открывают тот же чат', () {
     expect(
       pathFromNotificationPayload(
-        encodeNotificationPayload(url: '/chats/42', tag: 'chat_42', chatId: '42'),
+        encodeNotificationPayload(
+            url: '/chats/42', tag: 'chat_42', chatId: '42'),
       ),
       '/chats/42',
     );
@@ -97,7 +100,8 @@ void main() {
 
   test('notificationIdForTag стабилен', () {
     expect(notificationIdForTag('chat_a'), notificationIdForTag('chat_a'));
-    expect(notificationIdForTag('chat_a'), isNot(notificationIdForTag('chat_b')));
+    expect(
+        notificationIdForTag('chat_a'), isNot(notificationIdForTag('chat_b')));
     expect(notificationIdForTag('chat_a'), greaterThanOrEqualTo(0));
   });
 
@@ -129,6 +133,36 @@ void main() {
       pushLobbyDestination(gameType: 'durak', lobbyId: '1', gameId: 'g2'),
       '/games/durak/game/g2',
     );
+  });
+
+  test('пуш приглашения открывает вкладку лобби, а не стол', () {
+    final opened =
+        notificationOpenPath('/games/tictactoe/lobby/abc?mode=invite');
+    final uri = Uri.parse('https://local.app$opened');
+    expect(uri.path, '/games');
+    expect(uri.queryParameters['tab'], 'lobbies');
+    expect(opened.contains('/lobby/'), isFalse);
+    expect(
+      notificationOpenPath('/chats/7?name=Ann'),
+      '/chats/7?name=Ann',
+    );
+    expect(notificationOpenPath('/games'), '/games');
+  });
+
+  test('повтор go отличает вкладку лобби от каталога игр', () {
+    expect(pushRouteReached('/games', '/games?tab=lobbies&r=1'), isFalse);
+    expect(
+      pushRouteReached('/games?tab=lobbies&r=1', '/games?tab=lobbies&r=1'),
+      isTrue,
+    );
+    expect(pushRouteReached('/games?tab=lobbies&r=1', '/games?tab=lobbies&r=2'),
+        isFalse);
+    expect(pushRouteReached('/chats/1', '/chats/1'), isTrue);
+    expect(pushRouteReached('/chats/1', '/chats/1?name=a'), isFalse);
+    expect(pushRouteReached('/chats/1?name=a', '/chats/1?name=a'), isTrue);
+    expect(
+        uriWantsGamesLobbiesTab(Uri.parse('/games?tab=lobbies&r=3')), isTrue);
+    expect(uriWantsGamesLobbiesTab(Uri.parse('/games')), isFalse);
   });
 
   test('тап iPhone по thread-id открывает чат, даже без url', () {
