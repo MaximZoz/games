@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/widgets/app_shell.dart';
 
 import 'test_locale.dart';
 import 'test_viewport.dart';
@@ -14,7 +15,29 @@ void main() {
     await openGuestProfileOnPhone(tester);
 
     expect(mobileBottomNav(), findsOneWidget);
-    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(68));
+    final nav = tester.getRect(mobileBottomNav());
+    final icon = tester.getRect(
+      find.descendant(
+        of: mobileBottomNav(),
+        matching: find.byIcon(Icons.person),
+      ),
+    );
+    final above = icon.top - nav.top;
+    // Сверху есть зазор, но бейдж (выступ 4px) остаётся внутри панели.
+    expect(above, greaterThanOrEqualTo(mobileBottomNavIconPadTop - 0.5));
+    expect(above, lessThan(14));
+    expect(icon.top - 4, greaterThanOrEqualTo(nav.top + 2));
+    final label = tester.getRect(
+      find.descendant(
+        of: mobileBottomNav(),
+        matching: find.text('Профиль'),
+      ),
+    );
+    // Подпись сдвинута на 2px вверх, поэтому видимый зазор чуть меньше паддинга.
+    final below = label.top - icon.bottom;
+    expect(below, greaterThanOrEqualTo(2));
+    expect(below, lessThan(14));
     expect(find.byType(BottomNavigationBar), findsNothing);
     expect(find.byType(NavigationRail), findsNothing);
     // Одна подпись — текущий таб (Профиль).
@@ -132,7 +155,7 @@ void main() {
     final scroll = tester.getRect(find.byType(Scrollable));
     // Раньше SafeArea повторял home indicator (~34) над уже стоящим меню.
     expect(nav.top - scroll.bottom, lessThan(8));
-    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(68));
   });
 
   testWidgets('Phone bottom nav does not clip a badge above the icons',
@@ -148,7 +171,7 @@ void main() {
       return true;
     });
     expect(clipsBadge, isFalse);
-    expect(tester.getSize(mobileBottomNav()).height, lessThan(52));
+    expect(tester.getSize(mobileBottomNav()).height, lessThan(68));
   });
 
   testWidgets('Phone bottom nav label follows selected tab', (tester) async {

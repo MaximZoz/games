@@ -1502,6 +1502,15 @@ class _GamepadTabShoulders extends StatelessWidget {
   }
 }
 
+/// Зазор над иконками нижнего меню. Бейдж счётчика выступает на 4px вверх,
+/// поэтому сверху оставляем запас, чтобы кружок не упирался в край панели.
+@visibleForTesting
+const double mobileBottomNavIconPadTop = 8;
+
+/// Зазор под иконками, перед подписью выбранной вкладки.
+@visibleForTesting
+const double mobileBottomNavIconPadBottom = 6;
+
 class _MobileBottomNav extends StatelessWidget {
   const _MobileBottomNav({
     super.key,
@@ -1537,31 +1546,37 @@ class _MobileBottomNav extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _GamepadTabShoulders(
-            axis: Axis.horizontal,
-            child: Row(
-              children: [
-                for (var i = 0; i < navItems.length; i++)
-                  Expanded(
-                    child: ExcludeFocus(
-                      child: InkWell(
-                        onTap: () => onTap(i),
-                        customBorder: const CircleBorder(),
-                        child: Center(
-                          child: _navIcon(
-                            navItems[i],
-                            unreadChats,
-                            incomingFriends,
-                            gamesMyTurn,
-                            gameInvitesCount,
-                            homeBadgeCount,
-                            selected: i == safeIndex,
+          Padding(
+            padding: const EdgeInsets.only(
+              top: mobileBottomNavIconPadTop,
+              bottom: mobileBottomNavIconPadBottom,
+            ),
+            child: _GamepadTabShoulders(
+              axis: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (var i = 0; i < navItems.length; i++)
+                    Expanded(
+                      child: ExcludeFocus(
+                        child: InkWell(
+                          onTap: () => onTap(i),
+                          customBorder: const CircleBorder(),
+                          child: Center(
+                            child: _navIcon(
+                              navItems[i],
+                              unreadChats,
+                              incomingFriends,
+                              gamesMyTurn,
+                              gameInvitesCount,
+                              homeBadgeCount,
+                              selected: i == safeIndex,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           // Симметричная подпись: линия — текст — линия (тот же стиль, что splash).
