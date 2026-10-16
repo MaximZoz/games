@@ -95,7 +95,7 @@ func localizedWhatsNew(ctx context.Context, lang string) string {
 	return strings.TrimSpace(tr)
 }
 
-func handleVersion(w http.ResponseWriter, r *http.Request) {
+func handleVersion(w http.ResponseWriter, r *http.Request, rdb *redis.Client) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusNoContent)
@@ -107,10 +107,15 @@ func handleVersion(w http.ResponseWriter, r *http.Request) {
 	}
 	lang := i18n.LangFromRequest(r)
 	id := effectiveBuildID()
-	payload := map[string]string{
+	payload := map[string]any{
 		"build_id":     id,
 		"latest_build": id,
 		"whats_new":    localizedWhatsNew(r.Context(), lang),
+	}
+	if rel, ok := api.LoadIOSTestFlightRelease(r.Context(), rdb); ok {
+		payload["ios_build_id"] = rel.BuildID
+		payload["ios_build_number"] = rel.BuildNumber
+		payload["ios_apple_id"] = rel.AppleID
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
@@ -515,7 +520,20 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/start", handleStart)
-	mux.HandleFunc("/api/version", handleVersion)
+	mux.HandleFunc("/api/version", func(w http.ResponseWriter, r *http.Request) {
+		handleVersion(w, r, rdb)
+	})
+	mux.Handle("/api/internal/ios-testflight", &api.IOSTestFlightReleaseHandler{
+		Rdb: rdb,
+		Notify: func() {
+			id := effectiveBuildID()
+			gamesBroadcaster.PublishAll(map[string]any{
+				"type":         "client_update_available",
+				"build_id":     id,
+				"latest_build": id,
+			})
+		},
+	})
 	mux.Handle("/api/auth/register", rateLimiter.Middleware("register", api.RateRegisterPer15Min, 15*time.Minute, http.HandlerFunc(authHandler.Register)))
 	mux.Handle("/api/auth/login", rateLimiter.Middleware("login", api.RateLoginPerMinute, time.Minute, http.HandlerFunc(authHandler.Login)))
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)

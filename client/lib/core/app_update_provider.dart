@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/app_play_update.dart';
 import 'package:multigames_client/core/app_reload.dart';
+import 'package:multigames_client/core/app_testflight_update.dart';
+import 'package:multigames_client/core/app_testflight_update_launch.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -13,6 +15,9 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 
 /// Маркер «источник обновления = Google Play» (не серверный BUILD_ID).
 const String kPlayStoreUpdateBuildMarker = 'play_store';
+
+/// Маркер «источник обновления = TestFlight» (не серверный BUILD_ID).
+const String kTestFlightUpdateBuildMarker = 'testflight';
 
 /// Состояние проверки версии клиента vs сервера.
 class AppUpdateState {
@@ -23,6 +28,7 @@ class AppUpdateState {
     this.deferredUntilGameEnd = false,
     this.dialogShown = false,
     this.bannerDismissed = false,
+    this.iosAppleId = '',
   });
 
   final String? latestBuild;
@@ -41,6 +47,9 @@ class AppUpdateState {
   /// Баннер «после партии» закрыли крестиком.
   final bool bannerDismissed;
 
+  /// Apple ID приложения в TestFlight. Пусто — открыть TestFlight без страницы.
+  final String iosAppleId;
+
   AppUpdateState copyWith({
     String? latestBuild,
     String? whatsNew,
@@ -48,6 +57,7 @@ class AppUpdateState {
     bool? deferredUntilGameEnd,
     bool? dialogShown,
     bool? bannerDismissed,
+    String? iosAppleId,
   }) {
     return AppUpdateState(
       latestBuild: latestBuild ?? this.latestBuild,
@@ -56,6 +66,7 @@ class AppUpdateState {
       deferredUntilGameEnd: deferredUntilGameEnd ?? this.deferredUntilGameEnd,
       dialogShown: dialogShown ?? this.dialogShown,
       bannerDismissed: bannerDismissed ?? this.bannerDismissed,
+      iosAppleId: iosAppleId ?? this.iosAppleId,
     );
   }
 }
@@ -126,6 +137,32 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
         return;
       }
 
+      // iPhone из TestFlight: только если CI записал более новую IPA.
+      // Серверный BUILD_ID меняется и без сборки — из-за него диалог был ложным,
+      // а кнопка ничего не ставила.
+      if (await supportsTestFlightUpdate()) {
+        final info = await _fetchVersionInfo();
+        if (info == null) return;
+        if (notes.isEmpty) notes = info.whatsNew;
+        final flightAvailable = iosTestFlightUpdateAvailable(
+          localBuildId: appBuildId,
+          localBuildNumber: iosBuildNumber,
+          remoteBuildId: info.iosBuildId,
+          remoteBuildNumber: info.iosBuildNumber,
+        );
+        if (flightAvailable) {
+          _setUpdateAvailable(
+            remote: kTestFlightUpdateBuildMarker,
+            notes: notes,
+            iosAppleId: info.iosAppleId,
+          );
+        } else if (state.updateAvailable &&
+            state.latestBuild == kTestFlightUpdateBuildMarker) {
+          state = const AppUpdateState();
+        }
+        return;
+      }
+
       var remote = latestBuild?.trim();
       if (remote == null || remote.isEmpty || notes.isEmpty) {
         final info = await _fetchVersionInfo();
@@ -158,13 +195,18 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
     }
   }
 
-  void _setUpdateAvailable({required String remote, required String notes}) {
+  void _setUpdateAvailable({
+    required String remote,
+    required String notes,
+    String iosAppleId = '',
+  }) {
     final inGame = _isInActiveGame();
     final newRemote = remote != state.latestBuild;
     if (!newRemote &&
         state.updateAvailable &&
         state.deferredUntilGameEnd == inGame &&
-        (notes.isEmpty || state.whatsNew == notes)) {
+        (notes.isEmpty || state.whatsNew == notes) &&
+        (iosAppleId.isEmpty || state.iosAppleId == iosAppleId)) {
       return;
     }
     state = AppUpdateState(
@@ -175,6 +217,7 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
       // Новый build — снова показать диалог.
       dialogShown: newRemote ? false : state.dialogShown,
       bannerDismissed: newRemote ? false : state.bannerDismissed,
+      iosAppleId: iosAppleId.isNotEmpty ? iosAppleId : state.iosAppleId,
     );
   }
 
@@ -202,8 +245,10 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
   }
 
   Future<void> applyUpdate() async {
-    // Android: Play In-App Update (или страница в Store). Web: hard reload.
+    // Android: Play In-App Update. iPhone: страница приложения в TestFlight.
+    // Web: hard reload.
     if (await applyPlayStoreUpdate()) return;
+    if (await applyTestFlightUpdate(state.iosAppleId)) return;
     await reloadApp();
   }
 
@@ -221,7 +266,14 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
     return false;
   }
 
-  Future<({String buildId, String whatsNew})?> _fetchVersionInfo() async {
+  Future<
+      ({
+        String buildId,
+        String whatsNew,
+        String iosBuildId,
+        int iosBuildNumber,
+        String iosAppleId,
+      })?> _fetchVersionInfo() async {
     final now = DateTime.now();
     // Не чаще раза в 15 с — защита от петли rebuild / частых WS reconnect.
     if (_lastHttpFetchAt != null &&
@@ -249,10 +301,16 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
       final latest = body['latest_build'] ?? body['build_id'];
       if (latest is! String || latest.trim().isEmpty) return null;
       final notes = body['whats_new'];
+      final iosId = body['ios_build_id'];
+      final iosNumber = body['ios_build_number'];
+      final iosApple = body['ios_apple_id'];
       _lastHttpFetchAt = now;
       return (
         buildId: latest.trim(),
         whatsNew: notes is String ? notes.trim() : '',
+        iosBuildId: iosId is String ? iosId.trim() : '',
+        iosBuildNumber: iosNumber is num ? iosNumber.toInt() : 0,
+        iosAppleId: iosApple is String ? iosApple.trim() : '',
       );
     } catch (_) {}
     return null;

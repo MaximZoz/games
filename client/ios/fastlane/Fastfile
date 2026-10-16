@@ -421,7 +421,8 @@ platform :ios do
         "--export-options-plist", export_plist,
         "--dart-define=API_BASE=#{api_base}",
         "--dart-define=BUILD_ID=#{build_id}",
-        "--dart-define=APP_VERSION=#{app_version}"
+        "--dart-define=APP_VERSION=#{app_version}",
+        "--dart-define=IOS_BUILD_NUMBER=#{build_number}"
       )
     end
 
@@ -471,6 +472,8 @@ platform :ios do
     app = Spaceship::ConnectAPI::App.find(bundle_id)
     UI.user_error!("Нет приложения #{bundle_id} в App Store Connect") if app.nil?
     UI.success("App Store Connect: #{bundle_id} id=#{app.id}")
+    apple_id_file = ENV["APPLE_APP_ID_FILE"].to_s
+    File.write(apple_id_file, app.id.to_s) unless apple_id_file.empty?
 
     loc_code, loc_json = tf_asc(:get, "/v1/betaAppLocalizations?filter[app]=#{app.id}")
     UI.message("betaAppLocalizations HTTP #{loc_code}")
