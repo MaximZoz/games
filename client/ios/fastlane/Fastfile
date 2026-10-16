@@ -303,6 +303,9 @@ def tf_ensure_associated_domains(bundle_id)
 end
 
 def tf_match_appstore(bundle_id:, api_key:, readonly:, force:)
+  # force обновляет профиль (новая capability). Новый Distribution
+  # match выпускает только если в match-certs нет пары .cer/.p12.
+  # У команды Apple лимит 3, четвёртый создать нельзя.
   match(
     type: "appstore",
     app_identifier: [bundle_id],
@@ -313,6 +316,17 @@ def tf_match_appstore(bundle_id:, api_key:, readonly:, force:)
     git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
     force: force
   )
+rescue StandardError => e
+  message = e.message.to_s
+  if message.include?("maximum number of available Distribution certificates")
+    UI.user_error!(
+      "Apple не выдаёт ещё один Distribution certificate: лимит 3 уже занят. " \
+      "Новый не создаём. Сертификат и ключ лежат в ветке match-certs — " \
+      "её нельзя удалять и не нужно жать force_match, чтобы «заменить» сертификат. " \
+      "Верни ветку match-certs на коммит с certs/distribution. docs/IOS_TESTFLIGHT.md"
+    )
+  end
+  raise
 end
 
 def tf_decode_mobileprovision(path)
@@ -475,7 +489,8 @@ platform :ios do
         "--export-options-plist", export_plist,
         "--dart-define=API_BASE=#{api_base}",
         "--dart-define=BUILD_ID=#{build_id}",
-        "--dart-define=APP_VERSION=#{app_version}"
+        "--dart-define=APP_VERSION=#{app_version}",
+        "--dart-define=IOS_BUILD_NUMBER=#{build_number}"
       )
     end
 
@@ -525,6 +540,8 @@ platform :ios do
     app = Spaceship::ConnectAPI::App.find(bundle_id)
     UI.user_error!("Нет приложения #{bundle_id} в App Store Connect") if app.nil?
     UI.success("App Store Connect: #{bundle_id} id=#{app.id}")
+    apple_id_file = ENV["APPLE_APP_ID_FILE"].to_s
+    File.write(apple_id_file, app.id.to_s) unless apple_id_file.empty?
 
     loc_code, loc_json = tf_asc(:get, "/v1/betaAppLocalizations?filter[app]=#{app.id}")
     UI.message("betaAppLocalizations HTTP #{loc_code}")

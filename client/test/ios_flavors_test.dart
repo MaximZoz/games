@@ -84,6 +84,10 @@ void main() {
           reason: 'workflow must require $secret');
     }
     expect(fastfile, contains('upload_to_testflight'));
+    expect(fastfile, contains('--dart-define=IOS_BUILD_NUMBER=#{build_number}'));
+    expect(fastfile, contains('APPLE_APP_ID_FILE'));
+    expect(workflow, contains('/api/internal/ios-testflight'));
+    expect(info, contains('itms-beta'));
     expect(fastfile, contains('lane :public_code'));
     expect(fastfile, contains('public_link_enabled'));
     expect(fastfile, contains('TESTFLIGHT_CODE'));
@@ -121,6 +125,8 @@ void main() {
     expect(workflow, contains('Select Xcode 26'));
     expect(workflow, contains('Xcode_26'));
     expect(workflow, contains('fastlane ios public_code'));
+    expect(workflow, contains('Нет ветки match-certs'));
+    expect(fastfile, contains('maximum number of available Distribution certificates'));
     expect(workflow, contains('runs-on: ubuntu-latest'));
     expect(workflow, contains('code_only:'));
     expect(File('../.github/workflows/ios-testflight-code.yml').existsSync(),

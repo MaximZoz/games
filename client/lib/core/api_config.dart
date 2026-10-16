@@ -8,6 +8,12 @@ const String _apiBaseUrlRaw =
 const String appBuildId =
     String.fromEnvironment('BUILD_ID', defaultValue: 'dev');
 
+/// Номер сборки TestFlight (`--dart-define=IOS_BUILD_NUMBER=...`). 0 — не IPA.
+const int iosBuildNumber = int.fromEnvironment(
+  'IOS_BUILD_NUMBER',
+  defaultValue: 0,
+);
+
 /// Человекочитаемая версия для UI (CI: `--dart-define=APP_VERSION=0.1.0-prod.12+10012`).
 /// Если не задана — показываем [appBuildId] (web/local → часто `dev`).
 const String _appVersionRaw =
