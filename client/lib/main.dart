@@ -17,6 +17,7 @@ import 'core/local_notify.dart';
 import 'core/haptics.dart';
 import 'core/settings_provider.dart';
 import 'core/sfx.dart';
+import 'core/push_lobby_join.dart';
 import 'core/push_notification_nav_stub.dart'
     if (dart.library.html) 'core/push_notification_nav_web.dart'
     if (dart.library.io) 'core/push_notification_nav_io.dart'
@@ -90,10 +91,29 @@ TextTheme _textThemeNoUnderline(TextTheme base) {
 /// Клик по push (PWA SW или Android FCM/локальный баннер) → go_router.
 final _pushNotificationNavProvider = Provider<void>((ref) {
   final router = ref.watch(goRouterProvider);
+  var alive = true;
   push_nav.installPushNotificationNavigation((path) {
-    router.go(path);
+    unawaited(followNotificationPath(
+      ref: ref,
+      go: router.go,
+      path: path,
+      isAlive: () => alive,
+      // Ссылка из браузера по-прежнему открывает экран гостя.
+      // Пуш на телефоне сразу входит в лобби.
+      joinLobby: !kIsWeb,
+      currentLocation: () {
+        try {
+          return router.routerDelegate.currentConfiguration.uri.toString();
+        } catch (_) {
+          return '';
+        }
+      },
+    ));
   });
-  ref.onDispose(push_nav.uninstallPushNotificationNavigation);
+  ref.onDispose(() {
+    alive = false;
+    push_nav.uninstallPushNotificationNavigation();
+  });
 });
 
 /// Без Material-ползунка поверх списков (чат, друзья, поиск и т.д.).

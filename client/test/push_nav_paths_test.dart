@@ -105,4 +105,36 @@ void main() {
     expect(pathsMatch('/chats/1', '/chats/1?x=1'), isTrue);
     expect(pathsMatch('/chats/1', '/chats/2'), isFalse);
   });
+
+  test('пуш в лобби отличается от чата и ведёт в комнату, не в гостя', () {
+    expect(lobbyRouteFromPath('/chats/abc'), isNull);
+    expect(lobbyRouteFromPath('/games'), isNull);
+    final route = lobbyRouteFromPath('/games/uno/lobby/L9?mode=invite');
+    expect(route?.gameType, 'uno');
+    expect(route?.lobbyId, 'L9');
+    expect(
+      pushLobbyDestination(gameType: 'uno', lobbyId: 'L9'),
+      '/games/uno/lobby/L9?mode=invite',
+    );
+    expect(
+      pushLobbyDestination(
+        gameType: 'uno',
+        lobbyId: 'L9',
+        gameId: 'g1',
+        waitingMore: true,
+      ),
+      '/games/uno/lobby/L9?mode=invite',
+    );
+    expect(
+      pushLobbyDestination(gameType: 'durak', lobbyId: '1', gameId: 'g2'),
+      '/games/durak/game/g2',
+    );
+  });
+
+  test('тап iPhone по thread-id открывает чат, даже без url', () {
+    expect(
+      pathFromIosTap({'tag': 'chat_42', 'title': 'Аня'}),
+      '/chats/42?name=${Uri.encodeQueryComponent('Аня')}',
+    );
+  });
 }

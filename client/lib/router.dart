@@ -20,6 +20,7 @@ import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/screens/home_screen.dart';
 import 'package:multigames_client/screens/inventory_screen.dart';
 import 'package:multigames_client/screens/login_screen.dart';
@@ -261,9 +262,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // Перезагрузка / обновление PWA: всегда вкладка «Игры» (не чаты/друзья/…).
+      // Тап по пушу уже выбрал чат или лобби — не возвращать на «Игры».
       if (user != null && !startupGate.done) {
         startupGate.done = true;
-        if (!_preserveStartupPath(path) && path != '/games') {
+        if (!pushOpenedRouteRecently() &&
+            !_preserveStartupPath(path) &&
+            path != '/games') {
           return '/games';
         }
       }
