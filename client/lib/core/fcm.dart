@@ -5,6 +5,8 @@ export 'fcm_types.dart';
 
 bool fcmSupported() => impl.fcmSupported();
 
+String devicePushPlatform() => impl.devicePushPlatform();
+
 Future<String?> ensureFcmToken() => impl.ensureFcmToken();
 
 Stream<String> fcmTokenRefresh() => impl.fcmTokenRefresh();

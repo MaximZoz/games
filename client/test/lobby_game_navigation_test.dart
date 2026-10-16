@@ -25,6 +25,9 @@ void main() {
           lobbyDetailProvider.overrideWith(
             (ref, lobbyId) => pendingLobby.future,
           ),
+          // Реальный recovery ходит в SharedPreferences и оставляет
+          // двухсекундный таймер после ухода с лобби.
+          lobbyGameRecoveryProvider.overrideWith((ref, lobbyId) async => null),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),

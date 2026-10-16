@@ -16,6 +16,25 @@ void main() {
     expect(shouldShowAndroidTrayBanner(AppLifecycleState.inactive), isFalse);
   });
 
+  test('на iPhone баннер и в inactive: до paused событие часто не доживает', () {
+    expect(
+      shouldShowPhoneTrayBanner(AppLifecycleState.inactive, ios: true),
+      isTrue,
+    );
+    expect(
+      shouldShowPhoneTrayBanner(AppLifecycleState.inactive, ios: false),
+      isFalse,
+    );
+    expect(
+      shouldShowPhoneTrayBanner(AppLifecycleState.resumed, ios: true),
+      isFalse,
+    );
+    expect(
+      shouldShowPhoneTrayBanner(AppLifecycleState.paused, ios: true),
+      isTrue,
+    );
+  });
+
   test('chat_message даёт url/tag как PWA', () {
     final spec = mapAndroidNotifyEvent(
       {

@@ -32,6 +32,13 @@ bool shouldShowAndroidTrayBanner(AppLifecycleState state) {
   }
 }
 
+/// iOS часто остаётся в [AppLifecycleState.inactive], когда приложение уже
+/// ушло с экрана (свайп домой), и до paused баннер не успевает.
+bool shouldShowPhoneTrayBanner(AppLifecycleState state, {required bool ios}) {
+  if (ios && state == AppLifecycleState.inactive) return true;
+  return shouldShowAndroidTrayBanner(state);
+}
+
 AndroidNotifySpec? mapAndroidNotifyEvent(
   Map<String, dynamic> event, {
   required String? meId,

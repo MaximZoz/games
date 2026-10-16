@@ -1,6 +1,9 @@
+import 'package:multigames_client/core/device_push_platform.dart';
 import 'package:multigames_client/core/fcm_types.dart';
 
 bool fcmSupported() => false;
+
+String devicePushPlatform() => devicePushPlatformName('android');
 
 Future<String?> ensureFcmToken() async => null;
 
