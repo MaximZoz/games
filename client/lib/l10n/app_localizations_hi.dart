@@ -422,6 +422,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get commonClose => 'बंद करें';
 
   @override
+  String get openInApp => 'ऐप में खोलें';
+
+  @override
   String get commonRetry => 'फिर से कोशिश करें';
 
   @override

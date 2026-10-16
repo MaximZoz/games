@@ -422,6 +422,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonClose => '关闭';
 
   @override
+  String get openInApp => '在应用中打开';
+
+  @override
   String get commonRetry => '重试';
 
   @override

@@ -661,4 +661,12 @@ Authorization: Bearer <access_token>   // опционально
 
 ```
 GET /api/start      // → "go start"   (healthcheck для Fly.io)
+GET /.well-known/assetlinks.json
+GET /.well-known/apple-app-site-association
+GET /apple-app-site-association
 ```
+
+`assetlinks.json` и `apple-app-site-association` — не SPA. Их отдаёт сервер
+как `application/json` без редиректа. Файлы появляются, когда заданы
+`ANDROID_APP_LINK_SHA256` и `APPLE_TEAM_ID` (см. `.env.example`). Иначе `404`,
+чтобы проверка Apple/Google не закэшировала HTML.

@@ -194,6 +194,7 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |
 | `doesn't include the com.apple.developer.applesignin` | Bundle ID был создан раньше capability. CI включает Sign in with Apple и пересобирает профиль. Не жми Re-run старого прогона — дождись вливания в `develop` |
 | `aps-environment` / Push | CI включает Push Notifications и пересобирает профиль. Если ошибка осталась — Identifiers → Push Notifications → Enable, затем Run workflow → `force_match` |
+| `associated-domains` / Associated Domains | CI включает capability и пересобирает профиль. Домен в entitlement: `applinks:zozugames.com`. На Fly нужен `APPLE_TEAM_ID`, иначе `apple-app-site-association` отвечает 404 и ссылка остаётся в Safari |
 
 Лог Actions: job **release**, шаг **Build IPA and upload to TestFlight**.
 

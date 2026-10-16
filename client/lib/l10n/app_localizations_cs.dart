@@ -422,6 +422,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get commonClose => 'Zavřít';
 
   @override
+  String get openInApp => 'Otevřít v aplikaci';
+
+  @override
   String get commonRetry => 'Zkusit znovu';
 
   @override

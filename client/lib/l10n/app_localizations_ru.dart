@@ -422,6 +422,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonClose => 'Закрыть';
 
   @override
+  String get openInApp => 'Открыть в приложении';
+
+  @override
   String get commonRetry => 'Повторить';
 
   @override

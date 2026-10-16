@@ -422,6 +422,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get commonClose => 'Chiudi';
 
   @override
+  String get openInApp => 'Apri nell\'app';
+
+  @override
   String get commonRetry => 'Riprova';
 
   @override

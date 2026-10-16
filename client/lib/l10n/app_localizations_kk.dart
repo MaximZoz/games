@@ -422,6 +422,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get commonClose => 'Жабу';
 
   @override
+  String get openInApp => 'Қолданбада ашу';
+
+  @override
   String get commonRetry => 'Қайталау';
 
   @override

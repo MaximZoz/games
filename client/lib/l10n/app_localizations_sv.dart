@@ -422,6 +422,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get commonClose => 'Stäng';
 
   @override
+  String get openInApp => 'Öppna i appen';
+
+  @override
   String get commonRetry => 'Försök igen';
 
   @override

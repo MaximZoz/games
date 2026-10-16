@@ -422,6 +422,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonClose => 'Đóng';
 
   @override
+  String get openInApp => 'Mở trong ứng dụng';
+
+  @override
   String get commonRetry => 'Thử lại';
 
   @override

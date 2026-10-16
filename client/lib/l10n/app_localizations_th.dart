@@ -422,6 +422,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get commonClose => 'ปิด';
 
   @override
+  String get openInApp => 'เปิดในแอป';
+
+  @override
   String get commonRetry => 'ลองอีกครั้ง';
 
   @override

@@ -422,6 +422,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get commonClose => 'Zamknij';
 
   @override
+  String get openInApp => 'Otwórz w aplikacji';
+
+  @override
   String get commonRetry => 'Ponów';
 
   @override

@@ -19,6 +19,7 @@ import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
+import 'package:multigames_client/core/native_app_link.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/games/invite_link_entry.dart';
@@ -201,6 +202,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshListenable,
     observers: [chatsRouteObserver, GameFlyOverlayObserver()],
     redirect: (context, state) async {
+      // Custom scheme иногда приходит без ведущего /games — иначе холодный
+      // старт по ссылке приглашения открывает каталог, а не лобби.
+      final rewritten = externalAppLinkRedirect(state.uri);
+      if (rewritten != null) return rewritten;
+
       final path = state.uri.path;
       final isPublic = _publicPaths.contains(path);
       final needsAuth = _authRequiredPaths.contains(path) ||

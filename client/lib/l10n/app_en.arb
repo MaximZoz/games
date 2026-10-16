@@ -185,6 +185,7 @@
   "commonReply": "Reply",
   "commonSend": "Send",
   "commonClose": "Close",
+  "openInApp": "Open in the app",
   "commonRetry": "Retry",
   "commonLoading": "Loading…",
   "commonError": "Error",

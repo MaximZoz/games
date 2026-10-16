@@ -250,6 +250,58 @@ def tf_ensure_push_notifications(bundle_id)
   true
 end
 
+# Universal Links. Без capability match собирает профиль без associated-domains,
+# и ссылка приглашения остаётся в Safari.
+def tf_ensure_associated_domains(bundle_id)
+  require "uri"
+  query = URI.encode_www_form([["filter[identifier]", bundle_id], ["limit", "5"]])
+  _code, json = tf_asc(:get, "/v1/bundleIds?#{query}")
+  rows = json["data"]
+  rows = [] unless rows.is_a?(Array)
+  row = rows.find { |item| item.dig("attributes", "identifier") == bundle_id } || rows.first
+  if row.nil?
+    UI.user_error!(
+      "В Apple Developer нет Bundle ID #{bundle_id}. " \
+      "Identifiers → + → App ID и включи Associated Domains."
+    )
+  end
+  resource_id = row["id"]
+  _cap_code, cap_json = tf_asc(
+    :get,
+    "/v1/bundleIds/#{resource_id}?include=bundleIdCapabilities"
+  )
+  caps = cap_json["included"]
+  caps = [] unless caps.is_a?(Array)
+  if caps.any? { |cap| cap.dig("attributes", "capabilityType") == "ASSOCIATED_DOMAINS" }
+    UI.message("Associated Domains уже включены: #{bundle_id}")
+    return false
+  end
+  payload = {
+    data: {
+      type: "bundleIdCapabilities",
+      attributes: { capabilityType: "ASSOCIATED_DOMAINS" },
+      relationships: {
+        bundleId: { data: { type: "bundleIds", id: resource_id } }
+      }
+    }
+  }
+  post_code, = tf_asc(:post, "/v1/bundleIdCapabilities", payload)
+  if post_code == 409
+    UI.message("Associated Domains уже включены: #{bundle_id}")
+    return false
+  end
+  unless post_code.between?(200, 299)
+    UI.user_error!(
+      "Не удалось включить Associated Domains на #{bundle_id} (HTTP #{post_code}). " \
+      "Safari → developer.apple.com → Identifiers → #{bundle_id} → " \
+      "Associated Domains → Enable. Потом Actions → iOS TestFlight → " \
+      "Run workflow → force_match."
+    )
+  end
+  UI.success("Associated Domains включены: #{bundle_id}")
+  true
+end
+
 def tf_match_appstore(bundle_id:, api_key:, readonly:, force:)
   match(
     type: "appstore",
@@ -291,12 +343,13 @@ def tf_profile_has_apple_sign_in?(profile_name, bundle_id)
   UI.message("Профиль #{File.basename(path)}: #{keys.join(', ')}")
   has_apple = xml.include?("com.apple.developer.applesignin")
   has_push = xml.include?("aps-environment")
-  unless has_apple && has_push
+  has_domains = xml.include?("com.apple.developer.associated-domains")
+  unless has_apple && has_push && has_domains
     UI.important(
-      "Профиль без нужных entitlement: apple=#{has_apple} push=#{has_push}"
+      "Профиль без нужных entitlement: apple=#{has_apple} push=#{has_push} domains=#{has_domains}"
     )
   end
-  has_apple && has_push
+  has_apple && has_push && has_domains
 end
 
 default_platform(:ios)
@@ -343,11 +396,12 @@ platform :ios do
 
     apple_just_enabled = tf_ensure_sign_in_with_apple(bundle_id)
     push_just_enabled = tf_ensure_push_notifications(bundle_id)
+    domains_just_enabled = tf_ensure_associated_domains(bundle_id)
     tf_match_appstore(
       bundle_id: bundle_id,
       api_key: api_key,
       readonly: want_readonly,
-      force: !want_readonly && (apple_just_enabled || push_just_enabled || ENV["MATCH_FORCE"] == "true")
+      force: !want_readonly && (apple_just_enabled || push_just_enabled || domains_just_enabled || ENV["MATCH_FORCE"] == "true")
     )
 
     profile_env = "sigh_#{bundle_id}_appstore_profile-name"
@@ -355,7 +409,7 @@ platform :ios do
     profile_name = "match AppStore #{bundle_id}" if profile_name.nil? || profile_name.empty?
     UI.message("Provisioning profile: #{profile_name}")
     if !want_readonly && !tf_profile_has_apple_sign_in?(profile_name, bundle_id)
-      UI.important("Профиль без Sign in with Apple или Push — пересоздаю")
+      UI.important("Профиль без Sign in with Apple, Push или Associated Domains — пересоздаю")
       tf_match_appstore(
         bundle_id: bundle_id,
         api_key: api_key,
