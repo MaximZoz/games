@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "Pozvánky odeslány. Čekejte na odpověď.",
   "lobbyLinkCopiedHint": "Vložte ji do chatu nebo zprávy příteli",
   "lobbyCopyLinkHint": "Kopírovat odkaz do schránky",
-  "lobbyCreatorInvites": "{name} vás zve ke hře",
+  "lobbyCreatorInvites": "{name} vás zve ke hře {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

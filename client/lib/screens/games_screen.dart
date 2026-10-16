@@ -37,6 +37,7 @@ import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/games/games_gamepad.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/games/game_stake.dart';
+import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -300,6 +301,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     ref.listen<AsyncValue<ActiveGameItem?>>(activeGameProvider, (prev, next) {
       final active = next.valueOrNull;
       if (active == null) return;
+      // Пуш уже открыл чат или чужое лобби — не подменять своей «Своя игра».
+      if (pushOpenedRouteRecently()) return;
       final path =
           GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
       if (path != '/games') return;
@@ -378,6 +381,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             hasActiveLobby(activeSession))) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        if (pushOpenedRouteRecently()) return;
         final path =
             GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
         if (path != '/games') return;

@@ -124,7 +124,10 @@ final iosTraySyncProvider = Provider<void>((ref) {
   final keepInvites = <String>[
     for (final invite in invites)
       if (invite.lobbyId.trim().isNotEmpty)
-        'game_invite_${invite.lobbyId.trim()}',
+        gameInviteNotificationTag(
+          gameType: invite.gameType,
+          lobbyId: invite.lobbyId,
+        ),
   ];
   final badge = phoneNotificationBadge(
     chatsWithUnread: chatsReady ? keepChats.length : 0,

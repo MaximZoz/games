@@ -4,6 +4,7 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:web/web.dart' as web;
 
 typedef PushNotificationNavHandler = void Function(String path);
@@ -35,26 +36,7 @@ String _normalizeAppPath(String raw) {
 }
 
 /// Соответствует tagFromPath / pathFromTag в push-sw.js.
-String? _tagFromPath(String path) {
-  final p = _normalizeAppPath(path);
-  final chat = RegExp(r'^/chats/([^/?#]+)').firstMatch(p);
-  if (chat != null) return 'chat_${chat.group(1)}';
-  if (p == '/friends' || p.startsWith('/friends?') || p.startsWith('/friends/')) {
-    return 'friend_request';
-  }
-  final lobby = RegExp(
-    r'^/games/(tictactoe|durak|battleship|poker)/lobby/([^/?#]+)',
-  ).firstMatch(p);
-  if (lobby != null) return 'game_invite_${lobby.group(2)}';
-  final game = RegExp(
-    r'^/games/(tictactoe|durak|battleship|poker)/game/([^/?#]+)',
-  ).firstMatch(p);
-  if (game != null) return 'game_turn_${game.group(2)}';
-  if (p == '/coins/login' || p.startsWith('/coins/login?')) {
-    return 'daily_reward';
-  }
-  return null;
-}
+String? _tagFromPath(String path) => tagFromPath(path);
 
 void _postToPushSw(Map<String, Object?> payload) {
   try {
@@ -131,20 +113,10 @@ void _startHeartbeat() {
   });
 }
 
-int _pathSpecificity(String path) {
-  final p = _normalizeAppPath(path);
-  if (p.isEmpty || p == '/') return 0;
-  if (p == '/chats' || p == '/games' || p == '/friends') return 1;
-  if (RegExp(r'^/chats/[^/?#]+').hasMatch(p)) return 3;
-  if (RegExp(
-    r'^/games/(tictactoe|durak|battleship|poker)/(game|lobby)/[^/?#]+',
-  ).hasMatch(p)) {
-    return 3;
-  }
-  return 2;
-}
+int _pathSpecificity(String path) => pathSpecificity(path);
 
 void _navigateTo(String path, {String? tag}) {
+  if (_pathSpecificity(path) >= 2) markPushOpenedRoute();
   _onNavigate?.call(path);
   _askServiceWorkerClearNotifications(
     tag: tag ?? _tagFromPath(path),

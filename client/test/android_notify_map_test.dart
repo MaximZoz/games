@@ -97,8 +97,8 @@ void main() {
       meId: 'u1',
       cats: const WebPushCategoryPrefs(),
     );
-    expect(invite!.url, '/games/durak/lobby/L9');
-    expect(invite.tag, 'game_invite_L9');
+    expect(invite!.url, '/games/durak/lobby/L9?mode=invite');
+    expect(invite.tag, 'game_invite_durak:L9');
 
     final friend = mapAndroidNotifyEvent(
       {'type': 'friends_updated', 'incoming': true},

@@ -150,6 +150,10 @@ void main() {
     expect(app, contains('applicationIconBadgeNumber'));
     expect(app, contains('didReceive response'));
     expect(scene, contains('ZozuPush.rememberTap'));
+    expect(app, contains('"game_type"'));
+    expect(app, contains('"lobby_id"'));
+    expect(scene, contains('pendingOpenURLs'));
+    expect(scene, contains('NSUserActivityTypeBrowsingWeb'));
     expect(app, isNot(contains('binaryMessenger else')));
     expect(app, contains('ZozuFlutterViewController'));
     expect(app, contains('com.zozugames/apple_sign_in'));

@@ -83,12 +83,12 @@ AndroidNotifySpec? mapAndroidNotifyEvent(
     if (gameType.isEmpty) gameType = 'tictactoe';
     final url = lobbyId.isEmpty
         ? '/games'
-        : '/games/$gameType/lobby/$lobbyId';
+        : '/games/$gameType/lobby/$lobbyId?mode=invite';
     return AndroidNotifySpec(
       title: l10n.settingsPushGames,
       body: name.isNotEmpty ? name : l10n.settingsNotifications,
       url: url,
-      tag: lobbyId.isEmpty ? 'game_invite' : 'game_invite_$lobbyId',
+      tag: gameInviteNotificationTag(gameType: gameType, lobbyId: lobbyId),
     );
   }
   if (type == 'friends_updated') {

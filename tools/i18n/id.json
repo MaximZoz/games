@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Undangan terkirim. Menunggu respons.",
   "lobbyLinkCopiedHint": "Tempel di obrolan atau pesan ke teman",
   "lobbyCopyLinkHint": "Salin tautan ke papan klip",
-  "lobbyCreatorInvites": "{name} mengundang Anda bermain",
+  "lobbyCreatorInvites": "{name} mengundang Anda bermain {game}",
   "gameOpponentWon": "{name} menang",
   "gameOpponentWonTimeout": "Waktu habis. {name} menang",
   "gameSecondsLeft": "{seconds} d",

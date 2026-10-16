@@ -2479,8 +2479,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Link naar klembord kopiëren';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name nodigt je uit om te spelen';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name nodigt je uit om $game te spelen';
   }
 
   @override

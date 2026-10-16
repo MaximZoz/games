@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "초대가 전송되었습니다. 응답을 기다리는 중.",
   "lobbyLinkCopiedHint": "채팅이나 친구에게 보내는 메시지에 붙여넣으세요",
   "lobbyCopyLinkHint": "링크를 클립보드에 복사",
-  "lobbyCreatorInvites": "{name}님이 게임에 초대합니다",
+  "lobbyCreatorInvites": "{name}님이 {game} 게임에 초대합니다",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

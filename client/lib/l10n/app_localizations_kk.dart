@@ -2479,8 +2479,8 @@ class AppLocalizationsKk extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Сілтемені алмасу буферіне көшіру';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name сізді ойнауға шақырады';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name сізді $game ойнауға шақырады';
   }
 
   @override

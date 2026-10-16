@@ -73,7 +73,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     expect(find.text('Войти в игру'), findsWidgets);
-    expect(find.text('Хозяин приглашает вас сыграть'), findsOneWidget);
+    expect(find.text('Хозяин приглашает вас сыграть в Домино'), findsOneWidget);
     expect(find.text('Отправить ссылку на игру'), findsNothing);
     expect(find.text('Отправлено'), findsNothing);
     expect(find.text('Поиск игроков'), findsNothing);

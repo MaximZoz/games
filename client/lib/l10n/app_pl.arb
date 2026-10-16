@@ -1128,10 +1128,13 @@
   "lobbyInvitesSentWaiting": "Zaproszenia wysłane. Czekaj na odpowiedź.",
   "lobbyLinkCopiedHint": "Wklej go na czacie lub w wiadomości do znajomego",
   "lobbyCopyLinkHint": "Kopiuj link do schowka",
-  "lobbyCreatorInvites": "{name} zaprasza Cię do gry",
+  "lobbyCreatorInvites": "{name} zaprasza Cię do gry w {game}",
   "@lobbyCreatorInvites": {
     "placeholders": {
       "name": {
+        "type": "String"
+      },
+      "game": {
         "type": "String"
       }
     }

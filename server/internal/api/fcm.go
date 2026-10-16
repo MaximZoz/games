@@ -207,6 +207,12 @@ func fcmDataFromPayload(payload PushPayload) map[string]string {
 	if payload.ChatID != "" {
 		data["chat_id"] = payload.ChatID
 	}
+	if payload.GameType != "" {
+		data["game_type"] = payload.GameType
+	}
+	if payload.LobbyID != "" {
+		data["lobby_id"] = payload.LobbyID
+	}
 	return data
 }
 

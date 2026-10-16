@@ -2479,8 +2479,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lobbyCopyLinkHint => '复制链接到剪贴板';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name 邀请您一起玩';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name 邀请您一起玩$game';
   }
 
   @override

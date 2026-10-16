@@ -89,6 +89,25 @@ function stripQueryHash(path) {
   return p.slice(0, end) || '/';
 }
 
+/** Гость по ссылке: без mode=invite шапка лобби — «Своя игра». */
+function attachLobbyInviteMode(path) {
+  const p = String(path || '');
+  const bare = stripQueryHash(p);
+  if (!/^\/games\/[^/]+\/lobby\/[^/]+$/.test(bare)) return p;
+  if (/(^|[?&])mode=/.test(p)) return p;
+  return `${p}${p.includes('?') ? '&' : '?'}mode=invite`;
+}
+
+function attachChatPeerName(path, title) {
+  const p = String(path || '');
+  const bare = stripQueryHash(p);
+  if (!/^\/chats\/[^/]+$/.test(bare)) return p;
+  if (/(^|[?&])name=/.test(p)) return p;
+  const name = String(title || '').trim();
+  if (!name) return p;
+  return `${p}${p.includes('?') ? '&' : '?'}name=${encodeURIComponent(name)}`;
+}
+
 /** Fallback, когда iOS отдаёт пустой notification.data при клике. */
 function pathFromTag(tag) {
   const t = (tag && String(tag)) || '';
@@ -98,8 +117,17 @@ function pathFromTag(tag) {
   }
   if (t === 'friend_request') return '/friends?tab=incoming';
   if (t.startsWith('game_invite_')) {
-    const lobbyId = t.slice('game_invite_'.length);
-    return lobbyId ? `/games/tictactoe/lobby/${lobbyId}` : '/games';
+    const rest = t.slice('game_invite_'.length);
+    if (!rest) return '/games';
+    const colon = rest.indexOf(':');
+    if (colon > 0 && colon < rest.length - 1) {
+      const gt = rest.slice(0, colon);
+      const id = rest.slice(colon + 1);
+      if (/^[A-Za-z0-9_-]+$/.test(gt) && /^[A-Za-z0-9_-]+$/.test(id)) {
+        return `/games/${gt}/lobby/${id}?mode=invite`;
+      }
+    }
+    return `/games/tictactoe/lobby/${rest}`;
   }
   // game_turn_<gameId> — URL в payload предпочтителен; иначе вкладка «Игры».
   if (t.startsWith('game_turn_')) {
@@ -119,13 +147,9 @@ function tagFromPath(path) {
   if (p === '/friends' || p.startsWith('/friends?') || p.startsWith('/friends/')) {
     return 'friend_request';
   }
-  const lobby = p.match(
-    /^\/games\/(tictactoe|durak|battleship|poker)\/lobby\/([^/?#]+)/,
-  );
-  if (lobby && lobby[2]) return `game_invite_${lobby[2]}`;
-  const game = p.match(
-    /^\/games\/(tictactoe|durak|battleship|poker)\/game\/([^/?#]+)/,
-  );
+  const lobby = p.match(/^\/games\/([A-Za-z0-9_-]+)\/lobby\/([^/?#]+)/);
+  if (lobby && lobby[1] && lobby[2]) return `game_invite_${lobby[1]}:${lobby[2]}`;
+  const game = p.match(/^\/games\/([A-Za-z0-9_-]+)\/game\/([^/?#]+)/);
   if (game && game[2]) return `game_turn_${game[2]}`;
   if (p === '/coins/login' || p.startsWith('/coins/login?')) {
     return 'daily_reward';
@@ -184,11 +208,25 @@ function resolveClickPath(notification) {
   const chatId = data.chat_id != null ? String(data.chat_id).trim() : '';
   const fromChatId = chatId ? `/chats/${chatId}` : null;
 
+  const gameType = data.game_type != null ? String(data.game_type).trim() : '';
+  const lobbyId = data.lobby_id != null ? String(data.lobby_id).trim() : '';
+  const fromLobby =
+    /^[A-Za-z0-9_-]+$/.test(gameType) && /^[A-Za-z0-9_-]+$/.test(lobbyId)
+      ? `/games/${gameType}/lobby/${lobbyId}`
+      : null;
+  const title = data.title != null ? String(data.title) : '';
+
   if (dataUrl && dataUrl !== '/' && dataUrl !== '/chats') {
-    return appPathFromUrl(resolveTargetUrl(dataUrl));
+    return attachChatPeerName(
+      attachLobbyInviteMode(appPathFromUrl(resolveTargetUrl(dataUrl))),
+      title,
+    );
   }
-  if (fromTag && fromTag !== '/chats') return fromTag;
-  if (fromChatId) return fromChatId;
+  if (fromTag && fromTag !== '/chats') {
+    return attachChatPeerName(attachLobbyInviteMode(fromTag), title);
+  }
+  if (fromLobby) return attachLobbyInviteMode(fromLobby);
+  if (fromChatId) return attachChatPeerName(fromChatId, title);
   if (dataUrl === '/chats' || fromTag === '/chats') return '/chats';
   return null;
 }
@@ -199,7 +237,7 @@ function pathSpecificity(path) {
   if (!p || p === '/') return 0;
   if (p === '/chats' || p === '/games' || p === '/friends') return 1;
   if (/^\/chats\/[^/?#]+/.test(p)) return 3;
-  if (/^\/games\/tictactoe\/(game|lobby)\/[^/?#]+/.test(p)) return 3;
+  if (/^\/games\/[A-Za-z0-9_-]+\/(game|lobby)\/[^/?#]+/.test(p)) return 3;
   return 2;
 }
 
@@ -352,7 +390,7 @@ self.addEventListener('push', (event) => {
   const title = (data.title && String(data.title)) || 'Zozu Games';
   const body = data.body != null ? String(data.body) : '';
   const tag = data.tag || 'zozu';
-  const url = data.url || pathFromTag(tag) || '/';
+  const url = attachLobbyInviteMode(data.url || pathFromTag(tag) || '/');
   const chatId =
     data.chat_id != null && String(data.chat_id).trim()
       ? String(data.chat_id).trim()
@@ -362,10 +400,13 @@ self.addEventListener('push', (event) => {
     icon: '/icons/Icon-192.png?v=3',
     badge: '/icons/Icon-192.png?v=3',
     data: {
-      url: url,
+      url: attachChatPeerName(url, title),
       kind: data.kind || '',
       chat_id: chatId,
       tag: tag,
+      title: title,
+      game_type: data.game_type != null ? String(data.game_type) : '',
+      lobby_id: data.lobby_id != null ? String(data.lobby_id) : '',
     },
     tag: tag,
     renotify: true,

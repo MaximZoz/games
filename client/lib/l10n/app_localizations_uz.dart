@@ -2479,8 +2479,8 @@ class AppLocalizationsUz extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Havolani vaqtinchalik xotiraga nusxalash';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name sizni o‘ynashga taklif qiladi';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name sizni $game o‘ynashga taklif qiladi';
   }
 
   @override

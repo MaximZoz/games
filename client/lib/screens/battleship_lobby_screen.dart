@@ -345,6 +345,7 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
     );
     if (guest) {
       return LobbyInviteAcceptView(
+        gameType: 'battleship',
         creatorName: lobbyCreatorDisplayName(
           creatorId: lobby.creatorId,
           players: lobby.players,

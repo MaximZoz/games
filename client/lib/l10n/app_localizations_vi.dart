@@ -2479,8 +2479,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbyCopyLinkHint => 'Sao chép liên kết vào bộ nhớ tạm';
 
   @override
-  String lobbyCreatorInvites(String name) {
-    return '$name mời bạn chơi';
+  String lobbyCreatorInvites(String name, String game) {
+    return '$name mời bạn chơi $game';
   }
 
   @override

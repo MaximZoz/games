@@ -4772,8 +4772,8 @@ abstract class AppLocalizations {
   /// No description provided for @lobbyCreatorInvites.
   ///
   /// In ru, this message translates to:
-  /// **'{name} приглашает вас сыграть'**
-  String lobbyCreatorInvites(String name);
+  /// **'{name} приглашает вас сыграть в {game}'**
+  String lobbyCreatorInvites(String name, String game);
 
   /// No description provided for @gameOpponentWon.
   ///

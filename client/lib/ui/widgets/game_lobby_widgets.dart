@@ -7,6 +7,7 @@ import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show LobbyPlayer, formatStakeAmount, stakeCoinType; // stake — LobbyStakeChip
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -740,6 +741,7 @@ class LobbyInviteAcceptView extends StatelessWidget {
   const LobbyInviteAcceptView({
     super.key,
     required this.creatorName,
+    required this.gameType,
     required this.joining,
     required this.onJoin,
     this.rules,
@@ -749,6 +751,7 @@ class LobbyInviteAcceptView extends StatelessWidget {
   });
 
   final String creatorName;
+  final String gameType;
   final bool joining;
   final VoidCallback onJoin;
   final Widget? rules;
@@ -760,8 +763,9 @@ class LobbyInviteAcceptView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final name = creatorName.trim();
+    final game = localizedGameTypeName(gameType, l10n);
     final subtitle = name.isNotEmpty
-        ? l10n.lobbyCreatorInvites(name)
+        ? l10n.lobbyCreatorInvites(name, game)
         : l10n.lobbyInvitedToPlay;
     return Padding(
       padding: padding,

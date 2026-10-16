@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Шақырулар жіберілді. Жауап күтілуде.",
   "lobbyLinkCopiedHint": "Оны чатқа немесе досқа хабарламаға қойыңыз",
   "lobbyCopyLinkHint": "Сілтемені алмасу буферіне көшіру",
-  "lobbyCreatorInvites": "{name} сізді ойнауға шақырады",
+  "lobbyCreatorInvites": "{name} сізді {game} ойнауға шақырады",
   "gameOpponentWon": "{name} жеңді",
   "gameOpponentWonTimeout": "Уақыт бітті. {name} жеңді",
   "gameSecondsLeft": "{seconds} с",

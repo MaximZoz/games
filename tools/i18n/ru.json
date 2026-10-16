@@ -383,7 +383,7 @@
   "lobbyInvitesSentWaiting": "Приглашения отправлены. Ожидайте ответа.",
   "lobbyLinkCopiedHint": "Вставьте её в чат или сообщение другу",
   "lobbyCopyLinkHint": "Скопировать ссылку в буфер обмена",
-  "lobbyCreatorInvites": "{name} приглашает вас сыграть",
+  "lobbyCreatorInvites": "{name} приглашает вас сыграть в {game}",
   "gameOpponentWon": "Победил {name}",
   "gameOpponentWonTimeout": "Время вышло. Победил {name}",
   "gameSecondsLeft": "{seconds} с",
