@@ -3,6 +3,7 @@ import FirebaseCore
 import FirebaseMessaging
 import Flutter
 import UIKit
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -16,6 +17,21 @@ import UIKit
     // Живой messenger — в SceneDelegate / didBecomeActive.
     application.registerForRemoteNotifications()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    // UIScene кладёт холодный старт в connectionOptions, а тап по уже
+    // живому приложению — только сюда. Firebase этот вызов иногда не видит.
+    ZozuPush.rememberTap(response.notification.request.content.userInfo)
+    super.userNotificationCenter(
+      center,
+      didReceive: response,
+      withCompletionHandler: completionHandler
+    )
   }
 
   override func application(
@@ -38,13 +54,136 @@ enum ZozuPush {
       name: "com.zozugames/push",
       binaryMessenger: messenger
     )
+    self.channel = channel
     channel.setMethodCallHandler { call, result in
-      if call.method == "firebaseReady" {
+      switch call.method {
+      case "firebaseReady":
         apply()
         result(nil)
+      case "takeTap":
+        let tap = pendingTap
+        pendingTap = nil
+        result(tap)
+      case "clearDelivered":
+        let args = call.arguments as? [String: Any] ?? [:]
+        let tag = (args["tag"] as? String) ?? ""
+        let prefix = (args["prefix"] as? String) ?? ""
+        let all = (args["all"] as? Bool) ?? false
+        let keep = (args["keep"] as? [Any])?.compactMap { $0 as? String } ?? []
+        let tags = (args["tags"] as? [Any])?.compactMap { $0 as? String } ?? []
+        clearDelivered(tag: tag, prefix: prefix, all: all, keep: keep, tags: tags)
+        result(nil)
+      case "setBadge":
+        let args = call.arguments as? [String: Any] ?? [:]
+        let count = (args["count"] as? NSNumber)?.intValue ?? 0
+        setBadge(count)
+        result(nil)
+      case "refreshBadge":
+        refreshBadgeFromDelivered()
+        result(nil)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  static var channel: FlutterMethodChannel?
+  static var pendingTap: [String: String]?
+
+  static func rememberTap(_ userInfo: [AnyHashable: Any]) {
+    var out: [String: String] = [:]
+    func put(_ key: String, _ raw: Any?) {
+      if out[key] != nil { return }
+      let text: String
+      switch raw {
+      case let value as String:
+        text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+      case let value as NSNumber:
+        text = value.stringValue
+      default:
         return
       }
-      result(FlutterMethodNotImplemented)
+      if !text.isEmpty {
+        out[key] = text
+      }
+    }
+    for key in ["url", "tag", "chat_id", "title", "body", "payload"] {
+      put(key, userInfo[key])
+    }
+    put("url", userInfo["gcm.notification.url"])
+    if let aps = userInfo["aps"] as? [AnyHashable: Any] {
+      put("tag", aps["thread-id"])
+      if let alert = aps["alert"] as? [AnyHashable: Any] {
+        put("title", alert["title"])
+        put("body", alert["body"])
+      } else {
+        put("body", aps["alert"])
+      }
+    }
+    if out.isEmpty { return }
+    pendingTap = out
+    guard let channel = channel else { return }
+    channel.invokeMethod("notificationTap", arguments: out) { result in
+      let missed = result is FlutterError
+        || (result as? NSObject) == FlutterMethodNotImplemented
+      if missed { return }
+      if pendingTap == out {
+        pendingTap = nil
+      }
+    }
+  }
+
+  static func clearDelivered(
+    tag: String,
+    prefix: String,
+    all: Bool,
+    keep: [String] = [],
+    tags: [String] = []
+  ) {
+    let center = UNUserNotificationCenter.current()
+    if all {
+      center.removeAllDeliveredNotifications()
+      setBadge(0)
+      return
+    }
+    let keepSet = Set(keep)
+    let dropTags = Set(tags)
+    center.getDeliveredNotifications { notes in
+      let ids = notes.compactMap { note -> String? in
+        let thread = note.request.content.threadIdentifier
+        let info = note.request.content.userInfo
+        let infoTag = (info["tag"] as? String) ?? ""
+        let keys = [thread, infoTag].filter { !$0.isEmpty }
+        if keys.isEmpty { return nil }
+        if keys.contains(where: { keepSet.contains($0) }) { return nil }
+        let matchesTag = (!tag.isEmpty && keys.contains(tag))
+          || keys.contains { dropTags.contains($0) }
+        let matchesPrefix = !prefix.isEmpty && keys.contains { $0.hasPrefix(prefix) }
+        if matchesTag || matchesPrefix {
+          return note.request.identifier
+        }
+        return nil
+      }
+      if !ids.isEmpty {
+        center.removeDeliveredNotifications(withIdentifiers: ids)
+      }
+    }
+  }
+
+  static func setBadge(_ count: Int) {
+    let value = max(0, count)
+    DispatchQueue.main.async {
+      if #available(iOS 16.0, *) {
+        UNUserNotificationCenter.current().setBadgeCount(value) { _ in }
+      } else {
+        UIApplication.shared.applicationIconBadgeNumber = value
+      }
+    }
+  }
+
+  static func refreshBadgeFromDelivered() {
+    UNUserNotificationCenter.current().getDeliveredNotifications { notes in
+      setBadge(notes.count)
     }
   }
 

@@ -49,9 +49,9 @@ void _go(String raw, {String? tag}) {
 }
 
 void _goFromData(Map<String, String> data) {
-  final path = pathFromPushData(data);
+  final path = pathFromIosTap(data);
   if (path == null || path == '/') return;
-  _go(path, tag: data['tag']);
+  _go(path, tag: data['tag'] ?? tagFromPath(path));
 }
 
 void _onLocalPayload(String payload) {
@@ -71,6 +71,8 @@ void _onLocalPayload(String payload) {
 Future<void> _consumePendingLaunches() async {
   final local = await consumeLocalNotificationLaunchPayload();
   if (local != null) _onLocalPayload(local);
+  final native = await takeIosNotificationTap();
+  if (native != null) _goFromData(native);
   final fcm = await getInitialFcmMessage();
   if (fcm != null) _goFromData(fcm.data);
 }
@@ -79,6 +81,7 @@ void _ensureTapListeners() {
   if (_listeningTaps || !_phoneNavEnabled()) return;
   _listeningTaps = true;
   setLocalNotificationTapHandler(_onLocalPayload);
+  listenIosNotificationTaps(_goFromData);
   _openedSub = fcmOpenedAppMessages().listen((msg) => _goFromData(msg.data));
   _foregroundSub = fcmForegroundMessages().listen((msg) {
     final path = pathFromPushData(msg.data);

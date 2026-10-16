@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -69,7 +70,7 @@ AndroidNotifySpec? mapAndroidNotifyEvent(
     return AndroidNotifySpec(
       title: name.isNotEmpty ? name : l10n.settingsPushChat,
       body: body.trim().isEmpty ? l10n.settingsNotifications : body.trim(),
-      url: '/chats/$chatId',
+      url: attachChatPeerName('/chats/$chatId', name),
       tag: 'chat_$chatId',
       chatId: chatId,
     );

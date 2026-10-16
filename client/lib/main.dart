@@ -131,6 +131,7 @@ class MultiGamesApp extends ConsumerWidget {
     // Клик по push: navigate внутри SPA, без reload и splash.
     ref.watch(_pushNotificationNavProvider);
     ref.watch(androidNotifyBridgeProvider);
+    ref.watch(iosTraySyncProvider);
     final soundOn = ref.watch(soundEnabledProvider);
     Sfx.setEnabled(soundOn);
     Sfx.instance.setCategories(

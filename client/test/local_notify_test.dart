@@ -11,6 +11,12 @@ void main() {
     await cancelLocalNotificationsForTag('chat_x');
     await cancelLocalNotificationsForPath('/chats/x');
     await cancelAllLocalNotifications();
+    await syncIosNotificationCenter(
+      badge: 0,
+      applyBadge: true,
+      clearChatThreads: true,
+      keepChatTags: const ['chat_keep'],
+    );
     setLocalNotificationTapHandler((_) {});
     expect(await consumeLocalNotificationLaunchPayload(), isNull);
     expect(await requestLocalNotificationPermission(), isFalse);

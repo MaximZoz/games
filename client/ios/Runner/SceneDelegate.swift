@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   var window: UIWindow?
@@ -9,6 +10,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     willConnectTo session: UISceneSession,
     options connectionOptions: UIScene.ConnectionOptions
   ) {
+    if let response = connectionOptions.notificationResponse {
+      ZozuPush.rememberTap(response.notification.request.content.userInfo)
+    }
     attachZozuAuthChannels()
   }
 
