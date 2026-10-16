@@ -69,14 +69,29 @@ void main() {
   });
 
   group('landscapeRailLeadingInset', () {
-    test('альбом с рейлом: сдвигаем рейл от левой системной панели', () {
+    test('альбом с рейлом на Android: сдвигаем рейл от левой системной панели',
+        () {
       expect(
         landscapeRailLeadingInset(
           viewPadding: const EdgeInsets.only(left: 48, right: 24, top: 0),
           phoneLandscape: true,
           railVisible: true,
+          platform: TargetPlatform.android,
         ),
         48,
+      );
+    });
+
+    test('альбом с рейлом на iOS: кнопки меню прижаты к левому краю (inset = 0)',
+        () {
+      expect(
+        landscapeRailLeadingInset(
+          viewPadding: _iphoneLandscape,
+          phoneLandscape: true,
+          railVisible: true,
+          platform: TargetPlatform.iOS,
+        ),
+        0,
       );
     });
 
@@ -86,6 +101,7 @@ void main() {
           viewPadding: _iphoneLandscape,
           phoneLandscape: true,
           railVisible: false,
+          platform: TargetPlatform.android,
         ),
         0,
       );
@@ -97,6 +113,7 @@ void main() {
           viewPadding: const EdgeInsets.only(left: 48, top: 24),
           phoneLandscape: false,
           railVisible: true,
+          platform: TargetPlatform.android,
         ),
         0,
       );
@@ -140,5 +157,85 @@ void main() {
 
     expect(box.height, 393 - 21);
     expect(box.width, 852 - 59);
+  });
+
+  testWidgets(
+      'альбом iPhone: NavigationRail прижат к левому краю экрана (x = 0, ширина 56)',
+      (tester) async {
+    tester.view.physicalSize = const Size(852, 393);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    late Offset contentTopLeft;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(useMaterial3: true, platform: TargetPlatform.iOS),
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(852, 393),
+            viewPadding: _iphoneLandscape,
+            padding: _iphoneLandscape,
+          ),
+          child: Scaffold(
+            body: Builder(
+              builder: (context) {
+                final media = MediaQuery.of(context);
+                final narrowLandscape = isPhoneLandscape(context);
+                return Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: landscapeRailLeadingInset(
+                          viewPadding: media.viewPadding,
+                          phoneLandscape: narrowLandscape,
+                          railVisible: true,
+                          platform: Theme.of(context).platform,
+                        ),
+                      ),
+                      child: MediaQuery.removePadding(
+                        context: context,
+                        removeLeft: narrowLandscape,
+                        removeBottom: narrowLandscape,
+                        child: NavigationRail(
+                          minWidth: narrowLandscape ? 56 : null,
+                          selectedIndex: 0,
+                          labelType: NavigationRailLabelType.none,
+                          destinations: const [
+                            NavigationRailDestination(
+                              icon: Icon(Icons.home),
+                              label: Text('Главная'),
+                            ),
+                            NavigationRailDestination(
+                              icon: Icon(Icons.sports_esports),
+                              label: Text('Игры'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Builder(
+                        builder: (ctx) {
+                          return const SizedBox.expand(
+                            key: ValueKey('landscape-content'),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final railBox = tester.getRect(find.byType(NavigationRail));
+    contentTopLeft =
+        tester.getTopLeft(find.byKey(const ValueKey('landscape-content')));
+    expect(railBox.left, 0);
+    expect(railBox.width, 56);
+    expect(contentTopLeft.dx, 56);
   });
 }

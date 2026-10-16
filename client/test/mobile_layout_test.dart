@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
@@ -60,12 +61,28 @@ void main() {
 
   testWidgets('Phone landscape: NavigationRail instead of bottom nav',
       (tester) async {
-    setPhoneLandscape(tester);
-    await pumpMultiGamesApp(tester);
-    await goToProfileTab(tester);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      setPhoneLandscape(tester);
+      tester.view.viewPadding =
+          const FakeViewPadding(left: 59, right: 59, bottom: 21);
+      tester.view.padding =
+          const FakeViewPadding(left: 59, right: 59, bottom: 21);
+      addTearDown(tester.view.resetViewPadding);
+      addTearDown(tester.view.resetPadding);
 
-    expect(find.byType(NavigationRail), findsOneWidget);
-    expect(mobileBottomNav(), findsNothing);
+      await pumpMultiGamesApp(tester);
+      await goToProfileTab(tester);
+
+      expect(find.byType(NavigationRail), findsOneWidget);
+      expect(mobileBottomNav(), findsNothing);
+      // В альбоме на iPhone рейл прижат к левому краю (x = 0) и имеет ширину 56px.
+      final railRect = tester.getRect(find.byType(NavigationRail));
+      expect(railRect.left, 0);
+      expect(railRect.width, 56);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('Phone on login: bottom nav hidden', (tester) async {
