@@ -9,6 +9,19 @@ func userInvitesRedisKey(userID string) string {
 	return "user:" + userID + ":invites"
 }
 
+func lobbyDeclinedRedisKey(lobbyID string) string {
+	return "lobby:" + lobbyID + ":declined"
+}
+
+// pendingInviteVisible — карточка ещё ждёт ответа.
+// Отказ прячет её, даже если приглашение ещё числится в :invited.
+func pendingInviteVisible(invited bool, inviteTarget, userID string, declined bool) bool {
+	if declined || strings.TrimSpace(userID) == "" {
+		return false
+	}
+	return invited || strings.TrimSpace(inviteTarget) == userID
+}
+
 func lobbyIDFromInvitedKey(invitedKey string) string {
 	lobbyID := strings.TrimSuffix(strings.TrimPrefix(invitedKey, "lobby:"), ":invited")
 	if lobbyID == "" || lobbyID == invitedKey {

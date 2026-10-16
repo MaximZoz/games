@@ -1144,7 +1144,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await ref.read(battleshipRepositoryProvider).declineLobby(lobbyId);
     } catch (_) {}

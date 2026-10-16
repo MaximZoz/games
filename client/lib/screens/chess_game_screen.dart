@@ -565,7 +565,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await _repo.declineLobby(lobbyId);
     } catch (_) {}

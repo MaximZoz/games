@@ -1334,7 +1334,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
     } catch (_) {}

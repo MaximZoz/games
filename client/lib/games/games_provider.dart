@@ -111,7 +111,7 @@ const Duration kGameInvitesReconcileInterval = Duration(seconds: 5);
 const Duration kGameInviteHydrateGrace = Duration(seconds: 20);
 
 /// Сервер — база; локальные инвайты держим, если пришли во время GET
-/// или ещё в grace-окне после WS.
+/// или ещё в grace-окне после WS. Отказ важнее и GET, и ссылки.
 List<GameInvite> mergeHydratedGameInvites({
   required List<GameInvite> snapshot,
   required List<GameInvite> current,
@@ -120,10 +120,15 @@ List<GameInvite> mergeHydratedGameInvites({
   required DateTime now,
   Duration grace = kGameInviteHydrateGrace,
   Set<String> heldIds = const {},
+  Set<String> dismissedIds = const {},
 }) {
-  final next = List<GameInvite>.of(fromServer);
+  final next = <GameInvite>[
+    for (final inv in fromServer)
+      if (!dismissedIds.contains(inv.lobbyId)) inv,
+  ];
   final serverIds = {for (final inv in next) inv.lobbyId};
   for (final inv in current) {
+    if (dismissedIds.contains(inv.lobbyId)) continue;
     if (serverIds.contains(inv.lobbyId)) continue;
     // Ссылка без записи на сервере: карточку держим, пока гость не решит.
     if (heldIds.contains(inv.lobbyId)) {
@@ -231,7 +236,13 @@ final gameInvitesProvider =
       if (type == 'invite_cancelled') {
         final lobbyId = data['lobby_id']?.toString();
         if (lobbyId != null && lobbyId.isNotEmpty) {
-          notifier.remove(lobbyId);
+          // Свой отказ приходит и на другие устройства. Отмена хозяином
+          // не должна запретить позвать в этот стол ещё раз.
+          if (data['reason']?.toString() == 'declined') {
+            notifier.dismiss(lobbyId);
+          } else {
+            notifier.remove(lobbyId);
+          }
         }
         return;
       }
@@ -269,6 +280,10 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
 
   final Map<String, DateTime> _localSeenAt = {};
   final Set<String> _held = {};
+
+  /// Отказ от этого стола. Опрос, опоздавший WS и повторная ссылка
+  /// не возвращают карточку, пока не сменится сессия.
+  final Set<String> _dismissed = {};
   Timer? _poll;
 
   void startPolling(
@@ -290,15 +305,20 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   }
 
   void add(GameInvite invite) {
-    _localSeenAt[invite.lobbyId] = DateTime.now();
-    if (state.any((i) => i.lobbyId == invite.lobbyId)) return;
+    final id = invite.lobbyId.trim();
+    if (id.isEmpty) return;
+    // Новый кадр «пригласили» — хозяин зовёт снова. Сам опрос этого не делает.
+    _dismissed.remove(id);
+    _localSeenAt[id] = DateTime.now();
+    if (state.any((i) => i.lobbyId == id)) return;
     state = [...state, invite];
   }
 
   /// Карточка со ссылки: не стирать следующим опросом, если сервер её не знает.
+  /// Уже отказанный стол ссылка не поднимает снова.
   void hold(GameInvite invite) {
     final id = invite.lobbyId.trim();
-    if (id.isEmpty) return;
+    if (id.isEmpty || _dismissed.contains(id)) return;
     _held.add(id);
     add(invite);
   }
@@ -352,6 +372,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
         localSeenAt: _localSeenAt,
         now: now,
         heldIds: _held,
+        dismissedIds: _dismissed,
       );
       if (!gameInviteListsVisuallySame(state, next)) {
         state = next;
@@ -362,18 +383,37 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
     }
   }
 
-  void remove(String lobbyId) {
+  void _dropLocal(String lobbyId) {
+    final id = lobbyId.trim();
+    if (id.isEmpty) return;
+    _localSeenAt.remove(id);
     _localSeenAt.remove(lobbyId);
+    _held.remove(id);
     _held.remove(lobbyId);
-    state = state.where((i) => i.lobbyId != lobbyId).toList();
+  }
+
+  /// Отказ игрока. Карточка этого стола не возвращается сама.
+  void dismiss(String lobbyId) {
+    final id = lobbyId.trim();
+    if (id.isEmpty) return;
+    _dismissed.add(id);
+    _dropLocal(lobbyId);
+    state = state
+        .where((i) => i.lobbyId != id && i.lobbyId != lobbyId)
+        .toList();
+  }
+
+  void remove(String lobbyId) {
+    _dropLocal(lobbyId);
+    final id = lobbyId.trim();
+    state = state
+        .where((i) => i.lobbyId != id && i.lobbyId != lobbyId)
+        .toList();
   }
 
   void removeByCreatorId(String creatorId) {
     for (final inv in state) {
-      if (inv.creatorId == creatorId) {
-        _localSeenAt.remove(inv.lobbyId);
-        _held.remove(inv.lobbyId);
-      }
+      if (inv.creatorId == creatorId) _dropLocal(inv.lobbyId);
     }
     state = state.where((i) => i.creatorId != creatorId).toList();
   }
@@ -389,8 +429,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
     final creatorId = match.first.creatorId;
     for (final inv in state) {
       if (inv.lobbyId == lobbyId || inv.creatorId == creatorId) {
-        _localSeenAt.remove(inv.lobbyId);
-        _held.remove(inv.lobbyId);
+        _dropLocal(inv.lobbyId);
       }
     }
     state = state
@@ -401,6 +440,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   void clear() {
     _localSeenAt.clear();
     _held.clear();
+    _dismissed.clear();
     state = [];
   }
 }
