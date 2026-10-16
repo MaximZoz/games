@@ -422,6 +422,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonClose => '닫기';
 
   @override
+  String get openInApp => '앱에서 열기';
+
+  @override
   String get commonRetry => '다시 시도';
 
   @override

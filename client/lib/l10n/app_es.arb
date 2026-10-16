@@ -95,6 +95,7 @@
   "commonReply": "Responder",
   "commonSend": "Enviar",
   "commonClose": "Cerrar",
+  "openInApp": "Abrir en la aplicación",
   "commonRetry": "Reintentar",
   "commonLoading": "Cargando…",
   "commonError": "Error",

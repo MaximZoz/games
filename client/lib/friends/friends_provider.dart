@@ -10,7 +10,8 @@ final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
   return FriendsRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
-final friendsSnapshotProvider = StreamProvider.autoDispose<FriendsSnapshot>((ref) {
+final friendsSnapshotProvider =
+    StreamProvider.autoDispose<FriendsSnapshot>((ref) {
   final keepAliveLink = ref.keepAlive();
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) {
@@ -70,6 +71,7 @@ final friendsIncomingCountProvider = Provider<int>((ref) {
 /// только когда пользователь находится на экране «Друзья».
 ///
 /// Вне экрана — `null` (не `0`), иначе при открытии «Друзья» мелькает 0.
+/// Повторный опрос не сбрасывает провайдер: бейдж остаётся на месте.
 final totalUsersCountProvider =
     AsyncNotifierProvider.autoDispose<TotalUsersCountNotifier, int?>(
         TotalUsersCountNotifier.new);
@@ -77,24 +79,50 @@ final totalUsersCountProvider =
 class TotalUsersCountNotifier extends AutoDisposeAsyncNotifier<int?> {
   static const _pollInterval = Duration(seconds: 30);
   Timer? _pollTimer;
+  int _generation = 0;
+  bool _disposeHooked = false;
 
   @override
   Future<int?> build() async {
     _pollTimer?.cancel();
+    final generation = ++_generation;
+    if (!_disposeHooked) {
+      _disposeHooked = true;
+      ref.onDispose(() {
+        _generation++;
+        _pollTimer?.cancel();
+        _pollTimer = null;
+      });
+    }
     final user = ref.watch(authStateProvider).valueOrNull;
     final path = ref.watch(currentRoutePathProvider);
     final onFriends = path == '/friends';
     if (user == null || !onFriends) return null;
-    final repo = ref.read(friendsRepositoryProvider);
-    final count = await repo.getUsersCount();
-    _pollTimer = Timer(_pollInterval, () {
-      ref.invalidate(totalUsersCountProvider);
-    });
-    ref.onDispose(() {
-      _pollTimer?.cancel();
-      _pollTimer = null;
-    });
+    final count = await ref.read(friendsRepositoryProvider).getUsersCount();
+    if (generation != _generation) return count;
+    _schedulePoll(generation);
     return count;
+  }
+
+  void _schedulePoll(int generation) {
+    _pollTimer?.cancel();
+    if (generation != _generation) return;
+    _pollTimer = Timer(_pollInterval, () {
+      unawaited(_poll(generation));
+    });
+  }
+
+  Future<void> _poll(int generation) async {
+    if (generation != _generation) return;
+    try {
+      final count = await ref.read(friendsRepositoryProvider).getUsersCount();
+      if (generation != _generation) return;
+      state = AsyncData(count);
+    } catch (_) {
+      // Последнее число остаётся на бейдже.
+    }
+    if (generation != _generation) return;
+    _schedulePoll(generation);
   }
 }
 

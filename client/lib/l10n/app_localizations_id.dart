@@ -422,6 +422,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get commonClose => 'Tutup';
 
   @override
+  String get openInApp => 'Buka di aplikasi';
+
+  @override
   String get commonRetry => 'Coba lagi';
 
   @override

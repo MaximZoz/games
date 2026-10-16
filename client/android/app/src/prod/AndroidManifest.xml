@@ -1,0 +1,16 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name=".MainActivity">
+            <!-- https://zozugames.com/games/…/lobby|game/… открывает прод, если он установлен. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="zozugames.com" android:pathPattern="/games/.*/lobby/.*"/>
+                <data android:scheme="https" android:host="zozugames.com" android:pathPattern="/games/.*/game/.*"/>
+                <data android:scheme="https" android:host="www.zozugames.com" android:pathPattern="/games/.*/lobby/.*"/>
+                <data android:scheme="https" android:host="www.zozugames.com" android:pathPattern="/games/.*/game/.*"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

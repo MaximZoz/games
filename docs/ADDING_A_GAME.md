@@ -63,8 +63,15 @@
    `api/games.go` / отдельный файл; маршрутизация по `/api/games/<id>/…`).
 5. В Redis всегда писать `"game_type", "<id>"` на lobby и game.
 6. После хода человека/бота/таймаута: `h.notifyYourTurnUser(gameID, nextUserID, "<id>")`.
-7. В GetActive для своей ветки отдавать `"is_my_turn": …` (бейдж в меню / чатах).
+7. Возврат на вкладку «Игры» (GetActive) не должен попадать в ветку крестиков.
+   Игра с `player_ids` и `turn_actor_idx` подхватывается сама: `game_type` из Redis
+   сохраняется. Если ход или выбывание сложнее списка мест — в `init()` вызвать
+   `RegisterActiveReturn(id, fn)`. Таймаут крестиков к чужому `game_type` не применяется.
+   На клиенте экран партии вызывает `pinBlockingGame(ref, gameId, gameType: id)`:
+   возврат с «Сообщений» берёт тип из пина и пути реестра (`/games/<id>/game/...`),
+   а не из дефолта `tictactoe`.
 8. Выбывание multi: `moveActiveToObserving` + observation в GetActive.
+   В `ActiveReturn` для выбывшего вернуть `Observe: true`, не `Play`.
 9. Финиш: монеты + `store.RecordGameResult` с нужным `GameType`.
 10. Settings: ветка в `normalizeGameSettings` / `gameSettingsToJSON`.
 

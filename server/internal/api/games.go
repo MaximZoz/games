@@ -2251,6 +2251,8 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	}
 
 	invitedKey := key + ":invited"
+	// Явный повторный зов после отказа снова показывает карточку.
+	h.Rdb.SRem(ctx, lobbyDeclinedRedisKey(lobbyID), friendID.String())
 	h.Rdb.SAdd(ctx, invitedKey, friendID.String())
 	h.Rdb.Expire(ctx, invitedKey, lobbyTTL)
 	h.trackUserInvite(ctx, friendID.String(), lobbyID)
@@ -3008,20 +3010,33 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		return
 	}
 	invitedKey := key + ":invited"
+	declinedKey := lobbyDeclinedRedisKey(lobbyID)
+	// Отказ помним, даже если гость пришёл по ссылке и не был в :invited.
+	h.Rdb.SAdd(ctx, declinedKey, userID.String())
+	h.Rdb.Expire(ctx, declinedKey, lobbyTTL)
 	isInvited, _ := h.Rdb.SIsMember(ctx, invitedKey, userID.String()).Result()
-	if !isInvited && m["invite_target_id"] != userID.String() {
-		WriteErr(w, r, http.StatusForbidden, "you are not invited")
+	wasTarget := m["invite_target_id"] == userID.String()
+	h.Rdb.SRem(ctx, invitedKey, userID.String())
+	h.untrackUserInvite(ctx, userID.String(), lobbyID)
+	if wasTarget {
+		h.Rdb.HDel(ctx, key, "invite_target_id")
+	}
+	h.broadcast([]uuid.UUID{userID}, map[string]any{
+		"type":     "invite_cancelled",
+		"lobby_id": lobbyID,
+		"reason":   "declined",
+	})
+	if !isInvited && !wasTarget {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"declined": true,
+			"closed":   false,
+		})
 		return
 	}
 
 	creatorID := m["creator_id"]
 	creatorUUID, _ := uuid.Parse(creatorID)
-
-	h.Rdb.SRem(ctx, invitedKey, userID.String())
-	h.untrackUserInvite(ctx, userID.String(), lobbyID)
-	if m["invite_target_id"] == userID.String() {
-		h.Rdb.HDel(ctx, key, "invite_target_id")
-	}
 	players := parsePlayerIDsCSV(m["player_ids"])
 	if len(players) == 0 {
 		players = []string{creatorID}
@@ -3108,8 +3123,9 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 	for _, lobbyID := range mergePendingInviteLobbyIDs(indexed, nil) {
 		invitedKey := "lobby:" + lobbyID + ":invited"
 		okMem, _ := h.Rdb.SIsMember(ctx, invitedKey, uid).Result()
+		declined, _ := h.Rdb.SIsMember(ctx, lobbyDeclinedRedisKey(lobbyID), uid).Result()
 		m, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
-		if !okMem && strings.TrimSpace(m["invite_target_id"]) != uid {
+		if !pendingInviteVisible(okMem, m["invite_target_id"], uid, declined) {
 			h.untrackUserInvite(ctx, uid, lobbyID)
 			continue
 		}
@@ -3283,15 +3299,14 @@ func (h *GamesHandler) CancelInvite(w http.ResponseWriter, r *http.Request, lobb
 	_ = json.NewEncoder(w).Encode(map[string]any{"cancelled": true})
 }
 
-// applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.
-// Только крестики-нолики — дурак/морской бой ходят через свои apply*Timeout.
+// applyGameTimeout — таймаут только крестиков-ноликов.
+// Чужой game_type (шашки и любая новая игра) иначе получал o_won
+// и уводил вкладку «Игры» на чужой экран.
 func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[string]string) bool {
 	if m["status"] != gameStatusActive {
 		return false
 	}
-	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType ||
-		m["game_type"] == pokerGameType || m["game_type"] == unoGameType ||
-		m["game_type"] == nardyGameType || m["game_type"] == dominoGameType {
+	if !tictactoeTimeoutApplies(m["game_type"]) {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -4417,6 +4432,18 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		}
 		return gid
 	}
+	if res, ok := classifyNonTictactoeActive(gm, userID.String()); ok {
+		switch res.Class {
+		case activeClassObserve:
+			moveActiveToObserving(ctx, h.Rdb, userID, gid)
+			return ""
+		case activeClassPlay:
+			return gid
+		default:
+			clearUserActiveGame(ctx, h.Rdb, userID)
+			return ""
+		}
+	}
 	mark := markForUserID(gm, userID.String())
 	if mark == "" {
 		clearUserActiveGame(ctx, h.Rdb, userID)
@@ -4843,6 +4870,8 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		}
 	} else if gt == battleshipGameType {
 		inGame = battleshipSide(m, userID.String()) != ""
+	} else if ret, ok := classifyNonTictactoeActive(m, userID.String()); ok {
+		inGame = ret.Class == activeClassPlay || ret.Class == activeClassObserve
 	} else {
 		inGame = markForUserID(m, userID.String()) != ""
 	}
@@ -4910,6 +4939,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == store.GameTypeChess {
 				h.applyChessTimeout(ctx, gameID, m)
+			} else if m["game_type"] == store.GameTypeCheckers {
+				h.applyCheckersTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -5104,6 +5135,40 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_type": store.GameTypeChess,
 					}
 				}
+			} else if gt := strings.TrimSpace(m["game_type"]); gt != "" && gt != store.GameTypeTicTacToe {
+				// Шашки и любая новая игра: тип берётся из хеша / RegisterActiveReturn,
+				// а не подменяется на крестики.
+				if res, ok := classifyNonTictactoeActive(m, userID.String()); ok {
+					switch res.Class {
+					case activeClassObserve:
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+					case activeClassClear:
+						clearUserActiveGame(ctx, h.Rdb, userID)
+					default:
+						active = map[string]any{
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"game_type":  res.GameType,
+							"is_my_turn": res.MyTurn,
+						}
+					}
+				} else {
+					myMark := markForUserID(m, userID.String())
+					if myMark == "" {
+						clearUserActiveGame(ctx, h.Rdb, userID)
+					} else if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+					} else {
+						active = map[string]any{
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"is_my_turn": m["turn"] == myMark,
+							"game_type":  gt,
+						}
+					}
+				}
 			} else {
 				myMark := markForUserID(m, userID.String())
 				if myMark == "" {
@@ -5117,7 +5182,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":    gameID,
 						"lobby_id":   m["lobby_id"],
 						"is_my_turn": m["turn"] == myMark,
-						"game_type":  "tictactoe",
+						"game_type":  store.GameTypeTicTacToe,
 					}
 				}
 			}

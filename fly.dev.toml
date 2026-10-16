@@ -18,9 +18,11 @@ primary_region = 'ams'
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = 'stop'
+  # Как на проде: не глушить единственную машину. При auto_stop=stop
+  # fly deploy считает состояние stopped успехом и не ждёт процесс.
+  # Прокси тогда принимает TLS и не отдаёт /api/start (curl 28, 0 bytes).
+  auto_stop_machines = 'off'
   auto_start_machines = true
-  # На DEV держим 1 машину тёплой — меньше холодных стартов и обрывов WS/сессии.
   min_machines_running = 1
 
   [http_service.concurrency]
@@ -30,8 +32,8 @@ primary_region = 'ams'
 
   [[http_service.checks]]
     interval = '15s'
-    timeout = '5s'
-    grace_period = '20s'
+    timeout = '10s'
+    grace_period = '30s'
     method = 'GET'
     path = '/api/start'
 

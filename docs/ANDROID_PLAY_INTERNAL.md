@@ -164,6 +164,14 @@ flutter run -d android --flavor prod \
 Дополнительно можно добавить SHA-1 **upload** keystore и **debug** keystore
 в те же Android clients (для локальных сборок).
 
+Тот же экран **App signing** нужен для ссылок приглашения. Скопируй **SHA-256**
+сертификата App signing (и upload, если им подписываешь сборки вне Play) в
+секрет Fly `ANDROID_APP_LINK_SHA256` через запятую. Пакет:
+`ANDROID_APP_LINK_PACKAGE=com.zozugames.app` (на DEV — `com.zozugames.app.dev`).
+Пока отпечатка нет, `/.well-known/assetlinks.json` отвечает 404: обычная
+https-ссылка открывает сайт, а кнопка «Открыть в приложении» всё равно зовёт
+установленную сборку.
+
 Без этого native Google на телефоне **не заработает** (ошибка 10).
 Браузерный fallback на Android для Google отключён специально —
 он открывал веб-приложение вместо нативного.

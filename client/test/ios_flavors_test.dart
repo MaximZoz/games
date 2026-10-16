@@ -32,7 +32,8 @@ void main() {
       'Profile-dev',
     ]) {
       expect(podfile, contains("'$name'"), reason: 'Podfile must map $name');
-      expect(pbx, contains('name = "$name"'), reason: 'pbxproj must define $name');
+      expect(pbx, contains('name = "$name"'),
+          reason: 'pbxproj must define $name');
     }
 
     final prodScheme =
@@ -58,7 +59,8 @@ void main() {
   });
 
   test('iOS TestFlight CI covers both flavors without a local Mac', () {
-    final workflow = File('../.github/workflows/ios-testflight.yml').readAsStringSync();
+    final workflow =
+        File('../.github/workflows/ios-testflight.yml').readAsStringSync();
     final fastfile = File('ios/fastlane/Fastfile').readAsStringSync();
     final info = File('ios/Runner/Info.plist').readAsStringSync();
 
@@ -78,7 +80,8 @@ void main() {
       'APPLE_TEAM_ID',
       'MATCH_PASSWORD',
     ]) {
-      expect(workflow, contains(secret), reason: 'workflow must require $secret');
+      expect(workflow, contains(secret),
+          reason: 'workflow must require $secret');
     }
     expect(fastfile, contains('upload_to_testflight'));
     expect(fastfile, contains('lane :public_code'));
@@ -120,11 +123,13 @@ void main() {
     expect(workflow, contains('fastlane ios public_code'));
     expect(workflow, contains('runs-on: ubuntu-latest'));
     expect(workflow, contains('code_only:'));
-    expect(File('../.github/workflows/ios-testflight-code.yml').existsSync(), isFalse);
+    expect(File('../.github/workflows/ios-testflight-code.yml').existsSync(),
+        isFalse);
     final appFw = File('ios/Flutter/AppFrameworkInfo.plist').readAsStringSync();
     expect(appFw, contains('<key>MinimumOSVersion</key>'));
     expect(appFw, contains('<string>15.0</string>'));
-    expect(File('ios/Podfile').readAsStringSync(), contains("platform :ios, '15.0'"));
+    expect(File('ios/Podfile').readAsStringSync(),
+        contains("platform :ios, '15.0'"));
     expect(
       File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync(),
       isNot(contains('IPHONEOS_DEPLOYMENT_TARGET = 13.0')),
@@ -176,15 +181,22 @@ void main() {
     );
     expect(scene, contains('FlutterAppDelegate'));
 
-    final entitlements = File('ios/Runner/Runner.entitlements').readAsStringSync();
+    final entitlements =
+        File('ios/Runner/Runner.entitlements').readAsStringSync();
     final plist = File('ios/Runner/Info.plist').readAsStringSync();
     expect(entitlements, contains('com.apple.developer.applesignin'));
     expect(entitlements, contains('aps-environment'));
+    expect(entitlements, contains('com.apple.developer.associated-domains'));
+    expect(entitlements, contains('applinks:zozugames.com'));
+    expect(plist, contains('FlutterDeepLinkingEnabled'));
+    expect(fastfile, contains('tf_ensure_associated_domains'));
+    expect(fastfile, contains('ASSOCIATED_DOMAINS'));
     expect(plist, contains('NSPhotoLibraryUsageDescription'));
     expect(plist, contains('remote-notification'));
     expect(fastfile, contains('tf_ensure_push_notifications'));
     expect(fastfile, contains('PUSH_NOTIFICATIONS'));
-    expect(pbx, contains('CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements'));
+    expect(
+        pbx, contains('CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements'));
     expect(fastfile, contains('sign_in_with_apple'));
     expect(fastfile, contains('tf_ensure_sign_in_with_apple'));
     expect(fastfile, contains('APPLE_ID_AUTH'));

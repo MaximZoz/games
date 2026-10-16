@@ -78,6 +78,22 @@ Color friendsTabCountColor({
   return AppColors.accentStart;
 }
 
+/// Бейдж «Найти друга»: живой опрос, иначе число из того же ответа, что друзья.
+@visibleForTesting
+int? friendsFindTabCount({int? live, int? snapshot}) {
+  if (live != null) return live;
+  return snapshot;
+}
+
+/// На широком экране вкладки не растягиваются на всю ширину.
+@visibleForTesting
+bool friendsUsePackedTabs({
+  required double width,
+  required bool phoneLandscape,
+}) {
+  return phoneLandscape || width >= Breakpoints.mobile;
+}
+
 @visibleForTesting
 const double friendsDesktopGridGap = 12;
 
@@ -108,8 +124,9 @@ double friendsDesktopMaxCellWidth({
   );
   final contentWidth =
       (viewportWidth - 32).clamp(0.0, friendsDesktopMaxContentWidth);
-  final crossAxisCount =
-      (contentWidth / (maxCellWidth + friendsDesktopGridGap)).floor().clamp(1, 3);
+  final crossAxisCount = (contentWidth / (maxCellWidth + friendsDesktopGridGap))
+      .floor()
+      .clamp(1, 3);
   final itemWidth =
       (contentWidth - friendsDesktopGridGap * (crossAxisCount - 1)) /
           crossAxisCount;
@@ -155,7 +172,7 @@ class FriendsScreen extends ConsumerStatefulWidget {
 enum _FriendsTabKind { friends, incoming, outgoing, findFriend }
 
 class _FriendsScreenState extends ConsumerState<FriendsScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const int _pageSize = 10;
   static const List<IconData> _presetAvatarIcons = [
     Icons.face_rounded,
@@ -175,6 +192,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   late TabController _tabController;
+  late final StateController<Widget?> _toolbarLeading;
+  late final StateController<bool> _navCollapse;
   List<_FriendsTabKind> _currentTabs = const [
     _FriendsTabKind.friends,
     _FriendsTabKind.incoming,
@@ -214,6 +233,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   @override
   void initState() {
     super.initState();
+    // Кэш до dispose: в Flutter 3.27 ref уже закрыт, когда вызывается dispose.
+    _toolbarLeading = ref.read(mobileToolbarLeadingProvider.notifier);
+    _navCollapse = ref.read(collapseMobileBottomNavProvider.notifier);
     _tabController = TabController(length: _currentTabs.length, vsync: this);
     _tabController.addListener(_onTabChanged);
     _searchFocusNode.addListener(_onSearchFocusChanged);
@@ -274,14 +296,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   void _syncTabController(List<_FriendsTabKind> tabs) {
     if (tabs.isEmpty) return;
-    if (_sameTabs(tabs, _currentTabs) &&
-        _tabController.length == tabs.length) {
+    if (_sameTabs(tabs, _currentTabs) && _tabController.length == tabs.length) {
       return;
     }
-    final oldKind =
-        (_tabController.index >= 0 && _tabController.index < _currentTabs.length)
-            ? _currentTabs[_tabController.index]
-            : _FriendsTabKind.findFriend;
+    final oldKind = (_tabController.index >= 0 &&
+            _tabController.index < _currentTabs.length)
+        ? _currentTabs[_tabController.index]
+        : _FriendsTabKind.findFriend;
     final oldController = _tabController;
     oldController.removeListener(_onTabChanged);
     var index = tabs.indexOf(oldKind);
@@ -300,11 +321,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   @override
   void dispose() {
-    final toolbarNotifier = ref.read(mobileToolbarLeadingProvider.notifier);
-    final navNotifier = ref.read(collapseMobileBottomNavProvider.notifier);
+    final toolbarLeading = _toolbarLeading;
+    final navCollapse = _navCollapse;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      toolbarNotifier.state = null;
-      navNotifier.state = false;
+      if (toolbarLeading.mounted) toolbarLeading.state = null;
+      if (navCollapse.mounted) navCollapse.state = false;
     });
     _searchDebounce?.cancel();
     _tabController.removeListener(_onTabChanged);
@@ -616,8 +637,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   bool _actionHighlighted(int cardIndex, int actionIndex) {
-    return cardIndex == _gamepadCardIndex &&
-        _gamepadActionIndex == actionIndex;
+    return cardIndex == _gamepadCardIndex && _gamepadActionIndex == actionIndex;
   }
 
   GlobalKey _gamepadKeyFor(int index) {
@@ -1127,8 +1147,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ],
       ),
     );
-    final highlighted =
-        gamepadIndex != null && _cardHighlighted(gamepadIndex);
+    final highlighted = gamepadIndex != null && _cardHighlighted(gamepadIndex);
     final framed = wrapGamepadCursor(
       highlighted: highlighted,
       radius: 22,
@@ -1912,54 +1931,54 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         child: GamepadFieldBlock(
           inputFocus: _searchFocusNode,
           child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(
-            // В фокусе — тот же фиолет, что у рамки лупы.
-            color: focused
-                ? AppColors.accentStart
-                : AppColors.accentStart.withValues(alpha: 0.45),
-            width: focused ? 2 : 1.5,
-          ),
-        ),
-        child: TextField(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          readOnly: gamepadConnected(),
-          showCursor: true,
-          // null = AutofillConfiguration.disabled → autocomplete=off на web.
-          // Иначе дефолт [] оставляет autocomplete=on и iOS Safari
-          // показывает панель Passwords / Payment / Locations над клавиатурой.
-          autofillHints: null,
-          enableSuggestions: false,
-          autocorrect: false,
-          enableIMEPersonalizedLearning: false,
-          spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
-          smartDashesType: SmartDashesType.disabled,
-          smartQuotesType: SmartQuotesType.disabled,
-          keyboardType: TextInputType.text,
-          textInputAction: TextInputAction.search,
-          maxLines: 1,
-          decoration: InputDecoration(
-            hintText: context.l10n.friendsSearchHint,
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: suffix,
-            suffixIconConstraints: suffix == null
-                ? null
-                : const BoxConstraints(minWidth: 48, minHeight: 40),
-            filled: false,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: tight ? 8 : 12,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(AppRadius.input),
+              border: Border.all(
+                // В фокусе — тот же фиолет, что у рамки лупы.
+                color: focused
+                    ? AppColors.accentStart
+                    : AppColors.accentStart.withValues(alpha: 0.45),
+                width: focused ? 2 : 1.5,
+              ),
             ),
-          ),
-          onChanged: _onSearchTextChanged,
-          onSubmitted: (_) => _scheduleSearch(immediate: true),
-        ),
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              readOnly: gamepadConnected(),
+              showCursor: true,
+              // null = AutofillConfiguration.disabled → autocomplete=off на web.
+              // Иначе дефолт [] оставляет autocomplete=on и iOS Safari
+              // показывает панель Passwords / Payment / Locations над клавиатурой.
+              autofillHints: null,
+              enableSuggestions: false,
+              autocorrect: false,
+              enableIMEPersonalizedLearning: false,
+              spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+              smartDashesType: SmartDashesType.disabled,
+              smartQuotesType: SmartQuotesType.disabled,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.search,
+              maxLines: 1,
+              decoration: InputDecoration(
+                hintText: context.l10n.friendsSearchHint,
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: suffix,
+                suffixIconConstraints: suffix == null
+                    ? null
+                    : const BoxConstraints(minWidth: 48, minHeight: 40),
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: tight ? 8 : 12,
+                ),
+              ),
+              onChanged: _onSearchTextChanged,
+              onSubmitted: (_) => _scheduleSearch(immediate: true),
+            ),
           ),
         ),
       ),
@@ -2146,17 +2165,25 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   Widget _buildWideHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: FriendsGamepadLtHint(
-            expandChild: true,
-            child: _buildInlineSearchField(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const inset = 16.0;
+        final width = (constraints.maxWidth - inset * 2)
+            .clamp(0.0, friendsDesktopMaxContentWidth);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(inset, 8, inset, 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              width: width,
+              child: FriendsGamepadLtHint(
+                expandChild: true,
+                child: _buildInlineSearchField(),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -2165,63 +2192,63 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     return GamepadFieldBlock(
       inputFocus: _searchFocusNode,
       child: Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(AppRadius.input),
-        border: Border.all(
-          color: focused
-              ? AppColors.accentStart
-              : AppColors.accentStart.withValues(alpha: 0.45),
-          width: focused ? 2 : 1.5,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: Border.all(
+            color: focused
+                ? AppColors.accentStart
+                : AppColors.accentStart.withValues(alpha: 0.45),
+            width: focused ? 2 : 1.5,
+          ),
+        ),
+        child: TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          readOnly: gamepadConnected(),
+          showCursor: true,
+          autofillHints: null,
+          enableSuggestions: false,
+          autocorrect: false,
+          enableIMEPersonalizedLearning: false,
+          spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: context.l10n.friendsSearchHint,
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: _searchController.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: context.l10n.commonClose,
+                    onPressed: () {
+                      _searchDebounce?.cancel();
+                      _searchRevision++;
+                      _searchController.clear();
+                      setState(() {
+                        _searchResults = const [];
+                        _isSearching = false;
+                        _isSearchLoadingMore = false;
+                        _searchHasMore = false;
+                      });
+                      _focusSearchField();
+                    },
+                    icon: Icon(Icons.close_rounded,
+                        size: 20, color: Colors.red.shade600),
+                  ),
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+          onChanged: _onSearchTextChanged,
+          onSubmitted: (_) => _scheduleSearch(immediate: true),
         ),
       ),
-      child: TextField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        readOnly: gamepadConnected(),
-        showCursor: true,
-        autofillHints: null,
-        enableSuggestions: false,
-        autocorrect: false,
-        enableIMEPersonalizedLearning: false,
-        spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
-        smartDashesType: SmartDashesType.disabled,
-        smartQuotesType: SmartQuotesType.disabled,
-        keyboardType: TextInputType.text,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: context.l10n.friendsSearchHint,
-          prefixIcon: const Icon(Icons.search_rounded),
-          suffixIcon: _searchController.text.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: context.l10n.commonClose,
-                  onPressed: () {
-                    _searchDebounce?.cancel();
-                    _searchRevision++;
-                    _searchController.clear();
-                    setState(() {
-                      _searchResults = const [];
-                      _isSearching = false;
-                      _isSearchLoadingMore = false;
-                      _searchHasMore = false;
-                    });
-                    _focusSearchField();
-                  },
-                  icon: Icon(Icons.close_rounded,
-                      size: 20, color: Colors.red.shade600),
-                ),
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        ),
-        onChanged: _onSearchTextChanged,
-        onSubmitted: (_) => _scheduleSearch(immediate: true),
-      ),
-    ),
     );
   }
 
@@ -2273,63 +2300,51 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
   }
 
+  Widget _countBadge(int count, TextStyle style) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: AppColors.accentSoft,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text('$count', style: style),
+    );
+  }
+
   Widget _buildTabLabel(
     _FriendsTabKind tab,
     FriendsSnapshot? snapshot,
-    int? totalUsersCount,
-  ) {
+    int? totalUsersCount, {
+    required bool inline,
+  }) {
     final title = _tabTitle(context.l10n, tab);
     final count = _tabCount(tab, snapshot, totalUsersCount);
-    final isIncoming = tab == _FriendsTabKind.incoming;
-    final isFindFriend = tab == _FriendsTabKind.findFriend;
-    final countColor = friendsTabCountColor(
-      incoming: isIncoming,
-      findFriend: isFindFriend,
-      count: count ?? 0,
-    );
     final countStyle = TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
-      color: countColor,
+      color: friendsTabCountColor(
+        incoming: tab == _FriendsTabKind.incoming,
+        findFriend: tab == _FriendsTabKind.findFriend,
+        count: count ?? 0,
+      ),
     );
-    if (isPhoneLandscape(context)) {
-      if (count == null) {
-        return Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-        );
-      }
-      final countChild = isFindFriend
-          ? _AnimatedCountText(
-              value: count,
-              style: countStyle,
-              animateFromZeroOnce: true,
-            )
-          : Text('$count', style: countStyle);
-      // Плашка как в портрете: иначе акцент на выбранном табе сливается с подписью.
-      final countBadge = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-        decoration: BoxDecoration(
-          color: AppColors.accentSoft,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: countChild,
-      );
-      return Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(text: '$title '),
-            WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: countBadge,
-            ),
+    final titleWidget = Text(
+      title,
+      maxLines: 1,
+      overflow: inline ? TextOverflow.clip : TextOverflow.ellipsis,
+      softWrap: false,
+      textAlign: TextAlign.center,
+    );
+    if (inline) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          titleWidget,
+          if (count != null) ...[
+            const SizedBox(width: 6),
+            _countBadge(count, countStyle),
           ],
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
+        ],
       );
     }
     return Column(
@@ -2337,31 +2352,83 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (count != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppColors.accentSoft,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: isFindFriend
-                ? _AnimatedCountText(
-                    value: count,
-                    style: countStyle,
-                    // С нуля при первом появлении; дальше — от старого к новому.
-                    animateFromZeroOnce: true,
-                  )
-                : Text('$count', style: countStyle),
-          )
+          _countBadge(count, countStyle)
         else
-          const SizedBox(height: 22),
-        if (count != null) const SizedBox(height: 4),
-        Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-        ),
+          const SizedBox(height: 18),
+        const SizedBox(height: 4),
+        titleWidget,
       ],
+    );
+  }
+
+  Widget _buildTabBar({
+    required List<_FriendsTabKind> tabs,
+    required FriendsSnapshot? snapshot,
+    required int? totalUsersCount,
+    required bool compact,
+  }) {
+    final packed = friendsUsePackedTabs(
+      width: MediaQuery.sizeOf(context).width,
+      phoneLandscape: isPhoneLandscape(context),
+    );
+    final fontSize = compact ? (tabs.length <= 2 ? 14.0 : 12.0) : 15.0;
+    final bar = TabBar(
+      controller: _tabController,
+      isScrollable: packed,
+      tabAlignment: packed ? TabAlignment.start : TabAlignment.fill,
+      indicatorSize:
+          packed ? TabBarIndicatorSize.label : TabBarIndicatorSize.tab,
+      labelPadding:
+          EdgeInsets.only(right: packed ? 22 : 4, left: packed ? 0 : 4),
+      indicator: const UnderlineTabIndicator(
+        borderSide: BorderSide(color: AppColors.accentStart, width: 2.5),
+      ),
+      dividerColor: AppColors.accentStart.withValues(alpha: 0.16),
+      overlayColor: WidgetStatePropertyAll(
+        AppColors.accentStart.withValues(alpha: 0.06),
+      ),
+      labelColor: AppColors.accentStart,
+      unselectedLabelColor: AppColors.textSecondary,
+      labelStyle: TextStyle(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w600,
+      ),
+      unselectedLabelStyle: TextStyle(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w500,
+      ),
+      tabs: [
+        for (final tab in tabs)
+          Tab(
+            height: packed ? 40 : 48,
+            child: _buildTabLabel(
+              tab,
+              snapshot,
+              totalUsersCount,
+              inline: packed,
+            ),
+          ),
+      ],
+    );
+    if (!packed) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: bar,
+      );
+    }
+    final inset = isPhoneLandscape(context) ? 10.0 : 16.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - inset * 2)
+            .clamp(0.0, friendsDesktopMaxContentWidth);
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: inset),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(width: width, child: bar),
+          ),
+        );
+      },
     );
   }
 
@@ -2399,17 +2466,19 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     final friendsAsync = ref.watch(friendsSnapshotProvider);
     final totalUsersAsync = ref.watch(totalUsersCountProvider);
-    // Не показываем «0» из прошлго/пустого состояния на время загрузки.
-    final totalUsersCount = totalUsersAsync.when(
+    final friendsSnapshot = friendsAsync.valueOrNull;
+    // Сначала число из списка друзей — оно уже на экране. Опрос только
+    // обновляет его, не прячет бейдж и не крутит счётчик с нуля.
+    final liveUsersCount = totalUsersAsync.when(
       data: (v) => v,
-      loading: () {
-        final prev = totalUsersAsync.valueOrNull;
-        if (prev == null || prev <= 0) return null;
-        return prev;
-      },
+      loading: () => totalUsersAsync.valueOrNull,
       error: (_, __) => totalUsersAsync.valueOrNull,
     );
-    final tabs = _visibleTabs(friendsAsync.valueOrNull);
+    final totalUsersCount = friendsFindTabCount(
+      live: liveUsersCount,
+      snapshot: friendsSnapshot?.usersCount,
+    );
+    final tabs = _visibleTabs(friendsSnapshot);
     if (!_sameTabs(tabs, _currentTabs) ||
         _tabController.length != tabs.length) {
       _syncTabController(tabs);
@@ -2418,15 +2487,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
     final hideTabs = friendsHideTabsForKeyboard(
-      landscape: MediaQuery.sizeOf(context).width >
-          MediaQuery.sizeOf(context).height,
+      landscape:
+          MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height,
       keyboardInset: MediaQuery.viewInsetsOf(context).bottom,
     );
     final path = ref.watch(currentRoutePathProvider);
     if (!wide && path == '/friends') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
+          if (!mounted || !context.mounted) return;
           ref.read(mobileToolbarLeadingProvider.notifier).state =
               FriendsGamepadLtHint(
             child: _buildGradientHeaderIconButton(
@@ -2446,194 +2515,108 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     return GamepadScope(
       onAction: _onGamepad,
       child: Scaffold(
-      backgroundColor: Colors.transparent,
-      // Клавиатуру уже вычел AppShell — иначе поиск и список без высоты.
-      resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (wide)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-                child: _buildWideHeader(),
-              ),
-            if (!wide)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                // Поле поиска всегда в дереве, свёрнутое — просто нулевой
-                // высоты. Иначе оно создаётся вместе с панелью, фокус уходит
-                // в новый элемент на следующем кадре и клавиатура не выезжает
-                // с первого тапа.
-                child: ClipRect(
-                  child: AnimatedAlign(
-                    duration: AppDurations.short,
-                    alignment: Alignment.topCenter,
-                    heightFactor: _isSearchExpanded ? 1.0 : 0.0,
-                    child: IgnorePointer(
-                      ignoring: !_isSearchExpanded,
-                      child: _buildSearchPanel(),
+        backgroundColor: Colors.transparent,
+        // Клавиатуру уже вычел AppShell — иначе поиск и список без высоты.
+        resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (wide) _buildWideHeader(),
+              if (!wide)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  // Поле поиска всегда в дереве, свёрнутое — просто нулевой
+                  // высоты. Иначе оно создаётся вместе с панелью, фокус уходит
+                  // в новый элемент на следующем кадре и клавиатура не выезжает
+                  // с первого тапа.
+                  child: ClipRect(
+                    child: AnimatedAlign(
+                      duration: AppDurations.short,
+                      alignment: Alignment.topCenter,
+                      heightFactor: _isSearchExpanded ? 1.0 : 0.0,
+                      child: IgnorePointer(
+                        ignoring: !_isSearchExpanded,
+                        child: _buildSearchPanel(),
+                      ),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(maxWidth: double.infinity),
+                    child: Column(
+                      key: const ValueKey('friends-tabs'),
+                      children: [
+                        if (!hideTabs)
+                          Focus(
+                            canRequestFocus: false,
+                            skipTraversal: true,
+                            descendantsAreFocusable: false,
+                            descendantsAreTraversable: false,
+                            child: FriendsGamepadTabSticks(
+                              child: _buildTabBar(
+                                tabs: tabs,
+                                snapshot: friendsSnapshot,
+                                totalUsersCount: totalUsersCount,
+                                compact: compact,
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: friendsAsync.when(
+                            data: (snapshot) {
+                              return TabBarView(
+                                controller: _tabController,
+                                // Свайп между табами друзей; bottom-nav от
+                                // history защищён через Router.neglect.
+                                physics: const PageScrollPhysics(),
+                                children: [
+                                  for (final tab in tabs)
+                                    _tabContent(tab, snapshot, presence),
+                                ],
+                              );
+                            },
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.accentStart,
+                              ),
+                            ),
+                            error: (err, _) => Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline_rounded,
+                                      size: 46,
+                                      color: Colors.red.shade700,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      err.toString(),
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          TextStyle(color: Colors.red.shade700),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: double.infinity),
-                  child: Column(
-                    key: const ValueKey('friends-tabs'),
-                    children: [
-                      if (!hideTabs)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Focus(
-                          canRequestFocus: false,
-                          skipTraversal: true,
-                          descendantsAreFocusable: false,
-                          descendantsAreTraversable: false,
-                          child: FriendsGamepadTabSticks(
-                            child: TabBar(
-                          controller: _tabController,
-                          isScrollable: false,
-                          tabAlignment: TabAlignment.fill,
-                          labelPadding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                          ),
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          labelStyle: TextStyle(
-                            fontSize: compact
-                                ? (tabs.length <= 2 ? 14 : 12)
-                                : 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          unselectedLabelStyle: TextStyle(
-                            fontSize: compact
-                                ? (tabs.length <= 2 ? 14 : 12)
-                                : 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          tabs: [
-                            for (final tab in tabs)
-                              Tab(
-                                child: _buildTabLabel(
-                                  tab,
-                                  friendsAsync.valueOrNull,
-                                  totalUsersCount,
-                                ),
-                              ),
-                          ],
-                        ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: friendsAsync.when(
-                          data: (snapshot) {
-                            return TabBarView(
-                              controller: _tabController,
-                              // Свайп между табами друзей; bottom-nav от
-                              // history защищён через Router.neglect.
-                              physics: const PageScrollPhysics(),
-                              children: [
-                                for (final tab in tabs)
-                                  _tabContent(tab, snapshot, presence),
-                              ],
-                            );
-                          },
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.accentStart,
-                            ),
-                          ),
-                          error: (err, _) => Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.error_outline_rounded,
-                                    size: 46,
-                                    color: Colors.red.shade700,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    err.toString(),
-                                    textAlign: TextAlign.center,
-                                    style:
-                                        TextStyle(color: Colors.red.shade700),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-    );
-  }
-}
-
-/// Плавный счётчик для бейджа «Найти друга»: 0 → N, затем N → M.
-class _AnimatedCountText extends StatefulWidget {
-  const _AnimatedCountText({
-    required this.value,
-    required this.style,
-    this.animateFromZeroOnce = false,
-  });
-
-  final int value;
-  final TextStyle style;
-  final bool animateFromZeroOnce;
-
-  @override
-  State<_AnimatedCountText> createState() => _AnimatedCountTextState();
-}
-
-class _AnimatedCountTextState extends State<_AnimatedCountText> {
-  static const _duration = Duration(milliseconds: 700);
-
-  late int _from;
-  late int _to;
-
-  @override
-  void initState() {
-    super.initState();
-    _to = widget.value;
-    _from = widget.animateFromZeroOnce ? 0 : widget.value;
-  }
-
-  @override
-  void didUpdateWidget(covariant _AnimatedCountText oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value) {
-      _from = oldWidget.value;
-      _to = widget.value;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      key: ValueKey('count-$_from-$_to'),
-      tween: Tween<double>(begin: _from.toDouble(), end: _to.toDouble()),
-      duration: _duration,
-      curve: Curves.easeOutCubic,
-      builder: (context, value, _) {
-        return Text(
-          '${value.round()}',
-          style: widget.style,
-        );
-      },
     );
   }
 }

@@ -947,6 +947,12 @@ abstract class AppLocalizations {
   /// **'Закрыть'**
   String get commonClose;
 
+  /// No description provided for @openInApp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть в приложении'**
+  String get openInApp;
+
   /// No description provided for @commonRetry.
   ///
   /// In ru, this message translates to:

@@ -422,6 +422,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get commonClose => 'Закрыць';
 
   @override
+  String get openInApp => 'Адкрыць у праграме';
+
+  @override
   String get commonRetry => 'Паўтарыць';
 
   @override

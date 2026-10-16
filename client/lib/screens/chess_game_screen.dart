@@ -565,7 +565,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await _repo.declineLobby(lobbyId);
     } catch (_) {}
@@ -738,6 +738,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     final compact = MediaQuery.sizeOf(context).width < 420;
 
     return GameOpponentCard(
+      userId: oppId,
       displayName: name,
       avatarKind: opp?.avatarKind ?? 'letter',
       avatarValue: opp?.avatarValue,

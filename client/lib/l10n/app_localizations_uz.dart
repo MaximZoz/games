@@ -422,6 +422,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get commonClose => 'Yopish';
 
   @override
+  String get openInApp => 'Ilovada ochish';
+
+  @override
   String get commonRetry => 'Qayta urinish';
 
   @override

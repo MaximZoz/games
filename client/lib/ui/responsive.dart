@@ -88,12 +88,18 @@ EdgeInsets landscapeContentSafeArea({
 /// стоит в x=0, а `NavigationRail.useSafeArea` смотрит в `MediaQuery.padding`,
 /// который Scaffold обнуляет у body. Отступ берём из [viewPadding] и
 /// вешаем на рейл, иначе иконки уезжают под системную панель.
+///
+/// На iOS (включая iOS Safari / PWA) в альбоме браузер отдаёт симметричный
+/// горизонтальный `safe-area-inset-left/right` (~59 px), но системной строки
+/// состояния слева нет — сдвигать кнопки меню от левого края не нужно.
 double landscapeRailLeadingInset({
   required EdgeInsets viewPadding,
   required bool phoneLandscape,
   required bool railVisible,
+  TargetPlatform? platform,
 }) {
   if (!phoneLandscape || !railVisible) return 0;
+  if (platform == TargetPlatform.iOS) return 0;
   return viewPadding.left < 0 ? 0 : viewPadding.left;
 }
 

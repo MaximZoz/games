@@ -193,6 +193,92 @@ void main() {
       expect(lobbyScreenPath('abc', gameType: 'uno'), '/games/uno/lobby/abc');
     });
 
+    test('шашки с сообщений возвращают на стол шашек', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/chats',
+          active: ActiveGameItem(
+            type: 'game',
+            gameId: 'chk-1',
+            gameType: 'checkers',
+          ),
+        ),
+        '/games/checkers/game/chk-1',
+      );
+    });
+
+    test('дефолт tictactoe на тот же id уступает инжекту экрана', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/chats',
+          active: ActiveGameItem(
+            type: 'game',
+            gameId: 'chk-1',
+            gameType: 'tictactoe',
+          ),
+          pinnedLiveGameId: 'chk-1',
+          pinnedLiveGameType: 'checkers',
+          lastSessionPath: '/games/checkers/game/chk-1',
+        ),
+        '/games/checkers/game/chk-1',
+      );
+      expect(
+        mergeActiveReturn(
+          incoming: ActiveGameItem(
+            type: 'game',
+            gameId: 'chk-1',
+            gameType: 'tictactoe',
+            isMyTurn: true,
+          ),
+          previous: ActiveGameItem(
+            type: 'game',
+            gameId: 'chk-1',
+            gameType: 'checkers',
+          ),
+        )?.gameType,
+        'checkers',
+      );
+    });
+
+    test('чужой пин не подменяет настоящие крестики', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/chats',
+          active: ActiveGameItem(
+            type: 'game',
+            gameId: 'ttt-1',
+            gameType: 'tictactoe',
+          ),
+          pinnedLiveGameId: 'chk-1',
+          pinnedLiveGameType: 'checkers',
+          lastSessionPath: '/games/checkers/game/chk-1',
+        ),
+        '/games/tictactoe/game/ttt-1',
+      );
+    });
+
+    test('лобби новой игры не сбрасывается в каталог', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/games/checkers/lobby/lob-1?mode=invite',
+        ),
+        isNull,
+      );
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/chats',
+          active: ActiveGameItem(
+            type: 'lobby',
+            lobbyId: 'lob-9',
+            gameType: 'tictactoe',
+            mode: 'invite',
+          ),
+          lastSessionPath: '/games/chess/lobby/lob-9?mode=invite',
+        ),
+        '/games/chess/lobby/lob-9?mode=invite',
+      );
+    });
+
     test('активное invite-лобби открывает Свою игру', () {
       expect(
         resolveGamesTabPath(

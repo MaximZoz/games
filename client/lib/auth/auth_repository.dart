@@ -20,6 +20,8 @@ const _keyUser = 'user';
 bool authRefreshIsDeadSession(int statusCode) =>
     statusCode == 401 || statusCode == 403;
 
+enum _RefreshOnceResult { success, frozen, dead, retry }
+
 class AuthUser {
   final String id;
   final String email;
@@ -542,7 +544,8 @@ class AuthRepository {
         continue;
       }
       if (response.statusCode != 200) {
-        throw AuthException(response.statusCode, _messageFromResponse(response));
+        throw AuthException(
+            response.statusCode, _messageFromResponse(response));
       }
       final body = jsonDecode(response.body);
       if (body is! Map) {
@@ -615,7 +618,8 @@ class AuthRepository {
     final accessToken = body['access_token'] as String;
     final refreshToken = body['refresh_token'] as String? ?? '';
     final expiresIn = (body['expires_in'] as num?)?.toInt() ?? 900;
-    final user = AuthUser.fromJson(Map<String, dynamic>.from(body['user'] as Map));
+    final user =
+        AuthUser.fromJson(Map<String, dynamic>.from(body['user'] as Map));
 
     _memoryAccessToken = accessToken;
     _memoryRefreshToken = refreshToken;
@@ -931,7 +935,8 @@ class AuthRepository {
       throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
 
-    final name = displayName?.trim().isEmpty == true ? null : displayName?.trim();
+    final name =
+        displayName?.trim().isEmpty == true ? null : displayName?.trim();
 
     final uri = Uri.parse('$apiBaseUrl/api/profile');
     final response = await sendAuthorized(
@@ -971,8 +976,7 @@ class AuthRepository {
             about: about,
             avatarKind: avatarKind ?? 'letter',
             avatarValue: avatarValue,
-            showStatsToOthers:
-                showStatsToOthers ?? current.showStatsToOthers,
+            showStatsToOthers: showStatsToOthers ?? current.showStatsToOthers,
             emailVerified: current.emailVerified,
           );
     await _saveUser(user);
@@ -1023,9 +1027,7 @@ class AuthRepository {
         await _prefs!
             .setString(_keyRefreshToken, refreshToken)
             .timeout(sharedPrefsTimeout);
-        await _prefs!
-            .setString(_keyUser, userJson)
-            .timeout(sharedPrefsTimeout);
+        await _prefs!.setString(_keyUser, userJson).timeout(sharedPrefsTimeout);
         await _prefs!.reload().timeout(sharedPrefsTimeout);
         final okAccess = _prefs!.getString(_keyAccessToken) == accessToken;
         final okRefresh = refreshToken.isEmpty ||
@@ -1111,11 +1113,46 @@ class AuthRepository {
   }
 
   Future<String?> _refreshAccessTokenImpl() async {
-    final refreshToken = await _getRefreshToken();
-    if (refreshToken == null || refreshToken.isEmpty) {
+    var refreshToken = (await _getRefreshToken()) ?? '';
+    if (refreshToken.isEmpty) {
       return null;
     }
 
+    // Сеть и одиночный 401 не стирают вход: сервер ещё принимает предыдущий
+    // refresh, а другой таб мог уже записать более новый токен в storage.
+    const attempts = 3;
+    var sawDead = false;
+    for (var attempt = 0; attempt < attempts; attempt++) {
+      final outcome = await _refreshAccessTokenOnce(refreshToken);
+      if (outcome == _RefreshOnceResult.success) {
+        return _memoryAccessToken;
+      }
+      if (outcome == _RefreshOnceResult.frozen) {
+        await logout();
+        onSessionInvalidated?.call();
+        return null;
+      }
+      if (outcome == _RefreshOnceResult.dead) {
+        sawDead = true;
+      }
+      final stored = await _readStoredRefreshToken();
+      if (stored != null && stored.isNotEmpty && stored != refreshToken) {
+        refreshToken = stored;
+        _memoryRefreshToken = stored;
+        continue;
+      }
+      if (attempt == attempts - 1) break;
+      await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+    }
+    if (sawDead) {
+      await logout();
+      onSessionInvalidated?.call();
+    }
+    return null;
+  }
+
+  Future<_RefreshOnceResult> _refreshAccessTokenOnce(
+      String refreshToken) async {
     final http.Response response;
     try {
       response = await ApiClient.post(
@@ -1125,29 +1162,29 @@ class AuthRepository {
         operation: 'AuthRepository.refresh',
       );
     } catch (_) {
-      // Сеть недоступна — сессию не трогаем.
-      return null;
+      return _RefreshOnceResult.retry;
     }
-
-    if (authRefreshIsDeadSession(response.statusCode)) {
-      await logout();
-      onSessionInvalidated?.call();
-      return null;
-    }
-    if (response.statusCode == 502 || response.statusCode == 503) {
-      return null;
-    }
-    if (response.statusCode != 200) {
-      return null;
-    }
-
+    if (response.statusCode == 403) return _RefreshOnceResult.frozen;
+    if (response.statusCode == 401) return _RefreshOnceResult.dead;
+    if (response.statusCode != 200) return _RefreshOnceResult.retry;
     try {
-      final result = await _handleAuthResponse(response);
-      return result.accessToken;
+      await _handleAuthResponse(response);
+      return _RefreshOnceResult.success;
     } catch (_) {
       // Битый ответ — не стираем refresh, попробуем позже.
-      return null;
+      return _RefreshOnceResult.retry;
     }
+  }
+
+  Future<String?> _readStoredRefreshToken() async {
+    await init();
+    if (_prefs == null) return null;
+    try {
+      await _prefs!.reload();
+      final stored = _prefs!.getString(_keyRefreshToken);
+      if (stored != null && stored.isNotEmpty) return stored;
+    } catch (_) {}
+    return null;
   }
 
   Future<String?> _getRefreshToken() async {

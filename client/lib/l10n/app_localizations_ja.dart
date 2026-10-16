@@ -422,6 +422,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonClose => '閉じる';
 
   @override
+  String get openInApp => 'アプリで開く';
+
+  @override
   String get commonRetry => '再試行';
 
   @override

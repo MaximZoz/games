@@ -422,6 +422,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get commonClose => 'Κλείσιμο';
 
   @override
+  String get openInApp => 'Άνοιγμα στην εφαρμογή';
+
+  @override
   String get commonRetry => 'Επανάληψη';
 
   @override

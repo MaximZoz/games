@@ -32,3 +32,24 @@ func TestUserInvitesRedisKey(t *testing.T) {
 		t.Fatalf("key = %q", got)
 	}
 }
+
+func TestLobbyDeclinedRedisKey(t *testing.T) {
+	if got := lobbyDeclinedRedisKey("L1"); got != "lobby:L1:declined" {
+		t.Fatalf("key = %q", got)
+	}
+}
+
+func TestPendingInviteVisible(t *testing.T) {
+	if !pendingInviteVisible(true, "", "u1", false) {
+		t.Fatal("invited user should see the card")
+	}
+	if !pendingInviteVisible(false, "u1", "u1", false) {
+		t.Fatal("invite target should see the card")
+	}
+	if pendingInviteVisible(true, "u1", "u1", true) {
+		t.Fatal("declined invite must stay hidden")
+	}
+	if pendingInviteVisible(false, "other", "u1", false) {
+		t.Fatal("stranger must not see the card")
+	}
+}

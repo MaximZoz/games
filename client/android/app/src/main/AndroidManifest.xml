@@ -30,6 +30,15 @@
                 <action android:name="FLUTTER_NOTIFICATION_CLICK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+            <!-- Ссылка приглашения: zozugames://zozugames.com/games/…/lobby/… -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="${appUrlScheme}" android:host="zozugames.com" android:pathPattern="/games/.*/lobby/.*"/>
+                <data android:scheme="${appUrlScheme}" android:host="zozugames.com" android:pathPattern="/games/.*/game/.*"/>
+            </intent-filter>
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="true"/>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

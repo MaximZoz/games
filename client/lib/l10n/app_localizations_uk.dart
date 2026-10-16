@@ -422,6 +422,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get commonClose => 'Закрити';
 
   @override
+  String get openInApp => 'Відкрити в застосунку';
+
+  @override
   String get commonRetry => 'Повторити';
 
   @override

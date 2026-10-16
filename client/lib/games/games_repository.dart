@@ -894,20 +894,26 @@ class GameStateItem {
   final String? oDisplayName;
   final String xAvatarKind;
   final String? xAvatarValue;
+
+  /// false — в этом снимке полей аватара не было (типичный WS-ход).
+  final bool xAvatarKnown;
   final String? xFrameColor;
   final String? xFrameCode;
   final String oAvatarKind;
   final String? oAvatarValue;
+  final bool oAvatarKnown;
   final String? oFrameColor;
   final String? oFrameCode;
   final String? tDisplayName;
   final String? sDisplayName;
   final String tAvatarKind;
   final String? tAvatarValue;
+  final bool tAvatarKnown;
   final String? tFrameColor;
   final String? tFrameCode;
   final String sAvatarKind;
   final String? sAvatarValue;
+  final bool sAvatarKnown;
   final String? sFrameColor;
   final String? sFrameCode;
   final String? chatId;
@@ -944,20 +950,24 @@ class GameStateItem {
     this.oDisplayName,
     this.xAvatarKind = 'letter',
     this.xAvatarValue,
+    this.xAvatarKnown = false,
     this.xFrameColor,
     this.xFrameCode,
     this.oAvatarKind = 'letter',
     this.oAvatarValue,
+    this.oAvatarKnown = false,
     this.oFrameColor,
     this.oFrameCode,
     this.tDisplayName,
     this.sDisplayName,
     this.tAvatarKind = 'letter',
     this.tAvatarValue,
+    this.tAvatarKnown = false,
     this.tFrameColor,
     this.tFrameCode,
     this.sAvatarKind = 'letter',
     this.sAvatarValue,
+    this.sAvatarKnown = false,
     this.sFrameColor,
     this.sFrameCode,
     this.chatId,
@@ -1085,30 +1095,30 @@ class GameStateItem {
           incoming.stakeBronze != 0 ? incoming.stakeBronze : stakeBronze,
       xDisplayName: incoming.xDisplayName ?? xDisplayName,
       oDisplayName: incoming.oDisplayName ?? oDisplayName,
-      xAvatarKind: incoming.xUserId.trim().isNotEmpty
-          ? incoming.xAvatarKind
-          : xAvatarKind,
-      xAvatarValue: incoming.xAvatarValue ?? xAvatarValue,
+      xAvatarKind: incoming.xAvatarKnown ? incoming.xAvatarKind : xAvatarKind,
+      xAvatarValue:
+          incoming.xAvatarKnown ? incoming.xAvatarValue : xAvatarValue,
+      xAvatarKnown: xAvatarKnown || incoming.xAvatarKnown,
       xFrameColor: incoming.xFrameColor ?? xFrameColor,
       xFrameCode: incoming.xFrameCode ?? xFrameCode,
-      oAvatarKind: incoming.oUserId.trim().isNotEmpty
-          ? incoming.oAvatarKind
-          : oAvatarKind,
-      oAvatarValue: incoming.oAvatarValue ?? oAvatarValue,
+      oAvatarKind: incoming.oAvatarKnown ? incoming.oAvatarKind : oAvatarKind,
+      oAvatarValue:
+          incoming.oAvatarKnown ? incoming.oAvatarValue : oAvatarValue,
+      oAvatarKnown: oAvatarKnown || incoming.oAvatarKnown,
       oFrameColor: incoming.oFrameColor ?? oFrameColor,
       oFrameCode: incoming.oFrameCode ?? oFrameCode,
       tDisplayName: incoming.tDisplayName ?? tDisplayName,
       sDisplayName: incoming.sDisplayName ?? sDisplayName,
-      tAvatarKind: incoming.tUserId.trim().isNotEmpty
-          ? incoming.tAvatarKind
-          : tAvatarKind,
-      tAvatarValue: incoming.tAvatarValue ?? tAvatarValue,
+      tAvatarKind: incoming.tAvatarKnown ? incoming.tAvatarKind : tAvatarKind,
+      tAvatarValue:
+          incoming.tAvatarKnown ? incoming.tAvatarValue : tAvatarValue,
+      tAvatarKnown: tAvatarKnown || incoming.tAvatarKnown,
       tFrameColor: incoming.tFrameColor ?? tFrameColor,
       tFrameCode: incoming.tFrameCode ?? tFrameCode,
-      sAvatarKind: incoming.sUserId.trim().isNotEmpty
-          ? incoming.sAvatarKind
-          : sAvatarKind,
-      sAvatarValue: incoming.sAvatarValue ?? sAvatarValue,
+      sAvatarKind: incoming.sAvatarKnown ? incoming.sAvatarKind : sAvatarKind,
+      sAvatarValue:
+          incoming.sAvatarKnown ? incoming.sAvatarValue : sAvatarValue,
+      sAvatarKnown: sAvatarKnown || incoming.sAvatarKnown,
       sFrameColor: incoming.sFrameColor ?? sFrameColor,
       sFrameCode: incoming.sFrameCode ?? sFrameCode,
       chatId: incoming.chatId ?? chatId,
@@ -1178,20 +1188,24 @@ class GameStateItem {
       }(),
       xAvatarKind: json['x_avatar_kind'] as String? ?? 'letter',
       xAvatarValue: json['x_avatar_value'] as String?,
+      xAvatarKnown: _avatarSpecified(json, 'x'),
       xFrameColor: json['x_frame_color'] as String?,
       xFrameCode: json['x_frame_code'] as String?,
       oAvatarKind: json['o_avatar_kind'] as String? ?? 'letter',
       oAvatarValue: json['o_avatar_value'] as String?,
+      oAvatarKnown: _avatarSpecified(json, 'o'),
       oFrameColor: json['o_frame_color'] as String?,
       oFrameCode: json['o_frame_code'] as String?,
       tDisplayName: _localizedOptionalName(json['t_display_name']),
       sDisplayName: _localizedOptionalName(json['s_display_name']),
       tAvatarKind: json['t_avatar_kind'] as String? ?? 'letter',
       tAvatarValue: json['t_avatar_value'] as String?,
+      tAvatarKnown: _avatarSpecified(json, 't'),
       tFrameColor: json['t_frame_color'] as String?,
       tFrameCode: json['t_frame_code'] as String?,
       sAvatarKind: json['s_avatar_kind'] as String? ?? 'letter',
       sAvatarValue: json['s_avatar_value'] as String?,
+      sAvatarKnown: _avatarSpecified(json, 's'),
       sFrameColor: json['s_frame_color'] as String?,
       sFrameCode: json['s_frame_code'] as String?,
       chatId: json['chat_id'] as String?,
@@ -1210,6 +1224,10 @@ class GameStateItem {
       }(),
     );
   }
+
+  static bool _avatarSpecified(Map<String, dynamic> json, String side) =>
+      json.containsKey('${side}_avatar_kind') ||
+      json.containsKey('${side}_avatar_value');
 
   static List<int>? _parseWinningCells(dynamic raw) {
     if (raw is! List || raw.length < 3 || raw.length > 9) return null;

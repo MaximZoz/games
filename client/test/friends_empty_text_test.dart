@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 
 void main() {
   group('friendsListEmptyText', () {
@@ -162,6 +164,65 @@ void main() {
           loading: true,
           loaderVisible: true,
         ),
+        isFalse,
+      );
+    });
+  });
+
+  group('friendsFindTabCount', () {
+    test('пока опрос не пришёл, берёт число из списка друзей', () {
+      expect(friendsFindTabCount(live: null, snapshot: 122), 122);
+      expect(friendsFindTabCount(live: 130, snapshot: 122), 130);
+    });
+
+    test('без обоих источников бейджа нет', () {
+      expect(friendsFindTabCount(live: null, snapshot: null), isNull);
+    });
+  });
+
+  group('FriendsSnapshot.usersCount', () {
+    test('читает users_count из того же ответа, что и друзья', () {
+      final snapshot = FriendsSnapshot.fromJson({
+        'friends': [],
+        'incoming': [],
+        'outgoing': [],
+        'users_count': 122,
+      });
+      expect(snapshot.usersCount, 122);
+    });
+
+    test('старый ответ без поля не подставляет ноль', () {
+      final snapshot = FriendsSnapshot.fromJson({
+        'friends': [],
+        'incoming': [],
+        'outgoing': [],
+      });
+      expect(snapshot.usersCount, isNull);
+    });
+  });
+
+  group('friendsUsePackedTabs', () {
+    test('на десктопе и в альбоме вкладки собраны вместе', () {
+      expect(
+        friendsUsePackedTabs(width: 1280, phoneLandscape: false),
+        isTrue,
+      );
+      expect(
+        friendsUsePackedTabs(
+          width: Breakpoints.mobile,
+          phoneLandscape: false,
+        ),
+        isTrue,
+      );
+      expect(
+        friendsUsePackedTabs(width: 740, phoneLandscape: true),
+        isTrue,
+      );
+    });
+
+    test('в портрете телефона вкладки делят ширину', () {
+      expect(
+        friendsUsePackedTabs(width: 390, phoneLandscape: false),
         isFalse,
       );
     });
