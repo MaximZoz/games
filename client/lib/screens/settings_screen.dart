@@ -26,6 +26,7 @@ import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+import 'package:multigames_client/ui/widgets/app_update_dialog.dart';
 
 void _applySoundCategories(WidgetRef ref) {
   Sfx.instance.setCategories(
@@ -125,6 +126,17 @@ class SettingsScreen extends ConsumerWidget {
           ref,
           selected: localeChoice,
         );
+
+    Future<void> openUpdate() async {
+      final notes = ref.read(appUpdateProvider).whatsNew;
+      final go = await showAppUpdatePromptDialog(
+        context,
+        whatsNew: notes,
+        allowClose: true,
+      );
+      if (!go || !context.mounted) return;
+      await ref.read(appUpdateProvider.notifier).applyUpdate();
+    }
 
     return Scaffold(
       backgroundColor: AppColors.surfaceUnified,
@@ -587,13 +599,10 @@ class SettingsScreen extends ConsumerWidget {
                         Center(
                           child: GamepadFocusBlock(
                             radius: AppRadius.button,
-                            onActivate: () => ref
-                                .read(appUpdateProvider.notifier)
-                                .applyUpdate(),
+                            onActivate: openUpdate,
                             child: FilledButton.icon(
-                              onPressed: () => ref
-                                  .read(appUpdateProvider.notifier)
-                                  .applyUpdate(),
+                              key: const ValueKey('settings-app-update'),
+                              onPressed: openUpdate,
                               icon: const Icon(
                                 Icons.system_update_alt_rounded,
                                 size: 18,
@@ -603,20 +612,6 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        if (appUpdate.whatsNew.trim().isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            appUpdate.whatsNew,
-                            textAlign: TextAlign.center,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.textSecondary
-                                          .withValues(alpha: 0.8),
-                                      fontSize: 12,
-                                      height: 1.35,
-                                    ),
-                          ),
-                        ],
                       ],
                     ],
                   ),
