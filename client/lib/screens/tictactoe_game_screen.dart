@@ -29,27 +29,13 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
-import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
-import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/router.dart';
 import 'package:multigames_client/l10n/l10n.dart';
-
-const List<IconData> _presetAvatarIcons = [
-  Icons.face_rounded,
-  Icons.face_2_rounded,
-  Icons.face_3_rounded,
-  Icons.face_4_rounded,
-  Icons.face_5_rounded,
-  Icons.face_6_rounded,
-  Icons.man_rounded,
-  Icons.woman_rounded,
-  Icons.person_rounded,
-];
 
 class TicTacToeGameScreen extends ConsumerStatefulWidget {
   const TicTacToeGameScreen({
@@ -1999,7 +1985,8 @@ class _MultiOpponentChip extends StatelessWidget {
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _OpponentAvatar(
+        GamePlayerAvatar(
+          userId: player.userId,
           displayName: displayName,
           avatarKind: player.avatarKind,
           avatarValue: player.avatarValue,
@@ -2109,7 +2096,8 @@ class _OpponentCard extends StatelessWidget {
               child: GestureDetector(
                 onTap: onInfoTap,
                 behavior: HitTestBehavior.opaque,
-                child: _OpponentAvatar(
+                child: GamePlayerAvatar(
+                  userId: opponentId,
                   displayName: displayName,
                   avatarKind: avatarKind,
                   avatarValue: avatarValue,
@@ -2166,81 +2154,6 @@ class _OpponentCard extends StatelessWidget {
       );
     }
     return card;
-  }
-}
-
-class _OpponentAvatar extends StatelessWidget {
-  const _OpponentAvatar({
-    required this.displayName,
-    required this.avatarKind,
-    required this.avatarValue,
-    this.frameCode,
-    this.frameColor,
-    this.compact = false,
-  });
-
-  final String displayName;
-  final String avatarKind;
-  final String? avatarValue;
-  final String? frameCode;
-  final String? frameColor;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final r = compact ? 18.0 : 22.0;
-    Widget avatar;
-    if (avatarKind == 'file' &&
-        avatarValue != null &&
-        avatarValue!.trim().isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(avatarValue);
-      if (img != null) {
-        avatar = CircleAvatar(
-          radius: r,
-          backgroundImage: img,
-        );
-      } else {
-        avatar = _letter(r);
-      }
-    } else if (avatarKind == 'preset' && avatarValue != null) {
-      final idx = int.tryParse(avatarValue!);
-      if (idx != null && idx >= 0 && idx < _presetAvatarIcons.length) {
-        avatar = CircleAvatar(
-          radius: r,
-          backgroundColor: AppColors.accentSoft,
-          child: Icon(_presetAvatarIcons[idx], color: AppColors.accentStart),
-        );
-      } else {
-        avatar = _letter(r);
-      }
-    } else {
-      avatar = _letter(r);
-    }
-    return FramedAvatar(
-      size: r * 2,
-      borderWidth: compact ? 2.4 : 3.0,
-      frameCode: frameCode,
-      frameColor: frameColor,
-      animate: false,
-      child: avatar,
-    );
-  }
-
-  Widget _letter(double r) {
-    final letter =
-        displayName.trim().isEmpty ? '?' : displayName[0].toUpperCase();
-    return CircleAvatar(
-      radius: r,
-      backgroundColor: AppColors.accentSoft,
-      child: Text(
-        letter,
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: compact ? 14 : 16,
-        ),
-      ),
-    );
   }
 }
 
@@ -2508,8 +2421,8 @@ class _GameBoardState extends State<_GameBoard>
                                   ? () => _handleMove(cellIndex)
                                   : null,
                               pulse: cellCanTap ? pulseController : null,
-                              highlighted: showCursor &&
-                                  visualIndex == _cursor.index,
+                              highlighted:
+                                  showCursor && visualIndex == _cursor.index,
                             ),
                           );
                         });
@@ -2532,26 +2445,26 @@ class _GameBoardState extends State<_GameBoard>
         return GamepadScope(
           onAction: _onGamepad,
           child: Center(
-          child: SizedBox.square(
-            dimension: viewportSize,
-            child: _zoomableVariant
-                ? InteractiveViewer(
-                    transformationController: _transform,
-                    // scale=1: доска = viewport → с boundaryMargin=0 пан
-                    // невозможен; при зуме край доски не уезжает за кадр.
-                    boundaryMargin: EdgeInsets.zero,
-                    minScale: 1,
-                    maxScale: 3.5,
-                    // Зум/пан только на своём ходе.
-                    scaleEnabled: _interactionEnabled,
-                    panEnabled: _interactionEnabled,
-                    clipBehavior: Clip.hardEdge,
-                    onInteractionEnd: _onInteractionEnd,
-                    child: board,
-                  )
-                : board,
+            child: SizedBox.square(
+              dimension: viewportSize,
+              child: _zoomableVariant
+                  ? InteractiveViewer(
+                      transformationController: _transform,
+                      // scale=1: доска = viewport → с boundaryMargin=0 пан
+                      // невозможен; при зуме край доски не уезжает за кадр.
+                      boundaryMargin: EdgeInsets.zero,
+                      minScale: 1,
+                      maxScale: 3.5,
+                      // Зум/пан только на своём ходе.
+                      scaleEnabled: _interactionEnabled,
+                      panEnabled: _interactionEnabled,
+                      clipBehavior: Clip.hardEdge,
+                      onInteractionEnd: _onInteractionEnd,
+                      child: board,
+                    )
+                  : board,
+            ),
           ),
-        ),
         );
       },
     );

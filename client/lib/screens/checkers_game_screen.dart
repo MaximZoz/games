@@ -657,6 +657,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     final compact = MediaQuery.sizeOf(context).width < 420;
 
     return GameOpponentCard(
+      userId: oppId,
       displayName: name,
       avatarKind: opp?.avatarKind ?? 'letter',
       avatarValue: opp?.avatarValue,

@@ -6320,6 +6320,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               child: _opponentSeatBody(
+                userId: oppId,
                 name: name,
                 avatarKind: avatarKind,
                 avatarValue: avatarValue,
@@ -6450,6 +6451,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           radius: 22,
           onExpired: _onTurnTimeExpired,
           child: GameOpponentCard(
+            userId: oppId,
             displayName: name,
             avatarKind: avatarKind,
             avatarValue: avatarValue,
@@ -6558,6 +6560,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// В альбоме под стол остаётся ~60 px, и вертикальная колонка «аватар →
   /// имя → роль» съедает высоту, которой не хватает картам на столе.
   Widget _opponentSeatBody({
+    required String userId,
     required String name,
     required String avatarKind,
     required String? avatarValue,
@@ -6570,6 +6573,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final avatar = Opacity(
       opacity: finished ? 0.45 : 1,
       child: GamePlayerAvatar(
+        userId: userId,
         displayName: name,
         avatarKind: avatarKind,
         avatarValue: avatarValue,

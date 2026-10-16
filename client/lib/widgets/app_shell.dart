@@ -38,6 +38,7 @@ import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/app_update_dialog.dart';
 import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
@@ -1325,63 +1326,14 @@ class AppShell extends ConsumerWidget {
 }
 
 Future<void> _showAppUpdateDialog(BuildContext context, WidgetRef ref) async {
-  final l10n = context.l10n;
-  final whatsNew = ref.read(appUpdateProvider).whatsNew.trim();
-  final go = await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) {
-      return AlertDialog(
-        backgroundColor: AppColors.surfaceCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(
-          l10n.appUpdateTitle,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 360, maxHeight: 360),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.appUpdateBody),
-                if (whatsNew.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  Text(
-                    l10n.appUpdateWhatsNew,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    whatsNew,
-                    style: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.95),
-                      height: 1.35,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: AppButtonStyles.of(),
-            child: Text(l10n.appUpdateOk),
-          ),
-        ],
-      );
-    },
+  final whatsNew = ref.read(appUpdateProvider).whatsNew;
+  final go = await showAppUpdatePromptDialog(
+    context,
+    whatsNew: whatsNew,
+    allowClose: false,
   );
-  if (go == true) {
-    await ref.read(appUpdateProvider.notifier).applyUpdate();
-  }
+  if (!go || !context.mounted) return;
+  await ref.read(appUpdateProvider.notifier).applyUpdate();
 }
 
 class _AppUpdateBanner extends StatelessWidget {

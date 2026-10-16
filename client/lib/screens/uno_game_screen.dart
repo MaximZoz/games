@@ -2247,6 +2247,7 @@ class UnoOpponentHand extends StatelessWidget {
       decoration: left ? TextDecoration.lineThrough : null,
     );
     final avatar = GamePlayerAvatar(
+      userId: player.id,
       displayName: name,
       avatarKind: player.avatarKind,
       avatarValue: player.avatarValue,

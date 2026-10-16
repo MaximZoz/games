@@ -738,6 +738,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     final compact = MediaQuery.sizeOf(context).width < 420;
 
     return GameOpponentCard(
+      userId: oppId,
       displayName: name,
       avatarKind: opp?.avatarKind ?? 'letter',
       avatarValue: opp?.avatarValue,
