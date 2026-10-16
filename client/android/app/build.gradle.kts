@@ -52,11 +52,13 @@ android {
             dimension = "env"
             applicationId = "com.zozugames.app"
             resValue("string", "app_name", "Zozu Games")
+            manifestPlaceholders["appUrlScheme"] = "zozugames"
         }
         create("dev") {
             dimension = "env"
             applicationId = "com.zozugames.app.dev"
             resValue("string", "app_name", "Zozu Games DEV")
+            manifestPlaceholders["appUrlScheme"] = "zozugames-dev"
         }
     }
 

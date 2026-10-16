@@ -23,6 +23,7 @@ import 'core/push_notification_nav_stub.dart'
     if (dart.library.io) 'core/push_notification_nav_io.dart' as push_nav;
 import 'router.dart';
 import 'ui/app_theme.dart';
+import 'widgets/open_in_app_banner.dart';
 import 'ui/widgets/css_safe_area.dart';
 import 'ui/widgets/keyboard_inset_hud.dart';
 import 'ui/widgets/zozu_boot_splash.dart';
@@ -260,7 +261,14 @@ class MultiGamesApp extends ConsumerWidget {
                   child: CssSafeArea(
                     child: FakeKeyboardInset(
                       child: GamepadHost(
-                        child: child ?? const SizedBox.shrink(),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: child ?? const SizedBox.shrink(),
+                            ),
+                            const OpenInAppBanner(),
+                          ],
+                        ),
                       ),
                     ),
                   ),

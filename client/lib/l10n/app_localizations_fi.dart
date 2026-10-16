@@ -422,6 +422,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get commonClose => 'Sulje';
 
   @override
+  String get openInApp => 'Avaa sovelluksessa';
+
+  @override
   String get commonRetry => 'Yritä uudelleen';
 
   @override

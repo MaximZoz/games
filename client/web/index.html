@@ -42,6 +42,42 @@
 
   <title>Zozu Games</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    // Держать в синхроне с client/lib/core/native_app_link.dart.
+    // Android Chrome один раз открывает установленное приложение на то же лобби.
+    // iPhone и встроенный WebView остаются на сайте: там кнопка, без ложного диалога.
+    (function () {
+      try {
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+          || window.navigator.standalone === true;
+        if (standalone) return;
+        var ua = navigator.userAgent || '';
+        if (!/Android/i.test(ua) || /;\s*wv\)/i.test(ua)) return;
+        var loc = window.location;
+        if (/[?&]web=1(?:&|$)/.test(loc.search)) return;
+        var path = loc.pathname || '';
+        if (path.length > 1 && path.charAt(path.length - 1) === '/') path = path.slice(0, -1);
+        if (!/^\/games\/[^/]+\/(lobby|game)\/[^/]+$/.test(path)) return;
+        var attempted = false;
+        try { attempted = sessionStorage.getItem('zozu_native_attempt') === '1'; } catch (e) {}
+        if (attempted) return;
+        try { sessionStorage.setItem('zozu_native_attempt', '1'); } catch (e) {}
+        var host = (loc.hostname || '').toLowerCase();
+        var dev = host === 'localhost' || host === '127.0.0.1' || host.indexOf('-dev.') !== -1;
+        var scheme = dev ? 'zozugames-dev' : 'zozugames';
+        var pkg = dev ? 'com.zozugames.app.dev' : 'com.zozugames.app';
+        var tail = path + loc.search;
+        var fallback = new URL(loc.href);
+        fallback.searchParams.set('web', '1');
+        var intent = 'intent://zozugames.com' + tail
+          + '#Intent;scheme=' + scheme
+          + ';package=' + pkg
+          + ';S.browser_fallback_url=' + encodeURIComponent(fallback.toString())
+          + ';end';
+        window.location.replace(intent);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&display=swap" rel="stylesheet">

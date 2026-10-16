@@ -422,6 +422,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get commonClose => 'Luk';
 
   @override
+  String get openInApp => 'Åbn i appen';
+
+  @override
   String get commonRetry => 'Prøv igen';
 
   @override

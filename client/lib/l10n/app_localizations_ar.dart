@@ -422,6 +422,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonClose => 'إغلاق';
 
   @override
+  String get openInApp => 'فتح في التطبيق';
+
+  @override
   String get commonRetry => 'إعادة المحاولة';
 
   @override

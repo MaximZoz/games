@@ -422,6 +422,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonClose => 'Schließen';
 
   @override
+  String get openInApp => 'In der App öffnen';
+
+  @override
   String get commonRetry => 'Erneut';
 
   @override

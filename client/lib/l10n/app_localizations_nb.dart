@@ -422,6 +422,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get commonClose => 'Lukk';
 
   @override
+  String get openInApp => 'Åpne i appen';
+
+  @override
   String get commonRetry => 'Prøv igjen';
 
   @override

@@ -422,6 +422,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get commonClose => 'Kapat';
 
   @override
+  String get openInApp => 'Uygulamada aç';
+
+  @override
   String get commonRetry => 'Yeniden dene';
 
   @override

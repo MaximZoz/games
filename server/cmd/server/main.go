@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"multigames/server/internal/api"
+	"multigames/server/internal/applinks"
 	"multigames/server/internal/applog"
 	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
@@ -633,17 +634,36 @@ func main() {
 
 	directDB := appLogEnabled
 	corsHandler := api.CORS(api.RequestLogger([]byte(jwtSecret), logWriter, pool, directDB, mux))
-	var finalHandler http.Handler = corsHandler
+	var spa http.Handler
 	if _, err := webFS.Open("web/index.html"); err == nil {
-		finalHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
-				corsHandler.ServeHTTP(w, r)
-				return
-			}
-			spaHandler(webFS).ServeHTTP(w, r)
-		})
+		spa = spaHandler(webFS)
 		log.Println("Serving API at /api/* and static SPA at /*")
 	}
+	appLinks := applinks.LoadConfig()
+	if appLinks.AndroidReady() {
+		log.Printf("App Links: %s (%d sha256)", appLinks.AndroidPackage, len(appLinks.AndroidSHA256))
+	} else {
+		log.Printf("App Links: off (set ANDROID_APP_LINK_SHA256)")
+	}
+	if appLinks.AppleReady() {
+		log.Printf("Universal Links: %s.%s", appLinks.AppleTeamID, appLinks.AppleBundleID)
+	} else {
+		log.Printf("Universal Links: off (set APPLE_TEAM_ID)")
+	}
+	finalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if applinks.Serve(w, r, appLinks) {
+			return
+		}
+		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
+			corsHandler.ServeHTTP(w, r)
+			return
+		}
+		if spa != nil {
+			spa.ServeHTTP(w, r)
+			return
+		}
+		corsHandler.ServeHTTP(w, r)
+	})
 
 	port := getEnv("PORT", "8080")
 	if port != "" && port[0] != ':' {
