@@ -694,22 +694,25 @@ class _RenderGameCardBodyColumn extends RenderBox
         chips.size.height +
         actionsGap +
         actions.size.height;
-    final height = constraints.hasBoundedHeight &&
-            constraints.maxHeight.isFinite &&
-            constraints.maxHeight > contentHeight
-        ? constraints.maxHeight
-        : contentHeight;
+    var layoutHeight = contentHeight;
+    if (constraints.hasBoundedHeight &&
+        constraints.maxHeight.isFinite &&
+        constraints.maxHeight > layoutHeight) {
+      layoutHeight = constraints.maxHeight;
+    }
+    if (constraints.minHeight > layoutHeight) {
+      layoutHeight = constraints.minHeight;
+    }
+    final sizeHeight = constraints.constrainHeight(layoutHeight);
 
     final headerData = header.parentData! as _GameCardBodyParentData;
     final chipsData = chips.parentData! as _GameCardBodyParentData;
     final actionsData = actions.parentData! as _GameCardBodyParentData;
     headerData.offset = Offset.zero;
     chipsData.offset = Offset(0, header.size.height + headerGap);
-    actionsData.offset = Offset(
-      0,
-      height - actions.size.height,
-    );
-    size = constraints.constrain(Size(constraints.maxWidth, height));
+    final actionsTop = sizeHeight - actions.size.height;
+    actionsData.offset = Offset(0, actionsTop < 0 ? 0 : actionsTop);
+    size = Size(constraints.constrainWidth(width), sizeHeight);
   }
 
   @override

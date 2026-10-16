@@ -44,6 +44,16 @@ type fcmAPNS struct {
 
 type fcmAPNSPayload struct {
 	Aps *fcmAps `json:"aps,omitempty"`
+	// Те же ключи, что в data: iOS часто не кладёт data в userInfo,
+	// если apns.payload задан отдельно. Дублируем маршрут в payload.
+	URL      string `json:"url,omitempty"`
+	Tag      string `json:"tag,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Body     string `json:"body,omitempty"`
+	ChatID   string `json:"chat_id,omitempty"`
+	Kind     string `json:"kind,omitempty"`
+	GameType string `json:"game_type,omitempty"`
+	LobbyID  string `json:"lobby_id,omitempty"`
 }
 
 type fcmAps struct {
@@ -182,7 +192,17 @@ func buildFCMMessage(token string, payload PushPayload) fcmMessage {
 		},
 		APNS: &fcmAPNS{
 			Headers: headers,
-			Payload: &fcmAPNSPayload{Aps: aps},
+			Payload: &fcmAPNSPayload{
+				Aps:      aps,
+				URL:      payload.URL,
+				Tag:      payload.Tag,
+				Title:    payload.Title,
+				Body:     payload.Body,
+				ChatID:   payload.ChatID,
+				Kind:     payload.Kind,
+				GameType: payload.GameType,
+				LobbyID:  payload.LobbyID,
+			},
 		},
 	}
 }

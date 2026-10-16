@@ -13,7 +13,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     options connectionOptions: UIScene.ConnectionOptions
   ) {
     if let response = connectionOptions.notificationResponse {
-      ZozuPush.rememberTap(response.notification.request.content.userInfo)
+      ZozuPush.rememberResponse(response)
     }
     for context in connectionOptions.urlContexts {
       pendingOpenURLs.append(context.url)
@@ -26,12 +26,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
   func sceneDidBecomeActive(_ scene: UIScene) {
     attachZozuAuthChannels()
+    ZozuPush.claimNotificationDelegate()
     ZozuPush.apply()
+    ZozuPush.deliverPendingTap()
+    ZozuPush.scheduleTapReplay()
     // Окно storyboard иногда появляется на следующем обороте run loop.
     // Ссылку холодного старта отдаём тогда же, один раз, уже живому engine.
     DispatchQueue.main.async {
       attachZozuAuthChannels()
+      ZozuPush.claimNotificationDelegate()
       ZozuPush.apply()
+      ZozuPush.deliverPendingTap()
       self.flushPendingOpenURLs(clear: true)
     }
   }

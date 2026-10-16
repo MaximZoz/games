@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -102,10 +103,19 @@ Future<Map<String, String>?> takeIosNotificationTap() async {
 void listenIosNotificationTaps(void Function(Map<String, String> data) onTap) {
   if (!Platform.isIOS || !fcmSupported()) return;
   _pushChannel.setMethodCallHandler((call) async {
-    if (call.method != 'notificationTap') return;
+    if (call.method != 'notificationTap') return false;
     final data = _stringMap(call.arguments);
-    if (data != null) onTap(data);
+    if (data == null) return false;
+    onTap(data);
+    // true стирает pendingTap. takeTap отсюда нельзя: тот же канал, взаимная блокировка.
+    return true;
   });
+  // Нативный тап мог прийти раньше, чем Dart повесил обработчик.
+  unawaited(() async {
+    try {
+      await _pushChannel.invokeMethod<void>('tapReady');
+    } catch (_) {}
+  }());
 }
 
 Stream<String> fcmTokenRefresh() {

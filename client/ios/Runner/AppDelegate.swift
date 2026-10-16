@@ -16,7 +16,11 @@ import UserNotifications
     // на launch engine, который storyboard-контроллер выбрасывает.
     // Живой messenger — в SceneDelegate / didBecomeActive.
     application.registerForRemoteNotifications()
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    let ok = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    // Firebase ставит свой delegate после этого метода. Забираем центр
+    // обратно, иначе тап по баннеру не доходит до Dart.
+    ZozuPush.claimNotificationDelegate()
+    return ok
   }
 
   override func userNotificationCenter(
@@ -26,12 +30,14 @@ import UserNotifications
   ) {
     // UIScene кладёт холодный старт в connectionOptions, а тап по уже
     // живому приложению — только сюда. Firebase этот вызов иногда не видит.
-    ZozuPush.rememberTap(response.notification.request.content.userInfo)
+    ZozuPush.rememberResponse(response)
+    let once = ZozuOnce(completionHandler)
     super.userNotificationCenter(
       center,
       didReceive: response,
-      withCompletionHandler: completionHandler
+      withCompletionHandler: { once.run() }
     )
+    once.run()
   }
 
   override func application(
@@ -42,6 +48,22 @@ import UserNotifications
     // Без этой копии getToken() на iPhone не получает APNs и пуш не регистрируется.
     ZozuPush.capture(deviceToken)
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+}
+
+/// completionHandler уведомления можно вызвать только один раз.
+final class ZozuOnce {
+  private var done = false
+  private let body: () -> Void
+
+  init(_ body: @escaping () -> Void) {
+    self.body = body
+  }
+
+  func run() {
+    if done { return }
+    done = true
+    body()
   }
 }
 
@@ -58,12 +80,17 @@ enum ZozuPush {
     channel.setMethodCallHandler { call, result in
       switch call.method {
       case "firebaseReady":
+        claimNotificationDelegate()
         apply()
+        deliverPendingTap()
         result(nil)
       case "takeTap":
         let tap = pendingTap
         pendingTap = nil
         result(tap)
+      case "tapReady":
+        deliverPendingTap()
+        result(nil)
       case "clearDelivered":
         let args = call.arguments as? [String: Any] ?? [:]
         let tag = (args["tag"] as? String) ?? ""
@@ -85,12 +112,61 @@ enum ZozuPush {
         result(FlutterMethodNotImplemented)
       }
     }
+    claimNotificationDelegate()
+    deliverPendingTap()
   }
 
   static var channel: FlutterMethodChannel?
   static var pendingTap: [String: String]?
 
-  static func rememberTap(_ userInfo: [AnyHashable: Any]) {
+  /// Тап по баннеру. `threadIdentifier` живёт на content, а не в userInfo:
+  /// без него iPhone открывает «Игры», хотя в aps был `chat_<id>`.
+  static func rememberResponse(_ response: UNNotificationResponse) {
+    let content = response.notification.request.content
+    rememberTap(
+      content.userInfo,
+      thread: content.threadIdentifier,
+      title: content.title,
+      body: content.body
+    )
+  }
+
+  static func claimNotificationDelegate() {
+    guard let delegate = UIApplication.shared.delegate as? UNUserNotificationCenterDelegate else {
+      return
+    }
+    UNUserNotificationCenter.current().delegate = delegate
+  }
+
+  static func deliverPendingTap() {
+    guard let channel = channel, let tap = pendingTap else { return }
+    channel.invokeMethod("notificationTap", arguments: tap) { result in
+      // true — живой Dart принял тап. Пока ответа нет, pendingTap не стираем:
+      // мёртвый engine отвечал успехом и съедал переход в чат.
+      let acked = (result as? Bool) == true
+        || (result as? NSNumber)?.boolValue == true
+      if acked, pendingTap == tap {
+        pendingTap = nil
+      }
+    }
+  }
+
+  /// Повтор, пока Dart не подтвердит. Холодный старт и возврат из фона
+  /// часто просыпают engine позже, чем приходит первый invoke.
+  static func scheduleTapReplay() {
+    for delay in [0.35, 1.0, 2.5] {
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        deliverPendingTap()
+      }
+    }
+  }
+
+  static func rememberTap(
+    _ userInfo: [AnyHashable: Any],
+    thread: String = "",
+    title: String = "",
+    body: String = ""
+  ) {
     var out: [String: String] = [:]
     func put(_ key: String, _ raw: Any?) {
       if out[key] != nil { return }
@@ -120,17 +196,27 @@ enum ZozuPush {
         put("body", aps["alert"])
       }
     }
-    if out.isEmpty { return }
-    pendingTap = out
-    guard let channel = channel else { return }
-    channel.invokeMethod("notificationTap", arguments: out) { result in
-      let missed = result is FlutterError
-        || (result as? NSObject) == FlutterMethodNotImplemented
-      if missed { return }
-      if pendingTap == out {
-        pendingTap = nil
+    if let gcm = userInfo["gcm.notification"] as? [AnyHashable: Any] {
+      for key in ["url", "tag", "chat_id", "title", "body", "payload", "game_type", "lobby_id"] {
+        put(key, gcm[key])
       }
     }
+    if let nested = userInfo["data"] as? [AnyHashable: Any] {
+      for key in ["url", "tag", "chat_id", "title", "body", "payload", "game_type", "lobby_id"] {
+        put(key, nested[key])
+      }
+    }
+    put("tag", userInfo["thread-id"])
+    put("tag", thread)
+    put("title", title)
+    put("body", body)
+    if out.isEmpty { return }
+    pendingTap = out
+    // Не стираем, пока Dart не подтвердит notificationTap или не вызовет takeTap.
+    // invoke на мёртвый engine умел «успешно» съесть тап, и живой движок
+    // открывал последнюю страницу.
+    deliverPendingTap()
+    scheduleTapReplay()
   }
 
   static func clearDelivered(

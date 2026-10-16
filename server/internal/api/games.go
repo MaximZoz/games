@@ -4334,7 +4334,8 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	})
 }
 
-// gameInvitePushTarget — гостевой экран «Войти в игру», не стол хозяина.
+// gameInvitePushTarget — путь лобби. Телефон по пушу сначала входит в стол,
+// ссылка из чата по тому же адресу по-прежнему показывает гостя.
 func gameInvitePushTarget(gameType, lobbyID string) (url, tag string) {
 	gameType = strings.TrimSpace(gameType)
 	lobbyID = strings.TrimSpace(lobbyID)

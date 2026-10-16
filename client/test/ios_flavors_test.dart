@@ -149,7 +149,12 @@ void main() {
     expect(app, contains('setBadgeCount'));
     expect(app, contains('applicationIconBadgeNumber'));
     expect(app, contains('didReceive response'));
-    expect(scene, contains('ZozuPush.rememberTap'));
+    expect(scene, contains('ZozuPush.rememberResponse'));
+    expect(scene, contains('scheduleTapReplay'));
+    expect(app, contains('claimNotificationDelegate'));
+    expect(app, contains('threadIdentifier'));
+    expect(app, contains('tapReady'));
+    expect(app, contains('deliverPendingTap'));
     expect(app, contains('"game_type"'));
     expect(app, contains('"lobby_id"'));
     expect(scene, contains('pendingOpenURLs'));
