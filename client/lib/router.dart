@@ -21,6 +21,7 @@ import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
+import 'package:multigames_client/games/invite_link_entry.dart';
 import 'package:multigames_client/screens/home_screen.dart';
 import 'package:multigames_client/screens/inventory_screen.dart';
 import 'package:multigames_client/screens/login_screen.dart';
@@ -259,6 +260,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         if (path == '/shop/stakes' || path.endsWith('/shop/stakes')) {
           return '/shop';
         }
+      }
+
+      // Ссылка приглашения не принимает игру: вкладка «Лобби» и карточка.
+      // Хозяин своей игры (уже в составе) остаётся в комнате ожидания.
+      if (user != null) {
+        final guestLobby = await redirectGuestInviteIfNeeded(ref, state.uri);
+        if (guestLobby != null) return guestLobby;
       }
 
       // Перезагрузка / обновление PWA: всегда вкладка «Игры» (не чаты/друзья/…).
