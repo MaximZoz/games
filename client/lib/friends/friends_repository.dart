@@ -92,7 +92,8 @@ class FriendItem {
 
   factory FriendItem.fromJson(Map<String, dynamic> json) {
     return FriendItem(
-      user: FriendUserItem.fromJson(Map<String, dynamic>.from(json['user'] as Map? ?? {})),
+      user: FriendUserItem.fromJson(
+          Map<String, dynamic>.from(json['user'] as Map? ?? {})),
       createdAt: json['created_at'] as String? ?? '',
     );
   }
@@ -112,7 +113,8 @@ class FriendRequestItem {
   factory FriendRequestItem.fromJson(Map<String, dynamic> json) {
     return FriendRequestItem(
       requestId: json['request_id'] as String? ?? '',
-      user: FriendUserItem.fromJson(Map<String, dynamic>.from(json['user'] as Map? ?? {})),
+      user: FriendUserItem.fromJson(
+          Map<String, dynamic>.from(json['user'] as Map? ?? {})),
       createdAt: json['created_at'] as String? ?? '',
     );
   }
@@ -123,10 +125,15 @@ class FriendsSnapshot {
   final List<FriendRequestItem> incoming;
   final List<FriendRequestItem> outgoing;
 
+  /// Сколько пользователей зарегистрировано. Приходит в том же ответе, что и
+  /// список друзей, чтобы бейдж «Найти друга» был виден сразу.
+  final int? usersCount;
+
   FriendsSnapshot({
     required this.friends,
     required this.incoming,
     required this.outgoing,
+    this.usersCount,
   });
 
   factory FriendsSnapshot.fromJson(Map<String, dynamic> json) {
@@ -134,16 +141,20 @@ class FriendsSnapshot {
         .map((e) => FriendItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
     final incoming = (json['incoming'] as List<dynamic>? ?? const [])
-        .map((e) => FriendRequestItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map((e) =>
+            FriendRequestItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
     final outgoing = (json['outgoing'] as List<dynamic>? ?? const [])
-        .map((e) => FriendRequestItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map((e) =>
+            FriendRequestItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
+    final rawCount = json['users_count'];
 
     return FriendsSnapshot(
       friends: friends,
       incoming: incoming,
       outgoing: outgoing,
+      usersCount: rawCount is num ? rawCount.toInt() : null,
     );
   }
 }
@@ -161,7 +172,8 @@ class FriendSearchItem {
 
   factory FriendSearchItem.fromJson(Map<String, dynamic> json) {
     return FriendSearchItem(
-      user: FriendUserItem.fromJson(Map<String, dynamic>.from(json['user'] as Map? ?? {})),
+      user: FriendUserItem.fromJson(
+          Map<String, dynamic>.from(json['user'] as Map? ?? {})),
       relationStatus: json['relation_status'] as String? ?? 'none',
       requestId: json['request_id'] as String?,
     );
@@ -188,7 +200,8 @@ class FriendSearchPage {
   }) {
     final usersRaw = json['users'] as List<dynamic>? ?? const [];
     final users = usersRaw
-        .map((e) => FriendSearchItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map((e) =>
+            FriendSearchItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
     final limit = json['limit'] as int? ?? fallbackLimit;
     final offset = json['offset'] as int? ?? fallbackOffset;
@@ -203,7 +216,8 @@ class FriendSearchPage {
 }
 
 class FriendsRepository {
-  FriendsRepository({required AuthRepository authRepository}) : _auth = authRepository;
+  FriendsRepository({required AuthRepository authRepository})
+      : _auth = authRepository;
 
   final AuthRepository _auth;
 
@@ -225,7 +239,8 @@ class FriendsRepository {
     try {
       final body = jsonDecode(response.body);
       if (body is Map) {
-        message = (body['message'] ?? body['error'] ?? message).toString().trim();
+        message =
+            (body['message'] ?? body['error'] ?? message).toString().trim();
       }
     } catch (_) {}
 
