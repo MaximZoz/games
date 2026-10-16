@@ -205,6 +205,16 @@ class _RenderGamesHubEqualHeightGrid extends RenderBox
     }
   }
 
+  List<double> _rowHeights(List<double> heights, int columns, int rows) {
+    final rowHeights = List<double>.filled(rows, 0);
+    for (var i = 0; i < heights.length; i++) {
+      final row = i ~/ columns;
+      if (row >= rows) break;
+      rowHeights[row] = math.max(rowHeights[row], heights[i]);
+    }
+    return rowHeights;
+  }
+
   List<RenderBox> _childList() {
     final out = <RenderBox>[];
     var child = firstChild;
@@ -236,16 +246,27 @@ class _RenderGamesHubEqualHeightGrid extends RenderBox
 
     final columns = cols < 1 ? 1 : cols;
     final rows = ((children.length + columns - 1) / columns).floor();
-    final rowHeights = List<double>.filled(rows, 0);
-    for (var i = 0; i < children.length; i++) {
-      final row = i ~/ columns;
-      rowHeights[row] = math.max(rowHeights[row], measured[i]);
-    }
-    for (var i = 0; i < children.length; i++) {
-      children[i].layout(
-        BoxConstraints.tightFor(width: width, height: rowHeights[i ~/ columns]),
-        parentUsesSize: true,
-      );
+    var rowHeights = _rowHeights(measured, columns, rows);
+    // Нельзя зажимать высоту в tight: после первого кадра чипы переносятся
+    // (шрифт, text scale) и кнопки уезжают под рамку. minHeight выравнивает
+    // ряд, maxHeight без потолка даёт карточке вырасти.
+    final actual = List<double>.filled(children.length, 0);
+    for (var pass = 0; pass < 2; pass++) {
+      var grew = false;
+      for (var i = 0; i < children.length; i++) {
+        children[i].layout(
+          BoxConstraints(
+            minWidth: width,
+            maxWidth: width,
+            minHeight: rowHeights[i ~/ columns],
+          ),
+          parentUsesSize: true,
+        );
+        actual[i] = children[i].size.height;
+        if (actual[i] > rowHeights[i ~/ columns] + 0.5) grew = true;
+      }
+      if (!grew || pass == 1) break;
+      rowHeights = _rowHeights(actual, columns, rows);
     }
 
     final gridWidth = columns == 1
@@ -263,7 +284,11 @@ class _RenderGamesHubEqualHeightGrid extends RenderBox
         parentData.offset = Offset(x, y);
         x += width + gap;
       }
-      y += rowHeights[r];
+      var rowHeight = rowHeights[r];
+      for (var i = start; i < end; i++) {
+        rowHeight = math.max(rowHeight, actual[i]);
+      }
+      y += rowHeight;
       if (r != rows - 1) y += gap;
     }
     size = constraints.constrain(Size(gridWidth, y));
