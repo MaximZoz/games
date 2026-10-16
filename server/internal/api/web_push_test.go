@@ -58,6 +58,12 @@ func TestBuildFCMMessageReachesIOS(t *testing.T) {
 	if aps["thread-id"] != "lobby_1" {
 		t.Fatalf("thread=%v", aps["thread-id"])
 	}
+	if _, ok := aps["badge"]; ok {
+		t.Fatalf("нулевой бейдж не шлём, иначе иконка гаснет: %v", aps["badge"])
+	}
+	if headers["apns-collapse-id"] != "lobby_1" {
+		t.Fatalf("collapse=%v", headers["apns-collapse-id"])
+	}
 	alert, _ := aps["alert"].(map[string]any)
 	if alert["title"] != "Алёна" || alert["body"] != "Пойдём в домино" {
 		t.Fatalf("alert=%v", alert)
@@ -66,6 +72,57 @@ func TestBuildFCMMessageReachesIOS(t *testing.T) {
 	note, _ := android["notification"].(map[string]any)
 	if note["channel_id"] != "zozu_events" {
 		t.Fatalf("android channel=%v", note["channel_id"])
+	}
+}
+
+func TestPhoneNotificationBadge(t *testing.T) {
+	if got := phoneNotificationBadge(2, 3, 1); got != 4 {
+		t.Fatalf("chats+one friend bucket+invites = %d", got)
+	}
+	if got := phoneNotificationBadge(0, 0, 0); got != 0 {
+		t.Fatalf("empty = %d", got)
+	}
+	if got := phoneNotificationBadge(-4, -1, -2); got != 0 {
+		t.Fatalf("negatives = %d", got)
+	}
+}
+
+func TestIOSBadgeOnlyForTrackedPushes(t *testing.T) {
+	if !pushCountsForIconBadge(PushPayload{Kind: "chat", Tag: "chat_1"}) {
+		t.Fatal("chat")
+	}
+	if !pushCountsForIconBadge(PushPayload{Tag: "friend_request"}) {
+		t.Fatal("friend")
+	}
+	if !pushCountsForIconBadge(PushPayload{Kind: "game_invite", Tag: "game_invite_1"}) {
+		t.Fatal("invite")
+	}
+	if pushCountsForIconBadge(PushPayload{Kind: "game_turn", Tag: "game_turn_1"}) {
+		t.Fatal("turn must not reset the icon")
+	}
+	raw, err := json.Marshal(buildFCMMessage("tok", PushPayload{
+		Title: "Аня",
+		Body:  "привет",
+		URL:   "/chats/1",
+		Tag:   "chat_1",
+		Kind:  "chat",
+		Badge: 3,
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var msg map[string]any
+	if err := json.Unmarshal(raw, &msg); err != nil {
+		t.Fatal(err)
+	}
+	apns := msg["apns"].(map[string]any)
+	aps := apns["payload"].(map[string]any)["aps"].(map[string]any)
+	if aps["badge"] != float64(3) {
+		t.Fatalf("badge=%v", aps["badge"])
+	}
+	headers := apns["headers"].(map[string]any)
+	if headers["apns-collapse-id"] != "chat_1" {
+		t.Fatalf("collapse=%v", headers["apns-collapse-id"])
 	}
 }
 

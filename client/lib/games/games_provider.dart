@@ -137,6 +137,9 @@ List<GameInvite> mergeHydratedGameInvites({
   return next;
 }
 
+/// Серверный список приглашений уже пришёл. До этого пустой список — не «нет инвайтов».
+final gameInvitesHydratedProvider = StateProvider<bool>((ref) => false);
+
 final gameInvitesProvider =
     StateNotifierProvider<GameInvitesNotifier, List<GameInvite>>((ref) {
   final notifier = GameInvitesNotifier();
@@ -144,11 +147,30 @@ final gameInvitesProvider =
   // Только смена user id (логин/выход). refresh() баланса не должен
   // создавать новый notifier — иначе карточка «Вас пригласили» мигает.
   final userId = ref.watch(authStateProvider.select((s) => s.valueOrNull?.id));
+  ref.listen<String?>(
+    authStateProvider.select((s) => s.valueOrNull?.id),
+    (prev, next) {
+      if (next != prev) {
+        ref.read(gameInvitesHydratedProvider.notifier).state = false;
+      }
+    },
+  );
+  void markInvitesHydrated() {
+    final current = ref.read(authStateProvider).valueOrNull?.id;
+    if (current == null || current != userId) return;
+    ref.read(gameInvitesHydratedProvider.notifier).state = true;
+  }
+
   if (userId != null) {
-    unawaited(
-      notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
+    unawaited(() async {
+      final ok =
+          await notifier.hydrateFromServer(ref.read(gamesRepositoryProvider));
+      if (ok) markInvitesHydrated();
+    }());
+    notifier.startPolling(
+      () => ref.read(gamesRepositoryProvider),
+      onHydrated: markInvitesHydrated,
     );
-    notifier.startPolling(() => ref.read(gamesRepositoryProvider));
   }
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(
@@ -209,9 +231,11 @@ final gameInvitesProvider =
       }
       // После reconnect — восстановить карточки, которые пришли, пока были offline.
       if (type == 'realtime_connected') {
-        unawaited(
-          notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
-        );
+        unawaited(() async {
+          final ok = await notifier
+              .hydrateFromServer(ref.read(gamesRepositoryProvider));
+          if (ok) markInvitesHydrated();
+        }());
         return;
       }
       // Приглашение больше не актуально: лобби закрыто, игра началась, или
@@ -240,10 +264,15 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   final Map<String, DateTime> _localSeenAt = {};
   Timer? _poll;
 
-  void startPolling(GamesRepository Function() repo) {
+  void startPolling(
+    GamesRepository Function() repo, {
+    void Function()? onHydrated,
+  }) {
     _poll?.cancel();
     _poll = Timer.periodic(kGameInvitesReconcileInterval, (_) {
-      unawaited(hydrateFromServer(repo()));
+      unawaited(() async {
+        if (await hydrateFromServer(repo())) onHydrated?.call();
+      }());
     });
   }
 
@@ -262,7 +291,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   /// Подтянуть приглашения с сервера (reconnect / F5) — пока лобби ждёт.
   /// Сервер — источник истины для уже известных карточек; WS-инвайты,
   /// пришедшие во время запроса или в grace-окне, сохраняем.
-  Future<void> hydrateFromServer(GamesRepository repo) async {
+  Future<bool> hydrateFromServer(GamesRepository repo) async {
     try {
       final snapshot = List<GameInvite>.of(state);
       final raw = await repo.listPendingInvites();
@@ -308,9 +337,13 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
         localSeenAt: _localSeenAt,
         now: now,
       );
-      if (gameInviteListsVisuallySame(state, next)) return;
-      state = next;
-    } catch (_) {}
+      if (!gameInviteListsVisuallySame(state, next)) {
+        state = next;
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   void remove(String lobbyId) {

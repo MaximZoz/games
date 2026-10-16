@@ -143,6 +143,13 @@ void main() {
     expect(app, contains('com.zozugames/push'));
     expect(app, contains('setAPNSToken'));
     expect(app, contains('ZozuPush.capture'));
+    expect(app, contains('takeTap'));
+    expect(app, contains('notificationTap'));
+    expect(app, contains('clearDelivered'));
+    expect(app, contains('setBadgeCount'));
+    expect(app, contains('applicationIconBadgeNumber'));
+    expect(app, contains('didReceive response'));
+    expect(scene, contains('ZozuPush.rememberTap'));
     expect(app, isNot(contains('binaryMessenger else')));
     expect(app, contains('ZozuFlutterViewController'));
     expect(app, contains('com.zozugames/apple_sign_in'));

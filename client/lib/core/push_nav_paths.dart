@@ -74,14 +74,40 @@ bool pathsMatch(String current, String target) {
   return a == b;
 }
 
+/// Чат из пуша: имя собеседника в query, чтобы шапка не была «Диалог».
+String attachChatPeerName(String path, String? title) {
+  final normalized = normalizeAppPath(path);
+  final bare = normalized.split('?').first;
+  if (!RegExp(r'^/chats/[^/]+$').hasMatch(bare)) return normalized;
+  if (RegExp(r'(^|[?&])name=').hasMatch(normalized)) return normalized;
+  final name = (title ?? '').trim();
+  if (name.isEmpty) return normalized;
+  final sep = normalized.contains('?') ? '&' : '?';
+  return '$normalized${sep}name=${Uri.encodeQueryComponent(name)}';
+}
+
+/// Тап по баннеру iPhone: поля FCM, а если их нет — payload локального баннера.
+String? pathFromIosTap(Map<String, String> data) {
+  final direct = pathFromPushData(data);
+  if (direct != null && direct.isNotEmpty && direct != '/') return direct;
+  final payload = data['payload']?.trim() ?? '';
+  if (payload.isEmpty) return direct;
+  return pathFromNotificationPayload(payload);
+}
+
 /// `url` → `chat_id` → `tag`, как в iOS PWA.
 String? pathFromPushData(Map<String, dynamic> data) {
+  final title = data['title']?.toString();
   final url = data['url']?.toString().trim() ?? '';
-  if (url.isNotEmpty) return normalizeAppPath(url);
+  if (url.isNotEmpty) return attachChatPeerName(normalizeAppPath(url), title);
   final chatId = data['chat_id']?.toString().trim() ?? '';
-  if (chatId.isNotEmpty) return '/chats/$chatId';
+  if (chatId.isNotEmpty) {
+    return attachChatPeerName('/chats/$chatId', title);
+  }
   final tag = data['tag']?.toString() ?? '';
-  return pathFromTag(tag);
+  final fromTag = pathFromTag(tag);
+  if (fromTag == null) return null;
+  return attachChatPeerName(fromTag, title);
 }
 
 String? pathFromNotificationPayload(String? payload) {

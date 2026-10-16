@@ -22,6 +22,50 @@ void main() {
     expect(pathFromPushData({'tag': 'friend_request'}), '/friends?tab=incoming');
   });
 
+  test('имя из пуша попадает в шапку чата и не затирает чужой путь', () {
+    expect(
+      pathFromPushData({'url': '/chats/x', 'title': 'Аня'}),
+      '/chats/x?name=${Uri.encodeQueryComponent('Аня')}',
+    );
+    expect(
+      pathFromPushData({'chat_id': 'y', 'title': 'Аня'}),
+      '/chats/y?name=${Uri.encodeQueryComponent('Аня')}',
+    );
+    expect(
+      pathFromPushData({'url': '/chats/x?name=Боб', 'title': 'Аня'}),
+      '/chats/x?name=Боб',
+    );
+    expect(
+      pathFromPushData({
+        'url': '/games/durak/lobby/1',
+        'title': 'Игра',
+        'tag': 'game_invite_1',
+      }),
+      '/games/durak/lobby/1',
+    );
+  });
+
+  test('тап iPhone понимает и FCM, и payload локального баннера', () {
+    expect(
+      pathFromIosTap({
+        'url': '/games/domino/lobby/9',
+        'tag': 'game_invite_9',
+        'title': 'Оля',
+      }),
+      '/games/domino/lobby/9',
+    );
+    expect(
+      pathFromIosTap({
+        'payload': encodeNotificationPayload(
+          url: '/chats/7?name=${Uri.encodeQueryComponent('Ира')}',
+          tag: 'chat_7',
+          chatId: '7',
+        ),
+      }),
+      '/chats/7?name=${Uri.encodeQueryComponent('Ира')}',
+    );
+  });
+
   test('payload json и сырой path открывают тот же чат', () {
     expect(
       pathFromNotificationPayload(

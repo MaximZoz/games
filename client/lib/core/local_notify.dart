@@ -35,6 +35,29 @@ Future<void> cancelLocalNotificationsForTag(String tag) =>
 Future<void> cancelLocalNotificationsForPath(String path, {String? tag}) =>
     impl.cancelLocalNotificationsForPath(path, tag: tag);
 
+Future<void> syncIosNotificationCenter({
+  required int badge,
+  bool applyBadge = false,
+  bool clearChatThreads = false,
+  List<String> keepChatTags = const [],
+  List<String> dropChatTags = const [],
+  bool clearFriendRequests = false,
+  bool clearGameInvites = false,
+  List<String> keepInviteTags = const [],
+  bool clearAll = false,
+}) =>
+    impl.syncIosNotificationCenter(
+      badge: badge,
+      applyBadge: applyBadge,
+      clearChatThreads: clearChatThreads,
+      keepChatTags: keepChatTags,
+      dropChatTags: dropChatTags,
+      clearFriendRequests: clearFriendRequests,
+      clearGameInvites: clearGameInvites,
+      keepInviteTags: keepInviteTags,
+      clearAll: clearAll,
+    );
+
 void setLocalNotificationTapHandler(void Function(String payload)? handler) =>
     impl.setLocalNotificationTapHandler(handler);
 

@@ -20,6 +20,18 @@ Future<void> cancelLocalNotificationsForTag(String tag) async {}
 
 Future<void> cancelLocalNotificationsForPath(String path, {String? tag}) async {}
 
+Future<void> syncIosNotificationCenter({
+  required int badge,
+  bool applyBadge = false,
+  bool clearChatThreads = false,
+  List<String> keepChatTags = const [],
+  List<String> dropChatTags = const [],
+  bool clearFriendRequests = false,
+  bool clearGameInvites = false,
+  List<String> keepInviteTags = const [],
+  bool clearAll = false,
+}) async {}
+
 void setLocalNotificationTapHandler(void Function(String payload)? handler) {}
 
 Future<String?> consumeLocalNotificationLaunchPayload() async => null;
