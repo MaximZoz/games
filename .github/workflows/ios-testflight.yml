@@ -45,6 +45,11 @@ jobs:
   release:
     if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.code_only) && !(github.event_name == 'push' && contains(github.event.head_commit.message, '[skip ipa]')) }}
     runs-on: macos-26
+    outputs:
+      flavor: ${{ steps.target.outputs.flavor }}
+      build_id: ${{ steps.target.outputs.build_id }}
+      build_number: ${{ steps.target.outputs.build_number }}
+      bundle_id: ${{ steps.target.outputs.bundle_id }}
     permissions:
       contents: write
     defaults:
@@ -368,7 +373,72 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_KEY_FILE: ${{ runner.temp }}/AuthKey.p8
           TESTFLIGHT_GROUP: Redeem
+          APPLE_APP_ID_FILE: ${{ runner.temp }}/apple_app_id
         shell: bash
         run: |
           set -euo pipefail
           fastlane ios public_code
+
+      - name: Install flyctl
+        if: needs.release.result == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="0.4.97"
+          URL="https://github.com/superfly/flyctl/releases/download/v${VERSION}/flyctl_${VERSION}_Linux_x86_64.tar.gz"
+          dest="$HOME/.fly/bin"
+          mkdir -p "$dest"
+          for attempt in 1 2 3; do
+            tmp="$(mktemp -d)"
+            if curl -fL --retry 3 --retry-delay 2 --max-time 120 \
+                -o "$tmp/flyctl.tgz" "$URL" \
+              && tar -xzf "$tmp/flyctl.tgz" -C "$tmp" \
+              && test -x "$tmp/flyctl"; then
+              mv "$tmp/flyctl" "$dest/flyctl"
+              echo "$dest" >> "$GITHUB_PATH"
+              "$dest/flyctl" version
+              rm -rf "$tmp"
+              exit 0
+            fi
+            echo "Установка flyctl не удалась (попытка $attempt)"
+            rm -rf "$tmp"
+            sleep $((attempt * 4))
+          done
+          echo "Не удалось скачать flyctl ${VERSION}"
+          exit 1
+
+      - name: Tell the API about the TestFlight build
+        if: needs.release.result == 'success'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          BUILD_ID: ${{ needs.release.outputs.build_id }}
+          BUILD_NUMBER: ${{ needs.release.outputs.build_number }}
+          FLAVOR: ${{ needs.release.outputs.flavor }}
+          APPLE_APP_ID_FILE: ${{ runner.temp }}/apple_app_id
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${FLY_API_TOKEN:-}" ]]; then
+            echo "::warning::Нет FLY_API_TOKEN — iPhone не узнает, что в TestFlight новая сборка"
+            exit 0
+          fi
+          if [[ -z "${BUILD_ID:-}" || -z "${BUILD_NUMBER:-}" ]]; then
+            echo "::warning::Нет номера сборки — пропуск записи TestFlight"
+            exit 0
+          fi
+          apple_id=""
+          if [[ -f "$APPLE_APP_ID_FILE" ]]; then
+            apple_id="$(tr -cd '0-9' < "$APPLE_APP_ID_FILE")"
+          fi
+          if [[ "$FLAVOR" == "prod" ]]; then
+            APP="multigameszozu"
+          else
+            APP="multigameszozu-dev"
+          fi
+          payload="$(printf '{"build_id":"%s","build_number":%s,"apple_id":"%s"}' "$BUILD_ID" "$BUILD_NUMBER" "$apple_id")"
+          echo "Записываю TestFlight $payload на $APP"
+          if flyctl ssh console -a "$APP" -C "wget -qO- --header=Content-Type:application/json --post-data='${payload}' http://127.0.0.1:\${PORT:-8080}/api/internal/ios-testflight"; then
+            echo "Сервер знает про сборку $BUILD_NUMBER"
+          else
+            echo "::warning::Не удалось записать сборку на $APP. Кнопка «Обновить» появится после следующего успешного прогона, когда API уже с этим endpoint."
+          fi

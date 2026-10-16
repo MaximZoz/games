@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- iPhone: «Обновить» появляется только когда в TestFlight есть более новая сборка и открывает её установку, как на Android
 - iOS: TestFlight без Mac — GitHub Actions собирает IPA и заливает (develop → DEV, main → прод)
 - iOS: отдельные приложения prod и dev, как на Android — разные Bundle ID и иконки на телефоне, TestFlight для каждой
 - iOS CI: сборка на Xcode 26 (iOS 26 SDK); версия приложения три числа — иначе Apple отклоняет IPA
@@ -98,6 +99,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- iPhone: Update appears only when TestFlight has a newer build and opens that install, same as Android
 - iOS: TestFlight without a Mac — GitHub Actions builds the IPA and uploads it (develop → DEV, main → prod)
 - iOS: separate prod and dev apps, same as Android — different bundle IDs and home-screen icons, TestFlight per app
 - iOS CI: builds with Xcode 26 (iOS 26 SDK); the app version is three numbers so Apple accepts the IPA

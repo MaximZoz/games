@@ -126,6 +126,8 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 
 Если match/сертификат сломался: Run workflow → **force_match**.
 
+После успешной заливки workflow записывает номер сборки на API (`fly ssh` → `/api/internal/ios-testflight`). Нужен уже задеплоенный сервер с этим endpoint и секрет `FLY_API_TOKEN`. Пока записи нет, iPhone не показывает «Обновить»: деплой сервера сам по себе новую сборку не означает.
+
 ## 6. Поставить на iPhone
 
 ### Свой Apple ID разработчика (без кода, без Review)

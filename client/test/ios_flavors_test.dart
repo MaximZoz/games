@@ -84,6 +84,10 @@ void main() {
           reason: 'workflow must require $secret');
     }
     expect(fastfile, contains('upload_to_testflight'));
+    expect(fastfile, contains('--dart-define=IOS_BUILD_NUMBER=#{build_number}'));
+    expect(fastfile, contains('APPLE_APP_ID_FILE'));
+    expect(workflow, contains('/api/internal/ios-testflight'));
+    expect(info, contains('itms-beta'));
     expect(fastfile, contains('lane :public_code'));
     expect(fastfile, contains('public_link_enabled'));
     expect(fastfile, contains('TESTFLIGHT_CODE'));
