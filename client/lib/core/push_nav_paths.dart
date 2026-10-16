@@ -30,8 +30,7 @@ String gameInviteNotificationTag({
   return 'game_invite_$gt:$id';
 }
 
-bool _isPathToken(String value) =>
-    RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(value);
+bool _isPathToken(String value) => RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(value);
 
 /// Как `pathFromTag` в `push-sw.js`.
 String? pathFromTag(String tag) {
@@ -67,7 +66,9 @@ String? tagFromPath(String path) {
   final p = normalizeAppPath(path);
   final chat = RegExp(r'^/chats/([^/?#]+)').firstMatch(p);
   if (chat != null) return 'chat_${chat.group(1)}';
-  if (p == '/friends' || p.startsWith('/friends?') || p.startsWith('/friends/')) {
+  if (p == '/friends' ||
+      p.startsWith('/friends?') ||
+      p.startsWith('/friends/')) {
     return 'friend_request';
   }
   final lobby = RegExp(
@@ -105,6 +106,44 @@ bool pathsMatch(String current, String target) {
   return a == b;
 }
 
+/// Совпадение с учётом query: `/games` ещё не вкладка «Лобби».
+bool pushRouteReached(String current, String target) {
+  if (!pathsMatch(current, target)) return false;
+  final want = _queryOf(target);
+  if (want.isEmpty) return true;
+  final got = _queryOf(current);
+  for (final entry in want.entries) {
+    if (got[entry.key] != entry.value) return false;
+  }
+  return true;
+}
+
+Map<String, String> _queryOf(String raw) {
+  final normalized = normalizeAppPath(raw);
+  if (normalized.isEmpty) return const {};
+  final uri = normalized.startsWith('/')
+      ? Uri.tryParse('https://local.app$normalized')
+      : Uri.tryParse(normalized);
+  return uri?.queryParameters ?? const {};
+}
+
+/// «Игры» → вкладка «Лобби». `r` различает повторный заход,
+/// пока экран игр уже открыт.
+String gamesLobbiesTabLocation() {
+  final stamp = DateTime.now().microsecondsSinceEpoch;
+  return '/games?tab=lobbies&r=$stamp';
+}
+
+bool uriWantsGamesLobbiesTab(Uri uri) {
+  return uri.path == '/games' && uri.queryParameters['tab'] == 'lobbies';
+}
+
+/// Пуш в стол не входит в игру: карточка «Вас пригласили» на вкладке «Лобби».
+String notificationOpenPath(String path) {
+  if (lobbyRouteFromPath(path) != null) return gamesLobbiesTabLocation();
+  return path;
+}
+
 DateTime? _pushOpenedAt;
 
 /// Тап по пушу уже выбрал чат или лобби — не уводить в свою «Своя игра».
@@ -138,8 +177,8 @@ PushLobbyRoute? lobbyRouteFromPath(String path) {
   return PushLobbyRoute(gameType: gameType, lobbyId: lobbyId);
 }
 
-/// Куда открыть пуш после входа в стол: партия, если она уже идёт,
-/// иначе комната ожидания, а не экран «вас пригласили».
+/// Куда вёл бы пуш после входа в стол. Сейчас пуш в стол не входит:
+/// [notificationOpenPath] открывает вкладку «Лобби».
 String pushLobbyDestination({
   required String gameType,
   required String lobbyId,

@@ -4334,8 +4334,8 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	})
 }
 
-// gameInvitePushTarget — путь лобби. Телефон по пушу сначала входит в стол,
-// ссылка из чата по тому же адресу по-прежнему показывает гостя.
+// gameInvitePushTarget — путь лобби в пуше. Клиент не входит сам:
+// открывает «Игры» → вкладку «Лобби» и карточку «Вас пригласили».
 func gameInvitePushTarget(gameType, lobbyID string) (url, tag string) {
 	gameType = strings.TrimSpace(gameType)
 	lobbyID = strings.TrimSpace(lobbyID)

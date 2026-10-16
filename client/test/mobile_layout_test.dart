@@ -179,7 +179,7 @@ void main() {
     expect(find.text('Профиль'), findsWidgets);
 
     // Друзья → редирект на login, nav скрыт. Остаёмся на профиле и
-    // проверяем, что активная иконка без заливки (просто Icon).
+    // проверяем, что активная иконка покрашена.
     final personIcons = find.byIcon(Icons.person);
     expect(personIcons, findsWidgets);
     final iconWidget = tester.widget<Icon>(personIcons.first);
@@ -197,5 +197,46 @@ void main() {
     expect(find.text('Войдите в аккаунт'), findsOneWidget);
     expect(mobileBottomNav(), findsOneWidget);
     expect(find.text('Профиль'), findsWidgets);
+  });
+
+  testWidgets('тап по подписи снизу попадает во вкладку над пальцем',
+      (tester) async {
+    await openGuestProfileOnPhone(tester);
+    final nav = tester.getRect(mobileBottomNav());
+    final settings = tester.getRect(find.byIcon(Icons.settings));
+
+    // Низ панели — подпись, не глиф. Гость с «Настроек» уходит на вход.
+    await tester.tapAt(Offset(settings.center.dx, nav.bottom - 2));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Вход'), findsOneWidget);
+    expect(mobileBottomNav(), findsNothing);
+  });
+
+  testWidgets('плашка едет за пальцем и встаёт на вкладку', (tester) async {
+    await openGuestProfileOnPhone(tester);
+    final nav = tester.getRect(mobileBottomNav());
+    final slot = nav.width / 6;
+    final profileLeft = nav.left + slot;
+    final y = nav.top + 18.0;
+    final gesture = await tester.startGesture(
+      Offset(profileLeft + slot - 8, y),
+    );
+    await gesture.moveTo(Offset(profileLeft + 8, y));
+    await tester.pump();
+    final mid =
+        tester.getCenter(find.byKey(const ValueKey('mobile-bottom-nav-pill')));
+    expect(mid.dx, lessThan(profileLeft + slot * 0.55));
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 320));
+
+    expect(mobileBottomNav(), findsOneWidget);
+    expect(find.text('Профиль'), findsWidgets);
+    final pill =
+        tester.getCenter(find.byKey(const ValueKey('mobile-bottom-nav-pill')));
+    final person = tester.getCenter(find.byIcon(Icons.person));
+    expect((pill.dx - person.dx).abs(), lessThan(10));
   });
 }

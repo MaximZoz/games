@@ -94,6 +94,28 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   int _selectedStakeBronze = 2; // free: 2, 10, 50; + bought silver/gold
   bool _settingsHydrated = false;
   Timer? _lobbyRefreshTimer;
+  String? _lobbiesTabStamp;
+
+  void _scheduleLobbiesTabFromRoute() {
+    if (ref.read(isOfflineProvider)) return;
+    final uri = GoRouterState.of(context).uri;
+    if (!uriWantsGamesLobbiesTab(uri)) return;
+    final stamp = uri.toString();
+    if (_lobbiesTabStamp == stamp) return;
+    _lobbiesTabStamp = stamp;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || ref.read(isOfflineProvider)) return;
+      if (_selectedTab != _GamesTab.lobbies) {
+        _onTabChanged(_GamesTab.lobbies);
+        return;
+      }
+      unawaited(
+        ref.read(gameInvitesProvider.notifier).hydrateFromServer(
+              ref.read(gamesRepositoryProvider),
+            ),
+      );
+    });
+  }
 
   @override
   void initState() {
@@ -292,6 +314,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
 
   @override
   Widget build(BuildContext context) {
+    _scheduleLobbiesTabFromRoute();
     final lobbiesAsync = ref.watch(openLobbiesProvider);
     final invites = ref.watch(gameInvitesProvider);
     final activeAsync = ref.watch(activeGameProvider);
@@ -303,11 +326,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       if (active == null) return;
       // Пуш уже открыл чат или чужое лобби — не подменять своей «Своя игра».
       if (pushOpenedRouteRecently()) return;
-      final path =
-          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
-      if (path != '/games') return;
-      // Вкладка «Лобби» — список открытых столов, не уводим в свою игру.
-      if (_selectedTab == _GamesTab.lobbies) return;
+      final uri = GoRouter.of(context).routerDelegate.currentConfiguration.uri;
+      if (uri.path != '/games') return;
+      // Вкладка «Лобби» — список открытых столов и «Вас пригласили».
+      if (uriWantsGamesLobbiesTab(uri) || _selectedTab == _GamesTab.lobbies) {
+        return;
+      }
       if (hasBlockingActiveMatch(active)) {
         goToActiveSession(context, active);
         return;
@@ -382,10 +406,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         if (pushOpenedRouteRecently()) return;
-        final path =
-            GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
-        if (path != '/games') return;
-        if (_selectedTab == _GamesTab.lobbies) return;
+        final uri =
+            GoRouter.of(context).routerDelegate.currentConfiguration.uri;
+        if (uri.path != '/games') return;
+        if (uriWantsGamesLobbiesTab(uri) || _selectedTab == _GamesTab.lobbies) {
+          return;
+        }
         goToActiveSession(context, activeSession);
       });
     }
