@@ -563,7 +563,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await _repo.declineLobby(lobbyId);
     } catch (_) {}

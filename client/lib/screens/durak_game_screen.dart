@@ -5212,7 +5212,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
     } catch (_) {}

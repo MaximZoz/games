@@ -2251,6 +2251,8 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	}
 
 	invitedKey := key + ":invited"
+	// Явный повторный зов после отказа снова показывает карточку.
+	h.Rdb.SRem(ctx, lobbyDeclinedRedisKey(lobbyID), friendID.String())
 	h.Rdb.SAdd(ctx, invitedKey, friendID.String())
 	h.Rdb.Expire(ctx, invitedKey, lobbyTTL)
 	h.trackUserInvite(ctx, friendID.String(), lobbyID)
@@ -3008,20 +3010,33 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		return
 	}
 	invitedKey := key + ":invited"
+	declinedKey := lobbyDeclinedRedisKey(lobbyID)
+	// Отказ помним, даже если гость пришёл по ссылке и не был в :invited.
+	h.Rdb.SAdd(ctx, declinedKey, userID.String())
+	h.Rdb.Expire(ctx, declinedKey, lobbyTTL)
 	isInvited, _ := h.Rdb.SIsMember(ctx, invitedKey, userID.String()).Result()
-	if !isInvited && m["invite_target_id"] != userID.String() {
-		WriteErr(w, r, http.StatusForbidden, "you are not invited")
+	wasTarget := m["invite_target_id"] == userID.String()
+	h.Rdb.SRem(ctx, invitedKey, userID.String())
+	h.untrackUserInvite(ctx, userID.String(), lobbyID)
+	if wasTarget {
+		h.Rdb.HDel(ctx, key, "invite_target_id")
+	}
+	h.broadcast([]uuid.UUID{userID}, map[string]any{
+		"type":     "invite_cancelled",
+		"lobby_id": lobbyID,
+		"reason":   "declined",
+	})
+	if !isInvited && !wasTarget {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"declined": true,
+			"closed":   false,
+		})
 		return
 	}
 
 	creatorID := m["creator_id"]
 	creatorUUID, _ := uuid.Parse(creatorID)
-
-	h.Rdb.SRem(ctx, invitedKey, userID.String())
-	h.untrackUserInvite(ctx, userID.String(), lobbyID)
-	if m["invite_target_id"] == userID.String() {
-		h.Rdb.HDel(ctx, key, "invite_target_id")
-	}
 	players := parsePlayerIDsCSV(m["player_ids"])
 	if len(players) == 0 {
 		players = []string{creatorID}
@@ -3108,8 +3123,9 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 	for _, lobbyID := range mergePendingInviteLobbyIDs(indexed, nil) {
 		invitedKey := "lobby:" + lobbyID + ":invited"
 		okMem, _ := h.Rdb.SIsMember(ctx, invitedKey, uid).Result()
+		declined, _ := h.Rdb.SIsMember(ctx, lobbyDeclinedRedisKey(lobbyID), uid).Result()
 		m, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
-		if !okMem && strings.TrimSpace(m["invite_target_id"]) != uid {
+		if !pendingInviteVisible(okMem, m["invite_target_id"], uid, declined) {
 			h.untrackUserInvite(ctx, uid, lobbyID)
 			continue
 		}

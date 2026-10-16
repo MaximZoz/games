@@ -174,4 +174,30 @@ void main() {
     n.resolveJoined('L1');
     expect(n.state, isEmpty);
   });
+
+  test('отказ не даёт ссылке вернуть стол, новый зов — даёт', () {
+    final n = GameInvitesNotifier();
+    final card = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Zoz');
+    n.hold(card);
+    n.dismiss('L1');
+    n.hold(card);
+    expect(n.state, isEmpty);
+    n.add(card);
+    expect(n.state.map((e) => e.lobbyId), ['L1']);
+  });
+
+  test('опрос после отказа не поднимает карточку из устаревшего ответа', () {
+    final card = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Zoz');
+    final now = DateTime(2026, 9, 3, 14, 0, 0);
+    final merged = mergeHydratedGameInvites(
+      snapshot: [card],
+      current: [card],
+      fromServer: [card],
+      localSeenAt: {'L1': now},
+      now: now,
+      heldIds: {'L1'},
+      dismissedIds: {'L1'},
+    );
+    expect(merged, isEmpty);
+  });
 }

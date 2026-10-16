@@ -317,7 +317,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await ref.read(dominoRepositoryProvider).declineLobby(lobbyId);
     } catch (_) {}

@@ -1240,7 +1240,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Future<void> _declineRematch(String lobbyId) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
     try {
       await ref.read(unoRepositoryProvider).declineLobby(lobbyId);
     } catch (_) {}

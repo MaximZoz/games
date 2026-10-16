@@ -37,6 +37,7 @@ import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/games/games_gamepad.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/games/game_stake.dart';
+import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -1198,7 +1199,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
 
   Future<void> _declineInvite(String lobbyId,
       {String gameType = 'tictactoe'}) async {
-    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    ref.read(gameInvitesProvider.notifier).dismiss(lobbyId);
+    unawaited(cancelLocalNotificationsForTag(
+      gameInviteNotificationTag(gameType: gameType, lobbyId: lobbyId),
+    ));
     try {
       if (gameType == 'durak') {
         await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
