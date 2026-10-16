@@ -1,4 +1,6 @@
 import AuthenticationServices
+import FirebaseCore
+import FirebaseMessaging
 import Flutter
 import UIKit
 
@@ -12,7 +14,53 @@ import UIKit
     // Канал нельзя вешать здесь: при UIScene registrarForPlugin попадает
     // на launch engine, который storyboard-контроллер выбрасывает.
     // Живой messenger — в SceneDelegate / didBecomeActive.
+    application.registerForRemoteNotifications()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    // Токен приходит в AppDelegate, а Dart живёт в storyboard-engine.
+    // Без этой копии getToken() на iPhone не получает APNs и пуш не регистрируется.
+    ZozuPush.capture(deviceToken)
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+}
+
+/// APNs-токен дожидается Firebase.initializeApp (plist может подключиться позже).
+enum ZozuPush {
+  static var apnsToken: Data?
+
+  static func register(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "com.zozugames/push",
+      binaryMessenger: messenger
+    )
+    channel.setMethodCallHandler { call, result in
+      if call.method == "firebaseReady" {
+        apply()
+        result(nil)
+        return
+      }
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  static func capture(_ token: Data) {
+    apnsToken = token
+    apply()
+  }
+
+  static func apply() {
+    guard let token = apnsToken else { return }
+    guard FirebaseApp.app() != nil else { return }
+    #if DEBUG
+    Messaging.messaging().setAPNSToken(token, type: .sandbox)
+    #else
+    Messaging.messaging().setAPNSToken(token, type: .prod)
+    #endif
   }
 }
 
@@ -35,6 +83,7 @@ func registerZozuLivePlugins(on controller: FlutterViewController) {
   ZozuAppleSignIn.register(messenger: messenger)
   ZozuSystemAuth.register(messenger: messenger)
   ZozuSessionStore.register(messenger: messenger)
+  ZozuPush.register(messenger: messenger)
 }
 
 /// Живой FlutterViewController из storyboard. Плагины вешаем в awakeFromNib,

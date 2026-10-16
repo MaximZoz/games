@@ -102,9 +102,10 @@ void main() {
     expect(fastfile, contains('UserData/Provisioning Profiles'));
     expect(fastfile, contains('appstore_profile-path'));
     expect(fastfile, contains('match('));
-    expect(fastfile, contains('produce('));
+    expect(fastfile, isNot(contains('produce(')));
     expect(fastfile, contains('Spaceship::ConnectAPI::App.find'));
-    expect(fastfile, contains('Spaceship::ConnectAPI::App.create'));
+    expect(fastfile, isNot(contains('App.create')));
+    expect(fastfile, contains('does not allow \'CREATE\''));
     expect(fastfile, contains('tf_ensure_asc_app'));
     expect(fastfile, contains('want_readonly'));
     expect(fastfile, contains('ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")'));
@@ -139,6 +140,9 @@ void main() {
     expect(app, contains('SharedPreferencesPlugin'));
     expect(app, contains('com.zozugames/session_store'));
     expect(app, contains('let messenger = controller.binaryMessenger'));
+    expect(app, contains('com.zozugames/push'));
+    expect(app, contains('setAPNSToken'));
+    expect(app, contains('ZozuPush.capture'));
     expect(app, isNot(contains('binaryMessenger else')));
     expect(app, contains('ZozuFlutterViewController'));
     expect(app, contains('com.zozugames/apple_sign_in'));
