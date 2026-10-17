@@ -31,6 +31,7 @@ import 'package:multigames_client/core/soft_keyboard.dart';
 import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/sliding_pill_bar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
@@ -2325,6 +2326,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     FriendsSnapshot? snapshot,
     int? totalUsersCount, {
     required bool inline,
+    required bool selected,
+    required double fontSize,
   }) {
     final title = _tabTitle(context.l10n, tab);
     final count = _tabCount(tab, snapshot, totalUsersCount);
@@ -2343,6 +2346,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       overflow: inline ? TextOverflow.clip : TextOverflow.ellipsis,
       softWrap: false,
       textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: fontSize,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        color: selected ? AppColors.accentStart : AppColors.textSecondary,
+      ),
     );
     if (inline) {
       return Row(
@@ -2381,63 +2389,54 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       phoneLandscape: isPhoneLandscape(context),
     );
     final fontSize = compact ? (tabs.length <= 2 ? 14.0 : 12.0) : 15.0;
-    final bar = TabBar(
-      controller: _tabController,
-      isScrollable: packed,
-      tabAlignment: packed ? TabAlignment.start : TabAlignment.fill,
-      indicatorSize:
-          packed ? TabBarIndicatorSize.label : TabBarIndicatorSize.tab,
-      labelPadding:
-          EdgeInsets.only(right: packed ? 22 : 4, left: packed ? 0 : 4),
-      indicator: const UnderlineTabIndicator(
-        borderSide: BorderSide(color: AppColors.accentStart, width: 2.5),
+    final bar = _friendsPillChrome(
+      child: SlidingPillBar(
+        pillKey: const ValueKey('friends-tabs-pill'),
+        itemCount: tabs.length,
+        selectedIndex: _tabController.index.clamp(0, tabs.length - 1),
+        progress: _tabController.animation,
+        height: packed ? 40 : 46,
+        shrinkWrap: packed,
+        onChanged: (index) {
+          if (index == _tabController.index) return;
+          _tabController.animateTo(index);
+        },
+        itemBuilder: (context, index, selected) {
+          return _buildTabLabel(
+            tabs[index],
+            snapshot,
+            totalUsersCount,
+            inline: packed,
+            selected: selected,
+            fontSize: fontSize,
+          );
+        },
       ),
-      dividerColor: AppColors.accentStart.withValues(alpha: 0.16),
-      overlayColor: WidgetStatePropertyAll(
-        AppColors.accentStart.withValues(alpha: 0.06),
-      ),
-      labelColor: AppColors.accentStart,
-      unselectedLabelColor: AppColors.textSecondary,
-      labelStyle: TextStyle(
-        fontSize: fontSize,
-        fontWeight: FontWeight.w600,
-      ),
-      unselectedLabelStyle: TextStyle(
-        fontSize: fontSize,
-        fontWeight: FontWeight.w500,
-      ),
-      tabs: [
-        for (final tab in tabs)
-          Tab(
-            height: packed ? 40 : 48,
-            child: _buildTabLabel(
-              tab,
-              snapshot,
-              totalUsersCount,
-              inline: packed,
-            ),
-          ),
-      ],
     );
-    if (!packed) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: bar,
-      );
-    }
-    final inset = isPhoneLandscape(context) ? 10.0 : 16.0;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = (constraints.maxWidth - inset * 2)
-            .clamp(0.0, friendsDesktopMaxContentWidth);
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: inset),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: SizedBox(width: width, child: bar),
-          ),
-        );
-      },
+    final inset = packed ? (isPhoneLandscape(context) ? 10.0 : 16.0) : 8.0;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: inset),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: packed ? bar : SizedBox(width: double.infinity, child: bar),
+      ),
+    );
+  }
+
+  Widget _friendsPillChrome({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        gradient: AppGradients.borderAt(0.22),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: child,
+      ),
     );
   }
 
