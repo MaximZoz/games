@@ -107,6 +107,33 @@ void main() {
       );
     });
 
+    test('альбом iPhone: шапка отходит от скруглённых углов', () {
+      expect(
+        phoneLandscapeCornerInset(
+          phoneLandscape: true,
+          platform: TargetPlatform.iOS,
+        ),
+        phoneLandscapeCornerInsetPx,
+      );
+    });
+
+    test('Android и портрет: дополнительный сдвиг шапки не нужен', () {
+      expect(
+        phoneLandscapeCornerInset(
+          phoneLandscape: true,
+          platform: TargetPlatform.android,
+        ),
+        0,
+      );
+      expect(
+        phoneLandscapeCornerInset(
+          phoneLandscape: false,
+          platform: TargetPlatform.iOS,
+        ),
+        0,
+      );
+    });
+
     test('портрет: рейл не сдвигаем', () {
       expect(
         landscapeRailLeadingInset(

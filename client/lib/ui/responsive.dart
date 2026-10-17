@@ -103,6 +103,20 @@ double landscapeRailLeadingInset({
   return viewPadding.left < 0 ? 0 : viewPadding.left;
 }
 
+/// Насколько увести крайние кнопки шапки от скруглённых углов iPhone в альбоме.
+///
+/// Выход, новое сообщение, поиск друзей и монеты стоят в углах длинной стороны.
+/// Радиус скругления срезает их внешний край — сдвигаем к центру экрана.
+const double phoneLandscapeCornerInsetPx = 8;
+
+double phoneLandscapeCornerInset({
+  required bool phoneLandscape,
+  required TargetPlatform? platform,
+}) {
+  if (!phoneLandscape || platform != TargetPlatform.iOS) return 0;
+  return phoneLandscapeCornerInsetPx;
+}
+
 /// Клавиатура открыта в альбоме — вертикали почти нет, хром надо схлопнуть.
 bool isLandscapeKeyboardOpen(
   BuildContext context, {

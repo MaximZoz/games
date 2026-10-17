@@ -1924,8 +1924,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ],
       );
     }
+    final corner = phoneLandscapeCornerInset(
+      phoneLandscape: phoneLand,
+      platform: Theme.of(context).platform,
+    );
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, tight ? 4 : 10),
+      padding: EdgeInsets.fromLTRB(
+        16 + corner,
+        0,
+        16 + corner,
+        tight ? 4 : 10,
+      ),
       child: FriendsGamepadLtHint(
         expandChild: true,
         child: GamepadFieldBlock(
