@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
 import 'test_locale.dart';
@@ -74,12 +75,21 @@ void main() {
       await pumpMultiGamesApp(tester);
       await goToProfileTab(tester);
 
-      expect(find.byType(NavigationRail), findsOneWidget);
-      expect(mobileBottomNav(), findsNothing);
-      // В альбоме на iPhone рейл прижат к левому краю (x = 0) и имеет ширину 56px.
-      final railRect = tester.getRect(find.byType(NavigationRail));
-      expect(railRect.left, 0);
-      expect(railRect.width, 56);
+    final rail = find.byKey(const ValueKey('phone-landscape-nav'));
+    expect(rail, findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
+    expect(mobileBottomNav(), findsNothing);
+    // В альбоме на iPhone рейл прижат к левому краю и имеет ширину 56px.
+    final railRect = tester.getRect(rail);
+    expect(railRect.left, 0);
+    expect(railRect.width, 56);
+    final ends = tester.widget<Padding>(
+      find.byKey(const ValueKey('shell-toolbar-ends')),
+    );
+    expect(
+      ends.padding,
+      const EdgeInsets.symmetric(horizontal: phoneLandscapeCornerInsetPx),
+    );
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
@@ -229,6 +239,40 @@ void main() {
 
     expect(find.text('Вход'), findsOneWidget);
     expect(mobileBottomNav(), findsNothing);
+  });
+
+  testWidgets('альбом: плашка едет за пальцем по вертикали', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      setPhoneLandscape(tester);
+      await pumpMultiGamesApp(tester);
+      await goToProfileTab(tester);
+
+      final rail = tester.getRect(find.byKey(const ValueKey('phone-landscape-nav')));
+      final slot = rail.height / 6;
+      final profileTop = rail.top + slot;
+      final gesture = await tester.startGesture(
+        Offset(rail.center.dx, profileTop + slot - 8),
+      );
+      await gesture.moveTo(Offset(rail.center.dx, profileTop + 8));
+      await tester.pump();
+      final mid = tester.getCenter(
+        find.byKey(const ValueKey('phone-landscape-nav-pill')),
+      );
+      expect(mid.dy, lessThan(profileTop + slot * 0.55));
+      await gesture.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 320));
+
+      expect(find.byKey(const ValueKey('phone-landscape-nav')), findsOneWidget);
+      final pill = tester.getCenter(
+        find.byKey(const ValueKey('phone-landscape-nav-pill')),
+      );
+      final person = tester.getCenter(find.byIcon(Icons.person));
+      expect((pill.dy - person.dy).abs(), lessThan(10));
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('плашка едет за пальцем и встаёт на вкладку', (tester) async {

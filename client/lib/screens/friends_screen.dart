@@ -31,6 +31,7 @@ import 'package:multigames_client/core/soft_keyboard.dart';
 import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/sliding_pill_bar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
@@ -1924,8 +1925,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ],
       );
     }
+    final corner = phoneLandscapeCornerInset(
+      phoneLandscape: phoneLand,
+      platform: Theme.of(context).platform,
+    );
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, tight ? 4 : 10),
+      padding: EdgeInsets.fromLTRB(
+        16 + corner,
+        0,
+        16 + corner,
+        tight ? 4 : 10,
+      ),
       child: FriendsGamepadLtHint(
         expandChild: true,
         child: GamepadFieldBlock(
@@ -2315,7 +2325,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _FriendsTabKind tab,
     FriendsSnapshot? snapshot,
     int? totalUsersCount, {
-    required bool inline,
+    required bool selected,
+    required double fontSize,
   }) {
     final title = _tabTitle(context.l10n, tab);
     final count = _tabCount(tab, snapshot, totalUsersCount);
@@ -2328,35 +2339,25 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         count: count ?? 0,
       ),
     );
-    final titleWidget = Text(
-      title,
-      maxLines: 1,
-      overflow: inline ? TextOverflow.clip : TextOverflow.ellipsis,
-      softWrap: false,
-      textAlign: TextAlign.center,
-    );
-    if (inline) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          titleWidget,
-          if (count != null) ...[
-            const SizedBox(width: 6),
-            _countBadge(count, countStyle),
-          ],
-        ],
-      );
-    }
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (count != null)
-          _countBadge(count, countStyle)
-        else
-          const SizedBox(height: 18),
-        const SizedBox(height: 4),
-        titleWidget,
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.clip,
+          softWrap: false,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? AppColors.accentStart : AppColors.textSecondary,
+          ),
+        ),
+        if (count != null) ...[
+          const SizedBox(width: 6),
+          _countBadge(count, countStyle),
+        ],
       ],
     );
   }
@@ -2372,63 +2373,36 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       phoneLandscape: isPhoneLandscape(context),
     );
     final fontSize = compact ? (tabs.length <= 2 ? 14.0 : 12.0) : 15.0;
-    final bar = TabBar(
-      controller: _tabController,
-      isScrollable: packed,
-      tabAlignment: packed ? TabAlignment.start : TabAlignment.fill,
-      indicatorSize:
-          packed ? TabBarIndicatorSize.label : TabBarIndicatorSize.tab,
-      labelPadding:
-          EdgeInsets.only(right: packed ? 22 : 4, left: packed ? 0 : 4),
-      indicator: const UnderlineTabIndicator(
-        borderSide: BorderSide(color: AppColors.accentStart, width: 2.5),
-      ),
-      dividerColor: AppColors.accentStart.withValues(alpha: 0.16),
-      overlayColor: WidgetStatePropertyAll(
-        AppColors.accentStart.withValues(alpha: 0.06),
-      ),
-      labelColor: AppColors.accentStart,
-      unselectedLabelColor: AppColors.textSecondary,
-      labelStyle: TextStyle(
-        fontSize: fontSize,
-        fontWeight: FontWeight.w600,
-      ),
-      unselectedLabelStyle: TextStyle(
-        fontSize: fontSize,
-        fontWeight: FontWeight.w500,
-      ),
-      tabs: [
-        for (final tab in tabs)
-          Tab(
-            height: packed ? 40 : 48,
-            child: _buildTabLabel(
-              tab,
-              snapshot,
-              totalUsersCount,
-              inline: packed,
-            ),
-          ),
-      ],
-    );
-    if (!packed) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: bar,
-      );
-    }
-    final inset = isPhoneLandscape(context) ? 10.0 : 16.0;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = (constraints.maxWidth - inset * 2)
-            .clamp(0.0, friendsDesktopMaxContentWidth);
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: inset),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: SizedBox(width: width, child: bar),
-          ),
-        );
+    final bar = SlidingPillBar(
+      pillKey: const ValueKey('friends-tabs-pill'),
+      itemCount: tabs.length,
+      selectedIndex: _tabController.index.clamp(0, tabs.length - 1),
+      progress: _tabController.animation,
+      height: packed ? 40 : 46,
+      shrinkWrap: packed,
+      onChanged: (index) {
+        if (index == _tabController.index) return;
+        _tabController.animateTo(index);
       },
+      itemBuilder: (context, index, selected) {
+        final label = _buildTabLabel(
+          tabs[index],
+          snapshot,
+          totalUsersCount,
+          selected: selected,
+          fontSize: fontSize,
+        );
+        if (packed) return label;
+        return FittedBox(fit: BoxFit.scaleDown, child: label);
+      },
+    );
+    final inset = packed ? (isPhoneLandscape(context) ? 10.0 : 16.0) : 8.0;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: inset),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: packed ? bar : SizedBox(width: double.infinity, child: bar),
+      ),
     );
   }
 

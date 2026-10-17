@@ -895,6 +895,10 @@ class AppShell extends ConsumerWidget {
       ),
     );
 
+    final toolbarEndInset = phoneLandscapeCornerInset(
+      phoneLandscape: narrowLandscape,
+      platform: Theme.of(context).platform,
+    );
     final shellBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -921,7 +925,11 @@ class AppShell extends ConsumerWidget {
                     child: SizedBox(
                 height: toolbarHeight,
                 child: ClipRect(
-                  child: Row(
+                  child: Padding(
+                    key: const ValueKey('shell-toolbar-ends'),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: toolbarEndInset),
+                    child: Row(
                     children: [
                   if ((narrow && (onFriends || onChatsList) ||
                           (narrowLandscape && inChatRoom)) &&
@@ -1117,6 +1125,7 @@ class AppShell extends ConsumerWidget {
                     ),
                   ),
                     ],
+                    ),
                   ),
                 ),
                     ),
@@ -1156,43 +1165,61 @@ class AppShell extends ConsumerWidget {
                             child: _GamepadTabShoulders(
                               axis: Axis.vertical,
                               child: ExcludeFocus(
-                                child: MediaQuery.removePadding(
-                                  context: context,
-                                  removeLeft: narrowLandscape,
-                                  removeBottom: narrowLandscape,
-                                  child: NavigationRail(
-                                    minWidth: narrowLandscape ? 56 : null,
-                                    selectedIndex: selectedIndex,
-                                    onDestinationSelected: navigateWithPrefetch,
-                                    backgroundColor: Colors.transparent,
-                                    selectedIconTheme: const IconThemeData(
-                                      color: AppColors.accentStart,
-                                    ),
-                                    unselectedIconTheme: const IconThemeData(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    labelType: narrowLandscape
-                                        ? NavigationRailLabelType.none
-                                        : NavigationRailLabelType.all,
-                                    destinations:
-                                        navItems.asMap().entries.map((entry) {
-                                      final index = entry.key;
-                                      final item = entry.value;
-                                      return NavigationRailDestination(
-                                        icon: _navIcon(
-                                          item,
-                                          unreadChats,
-                                          incomingFriends,
-                                          gamesMyTurn,
-                                          gameInvitesCount,
-                                          homeBadgeCount,
-                                          selected: index == selectedIndex,
+                                child: narrowLandscape
+                                    ? _PhoneLandscapeNav(
+                                        key: const ValueKey(
+                                          'phone-landscape-nav',
                                         ),
-                                        label: Text(item.label),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
+                                        selectedIndex: selectedIndex,
+                                        onTap: navigateWithPrefetch,
+                                        offline: isOffline,
+                                        unreadChats: unreadChats,
+                                        incomingFriends: incomingFriends,
+                                        gamesMyTurn: gamesMyTurn,
+                                        gameInvitesCount: gameInvitesCount,
+                                        homeBadgeCount: homeBadgeCount,
+                                      )
+                                    : MediaQuery.removePadding(
+                                        context: context,
+                                        removeLeft: narrowLandscape,
+                                        removeBottom: narrowLandscape,
+                                        child: NavigationRail(
+                                          selectedIndex: selectedIndex,
+                                          onDestinationSelected:
+                                              navigateWithPrefetch,
+                                          backgroundColor: Colors.transparent,
+                                          selectedIconTheme:
+                                              const IconThemeData(
+                                            color: AppColors.accentStart,
+                                          ),
+                                          unselectedIconTheme:
+                                              const IconThemeData(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          labelType:
+                                              NavigationRailLabelType.all,
+                                          destinations: navItems
+                                              .asMap()
+                                              .entries
+                                              .map((entry) {
+                                            final index = entry.key;
+                                            final item = entry.value;
+                                            return NavigationRailDestination(
+                                              icon: _navIcon(
+                                                item,
+                                                unreadChats,
+                                                incomingFriends,
+                                                gamesMyTurn,
+                                                gameInvitesCount,
+                                                homeBadgeCount,
+                                                selected:
+                                                    index == selectedIndex,
+                                              ),
+                                              label: Text(item.label),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ),
                               ),
                             ),
                         ),
@@ -1481,6 +1508,210 @@ const double _navPillHeight = 34;
 
 const double _navIconSize = 26;
 
+const double _phoneLandscapeNavWidth = 56;
+
+/// Боковое меню телефона в альбоме: та же плашка и зажим, что у нижнего меню,
+/// только палец едет по вертикали.
+class _PhoneLandscapeNav extends StatefulWidget {
+  const _PhoneLandscapeNav({
+    super.key,
+    required this.selectedIndex,
+    required this.onTap,
+    required this.offline,
+    required this.unreadChats,
+    required this.incomingFriends,
+    required this.gamesMyTurn,
+    required this.gameInvitesCount,
+    required this.homeBadgeCount,
+  });
+
+  final int selectedIndex;
+  final ValueChanged<int> onTap;
+  final bool offline;
+  final int unreadChats;
+  final int incomingFriends;
+  final int gamesMyTurn;
+  final int gameInvitesCount;
+  final int homeBadgeCount;
+
+  @override
+  State<_PhoneLandscapeNav> createState() => _PhoneLandscapeNavState();
+}
+
+class _PhoneLandscapeNavState extends State<_PhoneLandscapeNav>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _move;
+  double _animFrom = 0;
+  double _animTo = 0;
+  double _dragCenter = 0;
+  var _dragging = false;
+  var _dragMoved = false;
+  int _pressedIndex = 0;
+  double _barExtent = 0;
+  int _count = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressedIndex = widget.selectedIndex;
+    _animFrom = widget.selectedIndex.toDouble();
+    _animTo = _animFrom;
+    _dragCenter = _animFrom;
+    _move = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      value: 1,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _PhoneLandscapeNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedIndex != oldWidget.selectedIndex && !_dragging) {
+      _pressedIndex = widget.selectedIndex;
+      _goTo(widget.selectedIndex.toDouble());
+    }
+  }
+
+  @override
+  void dispose() {
+    _move.dispose();
+    super.dispose();
+  }
+
+  double _shownT() {
+    final t = Curves.easeOutCubic.transform(_move.value.clamp(0.0, 1.0));
+    return _animFrom + (_animTo - _animFrom) * t;
+  }
+
+  void _goTo(double target) {
+    final current = _dragging ? _dragCenter : _shownT();
+    _dragging = false;
+    _animFrom = current;
+    _animTo = target;
+    if ((current - target).abs() < 0.02) {
+      _move.value = 1;
+      setState(() {});
+      return;
+    }
+    _move.forward(from: 0);
+    setState(() {});
+  }
+
+  void _pointer(double along, {required bool commit}) {
+    final extent = _barExtent;
+    final count = _count;
+    if (extent <= 0 || count <= 0) return;
+    final slot = extent / count;
+    final index = (along / slot).floor().clamp(0, count - 1);
+    setState(() {
+      _dragging = true;
+      _dragCenter = (along / slot - 0.5).clamp(0.0, (count - 1).toDouble());
+    });
+    if (commit || index != _pressedIndex) {
+      _pressedIndex = index;
+      widget.onTap(index);
+    }
+  }
+
+  void _endDrag() {
+    if (!_dragging) return;
+    _goTo(_pressedIndex.toDouble());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final navItems = _navItems(context, offline: widget.offline);
+    final count = navItems.length;
+    final safeIndex = widget.selectedIndex.clamp(0, count - 1);
+    final active = _dragging ? _pressedIndex.clamp(0, count - 1) : safeIndex;
+    return SizedBox(
+      width: _phoneLandscapeNavWidth,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (details) {
+          _dragMoved = false;
+          _pointer(details.localPosition.dy, commit: true);
+        },
+        onTapUp: (_) => _endDrag(),
+        onTapCancel: () {
+          if (!_dragMoved) _endDrag();
+        },
+        onVerticalDragStart: (details) {
+          _dragMoved = true;
+          _pointer(details.localPosition.dy, commit: false);
+        },
+        onVerticalDragUpdate: (details) {
+          _dragMoved = true;
+          _pointer(details.localPosition.dy, commit: false);
+        },
+        onVerticalDragEnd: (_) => _endDrag(),
+        onVerticalDragCancel: _endDrag,
+        child: AnimatedBuilder(
+          animation: _move,
+          builder: (context, _) {
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final height = constraints.maxHeight.isFinite
+                    ? constraints.maxHeight
+                    : 0.0;
+                _barExtent = height;
+                _count = count;
+                final slot = count == 0 || height <= 0 ? height : height / count;
+                final travel = _dragging ? _dragCenter : _shownT();
+                final top = travel * slot + (slot - _navPillHeight) / 2;
+                const pillWidth = 48.0;
+                return SizedBox(
+                  height: height,
+                  width: _phoneLandscapeNavWidth,
+                  child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: (_phoneLandscapeNavWidth - pillWidth) / 2,
+                      top: top,
+                      width: pillWidth,
+                      height: _navPillHeight,
+                      child: const DecoratedBox(
+                        key: ValueKey('phone-landscape-nav-pill'),
+                        decoration: BoxDecoration(
+                          color: AppColors.navPill,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(_navPillHeight / 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        for (var i = 0; i < count; i++)
+                          Expanded(
+                            child: Center(
+                              child: _navIcon(
+                                navItems[i],
+                                widget.unreadChats,
+                                widget.incomingFriends,
+                                widget.gamesMyTurn,
+                                widget.gameInvitesCount,
+                                widget.homeBadgeCount,
+                                selected: i == active,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 /// Нижняя панель: иконки с переезжающей плашкой, как вкладки Telegram,
 /// и одна подпись снизу.
 class _MobileBottomNav extends StatefulWidget {
@@ -1652,7 +1883,7 @@ class _MobileBottomNavState extends State<_MobileBottomNav>
                                 child: const DecoratedBox(
                                   key: ValueKey('mobile-bottom-nav-pill'),
                                   decoration: BoxDecoration(
-                                    color: Color(0x296366F1),
+                                    color: AppColors.navPill,
                                     borderRadius: BorderRadius.all(
                                       Radius.circular(_navPillHeight / 2),
                                     ),
