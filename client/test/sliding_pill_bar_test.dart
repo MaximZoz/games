@@ -64,7 +64,8 @@ void main() {
     expect((pill.dx - label.dx).abs(), lessThan(12));
   });
 
-  testWidgets('узкая плашка обнимает подпись, а не всю полоску', (tester) async {
+  testWidgets('узкая плашка обнимает подпись, а не всю полоску',
+      (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -99,9 +100,8 @@ void main() {
                           Text(
                             i == 0 ? 'Игры' : 'Лобби',
                             style: TextStyle(
-                              fontWeight: selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                              fontWeight:
+                                  selected ? FontWeight.w700 : FontWeight.w500,
                               color: selected
                                   ? AppColors.accentStart
                                   : AppColors.textSecondary,
@@ -124,6 +124,13 @@ void main() {
     final games = tester.getSize(find.text('Игры'));
     expect(pill.width, greaterThan(games.width));
     expect(pill.width, lessThan(180));
+    final pillRect = tester.getRect(find.byKey(const ValueKey('sliding-pill')));
+    final gamesRect = tester.getRect(find.text('Игры'));
+    expect(
+      (pillRect.center.dy - gamesRect.center.dy).abs(),
+      lessThan(2),
+      reason: 'заливка должна быть по центру подписи, а не ниже неё',
+    );
 
     final dir = Directory('/opt/cursor/artifacts');
     if (!dir.existsSync()) return;

@@ -899,6 +899,11 @@ class AppShell extends ConsumerWidget {
       phoneLandscape: narrowLandscape,
       platform: Theme.of(context).platform,
     );
+    final toolbarLeadingLeft = 8.0 +
+        phoneLandscapeToolbarLeadingNudge(
+          phoneLandscape: narrowLandscape,
+          platform: Theme.of(context).platform,
+        );
     final shellBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -942,7 +947,7 @@ class AppShell extends ConsumerWidget {
                             ),
                           )
                         : Padding(
-                            padding: const EdgeInsets.only(left: 8),
+                            padding: EdgeInsets.only(left: toolbarLeadingLeft),
                             child: toolbarLeading,
                           )
                   else if (isAuthorized)
