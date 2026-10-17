@@ -1675,7 +1675,7 @@ class _PhoneLandscapeNavState extends State<_PhoneLandscapeNav>
                       child: const DecoratedBox(
                         key: ValueKey('phone-landscape-nav-pill'),
                         decoration: BoxDecoration(
-                          color: Color(0x296366F1),
+                          color: AppColors.navPill,
                           borderRadius: BorderRadius.all(
                             Radius.circular(_navPillHeight / 2),
                           ),
@@ -1883,7 +1883,7 @@ class _MobileBottomNavState extends State<_MobileBottomNav>
                                 child: const DecoratedBox(
                                   key: ValueKey('mobile-bottom-nav-pill'),
                                   decoration: BoxDecoration(
-                                    color: Color(0x296366F1),
+                                    color: AppColors.navPill,
                                     borderRadius: BorderRadius.all(
                                       Radius.circular(_navPillHeight / 2),
                                     ),

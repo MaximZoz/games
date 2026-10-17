@@ -212,6 +212,46 @@ class _SlidingPillBarState extends State<SlidingPillBar>
     _goTo(_pressedIndex.toDouble());
   }
 
+  Widget _measuredSlot(int index, int active) {
+    return KeyedSubtree(
+      key: _slotKey(index),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: widget.itemBuilder(context, index, index == active),
+      ),
+    );
+  }
+
+  /// Плашка обнимает подпись, а центр едет за пальцем — как в нижнем меню.
+  (double, double) _pillBox(double travel, double width, int count) {
+    if (count <= 0 || width <= 0) return (0, 0);
+    final measured = _rects.length == count;
+    final last = count - 1;
+    final t = travel.clamp(0.0, last.toDouble());
+    final i = t.floor().clamp(0, last);
+    final f = (t - i).clamp(0.0, 1.0);
+    final next = i + 1 > last ? last : i + 1;
+    if (widget.shrinkWrap) {
+      if (!measured) return (0, 0);
+      final a = _rects[i];
+      final b = _rects[next];
+      return (
+        a.left + (b.left - a.left) * f,
+        (a.width + (b.width - a.width) * f).clamp(0.0, width),
+      );
+    }
+    final slot = width / count;
+    double widthFor(int index) {
+      if (!measured) return (slot - 8).clamp(36.0, 72.0);
+      return _rects[index].width.clamp(36.0, slot - 4);
+    }
+
+    final pillWidth = widthFor(i) + (widthFor(next) - widthFor(i)) * f;
+    final left = ((t + 0.5) * slot - pillWidth / 2)
+        .clamp(0.0, (width - pillWidth).clamp(0.0, width));
+    return (left, pillWidth);
+  }
+
   @override
   Widget build(BuildContext context) {
     final count = widget.itemCount;
@@ -228,52 +268,24 @@ class _SlidingPillBarState extends State<SlidingPillBar>
             final width = constraints.maxWidth;
             _barWidth = width;
             final travel = _travel(count);
-            late final double left;
-            late final double pillWidth;
-            if (widget.shrinkWrap &&
-                _rects.length == count &&
-                count > 0) {
-              final last = count - 1;
-              final t = travel.clamp(0.0, last.toDouble());
-              final i = t.floor().clamp(0, last);
-              final f = (t - i).clamp(0.0, 1.0);
-              final a = _rects[i];
-              final b = _rects[i + 1 > last ? last : i + 1];
-              left = a.left + (b.left - a.left) * f + 2;
-              pillWidth = (a.width + (b.width - a.width) * f - 4)
-                  .clamp(0.0, width);
-            } else if (widget.shrinkWrap) {
-              left = 0;
-              pillWidth = 0;
-            } else {
-              final slot = count == 0 ? width : width / count;
-              pillWidth = (slot - 6).clamp(0.0, slot);
-              left = travel * slot + (slot - pillWidth) / 2;
-            }
-            if (widget.shrinkWrap) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _measureSlots();
-              });
-            }
+            final pillBox = _pillBox(travel, width, count);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _measureSlots();
+            });
+            const pillHeight = 34.0;
+            final pillH = widget.height >= pillHeight + 4
+                ? pillHeight
+                : (widget.height - 4).clamp(0.0, pillHeight);
             final pill = Positioned(
-              left: left,
-              top: 3,
-              width: pillWidth,
-              height: widget.height - 6,
+              left: pillBox.$1,
+              top: (widget.height - pillH) / 2,
+              width: pillBox.$2,
+              height: pillH,
               child: DecoratedBox(
                 key: widget.pillKey ?? const ValueKey('sliding-pill'),
                 decoration: BoxDecoration(
-                  color: AppColors.accentSoft,
-                  borderRadius: BorderRadius.circular(
-                    (widget.height - 6) / 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accentStart.withValues(alpha: 0.16),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: AppColors.navPill,
+                  borderRadius: BorderRadius.circular(pillH / 2),
                 ),
               ),
             );
@@ -283,16 +295,10 @@ class _SlidingPillBarState extends State<SlidingPillBar>
               children: [
                 for (var i = 0; i < count; i++)
                   widget.shrinkWrap
-                      ? KeyedSubtree(
-                          key: _slotKey(i),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: widget.itemBuilder(context, i, i == active),
-                          ),
-                        )
+                      ? _measuredSlot(i, active)
                       : Expanded(
                           child: Center(
-                            child: widget.itemBuilder(context, i, i == active),
+                            child: _measuredSlot(i, active),
                           ),
                         ),
               ],

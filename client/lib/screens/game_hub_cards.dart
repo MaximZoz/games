@@ -1402,7 +1402,6 @@ class _GamesTabSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = isWide(context);
-    final gradient = AppGradients.borderAt(0.22);
     final selectedIndex = selectedTab == _GamesTab.games ? 0 : 1;
     return Focus(
       canRequestFocus: false,
@@ -1410,45 +1409,33 @@ class _GamesTabSwitcher extends StatelessWidget {
       descendantsAreFocusable: false,
       descendantsAreTraversable: false,
       child: GamepadTabSticks(
-        child: Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(AppRadius.button + 4),
+        child: SlidingPillBar(
+          pillKey: const ValueKey('games-lobby-pill'),
+          itemCount: 2,
+          selectedIndex: selectedIndex,
+          progress: progress,
+          height: isDesktop ? 48 : 44,
+          shrinkWrap: true,
+          onChanged: (index) => onTabChanged(
+            index == 0 ? _GamesTab.games : _GamesTab.lobbies,
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.button + 2),
-            ),
-            child: SlidingPillBar(
-              pillKey: const ValueKey('games-lobby-pill'),
-              itemCount: 2,
-              selectedIndex: selectedIndex,
-              progress: progress,
-              height: isDesktop ? 48 : 44,
-              onChanged: (index) => onTabChanged(
-                index == 0 ? _GamesTab.games : _GamesTab.lobbies,
-              ),
-              itemBuilder: (context, index, selected) {
-                if (index == 0) {
-                  return _TabSegment(
-                    label: context.l10n.gamesTitle,
-                    icon: Icons.sports_esports_rounded,
-                    isSelected: selected,
-                    isDesktop: isDesktop,
-                  );
-                }
-                return _TabSegment(
-                  label: context.l10n.gamesLobbyTab,
-                  icon: Icons.group_rounded,
-                  isSelected: selected,
-                  isDesktop: isDesktop,
-                  badgeCount: lobbyBadgeCount,
-                );
-              },
-            ),
-          ),
+          itemBuilder: (context, index, selected) {
+            if (index == 0) {
+              return _TabSegment(
+                label: context.l10n.gamesTitle,
+                icon: Icons.sports_esports_rounded,
+                isSelected: selected,
+                isDesktop: isDesktop,
+              );
+            }
+            return _TabSegment(
+              label: context.l10n.gamesLobbyTab,
+              icon: Icons.group_rounded,
+              isSelected: selected,
+              isDesktop: isDesktop,
+              badgeCount: lobbyBadgeCount,
+            );
+          },
         ),
       ),
     );
@@ -1477,10 +1464,7 @@ class _TabSegment extends StatelessWidget {
       selected: isSelected,
       label: badgeCount > 0 ? '$label, $badgeCount' : label,
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 16 : 10,
-          vertical: isDesktop ? 10 : 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 2),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,

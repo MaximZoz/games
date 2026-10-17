@@ -206,6 +206,22 @@ void main() {
     expect(find.text('0'), findsNothing);
   });
 
+  testWidgets('четыре вкладки на узком телефоне остаются в строке',
+      (tester) async {
+    await _pump(
+      tester,
+      size: const Size(360, 780),
+      snapshot: _snapshot(incoming: 2, outgoing: 1),
+    );
+
+    expect(find.text('Входящие'), findsOneWidget);
+    expect(find.text('Исходящие'), findsOneWidget);
+    expect(find.text('Найти друга'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await _saveShot(tester, 'friends-tabs-phone-four.png');
+  });
+
   testWidgets('на телефоне счётчик тоже на месте', (tester) async {
     await _pump(
       tester,
