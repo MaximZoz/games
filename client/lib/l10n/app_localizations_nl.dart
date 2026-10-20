@@ -1934,6 +1934,23 @@ class AppLocalizationsNl extends AppLocalizations {
   String get errTimeout => 'Verzoek time-out. Probeer het opnieuw.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'De server reageerde niet binnen $seconds s. Controleer internet en tik op «Opnieuw».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'De server reageerde niet op tijd. Controleer internet en tik op «Opnieuw».';
+
+  @override
+  String get loadErrorNoConnection => 'Geen verbinding met de server. Controleer internet en tik op «Opnieuw».';
+
+  @override
+  String get loadErrorUnavailable => 'De server is nu niet beschikbaar. Wacht even en tik op «Opnieuw».';
+
+  @override
+  String get loadErrorGeneric => 'Het verzoek is mislukt. Tik op «Opnieuw». Blijft de fout, controleer dan internet.';
+
+  @override
   String get errGamesUnavailable => 'Games zijn tijdelijk niet beschikbaar';
 
   @override

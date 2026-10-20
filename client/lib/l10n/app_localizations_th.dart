@@ -1934,6 +1934,23 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errTimeout => 'คำขอหมดเวลา โปรดลองอีกครั้ง';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'เซิร์ฟเวอร์ไม่ตอบภายใน $seconds วินาที ตรวจสอบอินเทอร์เน็ตแล้วกด «ลองอีกครั้ง»';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'เซิร์ฟเวอร์ไม่ตอบทันเวลา ตรวจสอบอินเทอร์เน็ตแล้วกด «ลองอีกครั้ง»';
+
+  @override
+  String get loadErrorNoConnection => 'ติดต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วกด «ลองอีกครั้ง»';
+
+  @override
+  String get loadErrorUnavailable => 'เซิร์ฟเวอร์ไม่พร้อมใช้งานตอนนี้ รอสักครู่แล้วกด «ลองอีกครั้ง»';
+
+  @override
+  String get loadErrorGeneric => 'คำขอไม่สำเร็จ กด «ลองอีกครั้ง» หากยังผิดพลาด ให้ตรวจสอบอินเทอร์เน็ต';
+
+  @override
   String get errGamesUnavailable => 'เกมไม่พร้อมใช้งานชั่วคราว';
 
   @override

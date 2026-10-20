@@ -1934,6 +1934,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errTimeout => 'Request timed out. Please try again.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'The server did not respond within $seconds s. Check your internet and tap Retry.';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'The server did not respond in time. Check your internet and tap Retry.';
+
+  @override
+  String get loadErrorNoConnection => 'Could not reach the server. Check your internet and tap Retry.';
+
+  @override
+  String get loadErrorUnavailable => 'The server is unavailable right now. Wait a moment and tap Retry.';
+
+  @override
+  String get loadErrorGeneric => 'The request did not finish. Tap Retry. If it keeps happening, check your internet.';
+
+  @override
   String get errGamesUnavailable => 'Games are temporarily unavailable';
 
   @override

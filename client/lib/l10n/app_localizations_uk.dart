@@ -1934,6 +1934,23 @@ class AppLocalizationsUk extends AppLocalizations {
   String get errTimeout => 'Час очікування вичерпано. Спробуйте ще раз.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Сервер не відповів за $seconds с. Перевірте інтернет і натисніть «Повторити».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Сервер не відповів вчасно. Перевірте інтернет і натисніть «Повторити».';
+
+  @override
+  String get loadErrorNoConnection => 'Немає зв’язку з сервером. Перевірте інтернет і натисніть «Повторити».';
+
+  @override
+  String get loadErrorUnavailable => 'Сервер зараз недоступний. Зачекайте трохи і натисніть «Повторити».';
+
+  @override
+  String get loadErrorGeneric => 'Запит не виконався. Натисніть «Повторити». Якщо помилка залишиться, перевірте інтернет.';
+
+  @override
   String get errGamesUnavailable => 'Ігри тимчасово недоступні';
 
   @override

@@ -1934,6 +1934,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errTimeout => '请求超时，请重试。';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return '服务器在 $seconds 秒内没有响应。请检查网络并点「重试」。';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => '服务器没有及时响应。请检查网络并点「重试」。';
+
+  @override
+  String get loadErrorNoConnection => '无法连接到服务器。请检查网络并点「重试」。';
+
+  @override
+  String get loadErrorUnavailable => '服务器暂时不可用。请稍等片刻再点「重试」。';
+
+  @override
+  String get loadErrorGeneric => '请求没有完成。请点「重试」。如果仍然失败，请检查网络。';
+
+  @override
   String get errGamesUnavailable => '游戏暂时不可用';
 
   @override

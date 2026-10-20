@@ -1934,6 +1934,23 @@ class AppLocalizationsPl extends AppLocalizations {
   String get errTimeout => 'Przekroczono limit czasu. Spróbuj ponownie.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Serwer nie odpowiedział w ciągu $seconds s. Sprawdź internet i naciśnij «Ponów».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Serwer nie odpowiedział na czas. Sprawdź internet i naciśnij «Ponów».';
+
+  @override
+  String get loadErrorNoConnection => 'Brak połączenia z serwerem. Sprawdź internet i naciśnij «Ponów».';
+
+  @override
+  String get loadErrorUnavailable => 'Serwer jest teraz niedostępny. Poczekaj chwilę i naciśnij «Ponów».';
+
+  @override
+  String get loadErrorGeneric => 'Żądanie nie zostało wykonane. Naciśnij «Ponów». Jeśli błąd zostanie, sprawdź internet.';
+
+  @override
   String get errGamesUnavailable => 'Gry są chwilowo niedostępne';
 
   @override

@@ -33,6 +33,7 @@ import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
+import 'package:multigames_client/ui/widgets/screen_load_error.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
@@ -81,6 +82,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   static const int _modalPageSize = 10;
 
   String? _error;
+  Object? _chatsLoadError;
   bool _isOpeningStartChatDialog = false;
   bool _isOpeningBlockedUsersDialog = false;
   bool _isStartingChat = false;
@@ -141,6 +143,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       _hasMoreChats = cache.chats.length >= _chatsPageSize;
       _isLoadingChats = false;
       _error = null;
+      _chatsLoadError = null;
     });
   }
 
@@ -259,6 +262,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         _hasMoreChats = cache.chats.length >= _chatsPageSize;
         _isLoadingChats = false;
         _error = null;
+        _chatsLoadError = null;
       });
       return;
     }
@@ -273,6 +277,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     _isChatsRequestInFlight = true;
     setState(() {
       _error = null;
+      _chatsLoadError = null;
       // Не мигаем спиннером, если список уже на экране.
       if (showLoading && _chats.isEmpty) {
         _isLoadingChats = true;
@@ -293,6 +298,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         _isLoadingChats = false;
         _isLoadingMoreChats = false;
         _error = null;
+        _chatsLoadError = null;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_chatsScrollController.hasClients) return;
@@ -319,14 +325,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       }
       if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _chatsLoadError = e;
         _isLoadingChats = false;
         _isLoadingMoreChats = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = LocaleService.l10n.chatsLoadFailed;
+        _chatsLoadError = e;
         _isLoadingChats = false;
         _isLoadingMoreChats = false;
       });
@@ -1787,7 +1793,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final chats = _chats;
     final hasBlockedUsers = blockedUsers.isNotEmpty;
     final errorText = _error;
-    final loading = _isLoadingChats && chats.isEmpty && errorText == null;
+    final loadError = _chatsLoadError;
+    final loading = _isLoadingChats &&
+        chats.isEmpty &&
+        errorText == null &&
+        loadError == null;
     final actionBusy = _isOpeningStartChatDialog ||
         _isOpeningBlockedUsersDialog ||
         _isStartingChat ||
@@ -1979,6 +1989,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                           child: Center(
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
+                        ),
+                      )
+                    else if (loadError != null)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: ScreenLoadError(
+                          title: context.l10n.chatsLoadFailed,
+                          error: loadError,
+                          onRetry: () => _loadChats(refreshOnline: true),
                         ),
                       )
                     else if (errorText != null)

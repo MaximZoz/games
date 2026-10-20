@@ -1934,6 +1934,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errTimeout => 'अनुरोध का समय समाप्त। कृपया फिर कोशिश करें।';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'सर्वर ने $seconds सेकंड में जवाब नहीं दिया। इंटरनेट जाँचें और «फिर कोशिश करें» दबाएँ।';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'सर्वर ने समय पर जवाब नहीं दिया। इंटरनेट जाँचें और «फिर कोशिश करें» दबाएँ।';
+
+  @override
+  String get loadErrorNoConnection => 'सर्वर से संपर्क नहीं हो सका। इंटरनेट जाँचें और «फिर कोशिश करें» दबाएँ।';
+
+  @override
+  String get loadErrorUnavailable => 'सर्वर अभी उपलब्ध नहीं है। थोड़ा इंतज़ार करें और «फिर कोशिश करें» दबाएँ।';
+
+  @override
+  String get loadErrorGeneric => 'अनुरोध पूरा नहीं हुआ। «फिर कोशिश करें» दबाएँ। गलती बनी रहे तो इंटरनेट जाँचें।';
+
+  @override
   String get errGamesUnavailable => 'गेम अस्थायी रूप से अनुपलब्ध हैं';
 
   @override

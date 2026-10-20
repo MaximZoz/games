@@ -1934,6 +1934,23 @@ class AppLocalizationsKk extends AppLocalizations {
   String get errTimeout => 'Күту уақыты аяқталды. Қайталап көріңіз.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Сервер $seconds с ішінде жауап бермеді. Интернетті тексеріп, «Қайталау» түймесін басыңыз.';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Сервер уақытында жауап бермеді. Интернетті тексеріп, «Қайталау» түймесін басыңыз.';
+
+  @override
+  String get loadErrorNoConnection => 'Сервермен байланыс жоқ. Интернетті тексеріп, «Қайталау» түймесін басыңыз.';
+
+  @override
+  String get loadErrorUnavailable => 'Сервер қазір қолжетімсіз. Сәл күтіп, «Қайталау» түймесін басыңыз.';
+
+  @override
+  String get loadErrorGeneric => 'Сұрау орындалмады. «Қайталау» түймесін басыңыз. Қате қайталанса, интернетті тексеріңіз.';
+
+  @override
   String get errGamesUnavailable => 'Ойындар уақытша қолжетімсіз';
 
   @override

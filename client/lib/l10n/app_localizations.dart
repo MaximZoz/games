@@ -3827,6 +3827,36 @@ abstract class AppLocalizations {
   /// **'Превышено время ожидания. Попробуйте ещё раз.'**
   String get errTimeout;
 
+  /// No description provided for @loadErrorTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сервер не ответил за {seconds} с. Проверьте интернет и нажмите «Повторить».'**
+  String loadErrorTimeout(int seconds);
+
+  /// No description provided for @loadErrorTimeoutUnknown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сервер не ответил вовремя. Проверьте интернет и нажмите «Повторить».'**
+  String get loadErrorTimeoutUnknown;
+
+  /// No description provided for @loadErrorNoConnection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет связи с сервером. Проверьте интернет и нажмите «Повторить».'**
+  String get loadErrorNoConnection;
+
+  /// No description provided for @loadErrorUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сервер сейчас недоступен. Подождите немного и нажмите «Повторить».'**
+  String get loadErrorUnavailable;
+
+  /// No description provided for @loadErrorGeneric.
+  ///
+  /// In ru, this message translates to:
+  /// **'Запрос не выполнился. Нажмите «Повторить». Если ошибка останется, проверьте интернет.'**
+  String get loadErrorGeneric;
+
   /// No description provided for @errGamesUnavailable.
   ///
   /// In ru, this message translates to:

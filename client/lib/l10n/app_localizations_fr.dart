@@ -1934,6 +1934,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errTimeout => 'Délai d’attente dépassé. Veuillez réessayer.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Le serveur n’a pas répondu en $seconds s. Vérifiez Internet et appuyez sur « Réessayer ».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Le serveur n’a pas répondu à temps. Vérifiez Internet et appuyez sur « Réessayer ».';
+
+  @override
+  String get loadErrorNoConnection => 'Impossible de joindre le serveur. Vérifiez Internet et appuyez sur « Réessayer ».';
+
+  @override
+  String get loadErrorUnavailable => 'Le serveur est indisponible pour le moment. Patientez un peu et appuyez sur « Réessayer ».';
+
+  @override
+  String get loadErrorGeneric => 'La requête n’a pas abouti. Appuyez sur « Réessayer ». Si l’erreur persiste, vérifiez Internet.';
+
+  @override
   String get errGamesUnavailable => 'Les jeux sont temporairement indisponibles';
 
   @override

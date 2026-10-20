@@ -1934,6 +1934,23 @@ class AppLocalizationsIt extends AppLocalizations {
   String get errTimeout => 'Tempo scaduto. Riprova.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Il server non ha risposto entro $seconds s. Controlla internet e tocca «Riprova».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Il server non ha risposto in tempo. Controlla internet e tocca «Riprova».';
+
+  @override
+  String get loadErrorNoConnection => 'Nessun collegamento al server. Controlla internet e tocca «Riprova».';
+
+  @override
+  String get loadErrorUnavailable => 'Il server non è disponibile ora. Attendi un momento e tocca «Riprova».';
+
+  @override
+  String get loadErrorGeneric => 'La richiesta non è riuscita. Tocca «Riprova». Se l’errore resta, controlla internet.';
+
+  @override
   String get errGamesUnavailable => 'I giochi non sono temporaneamente disponibili';
 
   @override

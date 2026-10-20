@@ -1934,6 +1934,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get errTimeout => 'Zeitüberschreitung. Bitte erneut versuchen.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Der Server hat innerhalb von $seconds s nicht geantwortet. Prüfen Sie das Internet und tippen Sie auf „Wiederholen“.';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Der Server hat nicht rechtzeitig geantwortet. Prüfen Sie das Internet und tippen Sie auf „Wiederholen“.';
+
+  @override
+  String get loadErrorNoConnection => 'Keine Verbindung zum Server. Prüfen Sie das Internet und tippen Sie auf „Wiederholen“.';
+
+  @override
+  String get loadErrorUnavailable => 'Der Server ist gerade nicht erreichbar. Warten Sie kurz und tippen Sie auf „Wiederholen“.';
+
+  @override
+  String get loadErrorGeneric => 'Die Anfrage wurde nicht ausgeführt. Tippen Sie auf „Wiederholen“. Wenn der Fehler bleibt, prüfen Sie das Internet.';
+
+  @override
   String get errGamesUnavailable => 'Spiele sind vorübergehend nicht verfügbar';
 
   @override
