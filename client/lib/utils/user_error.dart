@@ -72,6 +72,49 @@ String formatUserError(Object? error, {String? fallback}) {
   return fallback ?? l10n.commonGenericError;
 }
 
+/// Сбой, который имеет смысл повторить: таймаут, обрыв, 502/503/504.
+bool isTransientLoadError(Object? error) {
+  if (error == null) return false;
+  if (error is TimeoutException || error is http.ClientException) return true;
+  final code = _statusCode(error);
+  if (code == 502 || code == 503 || code == 504) return true;
+  if (code != null && code != 0) return false;
+  if (_looksTemporarilyUnavailable(error.toString())) return true;
+  return _looksOffline(error);
+}
+
+/// Что делать после неудачной загрузки списка.
+enum LoadFailureAction {
+  /// Ещё одна попытка, экран ошибки не показываем.
+  retrySoon,
+
+  /// Список уже на экране — не заменять его ошибкой.
+  keepShownData,
+
+  /// Показать пояснение и кнопку «Повторить».
+  showError,
+}
+
+LoadFailureAction loadFailureAction({
+  required Object error,
+  required bool hasData,
+  required int failures,
+}) {
+  if (hasData) return LoadFailureAction.keepShownData;
+  if (isTransientLoadError(error) && failures < 1) {
+    return LoadFailureAction.retrySoon;
+  }
+  return LoadFailureAction.showError;
+}
+
+int? _statusCode(Object? error) {
+  if (error is GamesException) return error.statusCode;
+  if (error is AuthException) return error.statusCode;
+  if (error is ChatException) return error.statusCode;
+  if (error is FriendsException) return error.statusCode;
+  return null;
+}
+
 /// Почему не загрузился список и что сделать. Без текста исключения.
 String loadFailureDetail(Object? error) {
   final l10n = LocaleService.l10n;
@@ -122,7 +165,7 @@ bool _isUnavailable(Object? error) {
     code = error.statusCode;
     message = error.message;
   }
-  if (code == 502 || code == 503) return true;
+  if (code == 502 || code == 503 || code == 504) return true;
   if (_looksTemporarilyUnavailable(key) ||
       _looksTemporarilyUnavailable(message)) {
     return true;

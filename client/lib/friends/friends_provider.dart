@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/utils/user_error.dart';
 
 final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
   return FriendsRepository(authRepository: ref.watch(authRepositoryProvider));
@@ -28,19 +29,46 @@ final friendsSnapshotProvider =
   final repo = ref.watch(friendsRepositoryProvider);
   final controller = StreamController<FriendsSnapshot>();
   var loadInFlight = false;
+  FriendsSnapshot? latest;
+  var transientFailures = 0;
+  Timer? recoverTimer;
+  late final Future<void> Function() load;
 
-  Future<void> load() async {
+  void scheduleRecover(Duration delay) {
+    recoverTimer?.cancel();
+    recoverTimer = Timer(delay, () => unawaited(load()));
+  }
+
+  load = () async {
     if (loadInFlight) return;
+    recoverTimer?.cancel();
     loadInFlight = true;
     try {
       final snapshot = await repo.getFriends();
+      latest = snapshot;
+      transientFailures = 0;
       if (!controller.isClosed) controller.add(snapshot);
     } catch (e, st) {
-      if (!controller.isClosed) controller.addError(e, st);
+      final action = loadFailureAction(
+        error: e,
+        hasData: latest != null,
+        failures: transientFailures,
+      );
+      if (action == LoadFailureAction.retrySoon) {
+        transientFailures++;
+        scheduleRecover(Duration(milliseconds: 700 * transientFailures));
+      } else if (action == LoadFailureAction.showError) {
+        if (!controller.isClosed) controller.addError(e, st);
+        if (isTransientLoadError(e)) {
+          scheduleRecover(const Duration(seconds: 12));
+        }
+      } else if (isTransientLoadError(e)) {
+        scheduleRecover(const Duration(seconds: 12));
+      }
     } finally {
       loadInFlight = false;
     }
-  }
+  };
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(
     realtimeEventsProvider,
@@ -55,6 +83,7 @@ final friendsSnapshotProvider =
   unawaited(load());
 
   ref.onDispose(() {
+    recoverTimer?.cancel();
     keepAliveLink.close();
     unawaited(controller.close());
   });

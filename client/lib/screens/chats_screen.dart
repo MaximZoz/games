@@ -83,6 +83,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   String? _error;
   Object? _chatsLoadError;
+  int _chatsTransientFails = 0;
+  Timer? _chatsRecoverTimer;
   bool _isOpeningStartChatDialog = false;
   bool _isOpeningBlockedUsersDialog = false;
   bool _isStartingChat = false;
@@ -176,6 +178,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     _chatsScrollController.removeListener(_onChatsScroll);
     _chatsScrollController.dispose();
     _navigationLockTimer?.cancel();
+    _chatsRecoverTimer?.cancel();
     super.dispose();
   }
 
@@ -269,15 +272,28 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     return unawaited(_loadChats(refreshOnline: true));
   }
 
+  void _scheduleChatsRecover(Duration delay) {
+    _chatsRecoverTimer?.cancel();
+    _chatsRecoverTimer = Timer(delay, () {
+      if (!mounted) return;
+      unawaited(_loadChats(showLoading: false));
+    });
+  }
+
   Future<void> _loadChats({
     bool showLoading = true,
     bool refreshOnline = false,
+    bool userRetry = false,
   }) async {
     if (!mounted || _isChatsRequestInFlight) return;
     _isChatsRequestInFlight = true;
+    _chatsRecoverTimer?.cancel();
+    if (userRetry || showLoading) _chatsTransientFails = 0;
     setState(() {
       _error = null;
-      _chatsLoadError = null;
+      if (userRetry || (showLoading && _chats.isEmpty)) {
+        _chatsLoadError = null;
+      }
       // Не мигаем спиннером, если список уже на экране.
       if (showLoading && _chats.isEmpty) {
         _isLoadingChats = true;
@@ -299,6 +315,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         _isLoadingMoreChats = false;
         _error = null;
         _chatsLoadError = null;
+        _chatsTransientFails = 0;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_chatsScrollController.hasClients) return;
@@ -324,20 +341,40 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         return;
       }
       if (!mounted) return;
-      setState(() {
-        _chatsLoadError = e;
-        _isLoadingChats = false;
-        _isLoadingMoreChats = false;
-      });
+      _failChatsLoad(e);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _chatsLoadError = e;
-        _isLoadingChats = false;
-        _isLoadingMoreChats = false;
-      });
+      _failChatsLoad(e);
     } finally {
       _isChatsRequestInFlight = false;
+    }
+  }
+
+  void _failChatsLoad(Object error) {
+    final action = loadFailureAction(
+      error: error,
+      hasData: _chats.isNotEmpty,
+      failures: _chatsTransientFails,
+    );
+    if (action == LoadFailureAction.retrySoon) {
+      _chatsTransientFails++;
+      setState(() {
+        _isLoadingChats = _chats.isEmpty;
+        _isLoadingMoreChats = false;
+        _chatsLoadError = null;
+      });
+      _scheduleChatsRecover(Duration(milliseconds: 700 * _chatsTransientFails));
+      return;
+    }
+    setState(() {
+      _isLoadingChats = false;
+      _isLoadingMoreChats = false;
+      if (action == LoadFailureAction.showError) {
+        _chatsLoadError = error;
+      }
+    });
+    if (isTransientLoadError(error)) {
+      _scheduleChatsRecover(const Duration(seconds: 12));
     }
   }
 
@@ -1997,7 +2034,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                         child: ScreenLoadError(
                           title: context.l10n.chatsLoadFailed,
                           error: loadError,
-                          onRetry: () => _loadChats(refreshOnline: true),
+                          onRetry: () => _loadChats(
+                            refreshOnline: true,
+                            userRetry: true,
+                          ),
                         ),
                       )
                     else if (errorText != null)

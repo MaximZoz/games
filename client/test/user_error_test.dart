@@ -111,6 +111,33 @@ void main() {
       );
     });
 
+    test('transient failure retries once before the error screen', () {
+      final timeout = TimeoutException('t');
+      expect(isTransientLoadError(timeout), isTrue);
+      expect(isTransientLoadError(FriendsException(503, 'down')), isTrue);
+      expect(isTransientLoadError(FriendsException(401, 'Сессия')), isFalse);
+      expect(
+        loadFailureAction(error: timeout, hasData: false, failures: 0),
+        LoadFailureAction.retrySoon,
+      );
+      expect(
+        loadFailureAction(error: timeout, hasData: false, failures: 1),
+        LoadFailureAction.showError,
+      );
+      expect(
+        loadFailureAction(error: timeout, hasData: true, failures: 0),
+        LoadFailureAction.keepShownData,
+      );
+      expect(
+        loadFailureAction(
+          error: FriendsException(401, 'Сессия'),
+          hasData: false,
+          failures: 0,
+        ),
+        LoadFailureAction.showError,
+      );
+    });
+
     test('unknown uses fallback', () {
       expect(
         formatUserError(StateError('x'), fallback: 'Упс'),
