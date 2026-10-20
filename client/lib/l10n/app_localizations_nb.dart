@@ -1934,6 +1934,23 @@ class AppLocalizationsNb extends AppLocalizations {
   String get errTimeout => 'Forespørselen tok for lang tid. Prøv igjen.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Serveren svarte ikke innen $seconds s. Sjekk internett og trykk «Prøv igjen».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Serveren svarte ikke i tide. Sjekk internett og trykk «Prøv igjen».';
+
+  @override
+  String get loadErrorNoConnection => 'Ingen kontakt med serveren. Sjekk internett og trykk «Prøv igjen».';
+
+  @override
+  String get loadErrorUnavailable => 'Serveren er utilgjengelig nå. Vent litt og trykk «Prøv igjen».';
+
+  @override
+  String get loadErrorGeneric => 'Forespørselen ble ikke fullført. Trykk «Prøv igjen». Hvis feilen blir, sjekk internett.';
+
+  @override
   String get errGamesUnavailable => 'Spill er midlertidig utilgjengelige';
 
   @override

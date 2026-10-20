@@ -1934,6 +1934,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get errTimeout => '요청 시간이 초과되었습니다. 다시 시도해 주세요.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return '서버가 $seconds초 안에 응답하지 않았습니다. 인터넷을 확인하고 «다시 시도»를 누르세요.';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => '서버가 제때 응답하지 않았습니다. 인터넷을 확인하고 «다시 시도»를 누르세요.';
+
+  @override
+  String get loadErrorNoConnection => '서버에 연결할 수 없습니다. 인터넷을 확인하고 «다시 시도»를 누르세요.';
+
+  @override
+  String get loadErrorUnavailable => '서버를 지금 사용할 수 없습니다. 잠시 후 «다시 시도»를 누르세요.';
+
+  @override
+  String get loadErrorGeneric => '요청이 끝나지 않았습니다. «다시 시도»를 누르세요. 계속되면 인터넷을 확인하세요.';
+
+  @override
   String get errGamesUnavailable => '게임을 일시적으로 이용할 수 없습니다';
 
   @override

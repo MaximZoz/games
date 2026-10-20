@@ -1934,6 +1934,23 @@ class AppLocalizationsPt extends AppLocalizations {
   String get errTimeout => 'A solicitação expirou. Tente novamente.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'O servidor não respondeu em $seconds s. Verifique a internet e toque em «Repetir».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'O servidor não respondeu a tempo. Verifique a internet e toque em «Repetir».';
+
+  @override
+  String get loadErrorNoConnection => 'Sem ligação ao servidor. Verifique a internet e toque em «Repetir».';
+
+  @override
+  String get loadErrorUnavailable => 'O servidor está indisponível agora. Espere um pouco e toque em «Repetir».';
+
+  @override
+  String get loadErrorGeneric => 'O pedido não foi concluído. Toque em «Repetir». Se o erro continuar, verifique a internet.';
+
+  @override
   String get errGamesUnavailable => 'Os jogos estão temporariamente indisponíveis';
 
   @override

@@ -82,6 +82,35 @@ void main() {
       );
     });
 
+    test('load failure explains a 12 second timeout', () {
+      expect(
+        loadFailureDetail(
+          TimeoutException('Future not completed', const Duration(seconds: 12)),
+        ),
+        'Сервер не ответил за 12 с. Проверьте интернет и нажмите «Повторить».',
+      );
+      expect(
+        loadFailureDetail(TimeoutException('t')),
+        contains('не ответил вовремя'),
+      );
+      expect(
+        loadFailureDetail(http.ClientException('fail')),
+        contains('Нет связи с сервером'),
+      );
+      expect(
+        loadFailureDetail(FriendsException(503, 'temporarily unavailable')),
+        contains('недоступен'),
+      );
+      expect(
+        loadFailureDetail(StateError('x')),
+        contains('Повторить'),
+      );
+      expect(
+        loadFailureDetail(TimeoutException('Future not completed')),
+        isNot(contains('Future not completed')),
+      );
+    });
+
     test('unknown uses fallback', () {
       expect(
         formatUserError(StateError('x'), fallback: 'Упс'),

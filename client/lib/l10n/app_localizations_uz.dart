@@ -1934,6 +1934,23 @@ class AppLocalizationsUz extends AppLocalizations {
   String get errTimeout => 'So‘rov vaqti tugadi. Qayta urinib ko‘ring.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Server $seconds soniya ichida javob bermadi. Internetni tekshiring va «Qayta urinish» tugmasini bosing.';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Server o‘z vaqtida javob bermadi. Internetni tekshiring va «Qayta urinish» tugmasini bosing.';
+
+  @override
+  String get loadErrorNoConnection => 'Server bilan aloqa yo‘q. Internetni tekshiring va «Qayta urinish» tugmasini bosing.';
+
+  @override
+  String get loadErrorUnavailable => 'Server hozir mavjud emas. Biroz kuting va «Qayta urinish» tugmasini bosing.';
+
+  @override
+  String get loadErrorGeneric => 'So‘rov bajarilmadi. «Qayta urinish» tugmasini bosing. Xato qolsa, internetni tekshiring.';
+
+  @override
   String get errGamesUnavailable => 'O‘yinlar vaqtincha mavjud emas';
 
   @override

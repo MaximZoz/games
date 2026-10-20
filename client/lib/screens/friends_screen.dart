@@ -32,6 +32,7 @@ import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/sliding_pill_bar.dart';
+import 'package:multigames_client/ui/widgets/screen_load_error.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
@@ -2558,27 +2559,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                                 color: AppColors.accentStart,
                               ),
                             ),
-                            error: (err, _) => Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline_rounded,
-                                      size: 46,
-                                      color: Colors.red.shade700,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      err.toString(),
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          TextStyle(color: Colors.red.shade700),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            error: (err, _) => ScreenLoadError(
+                              title: context.l10n.friendsLoadFailed,
+                              error: err,
+                              onRetry: () =>
+                                  ref.invalidate(friendsSnapshotProvider),
                             ),
                           ),
                         ),

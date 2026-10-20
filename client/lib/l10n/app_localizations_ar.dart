@@ -1934,6 +1934,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errTimeout => 'انتهت مهلة الطلب. يُرجى المحاولة مرة أخرى.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'لم يرد الخادم خلال $seconds ث. تحقق من الإنترنت واضغط «إعادة المحاولة».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'لم يرد الخادم في الوقت المناسب. تحقق من الإنترنت واضغط «إعادة المحاولة».';
+
+  @override
+  String get loadErrorNoConnection => 'تعذر الاتصال بالخادم. تحقق من الإنترنت واضغط «إعادة المحاولة».';
+
+  @override
+  String get loadErrorUnavailable => 'الخادم غير متاح الآن. انتظر قليلًا واضغط «إعادة المحاولة».';
+
+  @override
+  String get loadErrorGeneric => 'لم يكتمل الطلب. اضغط «إعادة المحاولة». إذا استمر الخطأ، تحقق من الإنترنت.';
+
+  @override
   String get errGamesUnavailable => 'الألعاب غير متاحة مؤقتًا';
 
   @override

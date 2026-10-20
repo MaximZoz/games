@@ -1934,6 +1934,23 @@ class AppLocalizationsDa extends AppLocalizations {
   String get errTimeout => 'Anmodningen fik timeout. Prøv igen.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Serveren svarede ikke inden for $seconds s. Tjek internettet og tryk på «Prøv igen».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Serveren svarede ikke i tide. Tjek internettet og tryk på «Prøv igen».';
+
+  @override
+  String get loadErrorNoConnection => 'Ingen forbindelse til serveren. Tjek internettet og tryk på «Prøv igen».';
+
+  @override
+  String get loadErrorUnavailable => 'Serveren er ikke tilgængelig lige nu. Vent lidt og tryk på «Prøv igen».';
+
+  @override
+  String get loadErrorGeneric => 'Forespørgslen blev ikke gennemført. Tryk på «Prøv igen». Hvis fejlen bliver, så tjek internettet.';
+
+  @override
   String get errGamesUnavailable => 'Spil er midlertidigt utilgængelige';
 
   @override

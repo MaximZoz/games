@@ -1934,6 +1934,23 @@ class AppLocalizationsEl extends AppLocalizations {
   String get errTimeout => 'Λήξη χρονικού ορίου αιτήματος. Δοκιμάστε ξανά.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Ο διακομιστής δεν απάντησε σε $seconds δ. Ελέγξτε το ίντερνετ και πατήστε «Επανάληψη».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Ο διακομιστής δεν απάντησε εγκαίρως. Ελέγξτε το ίντερνετ και πατήστε «Επανάληψη».';
+
+  @override
+  String get loadErrorNoConnection => 'Δεν υπάρχει σύνδεση με τον διακομιστή. Ελέγξτε το ίντερνετ και πατήστε «Επανάληψη».';
+
+  @override
+  String get loadErrorUnavailable => 'Ο διακομιστής δεν είναι διαθέσιμος τώρα. Περιμένετε λίγο και πατήστε «Επανάληψη».';
+
+  @override
+  String get loadErrorGeneric => 'Το αίτημα δεν ολοκληρώθηκε. Πατήστε «Επανάληψη». Αν το σφάλμα μείνει, ελέγξτε το ίντερνετ.';
+
+  @override
   String get errGamesUnavailable => 'Τα παιχνίδια δεν είναι προσωρινά διαθέσιμα';
 
   @override

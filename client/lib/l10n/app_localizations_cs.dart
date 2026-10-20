@@ -1934,6 +1934,23 @@ class AppLocalizationsCs extends AppLocalizations {
   String get errTimeout => 'Vypršel časový limit. Zkuste to znovu.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Server neodpověděl do $seconds s. Zkontrolujte internet a klepněte na «Znovu».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Server neodpověděl včas. Zkontrolujte internet a klepněte na «Znovu».';
+
+  @override
+  String get loadErrorNoConnection => 'Nelze se spojit se serverem. Zkontrolujte internet a klepněte na «Znovu».';
+
+  @override
+  String get loadErrorUnavailable => 'Server je teď nedostupný. Chvíli počkejte a klepněte na «Znovu».';
+
+  @override
+  String get loadErrorGeneric => 'Požadavek se nedokončil. Klepněte na «Znovu». Pokud chyba zůstane, zkontrolujte internet.';
+
+  @override
   String get errGamesUnavailable => 'Hry jsou dočasně nedostupné';
 
   @override

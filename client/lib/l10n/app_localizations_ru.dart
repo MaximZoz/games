@@ -1934,6 +1934,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get errTimeout => 'Превышено время ожидания. Попробуйте ещё раз.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Сервер не ответил за $seconds с. Проверьте интернет и нажмите «Повторить».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Сервер не ответил вовремя. Проверьте интернет и нажмите «Повторить».';
+
+  @override
+  String get loadErrorNoConnection => 'Нет связи с сервером. Проверьте интернет и нажмите «Повторить».';
+
+  @override
+  String get loadErrorUnavailable => 'Сервер сейчас недоступен. Подождите немного и нажмите «Повторить».';
+
+  @override
+  String get loadErrorGeneric => 'Запрос не выполнился. Нажмите «Повторить». Если ошибка останется, проверьте интернет.';
+
+  @override
   String get errGamesUnavailable => 'Игры временно недоступны';
 
   @override
