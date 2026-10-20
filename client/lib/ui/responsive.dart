@@ -117,6 +117,26 @@ double phoneLandscapeCornerInset({
   return phoneLandscapeCornerInsetPx;
 }
 
+/// Дополнительный сдвиг вправо для «Новый чат» и поиска друзей.
+///
+/// Общий отступ шапки ([phoneLandscapeCornerInsetPx]) уводит оба края на 8px.
+/// Эти две кнопки всё ещё садятся на скругление над рейлом.
+const double phoneLandscapeToolbarLeadingNudgePx = 16;
+
+double phoneLandscapeToolbarLeadingNudge({
+  required bool phoneLandscape,
+  required TargetPlatform? platform,
+}) {
+  if (phoneLandscapeCornerInset(
+        phoneLandscape: phoneLandscape,
+        platform: platform,
+      ) ==
+      0) {
+    return 0;
+  }
+  return phoneLandscapeToolbarLeadingNudgePx;
+}
+
 /// Клавиатура открыта в альбоме — вертикали почти нет, хром надо схлопнуть.
 bool isLandscapeKeyboardOpen(
   BuildContext context, {

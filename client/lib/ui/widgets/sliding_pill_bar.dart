@@ -261,8 +261,10 @@ class _SlidingPillBarState extends State<SlidingPillBar>
     return AnimatedBuilder(
       animation: listen,
       builder: (context, _) {
-        final safeIndex = widget.selectedIndex.clamp(0, count <= 0 ? 0 : count - 1);
-        final active = _dragging ? _pressedIndex.clamp(0, count - 1) : safeIndex;
+        final safeIndex =
+            widget.selectedIndex.clamp(0, count <= 0 ? 0 : count - 1);
+        final active =
+            _dragging ? _pressedIndex.clamp(0, count - 1) : safeIndex;
         return LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
@@ -326,6 +328,10 @@ class _SlidingPillBarState extends State<SlidingPillBar>
               child: SizedBox(
                 height: widget.height,
                 child: Stack(
+                  // Подписи без Expanded занимают только свою высоту.
+                  // Stack по умолчанию кладёт их к верху, а плашка
+                  // центрируется в полоске — заливка уезжает вниз.
+                  alignment: Alignment.centerLeft,
                   clipBehavior: Clip.none,
                   children: [
                     pill,
