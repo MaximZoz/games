@@ -28,6 +28,7 @@ void _purgeStalePlatformViews() {
 
 /// Поддерживает синхронизацию Flutter metrics с visualViewport на iOS.
 /// Иначе hit-test остаётся со сдвигом, пока пользователь не ткнёт в TextField.
+/// В альбоме сдвиг по offsetLeft уводит палец мимо узкого левого меню.
 void installIosViewportSync() {
   if (_installed) return;
   _installed = true;
@@ -39,7 +40,11 @@ void installIosViewportSync() {
         web.window.scrollTo(web.ScrollToOptions(left: 0, top: 0));
       }
       final vv = web.window.visualViewport;
-      if (vv != null && (vv.offsetTop != 0 || vv.pageTop != 0)) {
+      if (vv != null &&
+          (vv.offsetTop != 0 ||
+              vv.pageTop != 0 ||
+              vv.offsetLeft != 0 ||
+              vv.pageLeft != 0)) {
         web.window.scrollTo(web.ScrollToOptions(left: 0, top: 0));
       }
       web.window.dispatchEvent(web.Event('resize'));
