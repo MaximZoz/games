@@ -1551,6 +1551,7 @@ class _PhoneLandscapeNavState extends State<_PhoneLandscapeNav>
   double _dragCenter = 0;
   var _dragging = false;
   var _dragMoved = false;
+  int? _activePointer;
   int _pressedIndex = 0;
   double _barExtent = 0;
   int _count = 1;
@@ -1630,28 +1631,34 @@ class _PhoneLandscapeNavState extends State<_PhoneLandscapeNav>
     final count = navItems.length;
     final safeIndex = widget.selectedIndex.clamp(0, count - 1);
     final active = _dragging ? _pressedIndex.clamp(0, count - 1) : safeIndex;
+    // Listener, не GestureDetector: вертикальный drag на узком рейле
+    // проигрывает арену первому касанию (веб, край экрана iOS). Вкладка
+    // должна смениться в тот же момент, что и в нижнем меню.
     return SizedBox(
       width: _phoneLandscapeNavWidth,
-      child: GestureDetector(
+      child: Listener(
         behavior: HitTestBehavior.opaque,
-        onTapDown: (details) {
+        onPointerDown: (event) {
+          if (_activePointer != null) return;
+          _activePointer = event.pointer;
           _dragMoved = false;
-          _pointer(details.localPosition.dy, commit: true);
+          _pointer(event.localPosition.dy, commit: true);
         },
-        onTapUp: (_) => _endDrag(),
-        onTapCancel: () {
+        onPointerMove: (event) {
+          if (event.pointer != _activePointer) return;
+          if (event.delta != Offset.zero) _dragMoved = true;
+          _pointer(event.localPosition.dy, commit: false);
+        },
+        onPointerUp: (event) {
+          if (event.pointer != _activePointer) return;
+          _activePointer = null;
+          _endDrag();
+        },
+        onPointerCancel: (event) {
+          if (event.pointer != _activePointer) return;
+          _activePointer = null;
           if (!_dragMoved) _endDrag();
         },
-        onVerticalDragStart: (details) {
-          _dragMoved = true;
-          _pointer(details.localPosition.dy, commit: false);
-        },
-        onVerticalDragUpdate: (details) {
-          _dragMoved = true;
-          _pointer(details.localPosition.dy, commit: false);
-        },
-        onVerticalDragEnd: (_) => _endDrag(),
-        onVerticalDragCancel: _endDrag,
         child: AnimatedBuilder(
           animation: _move,
           builder: (context, _) {

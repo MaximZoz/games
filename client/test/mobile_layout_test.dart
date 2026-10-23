@@ -241,6 +241,37 @@ void main() {
     expect(mobileBottomNav(), findsNothing);
   });
 
+  testWidgets('альбом: одно касание по иконке переключает вкладку',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      setPhoneLandscape(tester);
+      await pumpMultiGamesApp(tester);
+      await goToProfileTab(tester);
+      expect(find.text('Войдите в аккаунт'), findsOneWidget);
+
+      final rail =
+          tester.getRect(find.byKey(const ValueKey('phone-landscape-nav')));
+      final settings = tester.getCenter(
+        find.descendant(
+          of: find.byKey(const ValueKey('phone-landscape-nav')),
+          matching: find.byIcon(Icons.settings),
+        ),
+      );
+      // Палец чуть сдвигается по вертикали — так на телефоне выглядит тап.
+      final gesture = await tester.startGesture(settings);
+      await gesture.moveBy(const Offset(0, 22));
+      await gesture.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Вход'), findsOneWidget);
+      expect(rail.width, 56);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('альбом: плашка едет за пальцем по вертикали', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     try {
