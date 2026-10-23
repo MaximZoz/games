@@ -110,6 +110,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('login-streak-hero')), findsOneWidget);
     expect(find.text('Забрать награду'), findsOneWidget);
+    expect(find.text('Доступна награда за сегодня'), findsNothing);
     expect(find.text('1/1 · Получено'), findsOneWidget);
     expect(find.text('3/3 · Получено'), findsOneWidget);
     expect(find.text('3/7 · ещё 4'), findsOneWidget);
@@ -128,6 +129,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('login-streak-hero')), findsOneWidget);
     expect(find.text('Забрать награду'), findsOneWidget);
+    expect(find.text('Доступна награда за сегодня'), findsNothing);
     expect(tester.takeException(), isNull);
 
     final c1 = tester.getTopLeft(find.byKey(const ValueKey('login-milestone-1')));
@@ -149,7 +151,8 @@ void main() {
       status: _sampleStatus(available: false),
     );
 
-    expect(find.text('Уже получено'), findsNWidgets(2));
+    expect(find.text('Уже получено'), findsOneWidget);
+    expect(find.text('Доступна награда за сегодня'), findsNothing);
     expect(tester.takeException(), isNull);
 
     await _saveShot(tester, 'coins-login-desktop.png');

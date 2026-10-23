@@ -325,9 +325,6 @@ class _StreakHeroCard extends StatelessWidget {
         ? (status.streak > 0 ? status.streak : status.nextStreak)
         : (status.streak > 0 ? status.streak : 1);
     final daysTitle = '$displayDays ${_daysWord(displayDays)}';
-    final subtitle = available
-        ? l10n.coinsLoginAvailableToday
-        : l10n.coinsAlreadyClaimed;
     final iconBox = dense ? 40.0 : 48.0;
 
     return Container(
@@ -391,49 +388,16 @@ class _StreakHeroCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            daysTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: dense ? 17 : 20,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              height: 1.15,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: available
-                                  ? AppColors.accentSoft
-                                  : const Color(0xFFE0F2FE),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: available
-                                    ? AppColors.accentStart
-                                    : const Color(0xFF0284C7),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      daysTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: dense ? 17 : 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        height: 1.15,
+                      ),
                     ),
                   ],
                 ),
