@@ -1325,14 +1325,19 @@ class AppShell extends ConsumerWidget {
                 : profileEditShellResizeToAvoidInset(
                     onProfile: path == '/profile',
                   ),
+            // Padding всегда в дереве. Ветка «Friends/Chats ↔ остальные»
+            // раньше подменяла Column на Padding и обратно: боковой рейл
+            // пересоздавался под пальцем, жест умирал и дальше одной вкладки
+            // не шёл. Нижнее меню в портрете живёт в bottomNavigationBar и
+            // этого скачка не видит.
             body: KeyboardInsetScope(
               handled: shellOwnsKeyboardInset,
-              child: shellOwnsKeyboardInset
-                  ? Padding(
-                      padding: EdgeInsets.only(bottom: shellKeyboardInset),
-                      child: shellBody,
-                    )
-                  : shellBody,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: shellOwnsKeyboardInset ? shellKeyboardInset : 0,
+                ),
+                child: shellBody,
+              ),
             ),
             bottomNavigationBar: bottomNav,
           ),

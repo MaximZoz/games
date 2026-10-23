@@ -105,6 +105,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   final Map<String, GlobalKey> _gamepadChatKeys = {};
   DateTime? _friendsCachedAt;
   Timer? _navigationLockTimer;
+  late final StateController<Widget?> _toolbarLeading;
 
   static const Duration _friendsCacheTTL = Duration(minutes: 2);
 
@@ -152,6 +153,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   @override
   void initState() {
     super.initState();
+    // Кэш до dispose: в Flutter 3.27 ref уже закрыт, когда вызывается dispose.
+    _toolbarLeading = ref.read(mobileToolbarLeadingProvider.notifier);
     _chatsScrollController.addListener(_onChatsScroll);
     _borderAnimationController = AnimationController(
       vsync: this,
@@ -166,9 +169,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
   @override
   void dispose() {
-    final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    final toolbarLeading = _toolbarLeading;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifier.state = null;
+      if (toolbarLeading.mounted) toolbarLeading.state = null;
     });
     chatsRouteObserver.unsubscribe(this);
     _borderAnimationController.dispose();
