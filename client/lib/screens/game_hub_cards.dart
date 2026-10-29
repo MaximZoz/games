@@ -1391,53 +1391,51 @@ class _GamesTabSwitcher extends StatelessWidget {
     required this.selectedTab,
     required this.onTabChanged,
     this.lobbyBadgeCount = 0,
+    this.progress,
   });
 
   final _GamesTab selectedTab;
   final void Function(_GamesTab) onTabChanged;
   final int lobbyBadgeCount;
+  final Animation<double>? progress;
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = isWide(context);
-    final gradient = AppGradients.borderAt(0.22);
+    final selectedIndex = selectedTab == _GamesTab.games ? 0 : 1;
     return Focus(
       canRequestFocus: false,
       skipTraversal: true,
       descendantsAreFocusable: false,
       descendantsAreTraversable: false,
       child: GamepadTabSticks(
-        child: Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(AppRadius.button + 4),
+        child: SlidingPillBar(
+          pillKey: const ValueKey('games-lobby-pill'),
+          itemCount: 2,
+          selectedIndex: selectedIndex,
+          progress: progress,
+          height: isDesktop ? 48 : 44,
+          shrinkWrap: true,
+          onChanged: (index) => onTabChanged(
+            index == 0 ? _GamesTab.games : _GamesTab.lobbies,
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.button + 2),
-            ),
-            child: Row(
-              children: [
-                _TabSegment(
-                  label: context.l10n.gamesTitle,
-                  icon: Icons.sports_esports_rounded,
-                  isSelected: selectedTab == _GamesTab.games,
-                  onTap: () => onTabChanged(_GamesTab.games),
-                  isDesktop: isDesktop,
-                ),
-                _TabSegment(
-                  label: context.l10n.gamesLobbyTab,
-                  icon: Icons.group_rounded,
-                  isSelected: selectedTab == _GamesTab.lobbies,
-                  onTap: () => onTabChanged(_GamesTab.lobbies),
-                  isDesktop: isDesktop,
-                  badgeCount: lobbyBadgeCount,
-                ),
-              ],
-            ),
-          ),
+          itemBuilder: (context, index, selected) {
+            if (index == 0) {
+              return _TabSegment(
+                label: context.l10n.gamesTitle,
+                icon: Icons.sports_esports_rounded,
+                isSelected: selected,
+                isDesktop: isDesktop,
+              );
+            }
+            return _TabSegment(
+              label: context.l10n.gamesLobbyTab,
+              icon: Icons.group_rounded,
+              isSelected: selected,
+              isDesktop: isDesktop,
+              badgeCount: lobbyBadgeCount,
+            );
+          },
         ),
       ),
     );
@@ -1449,7 +1447,6 @@ class _TabSegment extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.isSelected,
-    required this.onTap,
     required this.isDesktop,
     this.badgeCount = 0,
   });
@@ -1457,108 +1454,86 @@ class _TabSegment extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool isSelected;
-  final VoidCallback onTap;
   final bool isDesktop;
   final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Material(
-        color: isSelected
-            ? AppColors.accentSoft.withValues(alpha: 0.6)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.button),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          child: Semantics(
-            button: true,
-            selected: isSelected,
-            label: badgeCount > 0 ? '$label, $badgeCount' : label,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 24 : 16,
-                  vertical: isDesktop ? 14 : 12,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      icon,
-                      size: isDesktop ? 22 : 20,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: badgeCount > 0 ? '$label, $badgeCount' : label,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: isDesktop ? 22 : 20,
+              color: isSelected
+                  ? AppColors.accentStart
+                  : AppColors.textSecondary,
+            ),
+            SizedBox(width: isDesktop ? 10 : 8),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    right: badgeCount > 0 ? 14 : 0,
+                    top: badgeCount > 0 ? 2 : 0,
+                  ),
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: isDesktop ? 15 : 14,
                       color: isSelected
                           ? AppColors.accentStart
                           : AppColors.textSecondary,
                     ),
-                    SizedBox(width: isDesktop ? 10 : 8),
-                    Flexible(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Padding(
-                            // Место под бейдж справа сверху от текста.
-                            padding: EdgeInsets.only(
-                              right: badgeCount > 0 ? 14 : 0,
-                              top: badgeCount > 0 ? 2 : 0,
-                            ),
-                            child: Text(
-                              label,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                fontSize: isDesktop ? 15 : 14,
-                                color: isSelected
-                                    ? AppColors.accentStart
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          if (badgeCount > 0)
-                            Positioned(
-                              right: -2,
-                              top: -8,
-                              child: Container(
-                                constraints: const BoxConstraints(
-                                  minWidth: 18,
-                                  minHeight: 18,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 1,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade600,
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  badgeCount > 99 ? '99+' : '$badgeCount',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.1,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
+                  ),
+                ),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: -2,
+                    top: -8,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade600,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        badgeCount > 99 ? '99+' : '$badgeCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+              ],
             ),
-          ),
+          ],
         ),
       ),
     );

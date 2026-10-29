@@ -1934,6 +1934,23 @@ class AppLocalizationsHe extends AppLocalizations {
   String get errTimeout => 'הבקשה פגה. נסו שוב.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'השרת לא ענה תוך $seconds שניות. בדקו את האינטרנט ולחצו על «נסה שוב».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'השרת לא ענה בזמן. בדקו את האינטרנט ולחצו על «נסה שוב».';
+
+  @override
+  String get loadErrorNoConnection => 'אין קשר לשרת. בדקו את האינטרנט ולחצו על «נסה שוב».';
+
+  @override
+  String get loadErrorUnavailable => 'השרת אינו זמין כרגע. המתינו מעט ולחצו על «נסה שוב».';
+
+  @override
+  String get loadErrorGeneric => 'הבקשה לא הושלמה. לחצו על «נסה שוב». אם השגיאה נשארת, בדקו את האינטרנט.';
+
+  @override
   String get errGamesUnavailable => 'המשחקים אינם זמינים כרגע';
 
   @override

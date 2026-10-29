@@ -1934,6 +1934,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get errTimeout => 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Sunucu $seconds sn içinde yanıt vermedi. İnterneti kontrol edin ve «Yeniden dene»ye dokunun.';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Sunucu zamanında yanıt vermedi. İnterneti kontrol edin ve «Yeniden dene»ye dokunun.';
+
+  @override
+  String get loadErrorNoConnection => 'Sunucuya bağlanılamadı. İnterneti kontrol edin ve «Yeniden dene»ye dokunun.';
+
+  @override
+  String get loadErrorUnavailable => 'Sunucu şu anda kullanılamıyor. Biraz bekleyin ve «Yeniden dene»ye dokunun.';
+
+  @override
+  String get loadErrorGeneric => 'İstek tamamlanmadı. «Yeniden dene»ye dokunun. Hata sürerse interneti kontrol edin.';
+
+  @override
   String get errGamesUnavailable => 'Oyunlar geçici olarak kullanılamıyor';
 
   @override

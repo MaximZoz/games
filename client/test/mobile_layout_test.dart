@@ -1,6 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/main.dart';
+import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/zozu_boot_splash.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
 import 'test_locale.dart';
@@ -74,12 +81,21 @@ void main() {
       await pumpMultiGamesApp(tester);
       await goToProfileTab(tester);
 
-      expect(find.byType(NavigationRail), findsOneWidget);
-      expect(mobileBottomNav(), findsNothing);
-      // В альбоме на iPhone рейл прижат к левому краю (x = 0) и имеет ширину 56px.
-      final railRect = tester.getRect(find.byType(NavigationRail));
-      expect(railRect.left, 0);
-      expect(railRect.width, 56);
+    final rail = find.byKey(const ValueKey('phone-landscape-nav'));
+    expect(rail, findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
+    expect(mobileBottomNav(), findsNothing);
+    // В альбоме на iPhone рейл прижат к левому краю и имеет ширину 56px.
+    final railRect = tester.getRect(rail);
+    expect(railRect.left, 0);
+    expect(railRect.width, 56);
+    final ends = tester.widget<Padding>(
+      find.byKey(const ValueKey('shell-toolbar-ends')),
+    );
+    expect(
+      ends.padding,
+      const EdgeInsets.symmetric(horizontal: phoneLandscapeCornerInsetPx),
+    );
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
@@ -231,6 +247,143 @@ void main() {
     expect(mobileBottomNav(), findsNothing);
   });
 
+  testWidgets('альбом: одно касание по иконке переключает вкладку',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      setPhoneLandscape(tester);
+      await pumpMultiGamesApp(tester);
+      await goToProfileTab(tester);
+      expect(find.text('Войдите в аккаунт'), findsOneWidget);
+
+      final rail =
+          tester.getRect(find.byKey(const ValueKey('phone-landscape-nav')));
+      final settings = tester.getCenter(
+        find.descendant(
+          of: find.byKey(const ValueKey('phone-landscape-nav')),
+          matching: find.byIcon(Icons.settings),
+        ),
+      );
+      // Палец чуть сдвигается по вертикали — так на телефоне выглядит тап.
+      final gesture = await tester.startGesture(settings);
+      await gesture.moveBy(const Offset(0, 22));
+      await gesture.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Вход'), findsOneWidget);
+      expect(rail.width, 56);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('альбом: палец без отрыва проходит все вкладки', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    final user = AuthUser(
+      id: 'u-drag',
+      email: 'drag@test.com',
+      displayName: 'DragUser',
+    );
+    try {
+      setPhoneLandscape(tester);
+      setUpTestLocaleRu();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bootSplashEnabledProvider.overrideWith((ref) => false),
+            authRepositoryProvider.overrideWithValue(_DragAuth(user)),
+            authStateProvider.overrideWith((ref) => _DragAuthState(ref, user)),
+            realtimeEventsProvider.overrideWith((ref) => const Stream.empty()),
+          ],
+          child: const MultiGamesApp(),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(find.text('DragUser'), findsWidgets);
+
+      final rail =
+          tester.getRect(find.byKey(const ValueKey('phone-landscape-nav')));
+      final slot = rail.height / 6;
+      final gesture = await tester.startGesture(
+        Offset(rail.center.dx, rail.top + slot * 0.5),
+      );
+      await tester.pump();
+
+      // Один жест сверху вниз: каждая вкладка, включая друзей и чаты,
+      // где оболочка раньше пересоздавала рейл и жест умирал.
+      const markers = <String>[
+        'Достижения',
+        'Редактировать',
+        'Не удалось загрузить друзей',
+        'Не удалось загрузить чаты',
+        'Игры',
+        'Язык',
+      ];
+      for (var i = 0; i < markers.length; i++) {
+        await gesture.moveTo(
+          Offset(rail.center.dx, rail.top + slot * (i + 0.5)),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text(markers[i]), findsWidgets);
+      }
+      await gesture.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 320));
+
+      expect(find.byKey(const ValueKey('phone-landscape-nav')), findsOneWidget);
+      expect(find.text('Язык'), findsWidgets);
+      final pill = tester.getCenter(
+        find.byKey(const ValueKey('phone-landscape-nav-pill')),
+      );
+      final settings = tester.getCenter(
+        find.descendant(
+          of: find.byKey(const ValueKey('phone-landscape-nav')),
+          matching: find.byIcon(Icons.settings),
+        ),
+      );
+      expect((pill.dy - settings.dy).abs(), lessThan(10));
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('альбом: плашка едет за пальцем по вертикали', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      setPhoneLandscape(tester);
+      await pumpMultiGamesApp(tester);
+      await goToProfileTab(tester);
+
+      final rail = tester.getRect(find.byKey(const ValueKey('phone-landscape-nav')));
+      final slot = rail.height / 6;
+      final profileTop = rail.top + slot;
+      final gesture = await tester.startGesture(
+        Offset(rail.center.dx, profileTop + slot - 8),
+      );
+      await gesture.moveTo(Offset(rail.center.dx, profileTop + 8));
+      await tester.pump();
+      final mid = tester.getCenter(
+        find.byKey(const ValueKey('phone-landscape-nav-pill')),
+      );
+      expect(mid.dy, lessThan(profileTop + slot * 0.55));
+      await gesture.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 320));
+
+      expect(find.byKey(const ValueKey('phone-landscape-nav')), findsOneWidget);
+      final pill = tester.getCenter(
+        find.byKey(const ValueKey('phone-landscape-nav-pill')),
+      );
+      final person = tester.getCenter(find.byIcon(Icons.person));
+      expect((pill.dy - person.dy).abs(), lessThan(10));
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('плашка едет за пальцем и встаёт на вкладку', (tester) async {
     await openGuestProfileOnPhone(tester);
     final nav = tester.getRect(mobileBottomNav());
@@ -256,4 +409,28 @@ void main() {
     final person = tester.getCenter(find.byIcon(Icons.person));
     expect((pill.dx - person.dx).abs(), lessThan(10));
   });
+}
+
+class _DragAuth extends AuthRepository {
+  _DragAuth(this.user);
+
+  final AuthUser user;
+
+  @override
+  Future<String?> getAccessToken() async => 'test-token';
+
+  @override
+  Future<AuthUser?> peekStoredUser() async => user;
+
+  @override
+  Future<AuthUser?> getStoredUser() async => user;
+
+  @override
+  Future<AuthUser?> fetchCurrentUser() async => user;
+}
+
+class _DragAuthState extends AuthStateNotifier {
+  _DragAuthState(super.ref, AuthUser user) {
+    state = AsyncValue.data(user);
+  }
 }

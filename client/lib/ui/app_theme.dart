@@ -15,6 +15,9 @@ class AppColors {
   static const Color accentEnd = Color(0xFF8B5CF6);
   static const Color accentSoft = Color(0xFFE0E7FF);
 
+  /// Плашка нижнего меню: индиго поверх фона, без заливки на всю ячейку.
+  static const Color navPill = Color(0x296366F1);
+
   /// Текстовые кнопки и чипы: заливка цветом фона приложения, лавандовая рамка.
   static const Color buttonFill = surfaceUnified;
   static const Color buttonBorder = Color(0xFFB3B3E6);

@@ -1934,6 +1934,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errTimeout => 'リクエストがタイムアウトしました。もう一度お試しください。';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'サーバーが $seconds 秒以内に応答しませんでした。通信を確認して「再試行」を押してください。';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'サーバーが時間内に応答しませんでした。通信を確認して「再試行」を押してください。';
+
+  @override
+  String get loadErrorNoConnection => 'サーバーに接続できません。通信を確認して「再試行」を押してください。';
+
+  @override
+  String get loadErrorUnavailable => 'サーバーは現在利用できません。少し待ってから「再試行」を押してください。';
+
+  @override
+  String get loadErrorGeneric => 'リクエストが完了しませんでした。「再試行」を押してください。続く場合は通信を確認してください。';
+
+  @override
   String get errGamesUnavailable => 'ゲームは一時的に利用できません';
 
   @override

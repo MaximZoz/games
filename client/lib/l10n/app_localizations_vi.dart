@@ -1934,6 +1934,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errTimeout => 'Hết thời gian chờ. Vui lòng thử lại.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Máy chủ không phản hồi trong $seconds giây. Kiểm tra internet và nhấn «Thử lại».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Máy chủ không phản hồi kịp. Kiểm tra internet và nhấn «Thử lại».';
+
+  @override
+  String get loadErrorNoConnection => 'Không kết nối được máy chủ. Kiểm tra internet và nhấn «Thử lại».';
+
+  @override
+  String get loadErrorUnavailable => 'Máy chủ hiện không dùng được. Đợi một chút rồi nhấn «Thử lại».';
+
+  @override
+  String get loadErrorGeneric => 'Yêu cầu chưa hoàn tất. Nhấn «Thử lại». Nếu lỗi còn, hãy kiểm tra internet.';
+
+  @override
   String get errGamesUnavailable => 'Trò chơi tạm thời không khả dụng';
 
   @override

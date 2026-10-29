@@ -36,6 +36,7 @@ import 'package:multigames_client/core/gamepad/gamepad_scroll_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/games/games_gamepad.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
+import 'package:multigames_client/ui/widgets/sliding_pill_bar.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
@@ -456,6 +457,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
                       selectedTab: _selectedTab,
                       onTabChanged: _onTabChanged,
                       lobbyBadgeCount: invites.length,
+                      progress: _hubTabs.animation,
                     ),
                   ),
                 ),

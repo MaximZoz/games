@@ -1934,6 +1934,23 @@ class AppLocalizationsFi extends AppLocalizations {
   String get errTimeout => 'Pyyntö aikakatkaistiin. Yritä uudelleen.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Palvelin ei vastannut $seconds sekunnissa. Tarkista internet ja paina «Yritä uudelleen».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Palvelin ei vastannut ajoissa. Tarkista internet ja paina «Yritä uudelleen».';
+
+  @override
+  String get loadErrorNoConnection => 'Palvelimeen ei saada yhteyttä. Tarkista internet ja paina «Yritä uudelleen».';
+
+  @override
+  String get loadErrorUnavailable => 'Palvelin ei ole juuri nyt käytettävissä. Odota hetki ja paina «Yritä uudelleen».';
+
+  @override
+  String get loadErrorGeneric => 'Pyyntö ei valmistunut. Paina «Yritä uudelleen». Jos virhe jää, tarkista internet.';
+
+  @override
   String get errGamesUnavailable => 'Pelit eivät ole tilapäisesti saatavilla';
 
   @override

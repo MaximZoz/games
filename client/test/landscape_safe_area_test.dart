@@ -82,7 +82,8 @@ void main() {
       );
     });
 
-    test('альбом с рейлом на iOS: кнопки меню прижаты к левому краю (inset = 0)',
+    test(
+        'альбом с рейлом на iOS: кнопки меню прижаты к левому краю (inset = 0)',
         () {
       expect(
         landscapeRailLeadingInset(
@@ -102,6 +103,61 @@ void main() {
           phoneLandscape: true,
           railVisible: false,
           platform: TargetPlatform.android,
+        ),
+        0,
+      );
+    });
+
+    test('альбом iPhone: шапка отходит от скруглённых углов', () {
+      expect(
+        phoneLandscapeCornerInset(
+          phoneLandscape: true,
+          platform: TargetPlatform.iOS,
+        ),
+        phoneLandscapeCornerInsetPx,
+      );
+    });
+
+    test('Android и портрет: дополнительный сдвиг шапки не нужен', () {
+      expect(
+        phoneLandscapeCornerInset(
+          phoneLandscape: true,
+          platform: TargetPlatform.android,
+        ),
+        0,
+      );
+      expect(
+        phoneLandscapeCornerInset(
+          phoneLandscape: false,
+          platform: TargetPlatform.iOS,
+        ),
+        0,
+      );
+    });
+
+    test('альбом iPhone: новый чат и поиск друзей ещё правее угла', () {
+      expect(
+        phoneLandscapeToolbarLeadingNudge(
+          phoneLandscape: true,
+          platform: TargetPlatform.iOS,
+        ),
+        phoneLandscapeToolbarLeadingNudgePx,
+      );
+      expect(phoneLandscapeToolbarLeadingNudgePx, greaterThan(8));
+    });
+
+    test('Android и портрет: кнопки шапки слева не сдвигаем', () {
+      expect(
+        phoneLandscapeToolbarLeadingNudge(
+          phoneLandscape: true,
+          platform: TargetPlatform.android,
+        ),
+        0,
+      );
+      expect(
+        phoneLandscapeToolbarLeadingNudge(
+          phoneLandscape: false,
+          platform: TargetPlatform.iOS,
         ),
         0,
       );

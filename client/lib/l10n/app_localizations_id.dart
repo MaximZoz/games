@@ -1934,6 +1934,23 @@ class AppLocalizationsId extends AppLocalizations {
   String get errTimeout => 'Permintaan habis waktu. Silakan coba lagi.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Server tidak menjawab dalam $seconds dtk. Periksa internet dan ketuk «Coba lagi».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Server tidak menjawab tepat waktu. Periksa internet dan ketuk «Coba lagi».';
+
+  @override
+  String get loadErrorNoConnection => 'Tidak dapat terhubung ke server. Periksa internet dan ketuk «Coba lagi».';
+
+  @override
+  String get loadErrorUnavailable => 'Server sedang tidak tersedia. Tunggu sebentar lalu ketuk «Coba lagi».';
+
+  @override
+  String get loadErrorGeneric => 'Permintaan tidak selesai. Ketuk «Coba lagi». Jika kesalahan berlanjut, periksa internet.';
+
+  @override
   String get errGamesUnavailable => 'Game sementara tidak tersedia';
 
   @override

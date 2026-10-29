@@ -1934,6 +1934,23 @@ class AppLocalizationsBe extends AppLocalizations {
   String get errTimeout => 'Час чакання выйшаў. Паспрабуйце яшчэ раз.';
 
   @override
+  String loadErrorTimeout(int seconds) {
+    return 'Сервер не адказаў за $seconds с. Праверце інтэрнэт і націсніце «Паўтарыць».';
+  }
+
+  @override
+  String get loadErrorTimeoutUnknown => 'Сервер не адказаў своечасова. Праверце інтэрнэт і націсніце «Паўтарыць».';
+
+  @override
+  String get loadErrorNoConnection => 'Няма сувязі з серверам. Праверце інтэрнэт і націсніце «Паўтарыць».';
+
+  @override
+  String get loadErrorUnavailable => 'Сервер зараз недаступны. Пачакайце крыху і націсніце «Паўтарыць».';
+
+  @override
+  String get loadErrorGeneric => 'Запыт не выканаўся. Націсніце «Паўтарыць». Калі памылка застанецца, праверце інтэрнэт.';
+
+  @override
   String get errGamesUnavailable => 'Гульні часова недаступныя';
 
   @override

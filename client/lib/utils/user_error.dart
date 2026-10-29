@@ -72,6 +72,125 @@ String formatUserError(Object? error, {String? fallback}) {
   return fallback ?? l10n.commonGenericError;
 }
 
+/// Сбой, который имеет смысл повторить: таймаут, обрыв, 502/503/504.
+bool isTransientLoadError(Object? error) {
+  if (error == null) return false;
+  if (error is TimeoutException || error is http.ClientException) return true;
+  final code = _statusCode(error);
+  if (code == 502 || code == 503 || code == 504) return true;
+  if (code != null && code != 0) return false;
+  if (_looksTemporarilyUnavailable(error.toString())) return true;
+  return _looksOffline(error);
+}
+
+/// Что делать после неудачной загрузки списка.
+enum LoadFailureAction {
+  /// Ещё одна попытка, экран ошибки не показываем.
+  retrySoon,
+
+  /// Список уже на экране — не заменять его ошибкой.
+  keepShownData,
+
+  /// Показать пояснение и кнопку «Повторить».
+  showError,
+}
+
+LoadFailureAction loadFailureAction({
+  required Object error,
+  required bool hasData,
+  required int failures,
+}) {
+  if (hasData) return LoadFailureAction.keepShownData;
+  if (isTransientLoadError(error) && failures < 1) {
+    return LoadFailureAction.retrySoon;
+  }
+  return LoadFailureAction.showError;
+}
+
+int? _statusCode(Object? error) {
+  if (error is GamesException) return error.statusCode;
+  if (error is AuthException) return error.statusCode;
+  if (error is ChatException) return error.statusCode;
+  if (error is FriendsException) return error.statusCode;
+  return null;
+}
+
+/// Почему не загрузился список и что сделать. Без текста исключения.
+String loadFailureDetail(Object? error) {
+  final l10n = LocaleService.l10n;
+  if (error is TimeoutException) {
+    final seconds = error.duration?.inSeconds ?? 0;
+    if (seconds > 0) return l10n.loadErrorTimeout(seconds);
+    return l10n.loadErrorTimeoutUnknown;
+  }
+  if (_isUnavailable(error)) return l10n.loadErrorUnavailable;
+  if (error is http.ClientException) return l10n.loadErrorNoConnection;
+  final domain = _domainMessage(error);
+  if (domain != null && domain.isNotEmpty && !_looksLikeRawException(domain)) {
+    final localized = _localizedServerKey('', domain, l10n);
+    if (localized != null && localized.trim().isNotEmpty) return localized;
+    return domain;
+  }
+  if (_looksOffline(error)) return l10n.loadErrorNoConnection;
+  final friendly = formatUserError(error, fallback: '');
+  if (friendly.trim().isNotEmpty && friendly != l10n.commonGenericError) {
+    return friendly;
+  }
+  return l10n.loadErrorGeneric;
+}
+
+String? _domainMessage(Object? error) {
+  if (error is ChatException) return error.message.trim();
+  if (error is FriendsException) return error.message.trim();
+  if (error is AuthException) return error.message.trim();
+  if (error is GamesException) return error.message.trim();
+  return null;
+}
+
+bool _isUnavailable(Object? error) {
+  int? code;
+  var message = '';
+  var key = '';
+  if (error is GamesException) {
+    code = error.statusCode;
+    message = error.message;
+    key = error.errorKey;
+  } else if (error is AuthException) {
+    code = error.statusCode;
+    message = error.message;
+  } else if (error is ChatException) {
+    code = error.statusCode;
+    message = error.message;
+  } else if (error is FriendsException) {
+    code = error.statusCode;
+    message = error.message;
+  }
+  if (code == 502 || code == 503 || code == 504) return true;
+  if (_looksTemporarilyUnavailable(key) ||
+      _looksTemporarilyUnavailable(message)) {
+    return true;
+  }
+  final text = error?.toString().toLowerCase() ?? '';
+  return text.contains('service unavailable') ||
+      text.contains('временно недоступно');
+}
+
+bool _looksOffline(Object? error) {
+  final text = error?.toString().toLowerCase() ?? '';
+  return text.contains('socket') ||
+      text.contains('connection') ||
+      text.contains('network') ||
+      text.contains('failed host lookup') ||
+      text.contains('name resolution');
+}
+
+bool _looksLikeRawException(String message) {
+  final text = message.toLowerCase();
+  return text.contains('exception') ||
+      text.contains('future not completed') ||
+      text.startsWith('timeout');
+}
+
 String? _friendlyGameMessage(
   String errorKey,
   String message,

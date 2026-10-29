@@ -82,6 +82,62 @@ void main() {
       );
     });
 
+    test('load failure explains a 12 second timeout', () {
+      expect(
+        loadFailureDetail(
+          TimeoutException('Future not completed', const Duration(seconds: 12)),
+        ),
+        'Сервер не ответил за 12 с. Проверьте интернет и нажмите «Повторить».',
+      );
+      expect(
+        loadFailureDetail(TimeoutException('t')),
+        contains('не ответил вовремя'),
+      );
+      expect(
+        loadFailureDetail(http.ClientException('fail')),
+        contains('Нет связи с сервером'),
+      );
+      expect(
+        loadFailureDetail(FriendsException(503, 'temporarily unavailable')),
+        contains('недоступен'),
+      );
+      expect(
+        loadFailureDetail(StateError('x')),
+        contains('Повторить'),
+      );
+      expect(
+        loadFailureDetail(TimeoutException('Future not completed')),
+        isNot(contains('Future not completed')),
+      );
+    });
+
+    test('transient failure retries once before the error screen', () {
+      final timeout = TimeoutException('t');
+      expect(isTransientLoadError(timeout), isTrue);
+      expect(isTransientLoadError(FriendsException(503, 'down')), isTrue);
+      expect(isTransientLoadError(FriendsException(401, 'Сессия')), isFalse);
+      expect(
+        loadFailureAction(error: timeout, hasData: false, failures: 0),
+        LoadFailureAction.retrySoon,
+      );
+      expect(
+        loadFailureAction(error: timeout, hasData: false, failures: 1),
+        LoadFailureAction.showError,
+      );
+      expect(
+        loadFailureAction(error: timeout, hasData: true, failures: 0),
+        LoadFailureAction.keepShownData,
+      );
+      expect(
+        loadFailureAction(
+          error: FriendsException(401, 'Сессия'),
+          hasData: false,
+          failures: 0,
+        ),
+        LoadFailureAction.showError,
+      );
+    });
+
     test('unknown uses fallback', () {
       expect(
         formatUserError(StateError('x'), fallback: 'Упс'),

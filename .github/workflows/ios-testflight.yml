@@ -155,8 +155,11 @@ jobs:
             exit 1
           fi
           sudo xcode-select -s "$selected"
-          xcodebuild -version
-          version="$(xcodebuild -version | head -1)"
+          # xcodebuild 26 пишет две строки. head закрывает stdout после первой,
+          # и процесс падает: NSFileHandleOperationException, broken pipe, exit 134.
+          version_output="$(xcodebuild -version)"
+          printf '%s\n' "$version_output"
+          version="${version_output%%$'\n'*}"
           if [[ ! "$version" =~ ^Xcode\ 26 ]]; then
             echo "::error::Нужен Xcode 26 (iOS 26 SDK), сейчас: $version"
             exit 1
