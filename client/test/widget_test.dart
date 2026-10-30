@@ -9,6 +9,7 @@ import 'package:multigames_client/main.dart';
 import 'package:multigames_client/ui/widgets/zozu_boot_splash.dart';
 
 import 'test_locale.dart';
+import 'test_viewport.dart';
 
 Widget _testApp() => ProviderScope(
       overrides: [
@@ -70,6 +71,9 @@ void main() {
 
   testWidgets('Navigation shows main sections from profile',
       (WidgetTester tester) async {
+    // Окно по умолчанию 800×600 — телефон в альбоме: левый рейл только из
+    // иконок, подписи «Профиль» там нет. На планшете имена разделов в рейле.
+    setTablet(tester);
     await tester.pumpWidget(_testApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
