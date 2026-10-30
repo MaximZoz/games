@@ -12,7 +12,6 @@ import (
 
 	"multigames/server/internal/applog"
 	"multigames/server/internal/auth"
-	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -235,7 +234,6 @@ type RealtimeWSHandler struct {
 	JWTSecret     []byte
 	LogWriter     *applog.FileWriter // файл (для импорта)
 	AppLogEnabled bool               // если true — presence пишем ещё и напрямую в БД
-	Push          *WebPushSender
 	Limiter       *RateLimiter
 }
 
@@ -353,17 +351,9 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"type":      "daily_reward_available",
 				"available": available,
 			})
-			if available && h.Push != nil {
-				if ok, markErr := store.TryMarkDailyRewardPush(ctx, h.Pool, userID); markErr == nil && ok {
-					lang := i18n.LangRU
-					h.Push.NotifyUsers([]uuid.UUID{userID}, store.WebPushCategoryRewards, PushPayload{
-						Title: i18n.Content(lang, "push.daily_reward_title"),
-						Body:  i18n.Content(lang, "push.daily_reward_body"),
-						URL:   "/coins/login",
-						Tag:   "daily_reward",
-					})
-				}
-			}
+			// Пуш на телефон отсюда не шлём: приложение только что открылось,
+			// система баннер прячет, а отметка дня уже сгорает. Офлайн-рассылка
+			// в reward_push_loop.
 		}
 		if h.LogWriter != nil {
 			meta := map[string]interface{}{

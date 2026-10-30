@@ -20,6 +20,7 @@ void main() {
     );
     expect(pathFromTag('daily_reward'), '/coins/login');
     expect(tagFromPath('/coins/login'), 'daily_reward');
+    expect(pathFromTag('collection_income'), '/inventory');
   });
 
   test('pathFromPushData предпочитает url, затем chat_id, затем tag', () {

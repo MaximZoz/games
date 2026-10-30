@@ -104,10 +104,30 @@ AndroidNotifySpec? mapAndroidNotifyEvent(
   if (type == 'coins_granted') {
     if (!cats.rewards) return null;
     return AndroidNotifySpec(
-      title: l10n.settingsPushRewards,
-      body: l10n.settingsNotifications,
+      title: l10n.coinsLoginReward,
+      body: l10n.homeCoinsDailyReward,
       url: '/coins/login',
       tag: 'daily_reward',
+    );
+  }
+  if (type == 'daily_reward_available') {
+    if (!cats.rewards) return null;
+    if (event['available'] != true) return null;
+    return AndroidNotifySpec(
+      title: l10n.coinsLoginReward,
+      body: l10n.homeCoinsDailyReward,
+      url: '/coins/login',
+      tag: 'daily_reward',
+    );
+  }
+  if (type == 'collection_income_available') {
+    if (!cats.rewards) return null;
+    if (event['available'] == false) return null;
+    return AndroidNotifySpec(
+      title: l10n.settingsPushRewards,
+      body: l10n.homeItemsIncome,
+      url: '/inventory',
+      tag: 'collection_income',
     );
   }
   return null;

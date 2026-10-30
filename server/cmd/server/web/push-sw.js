@@ -136,6 +136,7 @@ function pathFromTag(tag) {
   if (t.startsWith('achievement_')) return '/achievements';
   if (t.startsWith('reward_gift_')) return '/inventory';
   if (t === 'daily_reward') return '/coins/login';
+  if (t === 'collection_income') return '/inventory';
   return null;
 }
 

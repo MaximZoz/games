@@ -109,6 +109,45 @@ void main() {
     expect(friend.tag, 'friend_request');
   });
 
+  test('монеты за вход и доход коллекций ведут на свои экраны', () {
+    final coins = mapAndroidNotifyEvent(
+      {'type': 'daily_reward_available', 'available': true},
+      meId: 'u1',
+      cats: const WebPushCategoryPrefs(),
+    );
+    expect(coins!.url, '/coins/login');
+    expect(coins.tag, 'daily_reward');
+    expect(coins.title, 'Монеты за вход');
+    expect(coins.body, 'Доступна награда за вход');
+
+    expect(
+      mapAndroidNotifyEvent(
+        {'type': 'daily_reward_available', 'available': false},
+        meId: 'u1',
+        cats: const WebPushCategoryPrefs(),
+      ),
+      isNull,
+    );
+
+    final income = mapAndroidNotifyEvent(
+      {'type': 'collection_income_available'},
+      meId: 'u1',
+      cats: const WebPushCategoryPrefs(),
+    );
+    expect(income!.url, '/inventory');
+    expect(income.tag, 'collection_income');
+    expect(income.body, 'Можно забрать доход коллекций');
+
+    expect(
+      mapAndroidNotifyEvent(
+        {'type': 'collection_income_available'},
+        meId: 'u1',
+        cats: const WebPushCategoryPrefs(rewards: false),
+      ),
+      isNull,
+    );
+  });
+
   test('выключенная категория чата глушит баннер', () {
     expect(
       mapAndroidNotifyEvent(
