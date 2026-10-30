@@ -151,10 +151,14 @@ class CollectionElixirButton {
     required this.effect,
     required this.label,
     required this.onPressed,
+    this.quantity = 1,
   });
 
   final String effect;
   final String label;
+
+  /// Сколько флаконов этого эффекта ещё есть. 0 — кнопку не показываем.
+  final int quantity;
 
   /// null — отмена. Иначе новый возраст, срок и сколько флаконов осталось.
   final Future<
@@ -165,6 +169,15 @@ class CollectionElixirButton {
             int quantity
           })?>
       Function() onPressed;
+
+  CollectionElixirButton withQuantity(int quantity) {
+    return CollectionElixirButton(
+      effect: effect,
+      label: label,
+      quantity: quantity,
+      onPressed: onPressed,
+    );
+  }
 }
 
 /// Полноэкранный просмотр: тап вне кнопок закрывает; крестика нет.
@@ -252,7 +265,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
   DateTime? _vintageAt;
   DateTime? _acquired;
   late String? _subtitle;
-  late List<CollectionElixirButton> _actions;
+  late List<CollectionElixirButton> _ownedElixirs;
   Timer? _tick;
   bool _closed = false;
   bool _buying = false;
@@ -264,7 +277,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
     _vintageAt = widget.vintageAt;
     _acquired = widget.acquiredAt;
     _subtitle = widget.subtitle;
-    _actions = [...widget.elixirActions];
+    _ownedElixirs = [...widget.elixirActions];
     widget.subtitleListenable?.addListener(_syncSubtitle);
     _tick = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
@@ -295,6 +308,31 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
     );
   }
 
+  List<CollectionElixirButton> _visibleElixirs(DateTime now) {
+    final acquired = _acquired;
+    if (acquired == null) {
+      return [for (final b in _ownedElixirs) if (b.quantity > 0) b];
+    }
+    final cond = collectionConditionEffective(
+      acquired: acquired,
+      now: now,
+      shift: _shift,
+      vintageAt: _vintageAt,
+    );
+    return [
+      for (final b in _ownedElixirs)
+        if (b.quantity > 0 &&
+            elixirCanApply(
+              effect: b.effect,
+              condition: cond,
+              vintageAt: _vintageAt,
+              acquired: acquired,
+              now: now,
+            ))
+          b,
+    ];
+  }
+
   Future<void> _useElixir(CollectionElixirButton button) async {
     final next = await button.onPressed();
     if (!mounted || next == null) return;
@@ -302,29 +340,9 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
       _shift = next.shift;
       _vintageAt = next.vintageAt;
       _acquired = next.acquiredAt ?? _acquired;
-      final acquiredAt = _acquired;
-      if (acquiredAt == null) {
-        _actions = _actions.where((b) => b.effect != button.effect).toList();
-        return;
-      }
-      final now = DateTime.now().toUtc();
-      final cond = collectionConditionEffective(
-        acquired: acquiredAt,
-        now: now,
-        shift: _shift,
-        vintageAt: _vintageAt,
-      );
-      _actions = [
-        for (final b in _actions)
-          if ((b.effect != button.effect || next.quantity > 0) &&
-              elixirCanApply(
-                effect: b.effect,
-                condition: cond,
-                vintageAt: _vintageAt,
-                acquired: acquiredAt,
-                now: now,
-              ))
-            b,
+      _ownedElixirs = [
+        for (final b in _ownedElixirs)
+          if (b.effect == button.effect) b.withQuantity(next.quantity) else b,
       ];
     });
   }
@@ -377,7 +395,8 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
       }
     }
 
-    final hasChoices = widget.onBuy != null || _actions.isNotEmpty;
+    final actions = _visibleElixirs(now);
+    final hasChoices = widget.onBuy != null || actions.isNotEmpty;
     final action = widget.onBuy == null
         ? widget.bottomAction
         : GamepadBuyButton(
@@ -482,7 +501,7 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
                       ),
                     ),
                   ),
-                  if (condition != null || _actions.isNotEmpty)
+                  if (condition != null || actions.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
                       child: GestureDetector(
@@ -525,18 +544,18 @@ class _CollectionFullscreenState extends State<_CollectionFullscreen> {
                                 onDark: true,
                               ),
                             ],
-                            if (_actions.isNotEmpty) ...[
+                            if (actions.isNotEmpty) ...[
                               const SizedBox(height: 12),
                               Wrap(
                                 alignment: WrapAlignment.center,
                                 spacing: 8,
                                 runSpacing: 8,
                                 children: [
-                                  for (var i = 0; i < _actions.length; i++)
+                                  for (var i = 0; i < actions.length; i++)
                                     GamepadBuyButton(
                                       autofocus: i == 0 && widget.onBuy == null,
-                                      label: _actions[i].label,
-                                      onPressed: () => _useElixir(_actions[i]),
+                                      label: actions[i].label,
+                                      onPressed: () => _useElixir(actions[i]),
                                     ),
                                 ],
                               ),
