@@ -48,9 +48,28 @@ void main() {
       await sharedPreferencesOrNull(timeout: const Duration(milliseconds: 30)),
       isNull,
     );
+    expect(sharedPrefsNeedsSessionRetry, isTrue);
     final sw = Stopwatch()..start();
     expect(await sharedPreferencesOrNull(), isNull);
     expect(sw.elapsedMilliseconds, lessThan(200));
+  });
+
+  test('после таймаута поздний SharedPreferences всё ещё годится', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({'k': 'v'});
+    final done = Completer<SharedPreferences>();
+    loadSharedPreferences = () => done.future;
+    expect(
+      await sharedPreferencesOrNull(timeout: const Duration(milliseconds: 30)),
+      isNull,
+    );
+    expect(sharedPrefsNeedsSessionRetry, isTrue);
+    done.complete(await SharedPreferences.getInstance());
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    final prefs = await sharedPreferencesOrNull();
+    expect(prefs, isNotNull);
+    expect(prefs!.getString('k'), 'v');
+    expect(sharedPrefsReady, isTrue);
   });
 
   testWidgets('разовая покупка: …, а после успеха только Есть', (tester) async {

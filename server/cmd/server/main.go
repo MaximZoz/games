@@ -462,7 +462,6 @@ func main() {
 		JWTSecret:     []byte(jwtSecret),
 		LogWriter:     logWriter,
 		AppLogEnabled: appLogEnabled,
-		Push:          pushSender,
 		Limiter:       rateLimiter,
 	}
 	webPushHandler := &api.WebPushHandler{Pool: pool, Sender: pushSender}
@@ -499,6 +498,7 @@ func main() {
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
 	}
+	api.StartRewardPushLoop(ctx, pool, realtimeHub, rdb, pushSender)
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{
 		Pool:        pool,

@@ -6,6 +6,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/auth/session_cache.dart';
 import 'package:multigames_client/core/local_notify.dart';
+import 'package:multigames_client/core/shared_prefs_guard.dart';
 import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
@@ -100,10 +101,24 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   Future<void> _loadUser() async {
     final repo = _ref.read(authRepositoryProvider);
     try {
-      final cached = await repo.getStoredUser();
+      var cached = await repo.getStoredUser();
+      if (cached == null && sharedPrefsNeedsSessionRetry) {
+        // getInstance мог ответить уже после таймаута. Пока state = loading,
+        // роутер не уводит на вход и не трогает токены.
+        for (var i = 0; i < 4 && cached == null; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+          if (!mounted) return;
+          if (state.valueOrNull != null) return;
+          cached = await repo.getStoredUser();
+          if (sharedPrefsReady) break;
+        }
+      }
+      if (!mounted) return;
+      if (state.valueOrNull != null && cached == null) return;
       state = AsyncValue.data(cached);
       try {
         final fresh = await repo.fetchCurrentUser();
+        if (!mounted) return;
         if (fresh != null) {
           state = AsyncValue.data(fresh);
         }
@@ -111,6 +126,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
         // Сеть/401 на cold start не должны сбрасывать уже сохранённую сессию.
       }
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }

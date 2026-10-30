@@ -4,7 +4,9 @@ import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
 
 /// iOS: UserDefaults через живой messenger (канал в SceneDelegate).
-/// Плагин shared_preferences на UIScene часто сидит не на том engine.
+/// Android: отдельный SharedPreferences, не плагин. Плагин на холодном
+/// старте иногда молчит дольше двух секунд, и без копии токенов приложение
+/// открывает вход, хотя сессия на диске ещё есть.
 const _channel = MethodChannel('com.zozugames/session_store');
 
 typedef SessionBackup = ({
@@ -18,7 +20,14 @@ bool _loaded = false;
 Future<void>? _loading;
 Future<void> _queue = Future<void>.value();
 
-bool get _useNativeStore => Platform.isIOS;
+/// Нативная копия сессии есть на iOS и Android. Web пишет в localStorage.
+bool nativeSessionStoreEnabled({required bool ios, required bool android}) =>
+    ios || android;
+
+bool get _useNativeStore => nativeSessionStoreEnabled(
+      ios: Platform.isIOS,
+      android: Platform.isAndroid,
+    );
 
 void writeSessionBackup({
   required String accessToken,
