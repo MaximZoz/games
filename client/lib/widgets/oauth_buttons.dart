@@ -27,8 +27,7 @@ String readableOauthError(Object error, String fallback) {
   }
   if (error is AppleSignInUnavailableException) {
     final message = error.message.trim();
-    if (message.isEmpty ||
-        message == 'Sign in with Apple is not available') {
+    if (message.isEmpty || message == 'Sign in with Apple is not available') {
       return fallback;
     }
     return message;
@@ -57,15 +56,21 @@ bool get _useNativeAppleSignIn =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
 /// iOS: Apple всегда первой (Guideline 4.8), даже если сервер её не отдал.
+/// Android: Google всегда в списке. Иначе после вылета, таймаута или офлайна
+/// /api/auth/oauth/providers кнопка пропадает и остаётся только пароль.
 List<String> visibleOAuthProviders(
   List<String> fromServer, {
   required bool isIos,
+  bool isAndroid = false,
 }) {
   final seen = <String>{};
   final out = <String>[];
   if (isIos) {
     out.add('apple');
     seen.add('apple');
+  } else if (isAndroid) {
+    out.add('google');
+    seen.add('google');
   }
   for (final provider in fromServer) {
     if (seen.add(provider)) out.add(provider);
@@ -74,7 +79,12 @@ List<String> visibleOAuthProviders(
 }
 
 final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
-  return ref.watch(authRepositoryProvider).fetchOAuthProviders();
+  final repo = ref.watch(authRepositoryProvider);
+  final first = await repo.fetchOAuthProviders();
+  if (first.isNotEmpty) return first;
+  // Пустой список — и «OAuth выключен», и проглоченная ошибка сети.
+  // Сразу после вылета первый запрос часто не успевает. Один повтор.
+  return repo.fetchOAuthProviders();
 });
 
 const _cookiePendingSentinel = 'cookie';
@@ -129,11 +139,22 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _retryOAuthProvidersIfEmpty();
       // ignore: discarded_futures
       () async {
         await hydrateOAuthPendingState();
         if (mounted) await _resumePending();
       }();
+    }
+  }
+
+  /// Сеть после вылета часто оживает только на следующем открытии.
+  void _retryOAuthProvidersIfEmpty() {
+    final async = ref.read(oauthProvidersProvider);
+    if (async.isLoading) return;
+    final providers = async.asData?.value;
+    if (async.hasError || providers == null || providers.isEmpty) {
+      ref.invalidate(oauthProvidersProvider);
     }
   }
 
@@ -168,83 +189,88 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(oauthProvidersProvider);
-    return async.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (providers) {
-        final shown = visibleOAuthProviders(
-          providers,
-          isIos: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS,
-        );
-        if (shown.isEmpty) return const SizedBox.shrink();
-        final l10n = context.l10n;
-        final repo = ref.read(authRepositoryProvider);
-        return Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    final isIos = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final fromServer = async.asData?.value ?? const <String>[];
+    // Сайт ждёт ответ сервера: чужие кнопки не показываем.
+    // Телефон показывает Apple/Google сразу, даже если список ещё грузится
+    // или запрос упал в пустой кэш.
+    if (!isIos && !isAndroid && !async.hasValue) {
+      return const SizedBox.shrink();
+    }
+    final shown = visibleOAuthProviders(
+      fromServer,
+      isIos: isIos,
+      isAndroid: isAndroid,
+    );
+    if (shown.isEmpty) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final repo = ref.read(authRepositoryProvider);
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      l10n.oauthOrContinue,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 16),
-              for (var i = 0; i < shown.length; i++) ...[
-                if (i > 0) const SizedBox(height: 10),
-                GamepadActionBlock(
-                  outlined: true,
-                  radius: AppRadius.button,
-                  onActivate: _busyProvider != null
-                      ? () {}
-                      : () => _startProvider(context, shown[i], repo),
-                  child: SizedBox(
-                    height: 48,
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      style: AppButtonStyles.of(
-                        minimumSize: const Size(double.infinity, 48),
-                        maximumSize: const Size(double.infinity, 48),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                      ),
-                      onPressed: _busyProvider != null
-                          ? null
-                          : () => _startProvider(context, shown[i], repo),
-                      child: _busyProvider == shown[i]
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(
-                              _label(l10n, shown[i]),
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            ),
-                    ),
+              const Expanded(child: Divider()),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  l10n.oauthOrContinue,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
                   ),
                 ),
-              ],
+              ),
+              const Expanded(child: Divider()),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 16),
+          for (var i = 0; i < shown.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            GamepadActionBlock(
+              outlined: true,
+              radius: AppRadius.button,
+              onActivate: _busyProvider != null
+                  ? () {}
+                  : () => _startProvider(context, shown[i], repo),
+              child: SizedBox(
+                height: 48,
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: AppButtonStyles.of(
+                    minimumSize: const Size(double.infinity, 48),
+                    maximumSize: const Size(double.infinity, 48),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: _busyProvider != null
+                      ? null
+                      : () => _startProvider(context, shown[i], repo),
+                  child: _busyProvider == shown[i]
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          _label(l10n, shown[i]),
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

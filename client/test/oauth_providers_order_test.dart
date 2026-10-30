@@ -34,7 +34,8 @@ void main() {
 
   test('oauth errors keep the server or platform message', () {
     expect(
-      readableOauthError(AuthException(401, 'Неверные данные Apple'), 'fallback'),
+      readableOauthError(
+          AuthException(401, 'Неверные данные Apple'), 'fallback'),
       'Неверные данные Apple',
     );
     expect(
@@ -57,7 +58,7 @@ void main() {
     );
   });
 
-  test('Android / web keep the server order and do not inject Apple', () {
+  test('Web and desktop keep the server order and do not inject buttons', () {
     expect(
       visibleOAuthProviders(['google'], isIos: false),
       ['google'],
@@ -65,6 +66,39 @@ void main() {
     expect(
       visibleOAuthProviders(['apple', 'google'], isIos: false),
       ['apple', 'google'],
+    );
+    expect(
+      visibleOAuthProviders(const [], isIos: false),
+      isEmpty,
+    );
+  });
+
+  test('Android shows Google even when the server list is empty', () {
+    expect(
+      visibleOAuthProviders(const [], isIos: false, isAndroid: true),
+      ['google'],
+    );
+  });
+
+  test('Android puts Google first and does not duplicate it', () {
+    expect(
+      visibleOAuthProviders(
+        ['yandex', 'google'],
+        isIos: false,
+        isAndroid: true,
+      ),
+      ['google', 'yandex'],
+    );
+  });
+
+  test('Android does not inject Apple', () {
+    expect(
+      visibleOAuthProviders(
+        ['google'],
+        isIos: false,
+        isAndroid: true,
+      ),
+      ['google'],
     );
   });
 }
