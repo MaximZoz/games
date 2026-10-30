@@ -667,6 +667,7 @@ class AuthRepository {
       }
       if (token != null && token.isNotEmpty) {
         _memoryAccessToken = token;
+        _mirrorSessionFromPrefs();
       }
     }
 
@@ -742,6 +743,7 @@ class AuthRepository {
             Map<String, dynamic>.from(jsonDecode(jsonStr) as Map),
           );
           _memoryUser = user;
+          _mirrorSessionFromPrefs();
           return user;
         } catch (_) {}
       }
@@ -1045,7 +1047,34 @@ class AuthRepository {
     // уже записан — сессия должна пережить закрытие вкладки.
   }
 
-  /// Если prefs пусты, но backup (localStorage / iOS UserDefaults) есть — восстанавливаем.
+  /// Первое успешное чтение SharedPreferences копирует токены в нативный backup.
+  /// Следующий холодный старт тогда не зависит от плагина.
+  void _mirrorSessionFromPrefs() {
+    if (_prefs == null) return;
+    if (session_storage.readSessionBackup() != null) return;
+    String? access;
+    String? refresh;
+    String? user;
+    try {
+      access = _prefs!.getString(_keyAccessToken);
+      refresh = _prefs!.getString(_keyRefreshToken);
+      user = _prefs!.getString(_keyUser);
+    } catch (_) {
+      return;
+    }
+    if ((access == null || access.isEmpty) &&
+        (refresh == null || refresh.isEmpty)) {
+      return;
+    }
+    session_storage.writeSessionBackup(
+      accessToken: access ?? '',
+      refreshToken: refresh ?? '',
+      userJson: user ?? '',
+    );
+    unawaited(session_storage.flushSessionBackup());
+  }
+
+  /// Если prefs пусты, но backup (localStorage / iOS UserDefaults / Android) есть — восстанавливаем.
   Future<void> _restoreFromBackupIfNeeded() async {
     await session_storage.ensureSessionBackupLoaded();
     final backup = session_storage.readSessionBackup();

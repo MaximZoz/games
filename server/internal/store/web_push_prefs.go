@@ -134,17 +134,34 @@ func FilterUserIDsForWebPushCategory(
 	return out, nil
 }
 
+// utcTodaySQL — календарный день в UTC, как клейм монет и дохода коллекций.
+const utcTodaySQL = `(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date`
+
 // TryMarkDailyRewardPush возвращает true, если сегодня ещё не слали push
 // о доступной ежедневной награде (и помечает день).
 func TryMarkDailyRewardPush(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (bool, error) {
+	return tryMarkPushDay(ctx, pool, userID, "last_daily_reward_push_date")
+}
+
+// TryMarkCollectionIncomePush — то же для дневного дохода коллекций.
+func TryMarkCollectionIncomePush(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (bool, error) {
+	return tryMarkPushDay(ctx, pool, userID, "last_collection_income_push_date")
+}
+
+func tryMarkPushDay(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, column string) (bool, error) {
+	switch column {
+	case "last_daily_reward_push_date", "last_collection_income_push_date":
+	default:
+		return false, nil
+	}
 	var id uuid.UUID
 	err := pool.QueryRow(ctx, `
-		INSERT INTO web_push_preferences (user_id, last_daily_reward_push_date, updated_at)
-		VALUES ($1, CURRENT_DATE, now())
+		INSERT INTO web_push_preferences (user_id, `+column+`, updated_at)
+		VALUES ($1, `+utcTodaySQL+`, now())
 		ON CONFLICT (user_id) DO UPDATE SET
-			last_daily_reward_push_date = CURRENT_DATE,
+			`+column+` = `+utcTodaySQL+`,
 			updated_at = now()
-		WHERE web_push_preferences.last_daily_reward_push_date IS DISTINCT FROM CURRENT_DATE
+		WHERE web_push_preferences.`+column+` IS DISTINCT FROM `+utcTodaySQL+`
 		RETURNING user_id
 	`, userID).Scan(&id)
 	if err == pgx.ErrNoRows {

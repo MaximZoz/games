@@ -42,6 +42,35 @@ class MainActivity : FlutterActivity() {
                     result.error("vibrate", e.message, null)
                 }
             }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            SESSION_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            val prefs = getSharedPreferences(SESSION_PREFS, Context.MODE_PRIVATE)
+            when (call.method) {
+                "read" -> result.success(
+                    hashMapOf(
+                        "access_token" to (prefs.getString(KEY_ACCESS, "") ?: ""),
+                        "refresh_token" to (prefs.getString(KEY_REFRESH, "") ?: ""),
+                        "user" to (prefs.getString(KEY_USER, "") ?: ""),
+                    ),
+                )
+                "write" -> {
+                    val args = call.arguments as? Map<*, *>
+                    prefs.edit()
+                        .putString(KEY_ACCESS, stringArg(args, "access_token"))
+                        .putString(KEY_REFRESH, stringArg(args, "refresh_token"))
+                        .putString(KEY_USER, stringArg(args, "user"))
+                        .commit()
+                    result.success(true)
+                }
+                "clear" -> {
+                    prefs.edit().clear().commit()
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
         gamepadChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             GAMEPAD_CHANNEL,
@@ -251,9 +280,19 @@ class MainActivity : FlutterActivity() {
             .build()
     }
 
+    private fun stringArg(args: Map<*, *>?, key: String): String {
+        val value = args?.get(key) ?: return ""
+        return value as? String ?: value.toString()
+    }
+
     companion object {
         private const val CHANNEL = "zozu/haptics"
         private const val GAMEPAD_CHANNEL = "zozu/gamepad"
+        private const val SESSION_CHANNEL = "com.zozugames/session_store"
+        private const val SESSION_PREFS = "zozu_session"
+        private const val KEY_ACCESS = "access_token"
+        private const val KEY_REFRESH = "refresh_token"
+        private const val KEY_USER = "user"
         private const val MAX_AMPLITUDE = 255
     }
 
