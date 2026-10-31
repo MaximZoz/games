@@ -692,5 +692,85 @@ void main() {
       );
       expect(kDurakActionPressFeedback.inMilliseconds, greaterThan(0));
     });
+
+    test('старый кадр не переигрывает локальную биту', () {
+      expect(
+        durakServerSnapshotBehindLocalRound(
+          tableReveal: true,
+          serverBito: 6,
+          lockedBito: 2,
+          serverDeck: 10,
+          lockedDeck: 20,
+          serverHand: 6,
+          lockedHand: 4,
+          serverTable: 0,
+          lockedTable: 2,
+        ),
+        isTrue,
+      );
+      expect(
+        durakServerSnapshotBehindLocalRound(
+          tableReveal: false,
+          serverBito: 2,
+          lockedBito: 2,
+          serverDeck: 20,
+          lockedDeck: 20,
+          serverHand: 4,
+          lockedHand: 4,
+          serverTable: 2,
+          lockedTable: 2,
+        ),
+        isTrue,
+      );
+      expect(
+        durakServerSnapshotBehindLocalRound(
+          tableReveal: false,
+          serverBito: 6,
+          lockedBito: 2,
+          serverDeck: 16,
+          lockedDeck: 20,
+          serverHand: 6,
+          lockedHand: 4,
+          serverTable: 0,
+          lockedTable: 2,
+        ),
+        isFalse,
+      );
+    });
+
+    test('оптимистичный отбой остаётся, пока атака не закрыта', () {
+      expect(
+        durakOptimisticDefenseRetires(
+          serverHasDefense: false,
+          attackStillOpen: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakOptimisticDefenseRetires(
+          serverHasDefense: true,
+          attackStillOpen: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakOptimisticDefenseRetires(
+          serverHasDefense: false,
+          attackStillOpen: false,
+        ),
+        isTrue,
+      );
+    });
+
+    test('локальный добор соперника не прячется за старым счётчиком', () {
+      expect(
+        durakOpponentFanShownCount(serverCount: 4, hidden: 0, atLeast: 6),
+        6,
+      );
+      expect(
+        durakOpponentFanShownCount(serverCount: 6, hidden: 0, atLeast: 6),
+        6,
+      );
+    });
   });
 }

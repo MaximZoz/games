@@ -39,6 +39,7 @@ class CardFan extends StatefulWidget {
     this.animateLayout = true,
     this.layoutDuration,
     this.fillWidth = false,
+    this.extraFaceDown = 0,
   });
 
   final List<PlayingCard> cards;
@@ -86,6 +87,9 @@ class CardFan extends StatefulWidget {
 
   /// Карты от левого края на всю ширину (без пустоты слева под крестиком).
   final bool fillWidth;
+
+  /// Рубашки в хвосте веера: добор уже сел, лиц с сервера ещё нет.
+  final int extraFaceDown;
 
   @override
   CardFanState createState() => CardFanState();
@@ -221,7 +225,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     }
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
-    _overlay = GameFlyOverlay.insert(overlay, (ctx) {
+    _overlay = GameFlyOverlay.insert(
+      overlay,
+      (ctx) {
         final card = _liftedCard;
         final center = _liftGlobalCenter;
         if (card == null || center == null) return const SizedBox.shrink();
@@ -283,7 +289,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final completer = Completer<void>();
     late OverlayEntry entry;
     final duration = Duration(milliseconds: ms ?? (soft ? 260 : 200));
-    entry = GameFlyOverlay.insert(overlay, (ctx) {
+    entry = GameFlyOverlay.insert(
+      overlay,
+      (ctx) {
         return IgnorePointer(
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
@@ -349,6 +357,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     VoidCallback? onHandoff,
     Duration flyDuration = const Duration(milliseconds: 300),
     int settleMs = 120,
+
     /// Не ждать опускание peek — следующая карта может стартовать раньше.
     bool awaitSettle = true,
   }) async {
@@ -707,6 +716,41 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     return best;
   }
 
+  int get _visualCount {
+    final extra = widget.extraFaceDown < 0 ? 0 : widget.extraFaceDown;
+    final n = _fanCards.length + extra;
+    return n < 1 ? 1 : n;
+  }
+
+  /// Слот рубашки добора ([tailIndex] с нуля среди [extraFaceDown]).
+  Rect? globalRectOfFaceDownTail(int tailIndex) {
+    if (!mounted || tailIndex < 0 || tailIndex >= widget.extraFaceDown) {
+      return null;
+    }
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    final n = _visualCount;
+    final spacing = _spacingFor(n);
+    final totalW = widget.cardSize.width + spacing * max(n - 1, 0);
+    final i = _fanCards.length + tailIndex;
+    final center = (n - 1) / 2;
+    final arc = _arcFor(n);
+    final curveY = arc == 0
+        ? 0.0
+        : (i - center) * (i - center) * widget.cardSize.height * _curveK(n);
+    final left = _cardLeft(i, n, spacing, totalW);
+    final top = widget.invertFan
+        ? curveY
+        : box.size.height - widget.cardSize.height + curveY;
+    final origin = box.localToGlobal(Offset(left, top));
+    return Rect.fromLTWH(
+      origin.dx,
+      origin.dy,
+      widget.cardSize.width,
+      widget.cardSize.height,
+    );
+  }
+
   /// Глобальный слот карты в веере — для показа младшего козыря.
   Rect? globalRectOfCard(PlayingCard card) {
     if (!mounted) return null;
@@ -955,7 +999,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     );
     final canPlay = widget.enabled && !widget.faceDown && _isLegal(card);
     final flickedUp = _upTravel > _extractPx + 8 || _panAccum.dy < -16;
-    final foldDown = _globalOverFan(global) && !flickedUp && _upTravel < _extractPx * 0.85;
+    final foldDown =
+        _globalOverFan(global) && !flickedUp && _upTravel < _extractPx * 0.85;
     try {
       if (foldDown || (!canPlay && _globalOverFan(global))) {
         await _foldIntoFan(global, baseSpacing, totalW);
@@ -998,18 +1043,19 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final layoutCards = _layoutCards;
     final fanCards = _fanCards;
-    if (layoutCards.isEmpty) {
+    final extra = widget.extraFaceDown < 0 ? 0 : widget.extraFaceDown;
+    if (layoutCards.isEmpty && extra <= 0) {
       return SizedBox(
         width: widget.cardSize.width,
         height: widget.cardSize.height,
       );
     }
-    final baseSpacing = _spacingFor(max(fanCards.length, 1));
-    final totalW =
-        widget.cardSize.width + baseSpacing * max(fanCards.length - 1, 0);
+    final slotCount = max(fanCards.length + extra, 1);
+    final baseSpacing = _spacingFor(slotCount);
+    final totalW = widget.cardSize.width + baseSpacing * max(slotCount - 1, 0);
     // Запас по высоте под приподнятую карту.
     final height = widget.cardSize.height * 1.7 + _peekRaiseY;
-    final arc = _arcFor(max(fanCards.length, 1));
+    final arc = _arcFor(slotCount);
     // fillWidth — карты + отступ слева 10; иначе ровно ширина веера (центр снаружи).
     final boxW = widget.fillWidth ? totalW + 10 : totalW;
 
@@ -1021,15 +1067,24 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
         alignment:
             widget.invertFan ? Alignment.topCenter : Alignment.bottomCenter,
         children: [
-          for (int i = 0; i < fanCards.length; i++)
-            _positioned(
-              i,
-              fanCards.length,
-              fanCards,
-              baseSpacing,
-              totalW,
-              arc,
-            ),
+          for (int i = 0; i < slotCount; i++)
+            if (i < fanCards.length)
+              _positioned(
+                i,
+                slotCount,
+                fanCards,
+                baseSpacing,
+                totalW,
+                arc,
+              )
+            else
+              _positionedFaceDownTail(
+                i,
+                slotCount,
+                baseSpacing,
+                totalW,
+                arc,
+              ),
           if (_peekOverlayCard() != null)
             _peekOverlay(
               fanCards,
@@ -1163,7 +1218,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
                   : (e) {
                       _lastPointerGlobal = e.position;
                       _pointerDown = false;
-                      if (_docking && _liftedCard == null && _peekCard == null) {
+                      if (_docking &&
+                          _liftedCard == null &&
+                          _peekCard == null) {
                         _panAccum = Offset.zero;
                         return;
                       }
@@ -1274,6 +1331,38 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     );
   }
 
+  Widget _positionedFaceDownTail(
+    int i,
+    int n,
+    double baseSpacing,
+    double totalW,
+    double arc,
+  ) {
+    final center = (n - 1) / 2;
+    final angle =
+        n == 1 || arc == 0 ? 0.0 : (i - center) * (arc / max(n - 1, 1));
+    final curveY = arc == 0
+        ? 0.0
+        : (i - center) * (i - center) * widget.cardSize.height * _curveK(n);
+    final edgeLift = -curveY;
+    final moveMs = widget.layoutDuration?.inMilliseconds ?? 180;
+    final instantSlot = !widget.animateLayout;
+    return AnimatedPositioned(
+      key: ValueKey<String>('fan-back-$i'),
+      duration: fanSlotMoveDuration(instant: instantSlot, moveMs: moveMs),
+      curve: kDurakLayoutCurve,
+      left: _cardLeft(i, n, baseSpacing, totalW),
+      top: widget.invertFan ? edgeLift : null,
+      bottom: widget.invertFan ? null : edgeLift,
+      child: Transform.rotate(
+        angle: angle,
+        alignment:
+            widget.invertFan ? Alignment.topCenter : Alignment.bottomCenter,
+        child: CardBackWidget(size: widget.cardSize),
+      ),
+    );
+  }
+
   Widget _positioned(
     int i,
     int n,
@@ -1284,9 +1373,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   ) {
     final center = (n - 1) / 2;
     // Одинаковый знак угла: у соперника (topCenter) края веера «к нему».
-    final angle = n == 1 || arc == 0
-        ? 0.0
-        : (i - center) * (arc / max(n - 1, 1));
+    final angle =
+        n == 1 || arc == 0 ? 0.0 : (i - center) * (arc / max(n - 1, 1));
     // arc == 0 — ровный ряд; иначе лёгкая парабола (слабее при многих картах).
     final curveY = arc == 0
         ? 0.0
@@ -1298,13 +1386,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final card = cards[i];
     final selected = _isSelected(card);
     final peeking = _peekCard == card;
-    final active =
-        (_hoverIndex == i && _liftedCard == null) || peeking;
+    final active = (_hoverIndex == i && _liftedCard == null) || peeking;
 
-    if (_hoverIndex != null &&
-        !active &&
-        _liftedCard == null &&
-        !peeking) {
+    if (_hoverIndex != null && !active && _liftedCard == null && !peeking) {
       final dir = i > _hoverIndex! ? 1 : -1;
       final distance = (i - _hoverIndex!).abs();
       extraX = dir * widget.cardSize.width * (0.22 / max(distance, 1));
@@ -1336,8 +1420,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       );
     }
     // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
-    final showHintShadow =
-        (active || selected) && (!hintLegal || legal);
+    final showHintShadow = (active || selected) && (!hintLegal || legal);
 
     // Края веера поднимаются «от стола»: у себя вверх, у соперника к верху экрана.
     final edgeLift = -curveY;
@@ -1350,8 +1433,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final bottom = widget.invertFan ? null : extraY + edgeLift;
 
     final face = widget.faceDown
-        ? CardBackWidget(
-            size: widget.cardSize, elevated: peeking || active)
+        ? CardBackWidget(size: widget.cardSize, elevated: peeking || active)
         : PlayingCardWidget(
             card: card,
             size: widget.cardSize,
