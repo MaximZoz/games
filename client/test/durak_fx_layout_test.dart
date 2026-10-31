@@ -591,4 +591,106 @@ void main() {
       );
     });
   });
+
+  group('мгновенная бита и память стола', () {
+    test('пас закрывает раунд, только если больше некому подкинуть', () {
+      expect(
+        durakRoundEndsOnPass(
+          actorIndex: 0,
+          playerCount: 2,
+          handCounts: const [3, 4],
+          canStillThrow: (seat) => seat != 1,
+        ),
+        isTrue,
+      );
+      expect(
+        durakRoundEndsOnPass(
+          actorIndex: 0,
+          playerCount: 3,
+          handCounts: const [2, 0, 3],
+          canStillThrow: (seat) => seat != 1,
+        ),
+        isFalse,
+      );
+      expect(
+        durakRoundEndsOnPass(
+          actorIndex: 0,
+          playerCount: 3,
+          handCounts: const [2, 0, 0],
+          canStillThrow: (seat) => seat != 1,
+        ),
+        isTrue,
+      );
+    });
+
+    test('добор идёт по порядку и не больше колоды', () {
+      final dealt = durakPredictRefillCounts(
+        order: const [0, 2, 1],
+        handCounts: const [4, 5, 6],
+        deckCount: 3,
+        alive: (_) => true,
+      );
+      expect(dealt[0], 2);
+      expect(dealt[2], isNull);
+      expect(dealt[1], 1);
+    });
+
+    test('невидимый отбой не записывается в prev', () {
+      expect(
+        durakKeepDefenseInPrevTable(
+          hasDefense: true,
+          alreadyVisible: false,
+          wasInPrevious: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakKeepDefenseInPrevTable(
+          hasDefense: true,
+          alreadyVisible: true,
+          wasInPrevious: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakKeepDefenseInPrevTable(
+          hasDefense: false,
+          alreadyVisible: true,
+          wasInPrevious: true,
+        ),
+        isFalse,
+      );
+    });
+
+    test('пустой кадр без биты не стирает стол', () {
+      expect(
+        durakRetainTableAcrossEmptyFrame(
+          bitoGrew: false,
+          lastWasTake: false,
+          tableReveal: false,
+          hidingTable: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakRetainTableAcrossEmptyFrame(
+          bitoGrew: true,
+          lastWasTake: false,
+          tableReveal: false,
+          hidingTable: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakRetainTableAcrossEmptyFrame(
+          bitoGrew: false,
+          lastWasTake: true,
+          tableReveal: false,
+          hidingTable: false,
+        ),
+        isFalse,
+      );
+      expect(kDurakActionPressFeedback.inMilliseconds, greaterThan(0));
+    });
+  });
 }

@@ -88,6 +88,8 @@ Future<void> showUserProfileDialog({
                     ref.watch(friendsSnapshotProvider).valueOrNull;
                 final presence =
                     ref.watch(presenceMapProvider).valueOrNull ?? const {};
+                final fallbackPresence =
+                    ref.watch(profilePresenceProvider(id)).valueOrNull;
                 final chatsList =
                     ref.watch(chatsListProvider).valueOrNull ?? const [];
 
@@ -165,13 +167,23 @@ Future<void> showUserProfileDialog({
                 final name = supportPeer
                     ? context.l10n.supportTitle
                     : localizeDisplayName(rawName, context.l10n);
-                final resolvedAge = friendUser?.age ?? age;
-                final resolvedGender = friendUser?.gender ?? gender;
-                final resolvedAbout =
-                    (friendUser?.about?.trim().isNotEmpty == true)
-                        ? friendUser!.about!.trim()
-                        : about?.trim();
-                final presenceEntry = presence[id];
+                final meUser = ref.watch(authStateProvider).valueOrNull;
+                final myId = meUser?.id.trim() ?? '';
+                final isSelf = myId.isNotEmpty && myId == id;
+                String? nonempty(String? raw) {
+                  final trimmed = raw?.trim() ?? '';
+                  return trimmed.isEmpty ? null : trimmed;
+                }
+
+                final resolvedAge =
+                    friendUser?.age ?? age ?? (isSelf ? meUser?.age : null);
+                final resolvedGender = nonempty(friendUser?.gender) ??
+                    nonempty(gender) ??
+                    (isSelf ? nonempty(meUser?.gender) : null);
+                final resolvedAbout = nonempty(friendUser?.about) ??
+                    nonempty(about) ??
+                    (isSelf ? nonempty(meUser?.about) : null);
+                final presenceEntry = presence[id] ?? fallbackPresence;
                 final statusText = presenceEntry == null
                     ? null
                     : (presenceEntry.online
@@ -179,9 +191,6 @@ Future<void> showUserProfileDialog({
                         : formatLastSeen(presenceEntry.lastSeenAt));
                 final genderIcon = _genderIcon(resolvedGender);
                 final female = _isFemaleGender(resolvedGender);
-                final myId =
-                    ref.watch(authStateProvider).valueOrNull?.id.trim() ?? '';
-                final isSelf = myId.isNotEmpty && myId == id;
                 // «В друзья» — если ещё не друг и нет исходящей заявки.
                 final showAddFriend =
                     !supportPeer && !isSelf && !isFriend && !hasOutgoing;

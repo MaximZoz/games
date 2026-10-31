@@ -228,6 +228,26 @@ void main() {
         isFalse,
       );
       expect(
+        durakShouldScheduleRemoteTableFlight(
+          existedOnPrevTable: false,
+          seated: false,
+          optimistic: false,
+          localFlying: false,
+          locallyCommitted: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakHideDeferredRemoteAttack(
+          existedOnPrevTable: false,
+          optimistic: false,
+          localFlying: false,
+          fxDeferred: true,
+          locallyCommitted: true,
+        ),
+        isFalse,
+      );
+      expect(
         durakTableCardAlreadyVisible(
           seated: true,
           existedOnKnownTable: false,

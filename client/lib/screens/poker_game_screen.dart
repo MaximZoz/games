@@ -64,6 +64,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   int _gamepadActionIndex = 0;
   /// Ход ушёл на сервер — не возвращать «Фолд», пока снимок не подтвердит.
   bool _hideActionsUntilSync = false;
+
+  /// Решение, на котором нажали кнопку. Пока view совпадает — панель скрыта.
+  String? _actedDecisionKey;
   final GameTurnActionLock _turnAction = GameTurnActionLock();
   Timer? _busyWatchdog;
   int _busyStuckTicks = 0;
@@ -162,6 +165,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _observeEntered = false;
         _openedAsObserver = false;
         _openModeCaptured = false;
+        _hideActionsUntilSync = false;
+        _actedDecisionKey = null;
       });
       _captureOpenMode();
     }
@@ -486,15 +491,20 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   bool _showPokerActions(PokerGameView game) {
     final meFolded = game.me?.folded ?? false;
+    final acted = _actedDecisionKey;
+    final decisionChanged =
+        acted != null && pokerDecisionKey(game) != acted;
     final keepHidden = pokerShouldKeepActionBarHidden(
       hideUntilSync: _hideActionsUntilSync,
       isMyTurn: game.isMyTurn,
       isHandOver: game.isHandOver,
       isOver: game.isOver,
       meFolded: meFolded,
+      decisionChanged: decisionChanged,
     );
     if (_hideActionsUntilSync && !keepHidden) {
       _hideActionsUntilSync = false;
+      _actedDecisionKey = null;
     }
     return pokerActionBarVisible(
       isOver: game.isOver,
@@ -520,6 +530,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         (_isOffline
             ? OfflinePokerRegistry.instance.get(widget.gameId)?.view
             : null);
+    final actedOn = gameSnap == null ? null : pokerDecisionKey(gameSnap);
     final meSnap = gameSnap?.me;
     if (meSnap != null && type == PokerActionType.fold && meSnap.bet > 0) {
       _foldChipFlownSeats.add(meSnap.seat);
@@ -563,7 +574,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     } finally {
       if (acquireLock) _turnAction.release();
       if (mounted) {
-        if (succeeded) _hideActionsUntilSync = true;
+        if (succeeded) {
+          _hideActionsUntilSync = true;
+          _actedDecisionKey = actedOn;
+        }
         setState(() => _busy = false);
       }
     }
@@ -1425,15 +1439,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       );
       return;
     }
+    final avatar = _playerAvatar(p);
     await showUserProfileDialog(
       context: context,
       ref: ref,
       userId: p.id,
       displayName: _playerName(p),
-      avatarKind: p.avatarKind,
-      avatarValue: p.avatarValue,
+      avatarKind: avatar.kind,
+      avatarValue: avatar.value,
       frameCode: p.frameCode,
       frameColor: p.frameColor,
+      age: p.age,
+      gender: p.gender,
+      about: p.about,
       messageFrom: 'games',
       messageReturnPath: '/games/poker/game/${widget.gameId}',
     );

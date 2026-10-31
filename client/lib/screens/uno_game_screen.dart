@@ -814,14 +814,40 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     setState(() {});
     _lastLocalDrawActor = before.me?.id;
     final from = _rectOf(_drawPileKey);
+    final to = _rectOf(_handKey);
+    // Рубашка летит сразу, лицо подставляем, когда сервер пришлёт карту.
+    final fly = (from != null && to != null)
+        ? playUnoCardFlyAnimation(
+            context: context,
+            card: const UnoCard(
+              id: 'draw-back',
+              color: UnoColor.wild,
+              kind: UnoCardKind.wild,
+            ),
+            cardSize: _flyCardSize(context),
+            from: from,
+            to: to,
+            faceDown: true,
+            arcLift: 36,
+            keepAtEnd: true,
+          )
+        : null;
     try {
       await _move(UnoActionType.draw, manageBusy: false);
-      if (!mounted) return;
+      if (!mounted) {
+        final ticket = await fly;
+        ticket?.dismiss();
+        return;
+      }
       UnoGameView? after;
       try {
         after = await ref.read(unoGameProvider(widget.gameId).future);
       } catch (_) {}
-      if (!mounted) return;
+      if (!mounted) {
+        final ticket = await fly;
+        ticket?.dismiss();
+        return;
+      }
       final oldIds = before.myHand.map((card) => card.id).toSet();
       final drawn = after?.myHand
               .where((card) => !oldIds.contains(card.id))
@@ -830,44 +856,40 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       if (drawn.isNotEmpty) {
         setState(() => _pendingDrawnIds.addAll(drawn.map((card) => card.id)));
       }
-      final to = _rectOf(_handKey);
-      if (from == null || to == null) {
-        if (mounted && drawn.isNotEmpty) {
-          setState(
-              () => _pendingDrawnIds.removeAll(drawn.map((card) => card.id)));
+      final tickets = <UnoCardFlyTicket>[];
+      final ticket = await fly;
+      if (ticket != null) tickets.add(ticket);
+      if (drawn.length > 1 && from != null && to != null && mounted) {
+        for (var i = 1; i < drawn.length; i++) {
+          if (!mounted) break;
+          tickets.add(
+            await playUnoCardFlyAnimation(
+              context: context,
+              card: drawn[i],
+              cardSize: _flyCardSize(context),
+              from: from,
+              to: to,
+              faceDown: true,
+              arcLift: 28,
+              keepAtEnd: true,
+              playSfx: false,
+            ),
+          );
+        }
+      }
+      if (!mounted) {
+        for (final t in tickets) {
+          t.dismiss();
         }
         return;
       }
-      for (final card in drawn) {
-        if (!mounted) return;
-        await playUnoCardFlyAnimation(
-          context: context,
-          card: card,
-          cardSize: _flyCardSize(context),
-          from: from,
-          to: to,
-          faceDown: true,
-          flipToFace: true,
-          arcLift: 36,
-        );
-        if (mounted) {
-          setState(() => _pendingDrawnIds.remove(card.id));
-        }
+      await WidgetsBinding.instance.endOfFrame;
+      for (final t in tickets) {
+        t.dismiss();
       }
-      if (drawn.isEmpty && mounted) {
-        await playUnoCardFlyAnimation(
-          context: context,
-          card: const UnoCard(
-            id: 'draw-back',
-            color: UnoColor.wild,
-            kind: UnoCardKind.wild,
-          ),
-          cardSize: _flyCardSize(context),
-          from: from,
-          to: to,
-          faceDown: true,
-          arcLift: 36,
-        );
+      if (drawn.isNotEmpty && mounted) {
+        setState(
+            () => _pendingDrawnIds.removeAll(drawn.map((card) => card.id)));
       }
     } finally {
       _turnAction.release();

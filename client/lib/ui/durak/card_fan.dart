@@ -362,9 +362,15 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _hoverIndex = _fanCards.indexOf(card);
     });
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted || gen != _gestureGen) {
+    if (!mounted) {
+      _docking = false;
+      return;
+    }
+    if (gen != _gestureGen) {
+      // Родитель уже спрятал карту в руке — вернуть её, даже если жест отменён.
       _docking = false;
       _hidePeekUnderOverlay = false;
+      onHandoff?.call();
       return;
     }
 
@@ -397,15 +403,24 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       arcLift: flipToFace ? 14 : 10,
       keepAtEnd: true,
     );
-    if (!mounted || gen != _gestureGen) {
+    if (!mounted) {
       ticket.dismiss();
       _docking = false;
-      _hidePeekUnderOverlay = false;
+      return;
+    }
+    // Полёт уже доиграл. Даже если жест сменился — сажаем карту, не обрываем.
+    onHandoff?.call();
+    if (gen != _gestureGen) {
+      if (mounted) {
+        setState(() => _hidePeekUnderOverlay = false);
+      }
+      await WidgetsBinding.instance.endOfFrame;
+      ticket.dismiss();
+      _docking = false;
       return;
     }
 
     // Сначала показать карту в peek и снять hidden у родителя — потом overlay.
-    onHandoff?.call();
     if (mounted) {
       setState(() => _hidePeekUnderOverlay = false);
     }

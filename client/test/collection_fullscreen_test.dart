@@ -88,6 +88,52 @@ void main() {
     expect(find.widgetWithText(GamepadBuyButton, 'Омолодить'), findsOneWidget);
   });
 
+  testWidgets('после состарить сразу появляется ускорить', (tester) async {
+    final acquired = DateTime.now().toUtc().subtract(const Duration(days: 100));
+    await open(
+      tester,
+      acquired: acquired,
+      actions: [
+        CollectionElixirButton(
+          effect: 'rejuvenate',
+          label: 'Омолодить',
+          quantity: 1,
+          onPressed: () async => null,
+        ),
+        CollectionElixirButton(
+          effect: 'age',
+          label: 'Состарить',
+          quantity: 1,
+          onPressed: () async => (
+            shift: 1,
+            vintageAt: null,
+            acquiredAt: acquired,
+            quantity: 1,
+          ),
+        ),
+        CollectionElixirButton(
+          effect: 'accelerate',
+          label: 'Ускорить',
+          quantity: 1,
+          onPressed: () async => null,
+        ),
+      ],
+    );
+
+    expect(find.widgetWithText(GamepadBuyButton, 'Состарить'), findsOneWidget);
+    expect(find.widgetWithText(GamepadBuyButton, 'Омолодить'), findsOneWidget);
+    expect(find.widgetWithText(GamepadBuyButton, 'Ускорить'), findsNothing);
+
+    await tester.tap(find.widgetWithText(GamepadBuyButton, 'Состарить'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.widgetWithText(GamepadBuyButton, 'Ускорить'), findsOneWidget);
+    expect(find.widgetWithText(GamepadBuyButton, 'Омолодить'), findsOneWidget);
+    expect(find.widgetWithText(GamepadBuyButton, 'Состарить'), findsNothing);
+    expect(find.text('Ветхое'), findsWidgets);
+  });
+
   testWidgets('счётчик открытого эликсира обновляется без закрытия',
       (tester) async {
     final subtitle = ValueNotifier<String>('Осталось 3');

@@ -368,12 +368,15 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           break;
         }
       }
-      if (elixir == null || !_elixirFits(elixir, it)) continue;
+      if (elixir == null) continue;
       final chosen = elixir;
+      // Флакон, который сейчас не подходит, всё равно держим: после
+      // «Состарить» ветхая коллекция сразу показывает «Ускорить».
       actions.add(
         CollectionElixirButton(
           effect: effect,
           label: elixirUseLabel(l10n, effect),
+          quantity: chosen.quantity,
           onPressed: () => _applyElixir(context, chosen, it),
         ),
       );
