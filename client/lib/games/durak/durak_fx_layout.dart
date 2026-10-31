@@ -233,13 +233,16 @@ double durakOpponentFanMinStepFrac(int shown) {
 int durakOpponentFanShownCount({
   required int serverCount,
   required int hidden,
+  int atLeast = 0,
 }) {
   final n = serverCount < 0 ? 0 : serverCount;
   final hide = hidden < 0 ? 0 : hidden;
   final visible = n - hide;
-  if (visible <= 0) return 0;
-  if (visible > 20) return 20;
-  return visible;
+  final floor = atLeast < 0 ? 0 : atLeast;
+  final shown = visible > floor ? visible : floor;
+  if (shown <= 0) return 0;
+  if (shown > 20) return 20;
+  return shown;
 }
 
 /// Snap к серверу обязан открыть то, что прятал незавершённый FX.
@@ -584,6 +587,36 @@ bool durakKeepDefenseInPrevTable({
 }) {
   if (!hasDefense) return false;
   return alreadyVisible || wasInPrevious;
+}
+
+/// Оптимистичный отбой снимаем, когда сервер его уже рисует
+/// или атака ушла со стола. Пока пара открыта — карта должна остаться.
+bool durakOptimisticDefenseRetires({
+  required bool serverHasDefense,
+  required bool attackStillOpen,
+}) =>
+    serverHasDefense || !attackStillOpen;
+
+/// Кадр сервера ещё тот, с которого стартовала локальная бита/взятие.
+///
+/// Такой кадр нельзя записывать в prev: иначе добор сыграет второй раз,
+/// когда придёт уже закрытый раунд.
+bool durakServerSnapshotBehindLocalRound({
+  required bool tableReveal,
+  required int serverBito,
+  required int lockedBito,
+  required int serverDeck,
+  required int lockedDeck,
+  required int serverHand,
+  required int lockedHand,
+  required int serverTable,
+  required int lockedTable,
+}) {
+  if (tableReveal) return true;
+  return serverBito == lockedBito &&
+      serverDeck == lockedDeck &&
+      serverHand == lockedHand &&
+      serverTable == lockedTable;
 }
 
 /// Ждать свои и чужие полёты на стол, прежде чем уводить карты в биту.
