@@ -55,6 +55,9 @@ class PokerPlayerView {
     this.avatarValue,
     this.frameCode,
     this.frameColor,
+    this.age,
+    this.gender,
+    this.about,
     required this.seat,
     required this.chips,
     required this.bet,
@@ -71,6 +74,9 @@ class PokerPlayerView {
   final String? avatarValue;
   final String? frameCode;
   final String? frameColor;
+  final int? age;
+  final String? gender;
+  final String? about;
   final int seat;
   final int chips;
   final int bet;
@@ -95,6 +101,9 @@ class PokerPlayerView {
       avatarValue: json['avatar_value']?.toString(),
       frameCode: json['frame_code']?.toString(),
       frameColor: json['frame_color']?.toString(),
+      age: (json['age'] as num?)?.toInt(),
+      gender: (json['gender'] as String?)?.trim(),
+      about: (json['about'] as String?)?.trim(),
       seat: (json['seat'] as num?)?.toInt() ?? 0,
       chips: (json['chips'] as num?)?.toInt() ?? 0,
       bet: (json['bet'] as num?)?.toInt() ?? 0,

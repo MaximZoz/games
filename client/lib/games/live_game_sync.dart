@@ -166,6 +166,18 @@ bool isOlderPoker(PokerGameView incoming, PokerGameView current) {
   return pokerProgress(incoming) < pokerProgress(current);
 }
 
+/// Отпечаток решения, на котором ушёл ход.
+///
+/// Совпадение со следующим снимком значит, что сервер ещё не подтвердил ход
+/// (фолд не должен мигнуть снова). Новая улица, дедлайн, банк или индекс
+/// актёра — уже другое решение: если ход снова наш, кнопки нужны сразу.
+String pokerDecisionKey(PokerGameView game) {
+  final me = game.me;
+  return '${game.handNumber}|${game.street}|${game.community.length}|'
+      '${game.actingIndex}|${game.turnDeadline}|${game.pot}|${game.currentBet}|'
+      '${me?.bet ?? -1}|${me?.chips ?? -1}|${me?.folded == true ? 1 : 0}';
+}
+
 /// Кнопки хода: не показывать фолд после своего хода, пока сервер не подтвердил.
 bool pokerShouldKeepActionBarHidden({
   required bool hideUntilSync,
@@ -173,9 +185,11 @@ bool pokerShouldKeepActionBarHidden({
   required bool isHandOver,
   required bool isOver,
   required bool meFolded,
+  bool decisionChanged = false,
 }) {
   if (!hideUntilSync) return false;
   if (isOver || isHandOver || meFolded || !isMyTurn) return false;
+  if (decisionChanged) return false;
   return true;
 }
 

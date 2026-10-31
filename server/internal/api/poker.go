@@ -1679,6 +1679,26 @@ func pokerHumans(m map[string]string) []uuid.UUID {
 	return out
 }
 
+// applyPokerPublicProfile — возраст, пол и «о себе», как в карточке друзей.
+func applyPokerPublicProfile(entry map[string]any, usr *store.User) {
+	if usr == nil {
+		return
+	}
+	if usr.Age != nil && *usr.Age > 0 {
+		entry["age"] = *usr.Age
+	}
+	if usr.Gender != nil {
+		if g := strings.TrimSpace(*usr.Gender); g != "" {
+			entry["gender"] = g
+		}
+	}
+	if usr.About != nil {
+		if a := strings.TrimSpace(*usr.About); a != "" {
+			entry["about"] = a
+		}
+	}
+}
+
 func pokerPlayerIndex(state *poker.Game, userID string) int {
 	for i := range state.Players {
 		if state.Players[i].UserID == userID {
@@ -1734,6 +1754,7 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 		if isBot(p.UserID) {
 			entry["display_name"] = "Бот"
 		} else if usr, ok := names[p.UserID]; ok && usr != nil {
+			applyPokerPublicProfile(entry, usr)
 			if usr.DisplayName != nil && *usr.DisplayName != "" {
 				entry["display_name"] = *usr.DisplayName
 			}
