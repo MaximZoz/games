@@ -448,5 +448,124 @@ void main() {
         isFalse,
       );
     });
+
+    test('кнопки возвращаются на новом решении того же игрока', () {
+      PokerGameView view({
+        required String street,
+        int pot = 40,
+        int actingIndex = 1,
+        int turnDeadline = 100,
+        int community = 0,
+      }) {
+        return PokerGameView(
+          id: 'g',
+          status: 'active',
+          street: street,
+          lobbyId: '',
+          chatId: null,
+          playerIds: const ['a', 'b'],
+          players: const [
+            PokerPlayerView(
+              id: 'a',
+              seat: 0,
+              chips: 100,
+              bet: 20,
+              folded: false,
+              allIn: false,
+              isActing: false,
+            ),
+            PokerPlayerView(
+              id: 'b',
+              seat: 1,
+              chips: 80,
+              bet: 20,
+              folded: false,
+              allIn: false,
+              isActing: true,
+            ),
+          ],
+          community: List<PokerApiCard>.filled(
+            community,
+            const PokerApiCard(14, 'H'),
+          ),
+          pot: pot,
+          currentBet: 20,
+          minRaise: 20,
+          smallBlind: 10,
+          bigBlind: 20,
+          dealerIndex: 0,
+          actingIndex: actingIndex,
+          myIndex: 1,
+          legalActions: const ['fold', 'check', 'raise'],
+          callAmount: 0,
+          minRaiseTo: 40,
+          maxRaiseTo: 100,
+          turnTimeSec: 30,
+          turnDeadline: turnDeadline,
+          stakeBronze: 0,
+          winners: const [],
+          winnerIds: const [],
+          isOver: false,
+          isForfeit: false,
+          isTimeout: false,
+          handNumber: 2,
+        );
+      }
+
+      final preflop = view(street: 'preflop');
+      final flop = view(street: 'flop', community: 3, turnDeadline: 140);
+      expect(pokerDecisionKey(preflop), pokerDecisionKey(preflop));
+      expect(pokerDecisionKey(flop), isNot(pokerDecisionKey(preflop)));
+      expect(
+        pokerShouldKeepActionBarHidden(
+          hideUntilSync: true,
+          isMyTurn: flop.isMyTurn,
+          isHandOver: false,
+          isOver: false,
+          meFolded: false,
+          decisionChanged: pokerDecisionKey(flop) != pokerDecisionKey(preflop),
+        ),
+        isFalse,
+      );
+      expect(
+        pokerActionBarVisible(
+          isOver: false,
+          isHandOver: false,
+          isMyTurn: flop.isMyTurn,
+          hasLegalActions: flop.legalActions.isNotEmpty,
+          meFolded: false,
+          hideUntilSync: false,
+        ),
+        isTrue,
+      );
+
+      final same = view(street: 'preflop');
+      expect(
+        pokerShouldKeepActionBarHidden(
+          hideUntilSync: true,
+          isMyTurn: true,
+          isHandOver: false,
+          isOver: false,
+          meFolded: false,
+          decisionChanged: pokerDecisionKey(same) != pokerDecisionKey(preflop),
+        ),
+        isTrue,
+      );
+    });
+
+    test('профиль игрока покера читает возраст, пол и о себе', () {
+      final player = PokerPlayerView.fromJson({
+        'id': 'user-1',
+        'seat': 1,
+        'chips': 100,
+        'bet': 0,
+        'age': 27,
+        'gender': 'female',
+        'about': '  играю по вечерам  ',
+      });
+      expect(player.age, 27);
+      expect(player.gender, 'female');
+      expect(player.about, 'играю по вечерам');
+    });
   });
 }

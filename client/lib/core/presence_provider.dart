@@ -123,6 +123,20 @@ final presenceMapProvider = StreamProvider.autoDispose<Map<String, PresenceEntry
   return controller.stream;
 });
 
+/// Presence одного пользователя, если его нет в общем списке друзей и чатов.
+///
+/// Карточка соперника за столом должна показывать «в сети» / «был(а)», даже
+/// когда с этим человеком ещё нет переписки.
+final profilePresenceProvider = FutureProvider.autoDispose
+    .family<PresenceEntry?, String>((ref, userId) async {
+  final id = userId.trim();
+  if (id.isEmpty || id.startsWith('bot:')) return null;
+  final known = ref.read(presenceMapProvider).valueOrNull?[id];
+  if (known != null) return known;
+  final fetched = await ref.read(presenceRepositoryProvider).getPresence([id]);
+  return fetched[id];
+});
+
 /// Принудительно обновить presence с API.
 void refreshPresence(WidgetRef ref) {
   ref.invalidate(presenceMapProvider);
