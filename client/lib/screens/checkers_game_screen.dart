@@ -16,6 +16,7 @@ import 'package:multigames_client/games/checkers/checkers_board.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_material.dart';
 import 'package:multigames_client/games/checkers/checkers_offline_session.dart';
+import 'package:multigames_client/games/checkers/checkers_optimistic.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_repository.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
@@ -54,6 +55,9 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   CheckersSquare _cursor = const CheckersSquare(0, 0);
   bool _busy = false;
 
+  /// Ход уже на доске, пока сервер не подтвердил `seq`.
+  CheckersGameView? _optimistic;
+
   /// Переворот доски вручную. `null` — авто (снизу мои шашки).
   bool? _flipOverride;
 
@@ -79,6 +83,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     _rematchPollTimer?.cancel();
     _history.clear();
     _reviewIndex = null;
+    _optimistic = null;
     _selected = null;
     _flipOverride = null;
     _busy = false;
@@ -172,6 +177,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
       if (!_isOffline) ref.invalidate(checkersGameProvider(widget.gameId));
     } on GamesException catch (e) {
       if (!mounted) return;
+      setState(() => _optimistic = null);
       if (!isStaleNotYourTurnError(e) && !isStaleGameOverError(e)) {
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
       }
@@ -212,6 +218,27 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     } else if (server.seq == _history.last.seq) {
       _history[_history.length - 1] = server;
     }
+    final opt = _optimistic;
+    if (opt != null &&
+        (server.seq >= opt.seq || server.id != opt.id || server.isOver)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final o = _optimistic;
+        final s = ref.read(checkersGameProvider(widget.gameId)).valueOrNull;
+        if (o != null &&
+            s != null &&
+            (s.seq >= o.seq || s.id != o.id || s.isOver)) {
+          setState(() => _optimistic = null);
+        }
+      });
+    }
+  }
+
+  /// Позиция на экране: оптимистичная, пока сервер не догнал `seq`.
+  CheckersGameView _shown(CheckersGameView server) {
+    final opt = _optimistic;
+    if (opt != null && opt.id == server.id && opt.seq > server.seq) return opt;
+    return server;
   }
 
   bool get _isReviewing =>
@@ -279,8 +306,12 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
       }
       return;
     }
-    setState(() => _selected = null);
-    await _run(() => _repo.move(widget.gameId, chosen!));
+    final move = chosen;
+    setState(() {
+      _selected = null;
+      _optimistic = checkersViewAfterMove(game, move);
+    });
+    await _run(() => _repo.move(widget.gameId, move));
   }
 
   String _statusText(CheckersGameView game) {
@@ -793,21 +824,23 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
 
   Widget _buildGame(CheckersGameView server, String? me) {
     _reconcile(server);
+    final shown = _shown(server);
     final display = _isReviewing
         ? _history[_reviewIndex!.clamp(0, _history.length - 1)]
-        : server;
-    final myTurn = server.isMyTurn && !server.isOver && !_isReviewing;
+        : shown;
+    final myTurn = shown.isMyTurn && !shown.isOver && !_isReviewing;
     final landscape = isPhoneLandscape(context) ||
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
     return BoardChangeSfx(
-      signature: '${server.id}:${server.seq}',
+      signature:
+          '${shown.id}:${shown.seq}:${shown.lastFromR}:${shown.lastToR}',
       child: Stack(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 2, 0, 6),
             child: landscape
-                ? _buildLandscape(server, display, me, myTurn)
-                : _buildPortrait(server, display, me, myTurn),
+                ? _buildLandscape(shown, display, me, myTurn)
+                : _buildPortrait(shown, display, me, myTurn),
           ),
           if (server.isOver && server.iWon)
             Positioned.fill(
