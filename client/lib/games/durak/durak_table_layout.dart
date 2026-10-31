@@ -146,6 +146,14 @@ bool durakSeatUnhiddenTableCard({
 }) =>
     !remoteFlying && !localFlying;
 
+/// Показанную карту не выкидываем из памяти, пока она ещё своя или на столе.
+bool durakKeepShownTableId({
+  required bool onLiveTable,
+  required bool localAttack,
+  required bool optimisticDefense,
+}) =>
+    onLiveTable || localAttack || optimisticDefense;
+
 /// Remote-id не должен прятать уже севшую / свою / летящую локально карту.
 bool durakShouldHideRemoteTableCard({
   required bool markedRemoteFlying,

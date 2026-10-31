@@ -163,6 +163,22 @@ void main() {
         isFalse,
       );
       expect(
+        durakKeepShownTableId(
+          onLiveTable: false,
+          localAttack: false,
+          optimisticDefense: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakKeepShownTableId(
+          onLiveTable: false,
+          localAttack: false,
+          optimisticDefense: false,
+        ),
+        isFalse,
+      );
+      expect(
         durakShouldRevealDeferredRemoteCard(
           hiddenAsRemote: true,
           seated: false,
