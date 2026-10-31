@@ -515,6 +515,77 @@ bool durakRevealFinishImmediately({
   return firstSnapshotAlreadyOver && !flightActive;
 }
 
+/// Нажатие «Бито»/«Взять»/«Готово»: сначала сжатие кнопки, потом смена подписи.
+const Duration kDurakActionPressFeedback = Duration(milliseconds: 110);
+
+/// Пустой кадр без биты, взятия и паузы reveal не стирает память стола.
+///
+/// Иначе свой подкид на смене хода пропадает и прилетает заново.
+bool durakRetainTableAcrossEmptyFrame({
+  required bool bitoGrew,
+  required bool lastWasTake,
+  required bool tableReveal,
+  required bool hidingTable,
+}) =>
+    !bitoGrew && !lastWasTake && !tableReveal && !hidingTable;
+
+/// «Бито» / «Готово» закрывает раунд, только если больше некому подкинуть.
+///
+/// Чужие ранги не видны: место с картами ещё может подкинуть, поэтому
+/// стол уводим сразу лишь когда таких мест нет.
+bool durakRoundEndsOnPass({
+  required int actorIndex,
+  required int playerCount,
+  required List<int> handCounts,
+  required bool Function(int seat) canStillThrow,
+}) {
+  if (playerCount <= 0) return true;
+  for (var i = 0; i < playerCount; i++) {
+    if (i == actorIndex) continue;
+    if (!canStillThrow(i)) continue;
+    final n = i < handCounts.length ? handCounts[i] : 0;
+    if (n > 0) return false;
+  }
+  return true;
+}
+
+/// Сколько карт добрать каждому после биты или взятия (до [handSize]).
+Map<int, int> durakPredictRefillCounts({
+  required List<int> order,
+  required List<int> handCounts,
+  required int deckCount,
+  required bool Function(int seat) alive,
+  int handSize = 6,
+}) {
+  var deck = deckCount < 0 ? 0 : deckCount;
+  final out = <int, int>{};
+  if (deck <= 0) return out;
+  for (final seat in order) {
+    if (seat < 0 || seat >= handCounts.length) continue;
+    if (!alive(seat)) continue;
+    final need = handSize - handCounts[seat];
+    if (need <= 0) continue;
+    final draw = need < deck ? need : deck;
+    if (draw <= 0) continue;
+    out[seat] = draw;
+    deck -= draw;
+    if (deck <= 0) break;
+  }
+  return out;
+}
+
+/// Новую защиту не записываем в prev, пока её не показали.
+///
+/// Иначе смена хода вспыхивает отбоем без полёта, и атака «моргает».
+bool durakKeepDefenseInPrevTable({
+  required bool hasDefense,
+  required bool alreadyVisible,
+  required bool wasInPrevious,
+}) {
+  if (!hasDefense) return false;
+  return alreadyVisible || wasInPrevious;
+}
+
 /// Ждать свои и чужие полёты на стол, прежде чем уводить карты в биту.
 bool durakTableReadyForBitoFlight({
   required bool remoteFlying,

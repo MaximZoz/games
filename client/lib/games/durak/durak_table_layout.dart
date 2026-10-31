@@ -107,8 +107,10 @@ bool durakHideDeferredRemoteAttack({
   required bool fxDeferred,
   bool seated = false,
   bool alreadyShown = false,
+  bool locallyCommitted = false,
 }) {
-  if (optimistic ||
+  if (locallyCommitted ||
+      optimistic ||
       localFlying ||
       durakTableCardAlreadyVisible(
         seated: seated,
@@ -175,8 +177,10 @@ bool durakShouldScheduleRemoteTableFlight({
   required bool optimistic,
   required bool localFlying,
   bool alreadyShown = false,
+  bool locallyCommitted = false,
 }) {
-  if (optimistic ||
+  if (locallyCommitted ||
+      optimistic ||
       localFlying ||
       seated ||
       alreadyShown ||
