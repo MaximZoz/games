@@ -760,14 +760,18 @@ func (h *GamesHandler) healDurakBitoReveal(ctx context.Context, gameID string, m
 	if state == nil || state.Status != durak.StatusActive || state.Phase != durak.PhaseBitoReveal {
 		return false
 	}
-	revealAt, missing := durakRevealDeadlineMs(m["bito_reveal_at"], durak.BitoRevealDelay)
+	revealAt, missing := durakRevealDeadlineMs(m["bito_reveal_at"], state.ActiveRevealDelay())
 	if missing {
 		// Нет метки — взвести паузу заново, не закрывать стол мгновенно.
 		h.Rdb.HSet(ctx, "game:"+gameID, "bito_reveal_at", strconv.FormatInt(revealAt, 10))
-		h.scheduleDurakBitoReveal(gameID)
+		h.scheduleDurakBitoReveal(gameID, state.ActiveRevealDelay())
 		return false
 	}
 	if time.Now().UTC().UnixMilli() < revealAt {
+		left := time.Until(time.UnixMilli(revealAt).UTC())
+		if left > 40*time.Millisecond {
+			h.scheduleDurakBitoReveal(gameID, left)
+		}
 		return false
 	}
 	if err := state.FinishBitoReveal(); err != nil {
@@ -799,9 +803,11 @@ func (h *GamesHandler) healDurakBitoReveal(ctx context.Context, gameID string, m
 	return true
 }
 
-// scheduleDurakBitoReveal — после хода: через 2с дожать отбой и разослать state.
-func (h *GamesHandler) scheduleDurakBitoReveal(gameID string) {
-	delay := durak.BitoRevealDelay
+// scheduleDurakBitoReveal — после хода дожать отбой и разослать state.
+func (h *GamesHandler) scheduleDurakBitoReveal(gameID string, delay time.Duration) {
+	if delay <= 0 {
+		delay = durak.BitoRevealDelay
+	}
 	go func() {
 		timer := time.NewTimer(delay + 50*time.Millisecond)
 		defer timer.Stop()
@@ -826,13 +832,17 @@ func (h *GamesHandler) healDurakTakeReveal(ctx context.Context, gameID string, m
 	if state == nil || state.Status != durak.StatusActive || state.Phase != durak.PhaseTakeReveal {
 		return false
 	}
-	revealAt, missing := durakRevealDeadlineMs(m["take_reveal_at"], durak.TakeRevealDelay)
+	revealAt, missing := durakRevealDeadlineMs(m["take_reveal_at"], state.ActiveRevealDelay())
 	if missing {
 		h.Rdb.HSet(ctx, "game:"+gameID, "take_reveal_at", strconv.FormatInt(revealAt, 10))
-		h.scheduleDurakTakeReveal(gameID)
+		h.scheduleDurakTakeReveal(gameID, state.ActiveRevealDelay())
 		return false
 	}
 	if time.Now().UTC().UnixMilli() < revealAt {
+		left := time.Until(time.UnixMilli(revealAt).UTC())
+		if left > 40*time.Millisecond {
+			h.scheduleDurakTakeReveal(gameID, left)
+		}
 		return false
 	}
 	if err := state.FinishTakeReveal(); err != nil {
@@ -864,9 +874,11 @@ func (h *GamesHandler) healDurakTakeReveal(ctx context.Context, gameID string, m
 	return true
 }
 
-// scheduleDurakTakeReveal — через 2с после подкида→«Беру» отдать карты защитнику.
-func (h *GamesHandler) scheduleDurakTakeReveal(gameID string) {
-	delay := durak.TakeRevealDelay
+// scheduleDurakTakeReveal — после подкида→«Беру» отдать карты защитнику.
+func (h *GamesHandler) scheduleDurakTakeReveal(gameID string, delay time.Duration) {
+	if delay <= 0 {
+		delay = durak.TakeRevealDelay
+	}
 	go func() {
 		timer := time.NewTimer(delay + 50*time.Millisecond)
 		defer timer.Stop()
@@ -1024,6 +1036,9 @@ func (h *GamesHandler) healDurakShortHands(ctx context.Context, gameID string, m
 // Возвращает true, если состояние записали в Redis.
 func (h *GamesHandler) healDurakDefenderEmpty(ctx context.Context, gameID string, m map[string]string, state *durak.State) bool {
 	if state == nil || state.Status != durak.StatusActive || len(state.Table) == 0 {
+		return false
+	}
+	if state.Phase == durak.PhaseBitoReveal || state.Phase == durak.PhaseTakeReveal {
 		return false
 	}
 	def := state.DefenderIndex()
@@ -1354,7 +1369,7 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	fields := []any{"state", encoded}
 	if state.Status == durak.StatusActive && state.Phase == durak.PhaseBitoReveal {
 		// Пауза показа стола: без таймера хода / forfeit, через 2с — отбой.
-		revealAt := time.Now().UTC().Add(durak.BitoRevealDelay).UnixMilli()
+		revealAt := time.Now().UTC().Add(state.ActiveRevealDelay()).UnixMilli()
 		fields = append(fields,
 			"bito_reveal_at", strconv.FormatInt(revealAt, 10),
 			"take_reveal_at", "0",
@@ -1364,7 +1379,7 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		)
 	} else if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
 		// Пауза перед взятием: все видят подкид, через 2с — карты защитнику.
-		revealAt := time.Now().UTC().Add(durak.TakeRevealDelay).UnixMilli()
+		revealAt := time.Now().UTC().Add(state.ActiveRevealDelay()).UnixMilli()
 		fields = append(fields,
 			"take_reveal_at", strconv.FormatInt(revealAt, 10),
 			"bito_reveal_at", "0",
@@ -1396,10 +1411,10 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	// Broadcast.
 	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	if state.Status == durak.StatusActive && state.Phase == durak.PhaseBitoReveal {
-		h.scheduleDurakBitoReveal(gameID)
+		h.scheduleDurakBitoReveal(gameID, state.ActiveRevealDelay())
 	}
 	if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
-		h.scheduleDurakTakeReveal(gameID)
+		h.scheduleDurakTakeReveal(gameID, state.ActiveRevealDelay())
 	}
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
@@ -1927,7 +1942,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 		}
 		fields := []any{"state", encoded}
 		if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
-			revealAt := time.Now().UTC().Unix() + int64(durak.TakeRevealDelay/time.Second)
+			revealAt := time.Now().UTC().Add(state.ActiveRevealDelay()).UnixMilli()
 			fields = append(fields,
 				"take_reveal_at", strconv.FormatInt(revealAt, 10),
 				"bito_reveal_at", "0",
@@ -1950,7 +1965,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 		h.promoteDurakFinishedPlayers(ctx, gameID, fresh, state)
 		h.broadcastDurakState(ctx, gameID, fresh, state, nil)
 		if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
-			h.scheduleDurakTakeReveal(gameID)
+			h.scheduleDurakTakeReveal(gameID, state.ActiveRevealDelay())
 		}
 		if state.Status == durak.StatusOver {
 			if state.LoserIndex < 0 {

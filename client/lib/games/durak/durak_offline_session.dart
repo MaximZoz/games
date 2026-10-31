@@ -6,7 +6,8 @@ import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
 import 'package:multigames_client/games/durak/durak_hand_sort.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
-import 'package:multigames_client/games/games_repository.dart' show GamesException;
+import 'package:multigames_client/games/games_repository.dart'
+    show GamesException;
 
 /// Локальная партия Дурака с ботами — тот же [DurakGameView], что и онлайн.
 class OfflineDurakSession extends ChangeNotifier {
@@ -31,6 +32,7 @@ class OfflineDurakSession extends ChangeNotifier {
   static const Duration botHoldRetry = Duration(milliseconds: 400);
   static const Duration bitoRevealDelay = Duration(milliseconds: 1400);
   static const Duration takeRevealDelay = Duration(milliseconds: 1000);
+  static const Duration lastTrickRevealDelay = Duration(seconds: 2);
 
   /// Как [OpeningDealGrace] на сервере — боты не ходят во время стартовой раздачи.
   static Duration openingDealGrace(int players, {int extraCards = 0}) {
@@ -119,9 +121,7 @@ class OfflineDurakSession extends ChangeNotifier {
   DurakGameView toView() {
     final g = _game;
     final trumpCard = g.openTrumpCard ??
-        (g.bito.isNotEmpty
-            ? g.bito.last
-            : PlayingCard(Rank.ace, g.trump));
+        (g.bito.isNotEmpty ? g.bito.last : PlayingCard(Rank.ace, g.trump));
     final phase = _revealPhase ?? _phaseOf(g.turn);
     final hands = <DurakHandView>[
       for (var i = 0; i < g.playerCount; i++)
@@ -327,7 +327,9 @@ class OfflineDurakSession extends ChangeNotifier {
     _revealPhase = phase;
     _lastWasTake = wasTake;
     _revealTimer?.cancel();
-    final delay = wasTake ? takeRevealDelay : bitoRevealDelay;
+    final delay = _game.completingRevealEndsMatch()
+        ? lastTrickRevealDelay
+        : (wasTake ? takeRevealDelay : bitoRevealDelay);
     _revealTimer = Timer(delay, () {
       if (_disposed) return;
       try {
@@ -349,8 +351,7 @@ class OfflineDurakSession extends ChangeNotifier {
       if (_game.defenderIndex != me && _game.isAlive(_game.defenderIndex)) {
         return _game.defenderIndex;
       }
-      if (_game.canThrowIn(_game.attackerIndex) &&
-          _game.attackerIndex != me) {
+      if (_game.canThrowIn(_game.attackerIndex) && _game.attackerIndex != me) {
         return _game.attackerIndex;
       }
       return null;
@@ -445,8 +446,7 @@ class OfflineDurakSession extends ChangeNotifier {
       if (!acted) {
         if (_game.canConfirmThrowAll && _game.throwerIndex == liveIdx) {
           _game.confirmThrowAll(playerIndex: liveIdx);
-        } else if (_game.canAttackerSayBito &&
-            _game.throwerIndex == liveIdx) {
+        } else if (_game.canAttackerSayBito && _game.throwerIndex == liveIdx) {
           _applyBito(liveIdx);
         } else if (_game.canAttackerConfirmTake &&
             _game.throwerIndex == liveIdx) {

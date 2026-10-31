@@ -190,8 +190,20 @@ func TestAutoBitoWhenDefenderEmpty(t *testing.T) {
 	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
+	if st.Phase != PhaseBitoReveal {
+		t.Fatalf("phase after auto-bito = %v, want bito_reveal", st.Phase)
+	}
+	if len(st.Table) != 1 || st.Table[0].Defense == nil {
+		t.Fatalf("table should stay visible: %v", st.Table)
+	}
+	if st.ActiveRevealDelay() != BitoRevealDelay {
+		t.Fatalf("mid-game reveal = %v, want %v", st.ActiveRevealDelay(), BitoRevealDelay)
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
 	if st.Phase != PhaseAttack {
-		t.Fatalf("phase after auto-bito = %v, want attack", st.Phase)
+		t.Fatalf("phase after reveal = %v, want attack", st.Phase)
 	}
 	if len(st.Table) != 0 || len(st.BitoPile) != 2 {
 		t.Fatalf("auto-bito table/bito: table=%d bito=%d", len(st.Table), len(st.BitoPile))
@@ -610,6 +622,15 @@ func TestDefenderEmptyPassesTurnWhenFinished(t *testing.T) {
 	if err := st.Defend(1, ace, 0); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
+	if st.Phase != PhaseBitoReveal || len(st.Table) == 0 || st.Table[0].Defense == nil {
+		t.Fatalf("empty-hand defense stays visible, phase=%s table=%v", st.Phase, st.Table)
+	}
+	if st.ActiveRevealDelay() != BitoRevealDelay {
+		t.Fatalf("game continues, delay=%v", st.ActiveRevealDelay())
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
 	if st.Status != StatusActive {
 		t.Fatalf("status=%v want active (ещё двое играют)", st.Status)
 	}
@@ -890,6 +911,15 @@ func TestBothEmptyIsDraw(t *testing.T) {
 	if err := st.Defend(1, Card{10, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
+	if st.Phase != PhaseBitoReveal || len(st.Table) == 0 || st.Table[0].Defense == nil {
+		t.Fatalf("last defense must stay on the table, phase=%s table=%v", st.Phase, st.Table)
+	}
+	if st.ActiveRevealDelay() != LastTrickRevealDelay {
+		t.Fatalf("last trick delay = %v, want %v", st.ActiveRevealDelay(), LastTrickRevealDelay)
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
 	if st.Status != StatusOver {
 		t.Fatalf("status = %v, want over", st.Status)
 	}
@@ -1127,6 +1157,15 @@ func TestBothEmptyAfterDoubleDefendIsDraw(t *testing.T) {
 	if err := st.Defend(1, Card{10, Diamonds}, 1); err != nil {
 		t.Fatalf("defend2: %v", err)
 	}
+	if st.Phase != PhaseBitoReveal {
+		t.Fatalf("phase=%s want bito_reveal before the draw", st.Phase)
+	}
+	if st.ActiveRevealDelay() != LastTrickRevealDelay {
+		t.Fatalf("delay=%v want last trick", st.ActiveRevealDelay())
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
 	if st.Status != StatusOver {
 		t.Fatalf("status=%v, want over", st.Status)
 	}
@@ -1163,6 +1202,11 @@ func TestBothEmptyAfterThrowInIsDraw(t *testing.T) {
 	}
 	if err := st.Defend(1, Card{10, Hearts}, -1); err != nil {
 		t.Fatalf("defend2: %v", err)
+	}
+	if st.Phase == PhaseBitoReveal {
+		if err := st.FinishBitoReveal(); err != nil {
+			t.Fatalf("FinishBitoReveal: %v", err)
+		}
 	}
 	if st.Status != StatusOver || st.LoserIndex != -1 {
 		t.Fatalf("status=%v loser=%d, want over/-1", st.Status, st.LoserIndex)
@@ -1654,5 +1698,83 @@ func TestAutoBitoWhenNobodyCanThrow(t *testing.T) {
 	}
 	if st.Phase != PhaseAttack {
 		t.Fatalf("phase=%s want attack", st.Phase)
+	}
+}
+
+// Последний неполный отбой: карта, которой побили, остаётся на столе пару секунд.
+func TestLastPartialDefenseStaysVisible(t *testing.T) {
+	king := Card{13, Spades}
+	ten := Card{10, Hearts}
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{},
+			{ten},
+		},
+		Table: []Pair{
+			{Attack: Card{9, Hearts}},
+			{Attack: king},
+		},
+		Deck:          nil,
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Defend(1, ten, 0); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if st.Phase != PhaseBitoReveal || st.PendingResolve != pendingResolveDefenderEmpty {
+		t.Fatalf("phase=%s pending=%s", st.Phase, st.PendingResolve)
+	}
+	if len(st.Table) != 2 || st.Table[0].Defense == nil {
+		t.Fatalf("defense must stay visible: %v", st.Table)
+	}
+	if st.ActiveRevealDelay() != LastTrickRevealDelay {
+		t.Fatalf("delay=%v", st.ActiveRevealDelay())
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("finish: %v", err)
+	}
+	if st.Status != StatusOver {
+		t.Fatalf("status=%s", st.Status)
+	}
+	found := false
+	for _, c := range st.Hands[0] {
+		if c == king {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("king should return to attacker, hand=%v", st.Hands[0])
+	}
+}
+
+func TestLastTakeRevealIsLonger(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{},
+			{{6, Clubs}},
+		},
+		Table: []Pair{
+			{Attack: Card{9, Hearts}},
+		},
+		Deck:          nil,
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseTakeReveal,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if st.ActiveRevealDelay() != LastTrickRevealDelay {
+		t.Fatalf("take delay=%v", st.ActiveRevealDelay())
+	}
+	st.Deck = []Card{{8, Clubs}, {9, Clubs}}
+	if st.ActiveRevealDelay() != TakeRevealDelay {
+		t.Fatalf("mid take delay=%v", st.ActiveRevealDelay())
 	}
 }

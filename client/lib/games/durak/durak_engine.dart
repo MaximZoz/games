@@ -124,6 +124,10 @@ class DurakGame {
   /// Оба вышли — ничья (колода пуста, карт ни у кого нет).
   bool endedInDraw = false;
 
+  /// Пустая рука защитника, но не все пары биты: пауза, потом
+  /// [_resolveDefenderEmpty], а не обычная бита.
+  bool _pendingDefenderEmpty = false;
+
   int get playerCount => hands.length;
   int get defenderIndex => nextAliveAfter(attackerIndex);
 
@@ -131,8 +135,7 @@ class DurakGame {
   bool get isOver => loserIndex != null || endedInDraw;
 
   /// Верхняя карта козыря (лежит открытой в основании колоды).
-  PlayingCard? get openTrumpCard =>
-      deck.isEmpty ? null : deck.cards.last;
+  PlayingCard? get openTrumpCard => deck.isEmpty ? null : deck.cards.last;
 
   bool isFinished(int idx) => finishedIndices.contains(idx);
 
@@ -177,11 +180,9 @@ class DurakGame {
     return s;
   }
 
-  int get undefendedCount =>
-      table.where((p) => p.defense == null).length;
+  int get undefendedCount => table.where((p) => p.defense == null).length;
 
-  bool get isFirstRoundActive =>
-      !isOver && bito.isEmpty && firstRound;
+  bool get isFirstRoundActive => !isOver && bito.isEmpty && firstRound;
 
   int get maxAttacksThisRound {
     final beaten = table.where((p) => p.isBeaten).length;
@@ -297,9 +298,7 @@ class DurakGame {
     if (!isAlive(next)) return const [];
     if (hands[next].length < table.length + 1) return const [];
     final rank = table.first.attack.rank;
-    return hands[idx]
-        .where((c) => c.rank == rank)
-        .toList(growable: false);
+    return hands[idx].where((c) => c.rank == rank).toList(growable: false);
   }
 
   bool get canDefenderTake =>
@@ -327,8 +326,8 @@ class DurakGame {
 
   /// Положить сразу несколько карт атаки/подкида.
   void attackMany(List<PlayingCard> cards, {int? playerIndex}) {
-    final pIndex = playerIndex ??
-        (table.isEmpty ? attackerIndex : throwerIndex);
+    final pIndex =
+        playerIndex ?? (table.isEmpty ? attackerIndex : throwerIndex);
     if (cards.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
@@ -415,12 +414,7 @@ class DurakGame {
     hands[pIndex].remove(card);
     table[idx] = table[idx].withDefense(card);
     if (hands[pIndex].isEmpty) {
-      // Все пары отбиты — пауза «бито», чтобы было видно чем отбились.
-      if (table.every((p) => p.isBeaten)) {
-        turn = DurakTurn.bitoReveal;
-        return;
-      }
-      _resolveDefenderEmpty();
+      _closeEmptyDefender();
       return;
     }
     if (table.every((p) => p.isBeaten)) {
@@ -476,7 +470,7 @@ class DurakGame {
       throw const DurakRuleError('брать сейчас нельзя');
     }
     if (hands[defenderIndex].isEmpty) {
-      _resolveDefenderEmpty();
+      _closeEmptyDefender();
       return;
     }
     turn = DurakTurn.takeFollowUp;
@@ -534,7 +528,7 @@ class DurakGame {
     passed.add(pIndex);
     final next = _nextThrowerAfter(pIndex);
     if (next < 0) {
-      turn = DurakTurn.bitoReveal;
+      _enterBitoReveal();
       return;
     }
     throwerIndex = next;
@@ -561,13 +555,87 @@ class DurakGame {
   /// Завершить паузу показа стола (бито / взятие) — как online reveal.
   void completeReveal() {
     if (turn == DurakTurn.bitoReveal) {
+      final pending = _pendingDefenderEmpty;
+      _pendingDefenderEmpty = false;
+      if (pending) {
+        _resolveDefenderEmpty();
+        return;
+      }
       _resolveBito();
       return;
     }
     if (turn == DurakTurn.takeReveal) {
+      _pendingDefenderEmpty = false;
       _resolveTake();
+    }
+  }
+
+  /// Последний ход: после разбора стола партия кончится.
+  bool completingRevealEndsMatch() {
+    if (turn == DurakTurn.takeReveal) return _wouldEndAfterTake();
+    if (turn != DurakTurn.bitoReveal) return false;
+    if (_pendingDefenderEmpty) return _wouldEndAfterDefenderEmpty();
+    return _wouldEndAfterBito();
+  }
+
+  void _enterBitoReveal({bool pendingDefenderEmpty = false}) {
+    _pendingDefenderEmpty = pendingDefenderEmpty;
+    turn = DurakTurn.bitoReveal;
+  }
+
+  /// Пустая рука защитника. Полный отбой и последний неполный — на паузе,
+  /// чтобы было видно, чем били или что вернулось атакующему.
+  void _closeEmptyDefender() {
+    if (table.isNotEmpty && table.every((p) => p.isBeaten)) {
+      _enterBitoReveal();
       return;
     }
+    if (_wouldEndAfterDefenderEmpty()) {
+      _enterBitoReveal(pendingDefenderEmpty: true);
+      return;
+    }
+    _pendingDefenderEmpty = false;
+    _resolveDefenderEmpty();
+  }
+
+  bool _wouldEndAfterBito() => _endsIfHands((i) => hands[i].length);
+
+  bool _wouldEndAfterTake() {
+    final di = defenderIndex;
+    var extra = 0;
+    for (final p in table) {
+      extra++;
+      if (p.defense != null) extra++;
+    }
+    return _endsIfHands((i) {
+      var n = hands[i].length;
+      if (i == di) n += extra;
+      return n;
+    });
+  }
+
+  bool _wouldEndAfterDefenderEmpty() {
+    final atk = attackerIndex;
+    var back = 0;
+    for (final p in table) {
+      if (p.defense == null) back++;
+    }
+    return _endsIfHands((i) {
+      var n = hands[i].length;
+      if (i == atk) n += back;
+      return n;
+    });
+  }
+
+  /// Колода пуста и карты останутся не больше чем у одного.
+  bool _endsIfHands(int Function(int index) handLen) {
+    if (deck.isNotEmpty) return false;
+    var withCards = 0;
+    for (var i = 0; i < hands.length; i++) {
+      if (!isAlive(i)) continue;
+      if (handLen(i) > 0) withCards++;
+    }
+    return withCards <= 1;
   }
 
   int _nextThrowerAfter(int idx) {
@@ -588,8 +656,7 @@ class DurakGame {
         return;
       }
       final eligible = canThrowInSeat(throwerIndex);
-      final hasCards =
-          eligible && legalThrowInCards(throwerIndex).isNotEmpty;
+      final hasCards = eligible && legalThrowInCards(throwerIndex).isNotEmpty;
       if (hasCards) return;
       if (eligible) passed.add(throwerIndex);
       final next = _nextThrowerAfter(throwerIndex);
@@ -597,7 +664,7 @@ class DurakGame {
         if (turn == DurakTurn.takeFollowUp) {
           turn = DurakTurn.takeReveal;
         } else {
-          turn = DurakTurn.bitoReveal;
+          _enterBitoReveal();
         }
         return;
       }
@@ -606,7 +673,7 @@ class DurakGame {
     if (turn == DurakTurn.takeFollowUp) {
       turn = DurakTurn.takeReveal;
     } else if (turn == DurakTurn.attackerFollowUp) {
-      turn = DurakTurn.bitoReveal;
+      _enterBitoReveal();
     }
   }
 

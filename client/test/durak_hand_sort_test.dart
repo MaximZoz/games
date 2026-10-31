@@ -304,9 +304,11 @@ void main() {
         isTrue,
       );
       final hand = v.hands[0].cards!.map((c) => c.toPlayingCard()).toList();
-      final sorted = List.of(hand)..sort(
-        (a, b) => compareDurakHandCards(a, b, v.trumpCard.toPlayingCard().suit),
-      );
+      final sorted = List.of(hand)
+        ..sort(
+          (a, b) =>
+              compareDurakHandCards(a, b, v.trumpCard.toPlayingCard().suit),
+        );
       expect(v.isOver, isFalse);
       expect(v.firstRound, isTrue);
       expect(v.hasBotOpponent, isTrue);
@@ -371,7 +373,8 @@ void main() {
       g.hands[0]
         ..clear()
         ..add(defense)
-        ..add(PlayingCard(Rank.king, attackSuit == Suit.diamonds ? Suit.spades : Suit.diamonds));
+        ..add(PlayingCard(Rank.king,
+            attackSuit == Suit.diamonds ? Suit.spades : Suit.diamonds));
       g.hands[1]
         ..clear()
         ..add(PlayingCard(Rank.six, g.trump));
@@ -389,6 +392,52 @@ void main() {
       final after = await session.waitUntilRevealDone();
       expect(after.table, isEmpty);
       expect(after.bitoCount, greaterThan(0));
+    });
+
+    test('последний отбой остаётся на столе около двух секунд', () async {
+      final session = OfflineDurakSession.create(
+        humanUserId: 'user-1',
+        deckSize: 36,
+        playerCount: 2,
+        gameId: 'offline:durak:last-trick',
+      );
+      addTearDown(session.dispose);
+      final g = session.engine;
+      g.deck.cards.clear();
+      const attack = PlayingCard(Rank.nine, Suit.hearts);
+      const defense = PlayingCard(Rank.ten, Suit.hearts);
+      g.attackerIndex = 1;
+      g.throwerIndex = 1;
+      g.turn = DurakTurn.defender;
+      g.table
+        ..clear()
+        ..add(const TablePair(attack));
+      g.hands[0]
+        ..clear()
+        ..add(defense);
+      g.hands[1].clear();
+      g.bito.clear();
+      g.finishedIndices.clear();
+      g.loserIndex = null;
+      g.endedInDraw = false;
+
+      final started = DateTime.now();
+      await session.applyMove(type: 'defend', card: defense);
+      expect(session.view.phase, 'bito_reveal');
+      expect(session.view.table, isNotEmpty);
+      expect(g.completingRevealEndsMatch(), isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 1600));
+      expect(session.view.phase, 'bito_reveal');
+      expect(session.view.table, isNotEmpty);
+
+      final after = await session.waitUntilRevealDone();
+      final elapsed = DateTime.now().difference(started);
+      expect(after.table, isEmpty);
+      expect(after.isOver, isTrue);
+      expect(after.isDraw, isTrue);
+      expect(elapsed.inMilliseconds, greaterThanOrEqualTo(1900));
+      expect(elapsed.inMilliseconds, lessThan(3500));
     });
 
     test('restart yields a fresh opening-deal view', () {
@@ -474,7 +523,8 @@ void main() {
         ..add(TablePair(PlayingCard(Rank.ten, attackSuit)));
       g.hands[0]
         ..clear()
-        ..add(PlayingCard(Rank.ten, g.trump == Suit.clubs ? Suit.diamonds : Suit.clubs))
+        ..add(PlayingCard(
+            Rank.ten, g.trump == Suit.clubs ? Suit.diamonds : Suit.clubs))
         ..add(PlayingCard(Rank.king, attackSuit));
       g.hands[1]
         ..clear()
@@ -523,9 +573,8 @@ void main() {
         ..add(PlayingCard(Rank.king, g.trump));
       g.hands[1]
         ..clear()
-        ..add(PlayingCard(Rank.seven, attackSuit == Suit.diamonds
-            ? Suit.spades
-            : Suit.diamonds));
+        ..add(PlayingCard(Rank.seven,
+            attackSuit == Suit.diamonds ? Suit.spades : Suit.diamonds));
 
       expect(session.view.table, isNotEmpty);
       await session.applyMove(type: 'bito');
