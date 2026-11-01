@@ -201,6 +201,12 @@ void main() {
         required int bito,
         required int tablePairs,
         String status = 'active',
+        bool lastWasTake = false,
+        int deckCount = 20,
+        List<DurakHandView> hands = const [
+          DurakHandView(count: 4),
+          DurakHandView(count: 2),
+        ],
       }) {
         return DurakGameView(
           id: 'g',
@@ -211,8 +217,8 @@ void main() {
           deckSize: 36,
           playerIds: const ['a', 'b'],
           players: const [],
-          hands: const [],
-          deckCount: 20,
+          hands: hands,
+          deckCount: deckCount,
           trumpSuit: 'H',
           trumpCard: const DurakApiCard(14, 'H'),
           table: List.generate(
@@ -233,13 +239,34 @@ void main() {
           turnTimeSec: 0,
           turnDeadline: 0,
           stakeBronze: 0,
+          lastWasTake: lastWasTake,
         );
       }
 
       final beforeTake = view(bito: 2, tablePairs: 3);
-      final afterTake = view(bito: 2, tablePairs: 0);
+      final afterTake = view(
+        bito: 2,
+        tablePairs: 0,
+        lastWasTake: true,
+        hands: const [
+          DurakHandView(count: 4),
+          DurakHandView(count: 5),
+        ],
+      );
       expect(isOlderDurak(afterTake, beforeTake), isFalse);
       expect(isOlderDurak(view(bito: 1, tablePairs: 0), beforeTake), isTrue);
+      expect(isOlderDurak(view(bito: 2, tablePairs: 1), beforeTake), isTrue);
+      expect(
+        isOlderDurak(
+          view(bito: 2, tablePairs: 3, deckCount: 24),
+          beforeTake,
+        ),
+        isTrue,
+      );
+      expect(
+        isOlderDurak(beforeTake, afterTake),
+        isTrue,
+      );
     });
 
     test('uno uses eventSeq', () {

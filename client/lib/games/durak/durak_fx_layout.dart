@@ -488,8 +488,68 @@ bool durakShowDoneAfterOpponentTake({
 /// Пауза после посадки отбоя, чтобы было видно чем отбились, затем стол в биту.
 const Duration kDurakBitoAfterDefensePause = Duration(milliseconds: 900);
 
-/// После последнего отбоя стол ещё виден, потом победа и реванш.
-const Duration kDurakFinishAfterLastTrickPause = Duration(milliseconds: 900);
+/// Последний ход: отбой или взятие читаются, и только потом бито.
+const Duration kDurakLastTrickLook = Duration(seconds: 2);
+
+/// Сервер уже подержал последний стол — в биту уходим почти сразу.
+const Duration kDurakBitoFlightLead = Duration(milliseconds: 250);
+
+/// После ухода последнего стола — короткая пауза и экран победы/ничьей.
+const Duration kDurakFinishAfterLastTrickPause = Duration(milliseconds: 450);
+
+/// Сколько раз опросить партию, пока пауза последнего хода (2с) не закроется.
+const int kDurakRevealSettlePolls = 30;
+
+/// Пауза перед уходом последнего стола (бито или взятие).
+///
+/// Середина партии — без дополнительной паузы. Если карты уже лежали,
+/// сервер их подержал: короткий заход в полёт. Если финальный снимок
+/// пришёл раньше, чем карту показали, держим стол [kDurakLastTrickLook].
+Duration durakPauseBeforeClosingFlight({
+  required bool cardsAlreadyVisible,
+  required bool gameEnding,
+}) {
+  if (!gameEnding) return Duration.zero;
+  if (cardsAlreadyVisible) return kDurakBitoFlightLead;
+  return kDurakLastTrickLook;
+}
+
+/// Пауза перед полётом в биту.
+///
+/// В середине партии после отбоя остаётся короткая пауза.
+/// На последнем ходу — [durakPauseBeforeClosingFlight].
+Duration durakPauseBeforeBitoFlight({
+  required bool defensesAlreadyVisible,
+  required bool gameEnding,
+}) {
+  if (!gameEnding) return kDurakBitoAfterDefensePause;
+  return durakPauseBeforeClosingFlight(
+    cardsAlreadyVisible: defensesAlreadyVisible,
+    gameEnding: true,
+  );
+}
+
+/// Итог ждёт, пока последний стол ещё в полёте или на паузе.
+bool durakFinishWaitsForTableFx({
+  required bool hidingTable,
+  required bool tableHold,
+  required bool fxScheduled,
+  required bool flightActive,
+}) =>
+    hidingTable || tableHold || fxScheduled || flightActive;
+
+/// Пустой кадр не стирает уже севшие карты, если это не сама бита и не взятие.
+bool durakKeepSeatedAcrossStaleEmpty({
+  required int seatedCount,
+  required bool bitoGrew,
+  required bool takeJustResolved,
+  required bool tableReveal,
+  required bool hidingTable,
+}) {
+  if (seatedCount <= 0) return false;
+  if (bitoGrew || takeJustResolved || tableReveal || hidingTable) return false;
+  return true;
+}
 
 /// Итог и «Повторить» — только когда пауза после последнего трюка прошла.
 bool durakFinishChromeVisible({

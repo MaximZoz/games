@@ -129,15 +129,61 @@ bool isOlderNardy(NardyGameView incoming, NardyGameView current) {
 bool isOlderTictactoe(GameStateItem incoming, GameStateItem current) =>
     tictactoeProgress(incoming) < tictactoeProgress(current);
 
-bool isOlderBattleship(BattleshipGameView incoming, BattleshipGameView current) =>
+bool isOlderBattleship(
+        BattleshipGameView incoming, BattleshipGameView current) =>
     battleshipProgress(incoming) < battleshipProgress(current);
+
+int durakTableCardCount(DurakGameView view) {
+  var n = 0;
+  for (final pair in view.table) {
+    n++;
+    if (pair.defense != null) n++;
+  }
+  return n;
+}
+
+int durakHandCountAt(DurakGameView view, int index) {
+  if (index < 0 || index >= view.hands.length) return 0;
+  final hand = view.hands[index];
+  final cards = hand.cards;
+  if (cards != null && cards.isNotEmpty) return cards.length;
+  return hand.count;
+}
+
+/// Старый HTTP/WS не должен стирать уже лежащий стол.
+///
+/// Бита растёт отдельно. Взятие — стол пустеет, [lastWasTake] становится
+/// true и рука защитника растёт. Иначе меньший стол или более полная колода
+/// — это откат, из‑за него карты гаснут и появляются снова.
+bool durakIncomingRewindsTable(DurakGameView incoming, DurakGameView current) {
+  if (incoming.bitoCount != current.bitoCount) return false;
+  if (incoming.status != current.status) return false;
+  if (incoming.deckCount > current.deckCount) return true;
+  final inCards = durakTableCardCount(incoming);
+  final curCards = durakTableCardCount(current);
+  if (inCards < curCards) {
+    final took = !current.lastWasTake &&
+        incoming.lastWasTake &&
+        durakHandCountAt(incoming, current.defenderIndex) >
+            durakHandCountAt(current, current.defenderIndex);
+    return !took;
+  }
+  if (current.lastWasTake &&
+      !incoming.lastWasTake &&
+      curCards == 0 &&
+      inCards > 0) {
+    return true;
+  }
+  return false;
+}
 
 bool isOlderDurak(DurakGameView incoming, DurakGameView current) {
   if (incoming.status != 'active' && current.status == 'active') return false;
   if (current.status != 'active' && incoming.status == 'active') return true;
   if (incoming.eliminated.length < current.eliminated.length) return true;
   if (incoming.finished.length < current.finished.length) return true;
-  return incoming.bitoCount < current.bitoCount;
+  if (incoming.bitoCount < current.bitoCount) return true;
+  return durakIncomingRewindsTable(incoming, current);
 }
 
 bool isOlderUno(UnoGameView incoming, UnoGameView current) {
@@ -216,14 +262,14 @@ BattleshipGameView mergeBattleshipMeta(
   return incoming.copyWith(
     p1DisplayName: incoming.p1DisplayName ?? previous.p1DisplayName,
     p2DisplayName: incoming.p2DisplayName ?? previous.p2DisplayName,
-    p1AvatarKind: incoming.p1AvatarKind == 'letter' &&
-            previous.p1AvatarKind != 'letter'
-        ? previous.p1AvatarKind
-        : incoming.p1AvatarKind,
-    p2AvatarKind: incoming.p2AvatarKind == 'letter' &&
-            previous.p2AvatarKind != 'letter'
-        ? previous.p2AvatarKind
-        : incoming.p2AvatarKind,
+    p1AvatarKind:
+        incoming.p1AvatarKind == 'letter' && previous.p1AvatarKind != 'letter'
+            ? previous.p1AvatarKind
+            : incoming.p1AvatarKind,
+    p2AvatarKind:
+        incoming.p2AvatarKind == 'letter' && previous.p2AvatarKind != 'letter'
+            ? previous.p2AvatarKind
+            : incoming.p2AvatarKind,
     p1AvatarValue: incoming.p1AvatarValue ?? previous.p1AvatarValue,
     p2AvatarValue: incoming.p2AvatarValue ?? previous.p2AvatarValue,
     p1FrameCode: incoming.p1FrameCode ?? previous.p1FrameCode,
