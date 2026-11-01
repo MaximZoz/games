@@ -105,7 +105,8 @@ void main() {
       final anyTrump = trumps.values.any((l) => l.isNotEmpty);
       expect(anyTrump, isTrue);
       final minEach = trumps.map(
-        (k, v) => MapEntry(k, v.isEmpty ? 100 : v.reduce((a, b) => a < b ? a : b)),
+        (k, v) =>
+            MapEntry(k, v.isEmpty ? 100 : v.reduce((a, b) => a < b ? a : b)),
       );
       final expected =
           minEach.entries.reduce((a, b) => a.value <= b.value ? a : b).key;
@@ -189,6 +190,7 @@ void main() {
       game.defend(PlayingCard(Rank.seven, Suit.hearts), playerIndex: 1);
       expect(game.turn, DurakTurn.bitoReveal);
       expect(game.table, isNotEmpty);
+      expect(game.completingRevealEndsMatch(), isFalse);
       game.completeReveal();
       expect(game.table, isEmpty);
       expect(game.bito.length, 2);
@@ -210,6 +212,8 @@ void main() {
       game.attack(PlayingCard(Rank.nine, Suit.hearts), playerIndex: 0);
       game.defend(PlayingCard(Rank.ten, Suit.hearts), playerIndex: 1);
       expect(game.turn, DurakTurn.bitoReveal);
+      expect(game.table, isNotEmpty);
+      expect(game.completingRevealEndsMatch(), isTrue);
       game.completeReveal();
       expect(game.isOver, isTrue);
       expect(game.endedInDraw, isTrue);
@@ -253,6 +257,34 @@ void main() {
       expect(game.hands[0], contains(king));
       expect(game.attackerIndex, 1);
       expect(game.canDefenderTake, isFalse);
+    });
+
+    test('last partial defense stays on the table before the game ends', () {
+      final king = PlayingCard(Rank.king, Suit.spades);
+      final ten = PlayingCard(Rank.ten, Suit.hearts);
+      final game = DurakGame(
+        hands: [
+          <PlayingCard>[],
+          [ten],
+        ],
+        deck: Deck([]),
+        trump: Suit.clubs,
+        attackerIndex: 0,
+        turn: DurakTurn.defender,
+        table: [
+          TablePair(PlayingCard(Rank.nine, Suit.hearts)),
+          TablePair(king),
+        ],
+      );
+      game.defend(ten, playerIndex: 1, pairIndex: 0);
+      expect(game.turn, DurakTurn.bitoReveal);
+      expect(game.table.length, 2);
+      expect(game.table.first.defense, ten);
+      expect(game.completingRevealEndsMatch(), isTrue);
+      game.completeReveal();
+      expect(game.isOver, isTrue);
+      expect(game.table, isEmpty);
+      expect(game.hands[0], contains(king));
     });
 
     test('defend can beat any undefended pair, not only the first', () {
@@ -322,6 +354,8 @@ void main() {
       game.take();
       // Нечего подкинуть вдогонку → пауза take_reveal, затем забор стола.
       expect(game.turn, DurakTurn.takeReveal);
+      expect(game.table, isNotEmpty);
+      expect(game.completingRevealEndsMatch(), isTrue);
       game.completeReveal();
       expect(game.hands[1].length, 2);
       // Не осталось карт у атакующего → он победил, защитник — дурак.
@@ -351,7 +385,8 @@ void main() {
       expect(game.turn, DurakTurn.defender);
       game.take();
       expect(game.turn, DurakTurn.takeFollowUp);
-      expect(game.canAttackWith(PlayingCard(Rank.nine, Suit.diamonds), 0), isTrue);
+      expect(
+          game.canAttackWith(PlayingCard(Rank.nine, Suit.diamonds), 0), isTrue);
       game.attack(PlayingCard(Rank.nine, Suit.diamonds), playerIndex: 0);
       expect(game.table.length, 2);
       expect(game.turn, DurakTurn.takeFollowUp);
@@ -378,8 +413,7 @@ void main() {
           ],
         ],
         deck: Deck([
-          for (var i = 0; i < 12; i++)
-            PlayingCard(Rank.ten, Suit.clubs),
+          for (var i = 0; i < 12; i++) PlayingCard(Rank.ten, Suit.clubs),
         ]),
         trump: Suit.clubs,
         attackerIndex: 0,
@@ -388,7 +422,8 @@ void main() {
       );
       game.attack(PlayingCard(Rank.six, Suit.hearts), playerIndex: 0);
       expect(game.turn, DurakTurn.defender);
-      expect(game.canTransferWith(PlayingCard(Rank.six, Suit.diamonds), 1), isTrue);
+      expect(game.canTransferWith(PlayingCard(Rank.six, Suit.diamonds), 1),
+          isTrue);
       game.transfer(PlayingCard(Rank.six, Suit.diamonds), playerIndex: 1);
       expect(game.attackerIndex, 1);
       expect(game.defenderIndex, 2);

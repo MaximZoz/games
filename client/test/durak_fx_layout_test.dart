@@ -453,9 +453,74 @@ void main() {
     });
 
     test('победа и реванш — после паузы на последний отбой', () {
+      expect(kDurakLastTrickLook.inMilliseconds, 2000);
+      expect(
+        durakPauseBeforeClosingFlight(
+          cardsAlreadyVisible: true,
+          gameEnding: false,
+        ),
+        Duration.zero,
+      );
+      expect(
+        durakPauseBeforeClosingFlight(
+          cardsAlreadyVisible: false,
+          gameEnding: true,
+        ),
+        kDurakLastTrickLook,
+      );
+      expect(
+        durakPauseBeforeBitoFlight(
+          defensesAlreadyVisible: true,
+          gameEnding: true,
+        ),
+        kDurakBitoFlightLead,
+      );
+      expect(
+        durakPauseBeforeBitoFlight(
+          defensesAlreadyVisible: false,
+          gameEnding: true,
+        ),
+        kDurakLastTrickLook,
+      );
+      expect(
+        durakPauseBeforeBitoFlight(
+          defensesAlreadyVisible: true,
+          gameEnding: false,
+        ),
+        kDurakBitoAfterDefensePause,
+      );
+      expect(
+        durakFinishWaitsForTableFx(
+          hidingTable: false,
+          tableHold: true,
+          fxScheduled: false,
+          flightActive: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakKeepSeatedAcrossStaleEmpty(
+          seatedCount: 2,
+          bitoGrew: false,
+          takeJustResolved: false,
+          tableReveal: false,
+          hidingTable: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakKeepSeatedAcrossStaleEmpty(
+          seatedCount: 2,
+          bitoGrew: false,
+          takeJustResolved: true,
+          tableReveal: false,
+          hidingTable: false,
+        ),
+        isFalse,
+      );
       expect(
         kDurakFinishAfterLastTrickPause.inMilliseconds,
-        greaterThanOrEqualTo(800),
+        inInclusiveRange(300, 700),
       );
       expect(
         durakFinishChromeVisible(isOver: true, finishReady: false),

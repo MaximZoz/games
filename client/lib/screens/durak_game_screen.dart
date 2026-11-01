@@ -260,6 +260,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   int _prevDeckCount = -1;
   int _prevBitoCount = -1;
+  bool _prevLastWasTake = false;
   int _prevHandLen = -1;
 
   /// Атакующий/защитник до последнего синка — для порядка добора после биты.
@@ -2597,6 +2598,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         : _prevHandLen;
     _prevDeckCount = v.deckCount;
     _prevBitoCount = v.bitoCount;
+    _prevLastWasTake = v.lastWasTake;
     _prevHandLen = handLen;
     _prevTable = List.of(v.table);
     _prevAttackerIndex = v.attackerIndex;
@@ -2628,7 +2630,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       await _waitOfflineRevealDone();
     }
     DurakGameView? fresh;
-    for (var i = 0; i < 14; i++) {
+    for (var i = 0; i < kDurakRevealSettlePolls; i++) {
       if (!mounted) return (view: fresh, failed: false);
       try {
         fresh = await ref.read(durakRepositoryProvider).getGame(widget.gameId);
@@ -3035,6 +3037,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final handLen = _handLenOf(view);
     _prevDeckCount = view.deckCount;
     _prevBitoCount = view.bitoCount;
+    _prevLastWasTake = view.lastWasTake;
     _prevHandLen = handLen;
     _prevAttackerIndex = view.attackerIndex;
     _prevDefenderIndex = view.defenderIndex;
@@ -3080,6 +3083,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final dealt = plan.values.fold<int>(0, (sum, n) => sum + n);
     _prevTable = const [];
     _lastNonEmptyTable = const [];
+    _prevLastWasTake = false;
     _prevBitoCount = freezeCount + flown;
     _prevDeckCount = (deckBefore - dealt).clamp(0, deckBefore);
     final mine = plan[view.myIndex] ?? 0;
@@ -3886,6 +3890,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _leadRevealHiddenSeat = null;
     _prevDeckCount = -1;
     _prevBitoCount = -1;
+    _prevLastWasTake = false;
     _prevHandLen = -1;
     _prevAttackerIndex = -1;
     _prevDefenderIndex = -1;
@@ -4054,7 +4059,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (_takeTableHold != null || view.table.isNotEmpty) return;
     if (_lastNonEmptyTable.isEmpty) return;
     final bitoGrew = _prevBitoCount >= 0 && view.bitoCount > _prevBitoCount;
-    if (!bitoGrew && !view.lastWasTake) return;
+    final takeJust = view.lastWasTake && !_prevLastWasTake;
+    if (!bitoGrew && !takeJust) return;
     _takeTableHold = List.of(_lastNonEmptyTable);
   }
 
@@ -4239,13 +4245,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final knownTable = _prevTable.isNotEmpty ? _prevTable : _lastNonEmptyTable;
     // Пустой кадр между ходами не должен забывать уже лежащие карты:
     // иначе свой подкид гаснет и прилетает второй раз.
+    final bitoGrewNow = _prevBitoCount >= 0 && view.bitoCount > _prevBitoCount;
+    // lastWasTake живёт весь следующий заход. Пустой кадр тогда — не взятие.
+    final takeJust = view.lastWasTake && !_prevLastWasTake;
+    // Снимок «уже показывали» до очистки seated: иначе последний отбой
+    // считается невидимым и пауза перед битой удваивается.
+    final visibleBefore = <String>{
+      ..._shownTableCardIds,
+      ..._seatedTableCardIds,
+    };
     final keepEmptyTable = view.table.isEmpty &&
-        durakRetainTableAcrossEmptyFrame(
-          bitoGrew: _prevBitoCount >= 0 && view.bitoCount > _prevBitoCount,
-          lastWasTake: view.lastWasTake,
-          tableReveal: view.isTableReveal,
-          hidingTable: _hidingTable,
-        );
+        (durakRetainTableAcrossEmptyFrame(
+              bitoGrew: bitoGrewNow,
+              lastWasTake: takeJust,
+              tableReveal: view.isTableReveal,
+              hidingTable: _hidingTable,
+            ) ||
+            durakKeepSeatedAcrossStaleEmpty(
+              seatedCount: _seatedTableCardIds.length,
+              bitoGrew: bitoGrewNow,
+              takeJustResolved: takeJust,
+              tableReveal: view.isTableReveal,
+              hidingTable: _hidingTable,
+            ));
     if (view.table.isNotEmpty) {
       _lastNonEmptyTable = List.of(view.table);
       if (_firstLeadVisible) _firstLeadVisible = false;
@@ -4308,6 +4330,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           : 0;
       _prevDeckCount = view.deckCount;
       _prevBitoCount = view.bitoCount;
+      _prevLastWasTake = view.lastWasTake;
       _prevHandLen = handLen;
       _prevTable = List.of(view.table);
       _prevAttackerIndex = view.attackerIndex;
@@ -4343,6 +4366,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
       _prevDeckCount = deck;
       _prevBitoCount = bito;
+      _prevLastWasTake = view.lastWasTake;
       _prevHandLen = handLen;
       _prevTable = List.of(view.table);
       _prevAttackerIndex = view.attackerIndex;
@@ -4375,7 +4399,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     } else if (prevTableSnapshot.isNotEmpty) {
       tableSnapshot = prevTableSnapshot;
     } else if (view.table.isEmpty &&
-        view.lastWasTake &&
+        takeJust &&
         _lastNonEmptyTable.isNotEmpty) {
       tableSnapshot = List<DurakTablePairApi>.of(_lastNonEmptyTable);
     } else {
@@ -4394,12 +4418,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         tableSnapshot.isNotEmpty &&
         view.table.isEmpty &&
         !bitoGrew &&
-        view.lastWasTake;
+        takeJust;
     final remoteTake = takeResolved && refillDefender != view.myIndex;
     final localTakeResolved = takeResolved && refillDefender == view.myIndex;
 
     _prevDeckCount = deck;
     _prevBitoCount = bito;
+    _prevLastWasTake = view.lastWasTake;
     _prevHandLen = handLen;
     // Невидимый отбой не помечаем «уже был» — иначе смена хода его проглотит.
     // Пустой промежуточный кадр стол не затирает: подкид иначе моргает.
@@ -4451,6 +4476,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _armOppDealPending(oppDealsDeck);
       _armDeckFreeze(prevDeck);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) {
+          _markFxDone();
+          return;
+        }
+        await _pauseBeforeLastTrickLeaves(
+          tableSnapshot,
+          view,
+          visibleBefore,
+        );
         if (!mounted) {
           _markFxDone();
           return;
@@ -4513,6 +4547,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
       _armDeckFreeze(prevDeck);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) {
+          _markFxDone();
+          return;
+        }
+        await _pauseBeforeLastTrickLeaves(
+          tableSnapshot,
+          view,
+          visibleBefore,
+        );
         if (!mounted) {
           _markFxDone();
           return;
@@ -4588,7 +4631,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           _markFxDone();
           return;
         }
-        await Future<void>.delayed(kDurakBitoAfterDefensePause);
+        final defensesVisible = tableSnapshot.isEmpty ||
+            tableSnapshot.every((p) {
+              final defense = p.defense?.toPlayingCard();
+              if (defense == null) return true;
+              final id = _cardId(defense);
+              return visibleBefore.contains(id) ||
+                  _wasShownOnTable(defense) ||
+                  _isSeatedTableCard(defense);
+            });
+        await Future<void>.delayed(durakPauseBeforeBitoFlight(
+          defensesAlreadyVisible: defensesVisible,
+          gameEnding: view.isOver,
+        ));
         if (!mounted) {
           _markFxDone();
           return;
@@ -4899,6 +4954,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     // База — финальное состояние сервера, чтобы не перезапустить FX.
     _prevDeckCount = view.deckCount;
     _prevBitoCount = view.bitoCount;
+    _prevLastWasTake = view.lastWasTake;
     _prevHandLen = myHand.length;
     _prevTable = List.of(view.table);
     _prevAttackerIndex = view.attackerIndex;
@@ -5395,6 +5451,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _retainLocalAttacksInPrev();
     _prevDeckCount = v.deckCount;
     _prevBitoCount = v.bitoCount;
+    _prevLastWasTake = v.lastWasTake;
     _prevHandLen = v.hands.length > v.myIndex && v.myIndex >= 0
         ? (v.hands[v.myIndex].cards?.length ?? v.hands[v.myIndex].count)
         : _prevHandLen;
@@ -5945,12 +6002,73 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   Future<void> _revealFinishAfterLastTrick() async {
     await _waitForTableLandings();
     if (!mounted) return;
+    await _waitForClosingTableFx();
+    if (!mounted) return;
     await Future<void>.delayed(kDurakFinishAfterLastTrickPause);
     if (!mounted) return;
     setState(() {
       _finishChromeReady = true;
       _clearMoveChrome(keepForFinish: false);
     });
+  }
+
+  /// Итог не показываем, пока последний стол ещё лежит или летит.
+  Future<void> _waitForClosingTableFx() async {
+    var waited = 0;
+    const step = 40;
+    const cap = 8000;
+    while (mounted && waited < cap) {
+      if (!durakFinishWaitsForTableFx(
+        hidingTable: _hidingTable,
+        tableHold: _takeTableHold != null,
+        fxScheduled: _fxScheduled,
+        flightActive: _cardFlightActive || _localRoundFx,
+      )) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: step));
+      waited += step;
+    }
+  }
+
+  /// Стол для отрисовки. Уже лежащие карты не гаснут на пустом кадре,
+  /// а своя бита не возвращает стол, пока сервер ещё на паузе.
+  List<DurakTablePairApi> _sourceTableForPaint(DurakGameView view) {
+    final hold = _takeTableHold;
+    if (hold != null) return hold;
+    if (_localRoundPrevLock && view.isTableReveal) return const [];
+    if (view.table.isNotEmpty) return view.table;
+    final remembered = _prevTable.isNotEmpty ? _prevTable : _lastNonEmptyTable;
+    if (remembered.isEmpty) return const [];
+    final bitoGrew = _prevBitoCount >= 0 && view.bitoCount > _prevBitoCount;
+    final takeJust = view.lastWasTake && !_prevLastWasTake;
+    if (bitoGrew || takeJust || view.isTableReveal || _hidingTable) {
+      return _localPlayActive ? remembered : const [];
+    }
+    return remembered;
+  }
+
+  /// Последний ход: если карту ещё не показали, стол остаётся на паузе.
+  Future<void> _pauseBeforeLastTrickLeaves(
+    List<DurakTablePairApi> snapshot,
+    DurakGameView view,
+    Set<String> visibleBefore,
+  ) async {
+    final visible = snapshot.isEmpty ||
+        snapshot.every((p) {
+          if (!visibleBefore.contains(_cardId(p.attack.toPlayingCard()))) {
+            return false;
+          }
+          final defense = p.defense?.toPlayingCard();
+          if (defense == null) return true;
+          return visibleBefore.contains(_cardId(defense));
+        });
+    final delay = durakPauseBeforeClosingFlight(
+      cardsAlreadyVisible: visible,
+      gameEnding: view.isOver,
+    );
+    if (delay == Duration.zero) return;
+    await Future<void>.delayed(delay);
   }
 
   void _maybeSettleGame(DurakGameView view) {
@@ -5971,12 +6089,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           !view.isDraw &&
           view.myPlace == 1) {
         _confettiArmed = true;
-      }
-      if (view.isOver &&
-          (_prevGameStatus == 'active' || _prevGameStatus == null)) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _snapVisualToServer();
-        });
       }
       _prevGameStatus = view.status;
       return;
@@ -6061,7 +6173,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        _snapVisualToServer();
         _clearSessionForFinishedGame();
         setState(() {
           _rematchLobbyId = null;
@@ -7861,10 +7972,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     // При «Взять» рисуем снимок стола — сервер уже пустой, карты улетают по одной.
     // Во время своего хода пустой кадр WS не должен гасить уже лежащие карты.
     final hold = _takeTableHold;
-    final sourceTable = hold ??
-        ((view.table.isEmpty && _localPlayActive)
-            ? (_prevTable.isNotEmpty ? _prevTable : _lastNonEmptyTable)
-            : view.table);
+    final sourceTable = _sourceTableForPaint(view);
     final tableItems = <Widget>[
       if (!_hidingTable) ...[
         for (var i = 0; i < sourceTable.length; i++)

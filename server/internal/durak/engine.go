@@ -43,6 +43,14 @@ const BitoRevealDelay = 1 * time.Second
 // TakeRevealDelay — пауза перед взятием, чтобы все увидели подкинутые карты.
 const TakeRevealDelay = 1 * time.Second
 
+// LastTrickRevealDelay — последний ход: отбой или взятие остаются на столе,
+// и только потом бито и экран победы/ничьей.
+const LastTrickRevealDelay = 2 * time.Second
+
+// pendingResolveDefenderEmpty — bito_reveal закрывается не обычной битой:
+// отбитые пары в отбой, неотбитые атаки возвращаются атакующему.
+const pendingResolveDefenderEmpty = "defender_empty"
+
 // OpeningDealGrace — сколько ждать стартовую раздачу на клиенте, прежде чем
 // запускать таймер хода (6 карт × игроки × ~280мс + козырь + запас).
 func OpeningDealGrace(players int) time.Duration {
@@ -193,6 +201,9 @@ type State struct {
 	Passed map[int]bool `json:"passed,omitempty"`
 	// Помечает: последнее действие — take (для UI и разгона следующих ходов).
 	LastWasTake bool `json:"last_was_take,omitempty"`
+	// PendingResolve — как закрыть bito_reveal, если это не обычная бита.
+	// pendingResolveDefenderEmpty: отбитые в отбой, неотбитые — атакующему.
+	PendingResolve string `json:"pending_resolve,omitempty"`
 	// Первый отбой партии: на стол не больше 5 карт (включая первую атаку).
 	// Без omitempty — иначе false/отсутствие поля путает клиент и лимит 5.
 	FirstRound bool `json:"first_round"`
@@ -378,6 +389,7 @@ func (s *State) beginBitoReveal() error {
 			return ErrCannotBito
 		}
 	}
+	s.PendingResolve = ""
 	s.Phase = PhaseBitoReveal
 	s.ThrowerIndex = s.AttackerIndex
 	return nil
@@ -390,6 +402,11 @@ func (s *State) FinishBitoReveal() error {
 	}
 	if s.Phase != PhaseBitoReveal {
 		return ErrCannotBito
+	}
+	if s.PendingResolve == pendingResolveDefenderEmpty {
+		s.PendingResolve = ""
+		s.resolveDefenderEmpty()
+		return nil
 	}
 	return s.resolveBito()
 }
@@ -716,6 +733,7 @@ func (s *State) beginTakeReveal() error {
 	if len(s.Table) == 0 {
 		return ErrCannotTake
 	}
+	s.PendingResolve = ""
 	s.Phase = PhaseTakeReveal
 	return nil
 }
@@ -764,10 +782,9 @@ func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	}
 	s.removeFromHand(playerIdx, card)
 	s.Table[idx].Defense = &card
-	// Рука пуста: отбитое — в биту, неотбитое — обратно атакующему.
+	// Рука пуста: стол ещё виден (чем отбились), потом бита.
 	if len(s.Hands[playerIdx]) == 0 {
-		s.resolveDefenderEmpty()
-		return nil
+		return s.closeEmptyDefender()
 	}
 	if s.UndefendedIndex() < 0 {
 		s.Phase = PhaseAttackFollow
@@ -880,8 +897,7 @@ func (s *State) Take(playerIdx int) error {
 	}
 	// Рука пуста: это не «взять», а закрытие раунда (бита + возврат неотбитых).
 	if len(s.Hands[playerIdx]) == 0 {
-		s.resolveDefenderEmpty()
-		return nil
+		return s.closeEmptyDefender()
 	}
 	// В подкидном разрешаем «взять» на любой фазе защиты/атаки, пока стол не пуст.
 	s.Phase = PhaseTakeFollow
@@ -950,6 +966,138 @@ func (s *State) SayBito(playerIdx int) error {
 	return s.advanceThrowerOrFinish()
 }
 
+// closeEmptyDefender — пустая рука защитника. Полный отбой держим на паузе,
+// чтобы было видно, чем побили. Неполный отбой в конце партии — тоже.
+func (s *State) closeEmptyDefender() error {
+	if s.tableFullyDefended() {
+		return s.beginBitoReveal()
+	}
+	if s.wouldEndAfterDefenderEmpty() {
+		return s.beginDefenderEmptyReveal()
+	}
+	s.resolveDefenderEmpty()
+	return nil
+}
+
+func (s *State) tableFullyDefended() bool {
+	if len(s.Table) == 0 {
+		return false
+	}
+	for _, p := range s.Table {
+		if p.Defense == nil {
+			return false
+		}
+	}
+	return true
+}
+
+// beginDefenderEmptyReveal — стол с последним отбоем остаётся, потом
+// resolveDefenderEmpty (неотбитые вернутся атакующему).
+func (s *State) beginDefenderEmptyReveal() error {
+	if s.Status != StatusActive || len(s.Table) == 0 {
+		s.resolveDefenderEmpty()
+		return nil
+	}
+	s.PendingResolve = pendingResolveDefenderEmpty
+	s.Phase = PhaseBitoReveal
+	s.ThrowerIndex = s.AttackerIndex
+	return nil
+}
+
+// ActiveRevealDelay — пауза текущей фазы показа стола.
+// Последний ход, после которого партия кончается, держим дольше.
+func (s *State) ActiveRevealDelay() time.Duration {
+	if s == nil {
+		return BitoRevealDelay
+	}
+	switch s.Phase {
+	case PhaseTakeReveal:
+		if s.wouldEndAfterTake() {
+			return LastTrickRevealDelay
+		}
+		return TakeRevealDelay
+	case PhaseBitoReveal:
+		if s.PendingResolve == pendingResolveDefenderEmpty {
+			if s.wouldEndAfterDefenderEmpty() {
+				return LastTrickRevealDelay
+			}
+			return BitoRevealDelay
+		}
+		if s.wouldEndAfterBito() {
+			return LastTrickRevealDelay
+		}
+		return BitoRevealDelay
+	default:
+		return BitoRevealDelay
+	}
+}
+
+func (s *State) wouldEndAfterBito() bool {
+	return s.endsIfHands(func(i int) int { return len(s.Hands[i]) })
+}
+
+func (s *State) wouldEndAfterTake() bool {
+	di := s.DefenderIndex()
+	extra := 0
+	for _, p := range s.Table {
+		extra++
+		if p.Defense != nil {
+			extra++
+		}
+	}
+	return s.endsIfHands(func(i int) int {
+		n := len(s.Hands[i])
+		if i == di {
+			n += extra
+		}
+		return n
+	})
+}
+
+func (s *State) wouldEndAfterDefenderEmpty() bool {
+	atk := s.AttackerIndex
+	back := 0
+	for _, p := range s.Table {
+		if p.Defense == nil {
+			back++
+		}
+	}
+	return s.endsIfHands(func(i int) int {
+		n := len(s.Hands[i])
+		if i == atk {
+			n += back
+		}
+		return n
+	})
+}
+
+// endsIfHands — колода пуста и после разбора стола карт останется не больше чем у одного.
+func (s *State) endsIfHands(handLen func(int) int) bool {
+	if s == nil || len(s.Deck) > 0 {
+		return false
+	}
+	with := 0
+	for i := range s.Hands {
+		if s.IsEliminated(i) {
+			continue
+		}
+		finished := false
+		for _, f := range s.FinishedIndices {
+			if f == i {
+				finished = true
+				break
+			}
+		}
+		if finished {
+			continue
+		}
+		if handLen(i) > 0 {
+			with++
+		}
+	}
+	return with <= 1
+}
+
 // resolveDefenderEmpty — у защитника кончились карты: отбитые пары в отбой,
 // неотбитые атаки возвращаются атакующему; ход — бывшему защитнику (как после бито),
 // а если он уже вышел «в ноль» — следующему живому.
@@ -995,7 +1143,11 @@ func (s *State) resolveDefenderEmpty() {
 }
 
 // HealDefenderEmpty — дожать застрявшее состояние (пустая рука + стол).
+// Паузу показа стола не срываем: её закрывает FinishBitoReveal.
 func (s *State) HealDefenderEmpty() {
+	if s.Phase == PhaseBitoReveal || s.Phase == PhaseTakeReveal {
+		return
+	}
 	s.resolveDefenderEmpty()
 }
 
