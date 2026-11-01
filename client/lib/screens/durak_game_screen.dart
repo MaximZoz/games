@@ -115,6 +115,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Оптимистичная защита: индекс пары → карта.
   final Map<int, PlayingCard> _optimisticDefends = {};
 
+  /// Атака, на которую сел оптимистичный отбой. Чужой индекс его не наследует.
+  final Map<int, PlayingCard> _optimisticDefendAttack = {};
+
   /// Во время взятия разрешить анимацию перестановки веера.
   bool _fanAnimDuringBusy = false;
 
@@ -429,7 +432,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _concealOpeningHand = false;
       // Сыгранные карты не возвращаем: сервер ещё может держать их в руке.
       _optimisticAttacks.clear();
-      _optimisticDefends.clear();
+      _clearOptimisticDefends();
       _seatedTableCardIds.clear();
       _shownTableCardIds.clear();
       _fanAnimDuringBusy = false;
@@ -971,10 +974,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   DurakTablePairApi _tablePairForRender(DurakTablePairApi pair, int i) {
     final def = pair.defense?.toPlayingCard();
-    if (durakTableDefenseHiddenDuringFlight(
-      localDefendLock: _flightDefendIdx == i && _flightLockTable,
-      remoteDefenseFlying: def != null && _isRemoteTableCardHidden(def),
-    )) {
+    final atk = pair.attack.toPlayingCard();
+    if (def == null ||
+        def == atk ||
+        durakTableDefenseHiddenDuringFlight(
+          localDefendLock: _flightDefendIdx == i && _flightLockTable,
+          remoteDefenseFlying: _isRemoteTableCardHidden(def),
+        )) {
       return DurakTablePairApi(attack: pair.attack, defense: null);
     }
     return pair;
@@ -1002,10 +1008,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     return pair;
   }
 
-  PlayingCard? _visibleOptimisticDefense(int i) {
+  PlayingCard? _visibleOptimisticDefense(int i, PlayingCard attack) {
     if (_flightDefendIdx == i && _flightLockTable) return null;
     final opt = _optimisticDefends[i];
-    if (opt == null) return null;
+    if (opt == null || opt == attack) return null;
+    final remembered = _optimisticDefendAttack[i];
+    if (remembered != null && remembered != attack) return null;
     if (_isRemoteTableCardHidden(opt)) return null;
     return opt;
   }
@@ -1888,6 +1896,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           // Иначе карта гаснет между dismiss и появлением защиты.
           setState(() {
             _optimisticDefends[defendIdx] = cards.first;
+            if (defendIdx < view.table.length) {
+              _optimisticDefendAttack[defendIdx] =
+                  view.table[defendIdx].attack.toPlayingCard();
+            }
             _seatTableCard(cards.first);
             _flightLockTable = false;
             _flightDefendIdx = null;
@@ -1939,7 +1951,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           }
           setState(() {
             for (final c in cards) {
-              _optimisticAttacks.remove(c);
+              if (_tableHasAttack(v, c)) {
+                _seatTableCard(c);
+                _optimisticAttacks.remove(c);
+              }
             }
             _retireOptimisticDefenses(v);
             _dragGlobal = null;
@@ -1964,7 +1979,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 _forgetOptimisticDefense(c);
               }
             }
-            _optimisticDefends.clear();
+            _clearOptimisticDefends();
             _restoreToHandOrder(cards);
             _unmarkPlayedAway(cards);
             _dragGlobal = null;
@@ -2225,7 +2240,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         final after = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
         setState(() {
           for (final c in cards) {
-            _optimisticAttacks.remove(c);
+            if (_tableHasAttack(after, c)) {
+              _seatTableCard(c);
+              _optimisticAttacks.remove(c);
+            }
           }
           _fanCloseAfterPlay = false;
           _suppressFanLayoutAnim = false;
@@ -3050,6 +3068,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _optimisticDefends.removeWhere(
       (_, card) => !_tableContainsDefense(view.table, card),
     );
+    _optimisticDefendAttack.removeWhere(
+      (index, _) => !_optimisticDefends.containsKey(index),
+    );
     final liveIds = <String>{
       for (final pair in view.table) ...[
         _cardId(pair.attack.toPlayingCard()),
@@ -3188,20 +3209,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       playerCount: before.hands.length,
     );
     final fly = durakDealFlyDuration(compact: _fit.compact);
-    var mineAsBacks = false;
     var mineAsFaces = false;
     for (final seat in order) {
       if (!mounted || !_gameUiActive) break;
       final n = plan[seat] ?? 0;
       if (n <= 0) continue;
-      final faces = _settledDealView(ready: ready, early: early);
       if (seat == before.myIndex) {
+        // Рубашки в свой веер не кладём. Лица — как только сервер их назвал.
+        final faces = _settledDealView(ready: ready, early: early);
         if (faces != null) {
-          await _dealMyFacesOnly(before, faces);
+          _adoptDealtFaces(before, faces);
           mineAsFaces = true;
-        } else {
-          await _flyBacksIntoMyFan(n, fly);
-          mineAsBacks = true;
         }
         continue;
       }
@@ -3215,12 +3233,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         _dealFaceDownTail = 0;
         _oppVisualFloor.clear();
       });
-    } else if (settled.view != null && !settled.view!.isTableReveal) {
-      if (mineAsBacks) {
-        _adoptDealtFaces(before, settled.view!);
-      } else if (!mineAsFaces && (plan[before.myIndex] ?? 0) > 0) {
-        await _dealMyFacesOnly(before, settled.view!);
-      }
+    } else if (!mineAsFaces &&
+        settled.view != null &&
+        !settled.view!.isTableReveal &&
+        (plan[before.myIndex] ?? 0) > 0) {
+      _adoptDealtFaces(before, settled.view!);
     }
     if (mounted) {
       setState(() => _oppDealPending.clear());
@@ -3249,20 +3266,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       for (final card in hand)
         if (!base.contains(card)) card,
     ];
-  }
-
-  Future<void> _dealMyFacesOnly(
-    DurakGameView before,
-    DurakGameView fresh,
-  ) async {
-    final incoming = _incomingAgainstBaseline(before, fresh);
-    if (!mounted || !_gameUiActive || incoming.isEmpty) return;
-    await _animateDealCardsToFan(
-      incoming,
-      flyDuration: durakDealFlyDuration(compact: _fit.compact),
-      settleMs: 70,
-      keepFanFreeze: true,
-    );
   }
 
   /// Рубашки в хвосте веера становятся лицами. Второй полёт с колоды не нужен.
@@ -3320,63 +3323,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       refillDefender: before.defenderIndex,
       deckCountBefore: deckBefore,
     );
-  }
-
-  /// Рубашка садится в хвост веера и сразу отпускает overlay.
-  Future<void> _flyBacksIntoMyFan(int count, Duration fly) async {
-    if (count <= 0 || !mounted || !_gameUiActive) return;
-    for (var i = 0; i < count; i++) {
-      if (!mounted || !_gameUiActive) return;
-      final tailIndex = _dealFaceDownTail;
-      setState(() {
-        final base = _handOrder?.length ?? 0;
-        final n = (base + _dealFaceDownTail + 1).clamp(1, 52);
-        final lay = _handFanVisualLayout(
-          n,
-          MediaQuery.sizeOf(context).width,
-        );
-        _dealFaceDownTail += 1;
-        _frozenFanCardSize = lay.cardSize;
-        _frozenFanHandCount = n;
-        _suppressFanLayoutAnim = false;
-        _fanAnimDuringBusy = true;
-      });
-      await awaitDurakFrame();
-      if (!mounted) return;
-      await awaitDurakFrame();
-      if (!mounted) return;
-      final slot = _fanKey.currentState?.globalRectOfFaceDownTail(tailIndex);
-      final land = slot ??
-          Rect.fromCenter(
-            center: Offset(_flyScreen.width / 2, _flyScreen.height * 0.82),
-            width: _handCardSize.width,
-            height: _handCardSize.height,
-          );
-      _consumeDeckFreezeSlot();
-      final ticket = await playCardFlyAnimation(
-        context: context,
-        card: const PlayingCard(Rank.six, Suit.spades),
-        cardSize: _tableCardSize,
-        from: _deckDealFromRect(jitter: i * 1.6),
-        to: land,
-        duration: fly,
-        curve: kDurakFlyCurve,
-        faceDown: true,
-        playSfx: false,
-        beginScale: 1,
-        endScale: land.width / _tableCardSize.width,
-        beginAngle: 0.12,
-        endAngle: 0.04,
-        arcLift: 16,
-        keepAtEnd: true,
-      );
-      if (!mounted) {
-        ticket.dismiss();
-        return;
-      }
-      await awaitDurakFrame();
-      ticket.dismiss();
-    }
   }
 
   /// Рубашка соперника садится в его веер, не висит до ответа сервера.
@@ -3906,7 +3852,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _leftTableCards.clear();
     _remoteFlyingCardIds.clear();
     _optimisticAttacks.clear();
-    _optimisticDefends.clear();
+    _clearOptimisticDefends();
     _seatedTableCardIds.clear();
     _shownTableCardIds.clear();
     _selected.clear();
@@ -4020,24 +3966,66 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _lastNonEmptyTable = strip(_lastNonEmptyTable);
   }
 
+  void _clearOptimisticDefends() {
+    _optimisticDefends.clear();
+    _optimisticDefendAttack.clear();
+  }
+
   void _retireOptimisticDefenses(DurakGameView? view) {
     if (view == null) return;
+    final hand = _myHandOf(view).toSet();
     final drop = <int>[];
     for (final entry in _optimisticDefends.entries) {
-      final open = entry.key >= 0 &&
-          entry.key < view.table.length &&
+      final inRange = entry.key >= 0 && entry.key < view.table.length;
+      final attackNow =
+          inRange ? view.table[entry.key].attack.toPlayingCard() : null;
+      final remembered = _optimisticDefendAttack[entry.key];
+      final open = inRange &&
           (view.table[entry.key].defense == null ||
               view.table[entry.key].defense!.toPlayingCard() == entry.value);
-      if (durakOptimisticDefenseRetires(
+      final retired = durakOptimisticDefenseRetires(
         serverHasDefense: _tableContainsDefense(view.table, entry.value),
         attackStillOpen: open &&
             view.table[entry.key].defense?.toPlayingCard() != entry.value,
+      );
+      final stillInHand = hand.contains(entry.value) &&
+          !_playedAwayCards.contains(entry.value) &&
+          !_flyingFromHand.contains(entry.value);
+      if (durakDropOptimisticDefense(
+        retired: retired,
+        attackMatches: remembered != null &&
+            attackNow != null &&
+            remembered == attackNow,
+        cardStillInHand: stillInHand,
       )) {
         drop.add(entry.key);
       }
     }
     for (final i in drop) {
       _optimisticDefends.remove(i);
+      _optimisticDefendAttack.remove(i);
+    }
+  }
+
+  bool _tableHasAttack(DurakGameView? view, PlayingCard card) {
+    if (view == null) return false;
+    for (final pair in view.table) {
+      if (pair.attack.toPlayingCard() == card) return true;
+    }
+    return false;
+  }
+
+  /// Подкид остаётся на столе, пока сервер его не подтвердил.
+  void _releaseOptimisticAttacksNowOnTable(DurakGameView view) {
+    if (_optimisticAttacks.isEmpty) return;
+    final done = <PlayingCard>[
+      for (final card in _optimisticAttacks)
+        if (_tableHasAttack(view, card)) card,
+    ];
+    for (final card in done) {
+      _seatTableCard(card);
+      _optimisticAttacks.remove(card);
+      _flyingToTable.remove(card);
     }
   }
 
@@ -4235,6 +4223,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   void _maybeRunTableFx(DurakGameView view) {
+    _retireOptimisticDefenses(view);
+    _releaseOptimisticAttacksNowOnTable(view);
     // Локальная бита/добор уже на экране. Не съедаем prev и не стартуем второй FX.
     if (_suppressRemoteBitoFx || _localRoundFx) {
       _fxNeedsReplay = true;
@@ -4455,7 +4445,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     // Соперник «Взял»: стол → его веер, затем добор из колоды.
     if (remoteTake) {
       // Прячем добор до анимации — в этом же кадре, до отрисовки веера.
-      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      if (incoming.isNotEmpty) {
+        _keepDrawnFacesInFan(incoming, _suitFromApi(view.trumpSuit));
+      }
       _beginTableFx();
       final taker = refillDefender;
       // В дельте руки соперника — и взятые со стола, и добор; анимируем раздельно.
@@ -4517,18 +4509,37 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
     // Я забрал стол (после подкида вдогонку) — карты со стола в мой веер.
     if (localTakeResolved) {
-      final taken = _flattenTableCardsTopFirst(tableSnapshot);
+      // Защита, которая всё ещё в веере, — ложный отбой. Её не забираем.
+      final fanBefore = <PlayingCard>{...?_handOrder};
+      final takeTable = <DurakTablePairApi>[
+        for (final pair in tableSnapshot)
+          DurakTablePairApi(
+            attack: pair.attack,
+            defense: pair.defense != null &&
+                    fanBefore.contains(pair.defense!.toPlayingCard())
+                ? null
+                : pair.defense,
+          ),
+      ];
+      final taken = <PlayingCard>[];
+      final seenTaken = <PlayingCard>{};
+      for (final card in _flattenTableCardsTopFirst(takeTable)) {
+        if (fanBefore.contains(card) || !seenTaken.add(card)) continue;
+        taken.add(card);
+      }
       final takenSet = taken.toSet();
       // Добор = новые карты руки минус взятые со стола.
       final dealtOnly = [
         for (final c in incoming)
           if (!takenSet.contains(c)) c,
       ];
-      if (dealtOnly.isNotEmpty) _pendingDealCards.addAll(dealtOnly);
+      if (dealtOnly.isNotEmpty) {
+        _keepDrawnFacesInFan(dealtOnly, _suitFromApi(view.trumpSuit));
+      }
       _armOppDealPending(oppDeals);
       _beginTableFx();
       // Hold + порядок веера синхронно — без кадра пустого стола.
-      _takeTableHold = tableSnapshot;
+      _takeTableHold = takeTable;
       _leftTableCards.clear();
       _suppressNextDealFx = true;
       if (taken.isNotEmpty) {
@@ -4561,10 +4572,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           return;
         }
         // froms после кадра с hold — ключи ещё на месте.
-        final froms = _tableCardGlobalRectsTopFirst(tableSnapshot);
-        if (tableSnapshot.isNotEmpty && _gameUiActive) {
+        final froms = _tableCardGlobalRectsTopFirst(takeTable);
+        if (takeTable.isNotEmpty && _gameUiActive) {
           await _animateTableToFan(
-            tableSnapshot,
+            takeTable,
             fromOverrides: froms,
             cardsOverride: taken,
             onCardLaunch: (card) {
@@ -4608,7 +4619,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     // Сначала бито (в т.ч. авто после пустой руки), потом добор — иначе
     // дельта руки проглотит анимацию стола в отбой.
     if (bitoGrew && !_hidingTable && !_suppressRemoteBitoFx) {
-      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      if (incoming.isNotEmpty) {
+        _keepDrawnFacesInFan(incoming, _suitFromApi(view.trumpSuit));
+      }
       // Скрыть добор соперников на время биты — не мелькать до колоды.
       _armOppDealPending(oppDeals);
       _beginTableFx();
@@ -4717,7 +4730,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           });
         }
       } else {
-        if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+        if (incoming.isNotEmpty) {
+        _keepDrawnFacesInFan(incoming, _suitFromApi(view.trumpSuit));
+      }
         _armOppDealPending(oppDeals);
         _beginTableFx();
         WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -4762,7 +4777,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     } else if (deckDropped > 0 &&
         (incoming.isNotEmpty || oppDeals.isNotEmpty)) {
       // Колода уменьшилась — добор после биты/взятия (prev уже мог сдвинуться).
-      if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      if (incoming.isNotEmpty) {
+        _keepDrawnFacesInFan(incoming, _suitFromApi(view.trumpSuit));
+      }
       _armOppDealPending(oppDeals);
       _beginTableFx();
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -5214,7 +5231,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     ticket.dismiss();
   }
 
-  /// Добор после биты/взятия: колода → мой веер и веера соперников (рубашки).
+  /// Добор после биты/взятия.
+  ///
+  /// Свои карты сразу лицом в веере. Соперникам по-прежнему летят рубашки.
   Future<void> _animateRefillDeals({
     required DurakGameView view,
     required List<PlayingCard> myIncoming,
@@ -5234,7 +5253,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     // иначе кадр: карты появились → исчезли → летят из колоды.
     _ensureOppDealPending(oppDeals);
     setState(() {
-      if (myCards.isNotEmpty) _pendingDealCards.addAll(myCards);
+      if (myCards.isNotEmpty) {
+        _keepDrawnFacesInFan(myCards, _suitFromApi(view.trumpSuit));
+      }
       if (deckCountBefore != null) {
         _armDeckFreeze(deckCountBefore);
       }
@@ -5245,37 +5266,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       defender: refillDefender,
       playerCount: view.hands.length,
     );
-    var dealtMine = false;
     for (final idx in order) {
       if (!mounted || !_gameUiActive) return;
-      if (idx == view.myIndex) {
-        if (dealtMine || myCards.isEmpty) continue;
-        dealtMine = true;
-        await awaitDurakFrame();
-        if (!mounted || !_gameUiActive) return;
-        await _animateDealCardsToFan(
-          myCards,
-          flyDuration: durakDealFlyDuration(compact: _fit.compact),
-          settleMs: 70,
-          keepFanFreeze: true,
-        );
-        continue;
-      }
+      if (idx == view.myIndex) continue;
       final n = oppDeals[idx] ?? 0;
       if (n <= 0) continue;
       await _animateDealToOpponent(idx, n);
     }
-    // Если меня не было в order (защита edge-case) — добор себе в конце.
-    if (!dealtMine && myCards.isNotEmpty && mounted && _gameUiActive) {
-      await _animateDealCardsToFan(
-        myCards,
-        flyDuration: durakDealFlyDuration(compact: _fit.compact),
-        settleMs: 70,
-        keepFanFreeze: true,
-      );
-    }
     if (mounted) {
       _pendingDealCards.removeAll(myCards);
+      _dealFaceDownTail = 0;
       _clearDeckCountFreeze();
       if (myCards.isNotEmpty) _releaseFanLayoutSmooth();
     }
@@ -5481,40 +5481,53 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   /// Разделить руку на «уже в веере» и «добрать из колоды» (ровно [expect]).
+  ///
+  /// Карты, которые уже лежат в веере, не уходят в добор — даже если дельта
+  /// длины руки больше числа новых карт.
   List<PlayingCard> _splitHandForDeal(List<PlayingCard> hand, int expect) {
     final n = expect.clamp(0, hand.length);
     if (n <= 0) {
       _seedHandOrderIfEmpty(hand);
       return const [];
     }
-    final keepCount = hand.length - n;
-    final prevSet = _handOrder?.toSet() ?? {};
-    final keep = <PlayingCard>[];
-    final rest = <PlayingCard>[];
-    for (final c in hand) {
-      if (prevSet.contains(c) && keep.length < keepCount) {
-        keep.add(c);
-      } else {
-        rest.add(c);
-      }
-    }
-    // Не хватает «старых» в order (пустой/устаревший) — оставляем в веере
-    // keepCount карт, с колоды анимируем только n.
-    while (keep.length < keepCount && rest.isNotEmpty) {
-      keep.add(rest.removeAt(0));
-    }
-    final incoming =
-        rest.length > n ? rest.sublist(rest.length - n) : List.of(rest);
-    // Лишнее из rest (если вдруг) — тоже в веер, не на анимацию.
-    for (final c in rest) {
-      if (!incoming.contains(c) && !keep.contains(c)) keep.add(c);
-    }
+    final prev = _handOrder ?? const <PlayingCard>[];
+    final incoming = durakFreshDealCards(
+      serverHand: hand,
+      handOrder: prev,
+      expect: n,
+    );
+    final incomingSet = incoming.toSet();
     final gone = _locallyGoneFromHand;
-    _handOrder = [
-      for (final c in keep)
-        if (!gone.contains(c)) c
+    final next = <PlayingCard>[
+      for (final c in prev)
+        if (hand.contains(c) && !gone.contains(c) && !incomingSet.contains(c))
+          c,
     ];
+    for (final c in hand) {
+      if (incomingSet.contains(c) || gone.contains(c) || next.contains(c)) {
+        continue;
+      }
+      next.add(c);
+    }
+    _handOrder = next;
     return incoming;
+  }
+
+  /// Лица своего добора сразу в веер. Рубашку не показываем.
+  void _keepDrawnFacesInFan(List<PlayingCard> cards, Suit trump) {
+    if (cards.isEmpty || _concealOpeningHand) return;
+    _pendingDealCards.removeAll(cards);
+    _flyingFromHand.removeAll(cards);
+    _dealFaceDownTail = 0;
+    final order = <PlayingCard>[
+      for (final c in (_handOrder ?? const <PlayingCard>[]))
+        if (!cards.contains(c)) c,
+      ...cards,
+    ];
+    order.sort((a, b) => _compareHandCards(a, b, trump));
+    _handOrder = order;
+    _fanOpenAfterIncoming = true;
+    _fanAnimDuringBusy = true;
   }
 
   void _releaseStuckRemoteCards(
@@ -8017,8 +8030,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 defendTargetKey: hold == null && i == defendPairIndex
                     ? _defendTargetKey
                     : null,
-                optimisticDefense:
-                    hold == null ? _visibleOptimisticDefense(i) : null,
+                optimisticDefense: hold == null
+                    ? _visibleOptimisticDefense(
+                        i,
+                        sourceTable[i].attack.toPlayingCard(),
+                      )
+                    : null,
               ),
             ),
         if (hold == null)

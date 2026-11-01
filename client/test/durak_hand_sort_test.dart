@@ -752,4 +752,32 @@ void main() {
       );
     });
   });
+
+  group('durakFreshDealCards', () {
+    const queen = PlayingCard(Rank.queen, Suit.hearts);
+    const eight = PlayingCard(Rank.eight, Suit.spades);
+    const seven = PlayingCard(Rank.seven, Suit.clubs);
+
+    test('раздутая дельта не выкидывает даму из веера', () {
+      expect(
+        durakFreshDealCards(
+          serverHand: const [queen, eight, seven],
+          handOrder: const [queen, eight],
+          expect: 6,
+        ),
+        const [seven],
+      );
+    });
+
+    test('карта, которая уже в веере, не считается добором', () {
+      expect(
+        durakFreshDealCards(
+          serverHand: const [queen],
+          handOrder: const [queen],
+          expect: 3,
+        ),
+        isEmpty,
+      );
+    });
+  });
 }

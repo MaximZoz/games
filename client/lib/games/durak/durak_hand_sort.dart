@@ -93,6 +93,26 @@ bool durakOpeningDealConcealsFan({
 }) =>
     prevDeckUninitialized && shouldAnimateOpening;
 
+/// Карты добора, которых ещё нет в веере.
+///
+/// Уже лежащие карты не становятся «новыми», даже если [expect] раздут.
+/// Иначе дама уходит из веера и летит рубашкой с колоды.
+List<PlayingCard> durakFreshDealCards({
+  required List<PlayingCard> serverHand,
+  required List<PlayingCard> handOrder,
+  required int expect,
+}) {
+  if (expect <= 0 || serverHand.isEmpty) return const [];
+  final prev = handOrder.toSet();
+  final fresh = <PlayingCard>[
+    for (final c in serverHand)
+      if (!prev.contains(c)) c,
+  ];
+  if (fresh.isEmpty) return const [];
+  if (expect >= fresh.length) return List<PlayingCard>.of(fresh);
+  return fresh.sublist(fresh.length - expect);
+}
+
 /// Слот в веере до полёта: карта уже в порядке, лицо прячет hidden.
 ///
 /// Иначе foldCardIn целится в центр пустого веера, а вся рука вспыхивает
