@@ -470,6 +470,14 @@ Duration durakFanLayoutTweenDuration({
         ? kDurakFanPlayCloseDuration
         : durakLayoutTweenDuration(compact: compact);
 
+/// Чья рамка хода. На паузе «Беру»/«Бито» актёра нет — не подсвечивать соперника.
+bool durakActorSeatHighlighted({
+  required int actor,
+  required int seat,
+  required bool tableReveal,
+}) =>
+    !tableReveal && actor >= 0 && actor == seat;
+
 /// Показать «Беру», пока держим паузу после взятия соперником.
 bool durakShowOpponentTakeLabel({
   required bool takeFollow,

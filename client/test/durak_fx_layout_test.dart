@@ -827,6 +827,25 @@ void main() {
       );
     });
 
+    test('пауза Беру не подсвечивает соперника', () {
+      expect(
+        durakActorSeatHighlighted(actor: -1, seat: 0, tableReveal: true),
+        isFalse,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: -1, seat: 1, tableReveal: true),
+        isFalse,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: 1, seat: 1, tableReveal: false),
+        isTrue,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: 1, seat: 0, tableReveal: false),
+        isFalse,
+      );
+    });
+
     test('ложный отбой на чужой атаке или карте из веера снимается', () {
       expect(
         durakDropOptimisticDefense(

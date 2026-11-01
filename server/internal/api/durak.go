@@ -908,15 +908,15 @@ func (h *GamesHandler) armDurakTurnAfterDeal(ctx context.Context, gameID string,
 		return false
 	}
 	deadline, _ := strconv.ParseInt(m["turn_deadline"], 10, 64)
-	if deadline > 0 {
-		return false
-	}
 	graceUntil, _ := strconv.ParseInt(m["deal_grace_until"], 10, 64)
-	if graceUntil > 0 && time.Now().UTC().Unix() < graceUntil {
-		return false
-	}
 	state, err := durak.Decode(m["state"])
 	if err != nil || state == nil || state.Status != durak.StatusActive {
+		return false
+	}
+	// Пауза «Беру»/«Бито» тоже пишет deadline 0. Без этой проверки GetGame
+	// в окне паузы заводил полный таймер хода при actor -1: оба клиента
+	// рисовали часы на сопернике и видели «Беру», пока пауза не кончится.
+	if !durakMayArmTurnClock(state.Phase, deadline, graceUntil, time.Now().UTC().Unix()) {
 		return false
 	}
 	actor := durakTurnActorIdx(state)
@@ -1821,6 +1821,21 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"turn_deadline": turnDeadline,
 		"stake_bronze":  func() int { v, _ := strconv.Atoi(m["stake_bronze"]); return v }(),
 	}
+}
+
+// durakMayArmTurnClock — можно ли сейчас впервые включить таймер хода.
+// Пауза показа стола и ещё не вышедший deal_grace — нет.
+func durakMayArmTurnClock(phase durak.TurnPhase, deadline, graceUntil, nowUnix int64) bool {
+	if deadline > 0 {
+		return false
+	}
+	if phase == durak.PhaseBitoReveal || phase == durak.PhaseTakeReveal {
+		return false
+	}
+	if graceUntil > 0 && nowUnix < graceUntil {
+		return false
+	}
+	return true
 }
 
 // durakTurnActorIdx — чей таймер хода (защитник / атакующий / текущий подкидывающий).

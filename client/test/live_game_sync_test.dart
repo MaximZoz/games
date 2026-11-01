@@ -269,6 +269,70 @@ void main() {
       );
     });
 
+    test('durak accepts take when previous round was also a take', () {
+      DurakGameView view({
+        required int tablePairs,
+        required int defenderCards,
+        required bool lastWasTake,
+      }) {
+        return DurakGameView(
+          id: 'g',
+          status: 'active',
+          lobbyId: '',
+          chatId: null,
+          mode: 'podkidnoi',
+          deckSize: 36,
+          playerIds: const ['a', 'b'],
+          players: const [],
+          hands: [
+            const DurakHandView(count: 6),
+            DurakHandView(count: defenderCards),
+          ],
+          deckCount: 5,
+          trumpSuit: 'H',
+          trumpCard: const DurakApiCard(14, 'H'),
+          table: List.generate(
+            tablePairs,
+            (_) => const DurakTablePairApi(
+              attack: DurakApiCard(7, 'C'),
+            ),
+          ),
+          bitoCount: 2,
+          attackerIndex: 0,
+          defenderIndex: 1,
+          phase: tablePairs == 0 ? 'attack' : 'take_reveal',
+          myIndex: 0,
+          legalAttack: const [],
+          legalDefend: const [],
+          loserIndex: -1,
+          finished: const [],
+          turnTimeSec: 30,
+          turnDeadline: 0,
+          stakeBronze: 0,
+          lastWasTake: lastWasTake,
+        );
+      }
+
+      final reveal = view(
+        tablePairs: 1,
+        defenderCards: 6,
+        lastWasTake: true,
+      );
+      final resolved = view(
+        tablePairs: 0,
+        defenderCards: 7,
+        lastWasTake: true,
+      );
+      expect(isOlderDurak(resolved, reveal), isFalse);
+      expect(
+        isOlderDurak(
+          view(tablePairs: 0, defenderCards: 7, lastWasTake: true),
+          view(tablePairs: 2, defenderCards: 6, lastWasTake: true),
+        ),
+        isTrue,
+      );
+    });
+
     test('uno uses eventSeq', () {
       UnoGameView uno(int seq) => UnoGameView(
             id: 'g',

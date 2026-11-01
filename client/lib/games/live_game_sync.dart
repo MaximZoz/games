@@ -150,6 +150,27 @@ int durakHandCountAt(DurakGameView view, int index) {
   return hand.count;
 }
 
+/// Пустой стол после «Беру» — это взятие, а не откат.
+///
+/// [lastWasTake] живёт до следующей биты. Если прошлый раунд уже был
+/// взятием, одного перехода флага мало: иначе закрытый стол отбрасывается,
+/// и оба клиента навсегда остаются на паузе «Беру».
+bool durakTableShrinkIsTake({
+  required bool incomingLastWasTake,
+  required bool currentLastWasTake,
+  required int incomingTableCards,
+  required int currentTableCards,
+  required int incomingDefenderHand,
+  required int currentDefenderHand,
+}) {
+  if (!incomingLastWasTake) return false;
+  if (incomingTableCards != 0 || currentTableCards <= 0) return false;
+  final grew = incomingDefenderHand - currentDefenderHand;
+  if (grew <= 0) return false;
+  if (currentLastWasTake) return grew >= currentTableCards;
+  return true;
+}
+
 /// Старый HTTP/WS не должен стирать уже лежащий стол.
 ///
 /// Бита растёт отдельно. Взятие — стол пустеет, [lastWasTake] становится
@@ -162,10 +183,14 @@ bool durakIncomingRewindsTable(DurakGameView incoming, DurakGameView current) {
   final inCards = durakTableCardCount(incoming);
   final curCards = durakTableCardCount(current);
   if (inCards < curCards) {
-    final took = !current.lastWasTake &&
-        incoming.lastWasTake &&
-        durakHandCountAt(incoming, current.defenderIndex) >
-            durakHandCountAt(current, current.defenderIndex);
+    final took = durakTableShrinkIsTake(
+      incomingLastWasTake: incoming.lastWasTake,
+      currentLastWasTake: current.lastWasTake,
+      incomingTableCards: inCards,
+      currentTableCards: curCards,
+      incomingDefenderHand: durakHandCountAt(incoming, current.defenderIndex),
+      currentDefenderHand: durakHandCountAt(current, current.defenderIndex),
+    );
     return !took;
   }
   if (current.lastWasTake &&
