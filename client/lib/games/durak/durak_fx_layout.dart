@@ -657,6 +657,14 @@ bool durakOptimisticDefenseRetires({
 }) =>
     serverHasDefense || !attackStillOpen;
 
+/// Ложный отбой: чужая атака на том же индексе или карта, которая ещё в веере.
+bool durakDropOptimisticDefense({
+  required bool retired,
+  required bool attackMatches,
+  required bool cardStillInHand,
+}) =>
+    retired || !attackMatches || cardStillInHand;
+
 /// Кадр сервера ещё тот, с которого стартовала локальная бита/взятие.
 ///
 /// Такой кадр нельзя записывать в prev: иначе добор сыграет второй раз,

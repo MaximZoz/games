@@ -827,6 +827,33 @@ void main() {
       );
     });
 
+    test('ложный отбой на чужой атаке или карте из веера снимается', () {
+      expect(
+        durakDropOptimisticDefense(
+          retired: false,
+          attackMatches: false,
+          cardStillInHand: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakDropOptimisticDefense(
+          retired: false,
+          attackMatches: true,
+          cardStillInHand: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakDropOptimisticDefense(
+          retired: false,
+          attackMatches: true,
+          cardStillInHand: false,
+        ),
+        isFalse,
+      );
+    });
+
     test('локальный добор соперника не прячется за старым счётчиком', () {
       expect(
         durakOpponentFanShownCount(serverCount: 4, hidden: 0, atLeast: 6),
