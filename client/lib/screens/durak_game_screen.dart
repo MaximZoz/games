@@ -4344,6 +4344,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         _retainLocalAttacksInPrev();
         _forgetFinishedLocalAttacks(view);
       }
+      _dropGhostTableOnFreshAttack(
+        view,
+        bitoGrew: bitoGrewNow,
+        takeJust: takeJust,
+      );
       return;
     }
     if (!_gameUiActive) {
@@ -4479,6 +4484,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if ((remoteTake || localTakeResolved || bitoGrew) && view.table.isEmpty) {
       _lastNonEmptyTable = const [];
     }
+    _dropGhostTableOnFreshAttack(
+      view,
+      bitoGrew: bitoGrew,
+      takeJust: takeJust,
+    );
 
     // Только реальный добор (дельта руки), не «все карты которых нет в order».
     final incoming = _incomingDealCards(hand, dealt);
@@ -6113,6 +6123,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   /// Стол для отрисовки. Уже лежащие карты не гаснут на пустом кадре,
   /// а своя бита не возвращает стол, пока сервер ещё на паузе.
+  /// Новый заход с пустым столом память прошлого раунда не рисует.
   List<DurakTablePairApi> _sourceTableForPaint(DurakGameView view) {
     final hold = _takeTableHold;
     if (hold != null) return hold;
@@ -6122,10 +6133,70 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (remembered.isEmpty) return const [];
     final bitoGrew = _prevBitoCount >= 0 && view.bitoCount > _prevBitoCount;
     final takeJust = view.lastWasTake && !_prevLastWasTake;
+    if (durakFreshAttackTableIsEmpty(
+      tableEmpty: true,
+      phase: view.phase,
+      tableReveal: view.isTableReveal,
+      bitoGrew: bitoGrew,
+      takeJustResolved: takeJust,
+      hidingTable: _hidingTable,
+      tableHold: false,
+    )) {
+      return _pendingPairsFrom(remembered);
+    }
     if (bitoGrew || takeJust || view.isTableReveal || _hidingTable) {
       return _localPlayActive ? remembered : const [];
     }
     return remembered;
+  }
+
+  /// Карта прошлого раунда не должна лежать на пустом столе нового захода.
+  void _dropGhostTableOnFreshAttack(
+    DurakGameView view, {
+    required bool bitoGrew,
+    required bool takeJust,
+  }) {
+    if (!durakFreshAttackTableIsEmpty(
+      tableEmpty: view.table.isEmpty,
+      phase: view.phase,
+      tableReveal: view.isTableReveal,
+      bitoGrew: bitoGrew,
+      takeJustResolved: takeJust,
+      hidingTable: _hidingTable,
+      tableHold: _takeTableHold != null,
+    )) {
+      return;
+    }
+    final pending = <PlayingCard>{..._optimisticAttacks, ..._flyingToTable};
+    if (pending.isEmpty) {
+      _prevTable = const [];
+      _lastNonEmptyTable = const [];
+      _clearSeatedTableCards();
+      _localAttackIds.clear();
+      _optimisticDefends.clear();
+      return;
+    }
+    final kept = _pendingPairsFrom(_prevTable, pending: pending);
+    final keptLast = _pendingPairsFrom(_lastNonEmptyTable, pending: pending);
+    _prevTable = kept;
+    _lastNonEmptyTable = keptLast;
+    final keepIds = pending.map(_cardId).toSet();
+    _seatedTableCardIds.removeWhere((id) => !keepIds.contains(id));
+    _shownTableCardIds.removeWhere((id) => !keepIds.contains(id));
+    _localAttackIds.removeWhere((id) => !keepIds.contains(id));
+    _optimisticDefends.removeWhere((_, card) => !pending.contains(card));
+  }
+
+  List<DurakTablePairApi> _pendingPairsFrom(
+    List<DurakTablePairApi> pairs, {
+    Set<PlayingCard>? pending,
+  }) {
+    final live = pending ?? {..._optimisticAttacks, ..._flyingToTable};
+    if (live.isEmpty || pairs.isEmpty) return const [];
+    return [
+      for (final pair in pairs)
+        if (live.contains(pair.attack.toPlayingCard())) pair,
+    ];
   }
 
   /// Последний ход: если карту ещё не показали, стол остаётся на паузе.
