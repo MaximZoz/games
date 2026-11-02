@@ -556,6 +556,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             durakStuckSnapTicks(
               compact: _fit.compact,
               openingDeal: _concealOpeningHand,
+              handDeal: _localRoundFx,
             )) {
           _busyStuckTicks = 0;
           _snapVisualToServer();
@@ -3215,9 +3216,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       final n = plan[seat] ?? 0;
       if (n <= 0) continue;
       if (seat == before.myIndex) {
-        // Рубашки в свой веер не кладём. Лица летят из колоды, как только
-        // сервер их назвал.
-        final faces = _settledDealView(ready: ready, early: early);
+        // Рубашки в свой веер не кладём. Ждём лица и летим из колоды
+        // в свой черёд, а не после всех соперников.
+        var faces = _settledDealView(ready: ready, early: early);
+        if (faces == null) {
+          final settled = ready && early != null ? early! : await settledFuture;
+          ready = true;
+          early = settled;
+          faces = _settledDealView(ready: true, early: settled);
+        }
         if (faces != null) {
           await _flyMyDealtFaces(before, faces);
           mineAsFaces = true;
@@ -3271,9 +3278,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   /// Известные карты добора — лицом из колоды в веер, без рубашки в ожидании.
   Future<void> _flyMyDealtFaces(DurakGameView before, DurakGameView fresh) async {
-    final incoming = _incomingAgainstBaseline(before, fresh);
+    final incoming = [
+      for (final card in _incomingAgainstBaseline(before, fresh))
+        // Со стола уже сели — из колоды их не гоняем второй раз.
+        if (!_incomingFanCards.contains(card)) card,
+    ];
     if (incoming.isEmpty || !mounted || !_gameUiActive) return;
-    await _animateDealCardsToFan(incoming, flipToFace: false);
+    await _animateDealCardsToFan(
+      incoming,
+      flyDuration: durakDealFlyDuration(compact: _fit.compact),
+      settleMs: 70,
+      keepFanFreeze: true,
+      flipToFace: false,
+    );
   }
 
   Future<void> _refillFromFresh(
@@ -3286,7 +3303,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final base = _optimisticDealBaseline ?? _myHandOf(before);
     final incoming = <PlayingCard>[
       for (final card in hand)
-        if (!base.contains(card)) card,
+        if (!base.contains(card) && !_incomingFanCards.contains(card)) card,
     ];
     final opp = <int, int>{};
     for (var i = 0; i < fresh.hands.length; i++) {
@@ -3665,7 +3682,49 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             ? _frozenFanCardSize!
             : lay.cardSize;
 
-        if (fan != null) {
+        if (!flipToFace) {
+          // Слот должен успеть разложиться. Иначе rect (0,0), полёт не виден,
+          // а лицо просто появляется в веере — так и было на «Бито».
+          await awaitDurakFrame();
+          if (!mounted) return;
+          final measured = _fanKey.currentState?.globalRectOfCard(card);
+          final land = durakDealLandRect(
+            measured: measured,
+            slotSize: slotSize,
+            fallbackCenter: Offset(
+              _flyScreen.width / 2,
+              _flyScreen.height * 0.82,
+            ),
+          );
+          final from = _deckDealFromRect(jitter: i * 1.6);
+          final ticket = await playCardFlyAnimation(
+            context: context,
+            card: card,
+            cardSize: _tableCardSize,
+            from: from,
+            to: land,
+            duration: flyDuration,
+            curve: kDurakFlyCurve,
+            faceDown: false,
+            flipToFace: false,
+            beginScale: 1,
+            endScale: (land.width / _tableCardSize.width).clamp(0.35, 1.6),
+            beginAngle: 0.16,
+            endAngle: angle,
+            arcLift: 22,
+            keepAtEnd: true,
+          );
+          if (!mounted) {
+            ticket.dismiss();
+            return;
+          }
+          setState(() {
+            _flyingFromHand.remove(card);
+            _incomingFanCards.add(card);
+          });
+          await awaitDurakFrame();
+          ticket.dismiss();
+        } else if (fan != null) {
           await fan.foldCardIn(
             card: card,
             from: deckFrom,
@@ -4110,7 +4169,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         if (_incomingFanCards.contains(card)) continue;
         // Уже летит лицом в свой слот — не прятать снова, иначе дырка пропадает.
         if (_flyingFromHand.contains(card)) continue;
-        if (_handOrder?.contains(card) == true) continue;
+        // Даже если карта уже попала в порядок веера: пока не долетела,
+        // лицо не показываем. Иначе «Бито» вспыхивает картами без полёта.
         _pendingDealCards.add(card);
       }
     }
@@ -5253,20 +5313,41 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       defender: refillDefender,
       playerCount: view.hands.length,
     );
+    var dealtMine = false;
     for (final idx in order) {
       if (!mounted || !_gameUiActive) {
         _pendingDealCards.removeAll(myCards);
         return;
       }
       if (idx == view.myIndex) {
-        if (myCards.isNotEmpty) {
-          await _animateDealCardsToFan(myCards, flipToFace: false);
+        if (dealtMine || myCards.isEmpty) continue;
+        dealtMine = true;
+        await awaitDurakFrame();
+        if (!mounted || !_gameUiActive) {
+          _pendingDealCards.removeAll(myCards);
+          return;
         }
+        await _animateDealCardsToFan(
+          myCards,
+          flyDuration: durakDealFlyDuration(compact: _fit.compact),
+          settleMs: 70,
+          keepFanFreeze: true,
+          flipToFace: false,
+        );
         continue;
       }
       final n = oppDeals[idx] ?? 0;
       if (n <= 0) continue;
       await _animateDealToOpponent(idx, n);
+    }
+    if (!dealtMine && myCards.isNotEmpty && mounted && _gameUiActive) {
+      await _animateDealCardsToFan(
+        myCards,
+        flyDuration: durakDealFlyDuration(compact: _fit.compact),
+        settleMs: 70,
+        keepFanFreeze: true,
+        flipToFace: false,
+      );
     }
     if (mounted) {
       _pendingDealCards.removeAll(myCards);

@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show Size;
+import 'dart:ui' show Offset, Rect, Size;
 
 /// Как показать итог партии дурака.
 enum DurakFinishedChrome {
@@ -351,6 +351,33 @@ Size durakOpponentFanFlightSize(
 Duration durakDealFlyDuration({required bool compact}) =>
     Duration(milliseconds: compact ? 260 : 240);
 
+/// Куда сажать карту добора.
+///
+/// Слот веера в том же кадре, где его добавили, часто даёт Rect в (0, 0).
+/// Полёт туда не виден, а лицо вспыхивает уже в веере.
+Rect durakDealLandRect({
+  required Rect? measured,
+  required Size slotSize,
+  required Offset fallbackCenter,
+}) {
+  final slot = measured;
+  if (slot != null &&
+      slot.width >= 8 &&
+      slot.height >= 8 &&
+      (slot.left.abs() > 1 || slot.top.abs() > 1)) {
+    return Rect.fromCenter(
+      center: slot.center,
+      width: slotSize.width,
+      height: slotSize.height,
+    );
+  }
+  return Rect.fromCenter(
+    center: fallbackCenter,
+    width: slotSize.width,
+    height: slotSize.height,
+  );
+}
+
 /// Вернулись с другой вкладки на стол — снять застрявшие полёты.
 bool shouldSnapDurakVisualOnResume({
   required String? previousPath,
@@ -395,8 +422,10 @@ bool durakFirstLeadShowsBannerCard({required bool compact}) => false;
 int durakStuckSnapTicks({
   required bool compact,
   bool openingDeal = false,
+  bool handDeal = false,
 }) {
-  if (openingDeal) return 5;
+  // Добор после «Бито» тоже длиннее 2 с: пауза показа стола и полёт из колоды.
+  if (openingDeal || handDeal) return 5;
   return compact ? 2 : 3;
 }
 
