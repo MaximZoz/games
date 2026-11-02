@@ -581,6 +581,24 @@ bool durakRevealFinishImmediately({
 /// Нажатие «Бито»/«Взять»/«Готово»: сначала сжатие кнопки, потом смена подписи.
 const Duration kDurakActionPressFeedback = Duration(milliseconds: 110);
 
+/// Сервер уже открыл новый заход: стол пуст, фаза атаки.
+///
+/// Память прошлого раунда здесь не рисуем. Иначе карта, которая уже в бите,
+/// лежит до следующего хода и пропадает только когда игрок подкидывает.
+bool durakFreshAttackTableIsEmpty({
+  required bool tableEmpty,
+  required String phase,
+  required bool tableReveal,
+  required bool bitoGrew,
+  required bool takeJustResolved,
+  required bool hidingTable,
+  required bool tableHold,
+}) {
+  if (!tableEmpty || tableReveal || bitoGrew || takeJustResolved) return false;
+  if (hidingTable || tableHold) return false;
+  return phase == 'attack';
+}
+
 /// Пустой кадр без биты, взятия и паузы reveal не стирает память стола.
 ///
 /// Иначе свой подкид на смене хода пропадает и прилетает заново.

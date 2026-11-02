@@ -447,6 +447,57 @@ void main() {
       );
     });
 
+    test('новый заход не держит карту прошлого стола', () {
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'attack',
+          tableReveal: false,
+          bitoGrew: false,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'defend',
+          tableReveal: false,
+          bitoGrew: false,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'attack_follow',
+          tableReveal: false,
+          bitoGrew: false,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'attack',
+          tableReveal: false,
+          bitoGrew: true,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('добор не в веере, пока карта pending — даже во время полёта', () {
       expect(durakDealCardInFanLayout(pendingDeal: true), isFalse);
       expect(durakDealCardInFanLayout(pendingDeal: false), isTrue);
