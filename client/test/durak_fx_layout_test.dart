@@ -361,6 +361,27 @@ void main() {
       expect(durakStuckSnapTicks(compact: true), 2);
       expect(durakStuckSnapTicks(compact: false), 3);
       expect(durakStuckSnapTicks(compact: true, openingDeal: true), 5);
+      expect(durakStuckSnapTicks(compact: true, handDeal: true), 5);
+      expect(
+        durakDealLandRect(
+          measured: const Rect.fromLTWH(0, 0, 40, 56),
+          slotSize: const Size(30, 42),
+          fallbackCenter: const Offset(180, 600),
+        ),
+        Rect.fromCenter(
+          center: const Offset(180, 600),
+          width: 30,
+          height: 42,
+        ),
+      );
+      expect(
+        durakDealLandRect(
+          measured: const Rect.fromLTWH(120, 80, 48, 64),
+          slotSize: const Size(30, 42),
+          fallbackCenter: const Offset(180, 600),
+        ).center,
+        const Offset(144, 112),
+      );
       expect(
         durakActionChromeVisible(
           liveCanShow: true,
@@ -824,6 +845,25 @@ void main() {
           attackStillOpen: false,
         ),
         isTrue,
+      );
+    });
+
+    test('пауза Беру не подсвечивает соперника', () {
+      expect(
+        durakActorSeatHighlighted(actor: -1, seat: 0, tableReveal: true),
+        isFalse,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: -1, seat: 1, tableReveal: true),
+        isFalse,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: 1, seat: 1, tableReveal: false),
+        isTrue,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: 1, seat: 0, tableReveal: false),
+        isFalse,
       );
     });
 
