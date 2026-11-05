@@ -556,7 +556,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             durakStuckSnapTicks(
               compact: _fit.compact,
               openingDeal: _concealOpeningHand,
-              handDeal: _localRoundFx,
+              // Длинный бюджет только пока карты реально летят.
+              // Зависший флаг раунда без полёта не держит короткую руку.
+              handDeal: _localRoundFx &&
+                  (_fxScheduled ||
+                      _cardFlightActive ||
+                      _hidingTable ||
+                      _takeTableHold != null),
             )) {
           _busyStuckTicks = 0;
           _snapVisualToServer();
@@ -5599,6 +5605,42 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     return incoming;
   }
 
+  /// Добор спрятан, а полёт уже кончился — показать карты в веере.
+  /// Иначе рука остаётся короткой, пока соперник ходит и колода не пуста.
+  void _releaseStuckFanDeals() {
+    if (!durakReleaseStuckDealCards(
+      pendingDeal: _pendingDealCards.isNotEmpty,
+      animatingDeal: _busy ||
+          _fxScheduled ||
+          _localRoundFx ||
+          _suppressRemoteBitoFx ||
+          _concealOpeningHand ||
+          _cardFlightActive,
+    )) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!durakReleaseStuckDealCards(
+        pendingDeal: _pendingDealCards.isNotEmpty,
+        animatingDeal: _busy ||
+            _fxScheduled ||
+            _localRoundFx ||
+            _suppressRemoteBitoFx ||
+            _concealOpeningHand ||
+            _cardFlightActive,
+      )) {
+        return;
+      }
+      setState(() {
+        _pendingDealCards.clear();
+        _dealFaceDownTail = 0;
+        _deckCountFreeze = null;
+        _handOrder = null;
+      });
+    });
+  }
+
   /// Добор ещё не в веере: слот не показываем, пока карта не полетит лицом.
   void _concealDrawnUntilFlight(List<PlayingCard> cards) {
     if (cards.isEmpty || _concealOpeningHand) return;
@@ -6886,7 +6928,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           ? (view.hands[view.myIndex].cards ?? const [])
           : const [],
     );
+    _releaseStuckFanDeals();
     final myHand = _orderedHand(serverHand, trump);
+    final hideFinishedHand = durakFinishChromeVisible(
+      isOver: view.isOver,
+      finishReady: _finishChromeReady,
+    );
     // Легальность для жестов — полный набор; подсветка веера — только при выборе.
     final legal = <PlayingCard>{
       ..._legalAttackNow(view),
@@ -6916,9 +6963,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     }
 
     // Полный веер: летящие карты — дырки слотов (hiddenCards), без схлопывания.
-    final handForFan = myHand;
+    // После итога рука не остаётся на экране.
+    final handForFan = hideFinishedHand ? const <PlayingCard>[] : myHand;
 
-    final fanSlotCount = handForFan.length + _dealFaceDownTail;
+    final fanSlotCount =
+        hideFinishedHand ? 0 : handForFan.length + _dealFaceDownTail;
     final useFrozenFanSize = _frozenFanCardSize != null &&
         fanSlotCount <= (_frozenFanHandCount ?? 0);
     if (!useFrozenFanSize && _frozenFanCardSize != null) {
@@ -7247,7 +7296,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                             return CardFan(
                                               key: _fanKey,
                                               cards: handForFan,
-                                              extraFaceDown: _dealFaceDownTail,
+                                              extraFaceDown: hideFinishedHand
+                                                  ? 0
+                                                  : _dealFaceDownTail,
                                               cardSize: Size(animW, animH),
                                               spacing: animSp,
                                               fillWidth: fillWidth,

@@ -524,6 +524,21 @@ void main() {
       expect(durakDealCardInFanLayout(pendingDeal: false), isTrue);
     });
 
+    test('застрявший добор возвращается в веер, когда полёт уже не идёт', () {
+      expect(
+        durakReleaseStuckDealCards(pendingDeal: true, animatingDeal: false),
+        isTrue,
+      );
+      expect(
+        durakReleaseStuckDealCards(pendingDeal: true, animatingDeal: true),
+        isFalse,
+      );
+      expect(
+        durakReleaseStuckDealCards(pendingDeal: false, animatingDeal: false),
+        isFalse,
+      );
+    });
+
     test('победа и реванш — после паузы на последний отбой', () {
       expect(kDurakLastTrickLook.inMilliseconds, 2000);
       expect(
