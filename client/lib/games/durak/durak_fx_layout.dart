@@ -481,6 +481,16 @@ bool durakRevealTableBeforeDismissOverlay({
 /// Взятие со стола не ставит pending — слот-дырка остаётся в [_handOrder].
 bool durakDealCardInFanLayout({required bool pendingDeal}) => !pendingDeal;
 
+/// Добор спрятан, а полёт уже не идёт — вернуть карты в веер.
+///
+/// Иначе после «Бито»/«Взять» рука выглядит короткой (например, 3 карты),
+/// хотя колода уже отдала добор и соперник начал новый заход.
+bool durakReleaseStuckDealCards({
+  required bool pendingDeal,
+  required bool animatingDeal,
+}) =>
+    pendingDeal && !animatingDeal;
+
 /// После «Беру» соперника: секунда подписи, потом кнопка «Готово».
 const Duration kDurakOpponentTakeHold = Duration(seconds: 1);
 
