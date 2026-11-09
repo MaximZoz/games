@@ -6,6 +6,32 @@ import (
 	"multigames/server/internal/durak"
 )
 
+func TestDurakViewMyTurnFollowsActor(t *testing.T) {
+	state := &durak.State{
+		PlayerIDs:     []string{"a", "b"},
+		Hands:         [][]durak.Card{{}, {}},
+		AttackerIndex: 1,
+		ThrowerIndex:  1,
+		Phase:         durak.PhaseAttack,
+		Status:        durak.StatusActive,
+		LoserIndex:    -1,
+		Mode:          durak.ModePodkidnoi,
+	}
+	mine := durakViewFor(state, "b", map[string]string{}, "g1")
+	if mine["is_my_turn"] != true {
+		t.Fatalf("attacker turn: %#v", mine["is_my_turn"])
+	}
+	other := durakViewFor(state, "a", map[string]string{}, "g1")
+	if other["is_my_turn"] != false {
+		t.Fatalf("opponent: %#v", other["is_my_turn"])
+	}
+	state.Status = durak.StatusOver
+	over := durakViewFor(state, "b", map[string]string{}, "g1")
+	if over["is_my_turn"] != false {
+		t.Fatalf("over: %#v", over["is_my_turn"])
+	}
+}
+
 func TestDurakMayArmTurnClock(t *testing.T) {
 	now := int64(1_700_000_000)
 	if durakMayArmTurnClock(durak.PhaseTakeReveal, 0, 0, now) {

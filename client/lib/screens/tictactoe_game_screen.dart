@@ -1503,8 +1503,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (!mounted) return;
         final gameId = widget.gameId;
         // Сначала forfeit — иначе у остальных партия «зависает» без WS.
+        var forfeited = false;
         try {
           await ref.read(gamesRepositoryProvider).forfeitGame(gameId);
+          forfeited = true;
         } catch (_) {}
         if (!mounted) return;
         clearBlockingGamePin(ref, ifGameId: gameId);
@@ -1516,6 +1518,18 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           // Multi: observation, пока партия не закончится.
           enterGameObservation(ref, gameId, gameType: 'tictactoe');
         } else {
+          if (forfeited && !multi && g != null) {
+            await playHeadToHeadFinish(
+              ref: ref,
+              context: context,
+              gameId: gameId,
+              stakeBronze: g.stakeBronze,
+              iWon: false,
+              isDraw: false,
+              playerCount: 2,
+            );
+          }
+          if (!mounted) return;
           ref.read(activeGameProvider.notifier).clearLocal();
           ref
               .read(activeGameProvider.notifier)

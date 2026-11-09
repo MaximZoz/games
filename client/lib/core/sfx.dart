@@ -404,11 +404,26 @@ abstract final class GameAwaySfx {
     required String nextPath,
     required String? gameId,
   }) {
+    if (!leftBoard(
+      previousPath: previousPath,
+      nextPath: nextPath,
+      gameId: gameId,
+    )) {
+      return false;
+    }
+    return isMessagesPath(nextPath);
+  }
+
+  /// Ушли со стола на любую другую страницу: сообщения, друзья, главная.
+  static bool leftBoard({
+    required String? previousPath,
+    required String nextPath,
+    required String? gameId,
+  }) {
     final prev = (previousPath ?? '').trim();
     if (prev.isEmpty) return false;
     if (!isWatchingBoard(prev, gameId)) return false;
-    if (isWatchingBoard(nextPath, gameId)) return false;
-    return isMessagesPath(nextPath);
+    return !isWatchingBoard(nextPath, gameId);
   }
 
   static void playIfNeeded({

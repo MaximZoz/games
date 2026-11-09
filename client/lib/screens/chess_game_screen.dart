@@ -25,6 +25,7 @@ import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
+import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -72,6 +73,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   String? _rematchLobbyId;
+  bool _balanceGainPlayed = false;
+  bool _lossChipRevealed = false;
+  Future<bool>? _settleFuture;
   Timer? _rematchPollTimer;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
 
@@ -445,14 +449,26 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       canLeaveFreely: _isOffline,
       onLeaveFinished: () async {
         if (!mounted) return;
+        final settled = ref.read(chessGameProvider(widget.gameId)).valueOrNull ??
+            game;
+        if (!_isOffline && settled != null && settled.isOver) {
+          await _runHeadToHeadSettle(settled);
+        }
+        if (!mounted) return;
         _navigateToGames();
       },
       onForfeitAndLeave: () async {
         if (!mounted) return;
+        var forfeited = false;
         try {
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await _repo.forfeit(widget.gameId);
+          forfeited = true;
         } catch (_) {}
+        if (!mounted) return;
+        if (forfeited && !_isOffline && game != null) {
+          await _runHeadToHeadSettle(game, forceLoss: true);
+        }
         if (!mounted) return;
         _navigateToGames();
         unawaited(ref.read(activeGameProvider.notifier).refresh());
@@ -874,7 +890,56 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     );
   }
 
+  void _scheduleHeadToHeadSettle(ChessGameView server) {
+    if (_isOffline || !server.isOver) return;
+    if (isGameBalanceSettled(ref, widget.gameId)) {
+      _balanceGainPlayed = true;
+      if (_lossChipRevealed) return;
+      final lost = stakeLostOnFinish(
+        stakeBronze: server.stakeBronze,
+        isDraw: server.isDraw,
+        iWon: server.iWon,
+      );
+      if (lost <= 0) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _lossChipRevealed = true);
+      });
+      return;
+    }
+    if (_balanceGainPlayed) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _balanceGainPlayed) return;
+      unawaited(_runHeadToHeadSettle(server));
+    });
+  }
+
+  Future<bool> _runHeadToHeadSettle(
+    ChessGameView game, {
+    bool forceLoss = false,
+  }) {
+    final existing = _settleFuture;
+    if (existing != null) return existing;
+    _balanceGainPlayed = true;
+    final players = game.playerIds.length >= 2 ? game.playerIds.length : 2;
+    final future = playHeadToHeadFinish(
+      ref: ref,
+      context: context,
+      gameId: widget.gameId,
+      stakeBronze: game.stakeBronze,
+      iWon: forceLoss ? false : game.iWon,
+      isDraw: forceLoss ? false : game.isDraw,
+      playerCount: players,
+      sourceKey: _rewardKey,
+    );
+    _settleFuture = future;
+    return future.then((loss) {
+      if (loss && mounted) setState(() => _lossChipRevealed = true);
+      return loss;
+    });
+  }
+
   Widget _buildGame(ChessGameView server, String? me) {
+    _scheduleHeadToHeadSettle(server);
     _reconcile(server);
     final live = _liveGame(server);
     final display = _isReviewing
@@ -1199,11 +1264,12 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     double fontSize = 14,
     int maxLines = 1,
   }) {
-    final rewardChip = stakeFinishRewardChip(
+    final rawChip = stakeFinishRewardChip(
       stakeBronze: game.stakeBronze,
       isDraw: game.isDraw,
       iWon: game.iWon,
     );
+    final rewardChip = rawChip < 0 && !_lossChipRevealed ? 0 : rawChip;
     return GameStatusWithReward(
       statusText: _statusText(game),
       showReward: stakeShowFinishReward(

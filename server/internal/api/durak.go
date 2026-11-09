@@ -1808,6 +1808,11 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"can_throw_in":   s.CanThrowIn(myIdx),
 		"thrower_index":  s.ThrowerIndex,
 		"turn_actor_idx": durakTurnActorIdx(s),
+		// Без этого бейдж «Игры» залипает на ходе со старта партии.
+		"is_my_turn": myIdx >= 0 &&
+			s.Status == durak.StatusActive &&
+			s.IsAlive(myIdx) &&
+			durakTurnActorIdx(s) == myIdx,
 		"loser_index": func() int {
 			if s.Status != durak.StatusOver {
 				return -1

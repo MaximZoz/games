@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/android_notify_map.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/phone_notification_badge.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
@@ -48,6 +49,59 @@ final androidNotifyBridgeProvider = Provider<void>((ref) {
     if (next && ref.read(authStateProvider).valueOrNull != null) {
       unawaited(requestLocalNotificationPermission());
     }
+  });
+
+  String? awayTurnTag;
+  final ios = defaultTargetPlatform == TargetPlatform.iOS;
+
+  bool trayAway(AppLifecycleState state) =>
+      shouldShowPhoneTrayBanner(state, ios: ios);
+
+  Future<void> showAwayTurn() async {
+    if (!ref.read(webPushEnabledProvider)) return;
+    if (!ref.read(webPushCategoriesProvider).games) return;
+    final active = ref.read(activeGameProvider).valueOrNull;
+    if (active == null || active.type != 'game' || !active.isMyTurn) return;
+    final id = active.gameId?.trim() ?? '';
+    if (id.isEmpty) return;
+    final l10n = LocaleService.l10n;
+    final tag = 'game_turn_$id';
+    awayTurnTag = tag;
+    await showLocalNotification(
+      title: l10n.gamesMyTurn,
+      body: l10n.settingsPushGames,
+      tag: tag,
+      id: notificationIdForTag(tag),
+      payload: encodeNotificationPayload(
+        url: '/games/${active.gameType}/game/$id',
+        tag: tag,
+      ),
+    );
+  }
+
+  void clearAwayTurn() {
+    final tag = awayTurnTag;
+    awayTurnTag = null;
+    if (tag == null) return;
+    unawaited(cancelLocalNotificationsForTag(tag));
+  }
+
+  lifecycle.onChange = (next) {
+    if (trayAway(next)) {
+      unawaited(showAwayTurn());
+      return;
+    }
+    if (next == AppLifecycleState.resumed) clearAwayTurn();
+  };
+
+  ref.listen<int>(gamesMyTurnCountProvider, (prev, next) {
+    if (next <= 0) {
+      clearAwayTurn();
+      return;
+    }
+    if ((prev ?? 0) > 0) return;
+    if (!trayAway(lifecycle.state)) return;
+    unawaited(showAwayTurn());
   });
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(realtimeEventsProvider,
@@ -173,9 +227,11 @@ final iosTraySyncProvider = Provider<void>((ref) {
 
 class _NotifyLifecycle with WidgetsBindingObserver {
   AppLifecycleState state = AppLifecycleState.resumed;
+  void Function(AppLifecycleState next)? onChange;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState next) {
     state = next;
+    onChange?.call(next);
   }
 }

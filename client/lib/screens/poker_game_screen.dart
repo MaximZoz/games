@@ -787,6 +787,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           await ref.read(pokerRepositoryProvider).forfeit(widget.gameId);
         } catch (_) {}
         if (!mounted) return;
+        try {
+          await ref.read(authStateProvider.notifier).refresh();
+        } catch (_) {}
+        if (!mounted) return;
         if (multi) {
           enterGameObservation(ref, widget.gameId, gameType: 'poker');
           _observeEntered = true;

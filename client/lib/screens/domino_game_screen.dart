@@ -96,13 +96,36 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
       onLeaveFinished: () async {
         if (gone && game != null && !game.isOver && !_isOffline) {
           enterGameObservation(ref, widget.gameId, gameType: 'domino');
+        } else if (game != null && game.isOver && !_isOffline) {
+          await playHeadToHeadFinish(
+            ref: ref,
+            context: context,
+            gameId: widget.gameId,
+            stakeBronze: game.stakeBronze,
+            iWon: game.iWon,
+            isDraw: game.isDraw,
+            playerCount: game.players.length,
+          );
         }
-        _goToGames();
+        if (mounted) _goToGames();
       },
       onForfeitAndLeave: () async {
+        var forfeited = false;
         try {
           await ref.read(dominoRepositoryProvider).forfeit(widget.gameId);
+          forfeited = true;
         } catch (_) {}
+        if (forfeited && game != null && !_isOffline && mounted) {
+          await playHeadToHeadFinish(
+            ref: ref,
+            context: context,
+            gameId: widget.gameId,
+            stakeBronze: game.stakeBronze,
+            iWon: false,
+            isDraw: false,
+            playerCount: game.players.length,
+          );
+        }
         if (mounted) _goToGames();
       },
     );
@@ -141,6 +164,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(() async {
+        if (isGameBalanceSettled(ref, widget.gameId)) return;
         markGameBalanceSettled(ref, widget.gameId);
         if (lost > 0 && credit <= 0) {
           await playGameSettledLoss(
