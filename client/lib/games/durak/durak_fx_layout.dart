@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show Size;
+import 'dart:ui' show Offset, Rect, Size;
 
 /// Как показать итог партии дурака.
 enum DurakFinishedChrome {
@@ -351,6 +351,33 @@ Size durakOpponentFanFlightSize(
 Duration durakDealFlyDuration({required bool compact}) =>
     Duration(milliseconds: compact ? 260 : 240);
 
+/// Куда сажать карту добора.
+///
+/// Слот веера в том же кадре, где его добавили, часто даёт Rect в (0, 0).
+/// Полёт туда не виден, а лицо вспыхивает уже в веере.
+Rect durakDealLandRect({
+  required Rect? measured,
+  required Size slotSize,
+  required Offset fallbackCenter,
+}) {
+  final slot = measured;
+  if (slot != null &&
+      slot.width >= 8 &&
+      slot.height >= 8 &&
+      (slot.left.abs() > 1 || slot.top.abs() > 1)) {
+    return Rect.fromCenter(
+      center: slot.center,
+      width: slotSize.width,
+      height: slotSize.height,
+    );
+  }
+  return Rect.fromCenter(
+    center: fallbackCenter,
+    width: slotSize.width,
+    height: slotSize.height,
+  );
+}
+
 /// Вернулись с другой вкладки на стол — снять застрявшие полёты.
 bool shouldSnapDurakVisualOnResume({
   required String? previousPath,
@@ -395,8 +422,10 @@ bool durakFirstLeadShowsBannerCard({required bool compact}) => false;
 int durakStuckSnapTicks({
   required bool compact,
   bool openingDeal = false,
+  bool handDeal = false,
 }) {
-  if (openingDeal) return 5;
+  // Добор после «Бито» тоже длиннее 2 с: пауза показа стола и полёт из колоды.
+  if (openingDeal || handDeal) return 5;
   return compact ? 2 : 3;
 }
 
@@ -452,6 +481,16 @@ bool durakRevealTableBeforeDismissOverlay({
 /// Взятие со стола не ставит pending — слот-дырка остаётся в [_handOrder].
 bool durakDealCardInFanLayout({required bool pendingDeal}) => !pendingDeal;
 
+/// Добор спрятан, а полёт уже не идёт — вернуть карты в веер.
+///
+/// Иначе после «Бито»/«Взять» рука выглядит короткой (например, 3 карты),
+/// хотя колода уже отдала добор и соперник начал новый заход.
+bool durakReleaseStuckDealCards({
+  required bool pendingDeal,
+  required bool animatingDeal,
+}) =>
+    pendingDeal && !animatingDeal;
+
 /// После «Беру» соперника: секунда подписи, потом кнопка «Готово».
 const Duration kDurakOpponentTakeHold = Duration(seconds: 1);
 
@@ -469,6 +508,14 @@ Duration durakFanLayoutTweenDuration({
     fastClose
         ? kDurakFanPlayCloseDuration
         : durakLayoutTweenDuration(compact: compact);
+
+/// Чья рамка хода. На паузе «Беру»/«Бито» актёра нет — не подсвечивать соперника.
+bool durakActorSeatHighlighted({
+  required int actor,
+  required int seat,
+  required bool tableReveal,
+}) =>
+    !tableReveal && actor >= 0 && actor == seat;
 
 /// Показать «Беру», пока держим паузу после взятия соперником.
 bool durakShowOpponentTakeLabel({
@@ -581,6 +628,24 @@ bool durakRevealFinishImmediately({
 /// Нажатие «Бито»/«Взять»/«Готово»: сначала сжатие кнопки, потом смена подписи.
 const Duration kDurakActionPressFeedback = Duration(milliseconds: 110);
 
+/// Сервер уже открыл новый заход: стол пуст, фаза атаки.
+///
+/// Память прошлого раунда здесь не рисуем. Иначе карта, которая уже в бите,
+/// лежит до следующего хода и пропадает только когда игрок подкидывает.
+bool durakFreshAttackTableIsEmpty({
+  required bool tableEmpty,
+  required String phase,
+  required bool tableReveal,
+  required bool bitoGrew,
+  required bool takeJustResolved,
+  required bool hidingTable,
+  required bool tableHold,
+}) {
+  if (!tableEmpty || tableReveal || bitoGrew || takeJustResolved) return false;
+  if (hidingTable || tableHold) return false;
+  return phase == 'attack';
+}
+
 /// Пустой кадр без биты, взятия и паузы reveal не стирает память стола.
 ///
 /// Иначе свой подкид на смене хода пропадает и прилетает заново.
@@ -656,6 +721,14 @@ bool durakOptimisticDefenseRetires({
   required bool attackStillOpen,
 }) =>
     serverHasDefense || !attackStillOpen;
+
+/// Ложный отбой: чужая атака на том же индексе или карта, которая ещё в веере.
+bool durakDropOptimisticDefense({
+  required bool retired,
+  required bool attackMatches,
+  required bool cardStillInHand,
+}) =>
+    retired || !attackMatches || cardStillInHand;
 
 /// Кадр сервера ещё тот, с которого стартовала локальная бита/взятие.
 ///

@@ -5,8 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/android_notify_map.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/phone_notification_badge.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
@@ -47,6 +49,59 @@ final androidNotifyBridgeProvider = Provider<void>((ref) {
     if (next && ref.read(authStateProvider).valueOrNull != null) {
       unawaited(requestLocalNotificationPermission());
     }
+  });
+
+  String? awayTurnTag;
+  final ios = defaultTargetPlatform == TargetPlatform.iOS;
+
+  bool trayAway(AppLifecycleState state) =>
+      shouldShowPhoneTrayBanner(state, ios: ios);
+
+  Future<void> showAwayTurn() async {
+    if (!ref.read(webPushEnabledProvider)) return;
+    if (!ref.read(webPushCategoriesProvider).games) return;
+    final active = ref.read(activeGameProvider).valueOrNull;
+    if (active == null || active.type != 'game' || !active.isMyTurn) return;
+    final id = active.gameId?.trim() ?? '';
+    if (id.isEmpty) return;
+    final l10n = LocaleService.l10n;
+    final tag = 'game_turn_$id';
+    awayTurnTag = tag;
+    await showLocalNotification(
+      title: l10n.gamesMyTurn,
+      body: l10n.settingsPushGames,
+      tag: tag,
+      id: notificationIdForTag(tag),
+      payload: encodeNotificationPayload(
+        url: '/games/${active.gameType}/game/$id',
+        tag: tag,
+      ),
+    );
+  }
+
+  void clearAwayTurn() {
+    final tag = awayTurnTag;
+    awayTurnTag = null;
+    if (tag == null) return;
+    unawaited(cancelLocalNotificationsForTag(tag));
+  }
+
+  lifecycle.onChange = (next) {
+    if (trayAway(next)) {
+      unawaited(showAwayTurn());
+      return;
+    }
+    if (next == AppLifecycleState.resumed) clearAwayTurn();
+  };
+
+  ref.listen<int>(gamesMyTurnCountProvider, (prev, next) {
+    if (next <= 0) {
+      clearAwayTurn();
+      return;
+    }
+    if ((prev ?? 0) > 0) return;
+    if (!trayAway(lifecycle.state)) return;
+    unawaited(showAwayTurn());
   });
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(realtimeEventsProvider,
@@ -94,8 +149,11 @@ final iosTraySyncProvider = Provider<void>((ref) {
   final invitesHydrated = ref.watch(gameInvitesHydratedProvider);
   final invites = ref.watch(gameInvitesProvider);
   final localRead = ref.watch(locallyReadChatIdsProvider);
+  final dailyAsync = ref.watch(dailyRewardAvailableProvider);
+  final incomeAsync = ref.watch(collectionIncomeProvider);
   final chatsReady = chatsAsync.hasValue;
   final friendsReady = friendsAsync.hasValue;
+  final rewardsReady = dailyAsync.hasValue && incomeAsync.hasValue;
   if (!chatsReady && !friendsReady && !invitesHydrated) return;
 
   final chats = applyLocallyReadChats(
@@ -133,9 +191,16 @@ final iosTraySyncProvider = Provider<void>((ref) {
     chatsWithUnread: chatsReady ? keepChats.length : 0,
     incomingFriends: friendsReady ? incoming : 0,
     gameInvites: invitesHydrated ? keepInvites.length : 0,
+    dailyReward: dailyAsync.valueOrNull == true ? 1 : 0,
+    collectionIncome: incomeAsync.valueOrNull?.available == true ? 1 : 0,
   );
-  final applyBadge =
-      chatsReady && friendsReady && invitesHydrated && !chatsTruncated;
+  // Пока статус наград не приехал, не затираем число, которое пуш уже
+  // поставил на иконке.
+  final applyBadge = chatsReady &&
+      friendsReady &&
+      invitesHydrated &&
+      rewardsReady &&
+      !chatsTruncated;
   final signature = [
     badge,
     applyBadge,
@@ -162,9 +227,11 @@ final iosTraySyncProvider = Provider<void>((ref) {
 
 class _NotifyLifecycle with WidgetsBindingObserver {
   AppLifecycleState state = AppLifecycleState.resumed;
+  void Function(AppLifecycleState next)? onChange;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState next) {
     state = next;
+    onChange?.call(next);
   }
 }

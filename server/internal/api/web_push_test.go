@@ -79,13 +79,19 @@ func TestBuildFCMMessageReachesIOS(t *testing.T) {
 }
 
 func TestPhoneNotificationBadge(t *testing.T) {
-	if got := phoneNotificationBadge(2, 3, 1); got != 4 {
+	if got := phoneNotificationBadge(2, 3, 1, 0, 0); got != 4 {
 		t.Fatalf("chats+one friend bucket+invites = %d", got)
 	}
-	if got := phoneNotificationBadge(0, 0, 0); got != 0 {
+	if got := phoneNotificationBadge(0, 0, 0, 1, 1); got != 2 {
+		t.Fatalf("daily reward + collection income = %d", got)
+	}
+	if got := phoneNotificationBadge(1, 0, 0, 1, 1); got != 3 {
+		t.Fatalf("chat + both rewards = %d", got)
+	}
+	if got := phoneNotificationBadge(0, 0, 0, 0, 0); got != 0 {
 		t.Fatalf("empty = %d", got)
 	}
-	if got := phoneNotificationBadge(-4, -1, -2); got != 0 {
+	if got := phoneNotificationBadge(-4, -1, -2, -1, -3); got != 0 {
 		t.Fatalf("negatives = %d", got)
 	}
 }
@@ -99,6 +105,12 @@ func TestIOSBadgeOnlyForTrackedPushes(t *testing.T) {
 	}
 	if !pushCountsForIconBadge(PushPayload{Kind: "game_invite", Tag: "game_invite_1"}) {
 		t.Fatal("invite")
+	}
+	if !pushCountsForIconBadge(PushPayload{Tag: "daily_reward"}) {
+		t.Fatal("daily reward")
+	}
+	if !pushCountsForIconBadge(PushPayload{Tag: "collection_income"}) {
+		t.Fatal("collection income")
 	}
 	if pushCountsForIconBadge(PushPayload{Kind: "game_turn", Tag: "game_turn_1"}) {
 		t.Fatal("turn must not reset the icon")

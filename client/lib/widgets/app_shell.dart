@@ -27,6 +27,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/live_my_turn.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -207,14 +208,17 @@ Future<void> _announceAwayGameTurn(
   );
 }
 
-/// Уход из партии в сообщения: бейдж меню + notify, часы стола не глушим.
-void _announceLeftBoardToMessages(WidgetRef ref, String path) {
+/// Уход со стола на другую вкладку: звук только если сейчас наш ход.
+void _announceLeftBoard(
+  WidgetRef ref,
+  String path, {
+  required bool isMyTurn,
+}) {
   final prev = _lastAwaySfxPath;
   if (prev == path) return;
   _lastAwaySfxPath = path;
   final active = ref.read(activeGameProvider).valueOrNull;
-  final isMyTurn = active?.type == 'game' && (active?.isMyTurn ?? false);
-  if (!GameAwaySfx.leftBoardToMessages(
+  if (!GameAwaySfx.leftBoard(
     previousPath: prev,
     nextPath: path,
     gameId: active?.gameId,
@@ -225,7 +229,7 @@ void _announceLeftBoardToMessages(WidgetRef ref, String path) {
     path: path,
     gameId: active?.gameId,
     isMyTurn: isMyTurn,
-    leftBoardWhileMyTurn: true,
+    leftBoardWhileMyTurn: isMyTurn,
   );
 }
 
@@ -241,7 +245,6 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     GameFlyOverlay.syncVisiblePath(path);
-    _announceLeftBoardToMessages(ref, path);
     final gameNavigation = ref.read(gameNavigationCoordinatorProvider);
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
@@ -474,7 +477,18 @@ class AppShell extends ConsumerWidget {
     });
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
-    final gamesMyTurn = ref.watch(gamesMyTurnCountProvider);
+    final activeForTurn = ref.watch(activeGameProvider).valueOrNull;
+    final liveTurn = watchLiveIsMyTurn(
+      ref,
+      activeForTurn,
+      meId: authState.valueOrNull?.id,
+    );
+    final isMyTurnNow = liveTurn ??
+        (activeForTurn?.type == 'game' && activeForTurn!.isMyTurn);
+    scheduleActiveTurnSync(ref, activeForTurn, liveTurn);
+    _announceLeftBoard(ref, path, isMyTurn: isMyTurnNow);
+    // На другой вкладке бейдж есть только при живом «моём ходе», не со старта.
+    final gamesMyTurn = isMyTurnNow ? 1 : 0;
     final gameInvitesCount = ref.watch(gameInvitesCountProvider);
     final dailyRewardAsync = ref.watch(dailyRewardAvailableProvider);
     final dailyRewardCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;

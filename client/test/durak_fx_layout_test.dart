@@ -361,6 +361,27 @@ void main() {
       expect(durakStuckSnapTicks(compact: true), 2);
       expect(durakStuckSnapTicks(compact: false), 3);
       expect(durakStuckSnapTicks(compact: true, openingDeal: true), 5);
+      expect(durakStuckSnapTicks(compact: true, handDeal: true), 5);
+      expect(
+        durakDealLandRect(
+          measured: const Rect.fromLTWH(0, 0, 40, 56),
+          slotSize: const Size(30, 42),
+          fallbackCenter: const Offset(180, 600),
+        ),
+        Rect.fromCenter(
+          center: const Offset(180, 600),
+          width: 30,
+          height: 42,
+        ),
+      );
+      expect(
+        durakDealLandRect(
+          measured: const Rect.fromLTWH(120, 80, 48, 64),
+          slotSize: const Size(30, 42),
+          fallbackCenter: const Offset(180, 600),
+        ).center,
+        const Offset(144, 112),
+      );
       expect(
         durakActionChromeVisible(
           liveCanShow: true,
@@ -447,9 +468,75 @@ void main() {
       );
     });
 
+    test('новый заход не держит карту прошлого стола', () {
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'attack',
+          tableReveal: false,
+          bitoGrew: false,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'defend',
+          tableReveal: false,
+          bitoGrew: false,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'attack_follow',
+          tableReveal: false,
+          bitoGrew: false,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakFreshAttackTableIsEmpty(
+          tableEmpty: true,
+          phase: 'attack',
+          tableReveal: false,
+          bitoGrew: true,
+          takeJustResolved: false,
+          hidingTable: false,
+          tableHold: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('добор не в веере, пока карта pending — даже во время полёта', () {
       expect(durakDealCardInFanLayout(pendingDeal: true), isFalse);
       expect(durakDealCardInFanLayout(pendingDeal: false), isTrue);
+    });
+
+    test('застрявший добор возвращается в веер, когда полёт уже не идёт', () {
+      expect(
+        durakReleaseStuckDealCards(pendingDeal: true, animatingDeal: false),
+        isTrue,
+      );
+      expect(
+        durakReleaseStuckDealCards(pendingDeal: true, animatingDeal: true),
+        isFalse,
+      );
+      expect(
+        durakReleaseStuckDealCards(pendingDeal: false, animatingDeal: false),
+        isFalse,
+      );
     });
 
     test('победа и реванш — после паузы на последний отбой', () {
@@ -824,6 +911,52 @@ void main() {
           attackStillOpen: false,
         ),
         isTrue,
+      );
+    });
+
+    test('пауза Беру не подсвечивает соперника', () {
+      expect(
+        durakActorSeatHighlighted(actor: -1, seat: 0, tableReveal: true),
+        isFalse,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: -1, seat: 1, tableReveal: true),
+        isFalse,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: 1, seat: 1, tableReveal: false),
+        isTrue,
+      );
+      expect(
+        durakActorSeatHighlighted(actor: 1, seat: 0, tableReveal: false),
+        isFalse,
+      );
+    });
+
+    test('ложный отбой на чужой атаке или карте из веера снимается', () {
+      expect(
+        durakDropOptimisticDefense(
+          retired: false,
+          attackMatches: false,
+          cardStillInHand: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakDropOptimisticDefense(
+          retired: false,
+          attackMatches: true,
+          cardStillInHand: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakDropOptimisticDefense(
+          retired: false,
+          attackMatches: true,
+          cardStillInHand: false,
+        ),
+        isFalse,
       );
     });
 

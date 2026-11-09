@@ -108,9 +108,10 @@ func apnsCollapseID(tag string) string {
 	return tag
 }
 
-// phoneNotificationBadge — как на Android: один баннер на чат, один на заявки
-// в друзья и по одному на каждое приглашение в игру.
-func phoneNotificationBadge(chatsWithUnread, incomingFriends, gameInvites int) int {
+// phoneNotificationBadge — число на иконке: один баннер на чат, один на заявки
+// в друзья, по одному на приглашение и по одному на доступные награды
+// (монеты за вход и дневной доход коллекций).
+func phoneNotificationBadge(chatsWithUnread, incomingFriends, gameInvites, dailyReward, collectionIncome int) int {
 	if chatsWithUnread < 0 {
 		chatsWithUnread = 0
 	}
@@ -121,18 +122,32 @@ func phoneNotificationBadge(chatsWithUnread, incomingFriends, gameInvites int) i
 	if gameInvites < 0 {
 		gameInvites = 0
 	}
-	return chatsWithUnread + friends + gameInvites
+	rewards := 0
+	if dailyReward > 0 {
+		rewards++
+	}
+	if collectionIncome > 0 {
+		rewards++
+	}
+	return chatsWithUnread + friends + gameInvites + rewards
 }
 
 func pushCountsForIconBadge(payload PushPayload) bool {
 	switch strings.TrimSpace(payload.Kind) {
 	case "chat", "game_invite":
 		return true
+	case "game_turn":
+		return false
 	}
 	tag := strings.TrimSpace(payload.Tag)
-	return tag == "friend_request" ||
-		strings.HasPrefix(tag, "chat_") ||
-		strings.HasPrefix(tag, "game_invite")
+	switch tag {
+	case "friend_request", "daily_reward", "collection_income":
+		return true
+	}
+	return strings.HasPrefix(tag, "chat_") ||
+		strings.HasPrefix(tag, "game_invite") ||
+		strings.HasPrefix(tag, "achievement_") ||
+		strings.HasPrefix(tag, "reward_")
 }
 
 func (s *WebPushSender) iosBadgeForUser(ctx context.Context, userID uuid.UUID) int {
@@ -151,7 +166,11 @@ func (s *WebPushSender) iosBadgeForUser(ctx context.Context, userID uuid.UUID) i
 			invites = int(n)
 		}
 	}
-	return phoneNotificationBadge(chats, friends, invites)
+	daily, income, rewardErr := store.CountRewardIconBadges(ctx, s.Pool, userID)
+	if rewardErr != nil {
+		log.Printf("fcm: reward badge: %v", rewardErr)
+	}
+	return phoneNotificationBadge(chats, friends, invites, daily, income)
 }
 
 func buildFCMMessage(token string, payload PushPayload) fcmMessage {

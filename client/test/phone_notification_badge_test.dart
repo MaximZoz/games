@@ -21,9 +21,31 @@ void main() {
     );
     expect(
       phoneNotificationBadge(
+        chatsWithUnread: 0,
+        incomingFriends: 0,
+        gameInvites: 0,
+        dailyReward: 1,
+        collectionIncome: 1,
+      ),
+      2,
+    );
+    expect(
+      phoneNotificationBadge(
+        chatsWithUnread: 1,
+        incomingFriends: 0,
+        gameInvites: 0,
+        dailyReward: 1,
+        collectionIncome: 1,
+      ),
+      3,
+    );
+    expect(
+      phoneNotificationBadge(
         chatsWithUnread: -3,
         incomingFriends: -1,
         gameInvites: -2,
+        dailyReward: -1,
+        collectionIncome: -2,
       ),
       0,
     );

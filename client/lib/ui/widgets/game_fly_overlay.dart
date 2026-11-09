@@ -59,11 +59,11 @@ class GameFlyOverlay {
     }
   }
 
-  /// Тики и «ваш ход» не глушим в сообщениях: партия жива в IndexedStack.
+  /// Тики и «ваш ход» только на открытом столе.
+  /// На другой вкладке звук — отдельное уведомление, и только если ход наш.
   static bool shouldKeepTurnClock(BuildContext context) {
     if (!context.mounted) return false;
-    if (isVisibleShellRoute(context)) return true;
-    return isMessagesPath(_visiblePath);
+    return isVisibleShellRoute(context);
   }
 
   /// Звук полёта/фишки — и на столе, и в сообщениях (без картинки поверх чата).

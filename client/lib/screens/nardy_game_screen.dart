@@ -29,6 +29,7 @@ import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/nardy/nardy_sfx.dart';
+import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -60,6 +61,9 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   int _gamepadSlot = 0;
   bool _busy = false;
   bool _isRematching = false;
+  bool _balanceGainPlayed = false;
+  bool _lossChipRevealed = false;
+  Future<bool>? _settleFuture;
   bool _isAcceptingRematch = false;
   bool _isFindingGame = false;
   bool _rematchDeclined = false;
@@ -443,14 +447,26 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       canLeaveFreely: _isOffline,
       onLeaveFinished: () async {
         if (!mounted) return;
+        final settled =
+            ref.read(nardyGameProvider(widget.gameId)).valueOrNull ?? game;
+        if (!_isOffline && settled != null && settled.isOver) {
+          await _runHeadToHeadSettle(settled);
+        }
+        if (!mounted) return;
         _navigateToGames();
       },
       onForfeitAndLeave: () async {
         if (!mounted) return;
+        var forfeited = false;
         try {
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await _repo.forfeit(widget.gameId);
+          forfeited = true;
         } catch (_) {}
+        if (!mounted) return;
+        if (forfeited && !_isOffline && game != null) {
+          await _runHeadToHeadSettle(game, forceLoss: true);
+        }
         if (!mounted) return;
         _navigateToGames();
         unawaited(ref.read(activeGameProvider.notifier).refresh());
@@ -957,7 +973,56 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     return false;
   }
 
+  void _scheduleHeadToHeadSettle(NardyGameView server) {
+    if (_isOffline || !server.isOver) return;
+    if (isGameBalanceSettled(ref, widget.gameId)) {
+      _balanceGainPlayed = true;
+      if (_lossChipRevealed) return;
+      final lost = stakeLostOnFinish(
+        stakeBronze: server.stakeBronze,
+        isDraw: server.isDraw,
+        iWon: server.iWon,
+      );
+      if (lost <= 0) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _lossChipRevealed = true);
+      });
+      return;
+    }
+    if (_balanceGainPlayed) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _balanceGainPlayed) return;
+      unawaited(_runHeadToHeadSettle(server));
+    });
+  }
+
+  Future<bool> _runHeadToHeadSettle(
+    NardyGameView game, {
+    bool forceLoss = false,
+  }) {
+    final existing = _settleFuture;
+    if (existing != null) return existing;
+    _balanceGainPlayed = true;
+    final players = game.playerIds.length >= 2 ? game.playerIds.length : 2;
+    final future = playHeadToHeadFinish(
+      ref: ref,
+      context: context,
+      gameId: widget.gameId,
+      stakeBronze: game.stakeBronze,
+      iWon: forceLoss ? false : game.iWon,
+      isDraw: forceLoss ? false : game.isDraw,
+      playerCount: players,
+      sourceKey: _rewardKey,
+    );
+    _settleFuture = future;
+    return future.then((loss) {
+      if (loss && mounted) setState(() => _lossChipRevealed = true);
+      return loss;
+    });
+  }
+
   Widget _buildGame(NardyGameView game, String? me) {
+    _scheduleHeadToHeadSettle(game);
     _scheduleAutoRoll(game);
     _scheduleAutoEndTurn(game);
     final myTurn = game.isMyTurn && !game.isOver;
@@ -1130,11 +1195,12 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   }
 
   Widget _buildStatusLine(NardyGameView game, bool myTurn) {
-    final rewardChip = stakeFinishRewardChip(
+    final rawChip = stakeFinishRewardChip(
       stakeBronze: game.stakeBronze,
       isDraw: game.isDraw,
       iWon: game.iWon,
     );
+    final rewardChip = rawChip < 0 && !_lossChipRevealed ? 0 : rawChip;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
