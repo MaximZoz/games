@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/android_notify_map.dart';
 import 'package:multigames_client/core/local_notify.dart';
@@ -94,8 +95,11 @@ final iosTraySyncProvider = Provider<void>((ref) {
   final invitesHydrated = ref.watch(gameInvitesHydratedProvider);
   final invites = ref.watch(gameInvitesProvider);
   final localRead = ref.watch(locallyReadChatIdsProvider);
+  final dailyAsync = ref.watch(dailyRewardAvailableProvider);
+  final incomeAsync = ref.watch(collectionIncomeProvider);
   final chatsReady = chatsAsync.hasValue;
   final friendsReady = friendsAsync.hasValue;
+  final rewardsReady = dailyAsync.hasValue && incomeAsync.hasValue;
   if (!chatsReady && !friendsReady && !invitesHydrated) return;
 
   final chats = applyLocallyReadChats(
@@ -133,9 +137,16 @@ final iosTraySyncProvider = Provider<void>((ref) {
     chatsWithUnread: chatsReady ? keepChats.length : 0,
     incomingFriends: friendsReady ? incoming : 0,
     gameInvites: invitesHydrated ? keepInvites.length : 0,
+    dailyReward: dailyAsync.valueOrNull == true ? 1 : 0,
+    collectionIncome: incomeAsync.valueOrNull?.available == true ? 1 : 0,
   );
-  final applyBadge =
-      chatsReady && friendsReady && invitesHydrated && !chatsTruncated;
+  // Пока статус наград не приехал, не затираем число, которое пуш уже
+  // поставил на иконке.
+  final applyBadge = chatsReady &&
+      friendsReady &&
+      invitesHydrated &&
+      rewardsReady &&
+      !chatsTruncated;
   final signature = [
     badge,
     applyBadge,

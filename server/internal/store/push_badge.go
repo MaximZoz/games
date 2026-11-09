@@ -50,3 +50,35 @@ func CountPhoneBadgeSources(
 	`, userID).Scan(&unreadChats, &incomingFriends)
 	return unreadChats, incomingFriends, err
 }
+
+// CountRewardIconBadges — по единице, если сегодня можно забрать монеты за
+// вход и дневной доход коллекций. Это те же условия, что у пушей наград.
+func CountRewardIconBadges(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	userID uuid.UUID,
+) (daily int, income int, err error) {
+	err = pool.QueryRow(ctx, `
+		SELECT
+			CASE WHEN u.daily_reward_claimed_at IS NULL
+				OR (u.daily_reward_claimed_at AT TIME ZONE 'UTC')::date < `+utcTodaySQL+`
+				THEN 1 ELSE 0 END,
+			CASE WHEN (
+					u.collection_income_claimed_at IS NULL
+					OR (u.collection_income_claimed_at AT TIME ZONE 'UTC')::date < `+utcTodaySQL+`
+				)
+				AND EXISTS (
+					SELECT 1
+					FROM user_inventory inv
+					JOIN shop_items s ON s.code = inv.item_code
+					WHERE inv.user_id = u.id
+						AND s.kind = 'collection'
+						AND s.active = TRUE
+						AND COALESCE((s.payload->>'weekly_bronze')::int, 0) > 0
+				)
+				THEN 1 ELSE 0 END
+		FROM users u
+		WHERE u.id = $1
+	`, userID).Scan(&daily, &income)
+	return daily, income, err
+}
