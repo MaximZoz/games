@@ -1,6 +1,6 @@
 # iOS → TestFlight без Mac (Zozu Games)
 
-Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-26` + Xcode 26 / iOS 26 SDK), как Android AAB заливается в Play Internal. С апреля 2026 App Store Connect не принимает SDK старше iOS 26.
+Mac не нужен. Сборку IPA и загрузку делает GitHub Actions (`macos-26-intel` + Xcode 26 / iOS 26 SDK), как Android AAB заливается в Play Internal. С апреля 2026 App Store Connect не принимает SDK старше iOS 26. Метка `macos-26` — тот же образ, но очередь arm64; при нехватке машин GitHub отменяет job, не начиная сборку.
 
 На iPhone ставишь приложение **TestFlight** из App Store и ставишь сборку оттуда.
 
@@ -190,7 +190,8 @@ macOS-минуты GitHub дороже Linux — не жми Run подряд.
 | `readonly` / `No code signing identity` | не жми Re-run на старом прогоне. Actions → iOS TestFlight → **Run workflow** с `develop`, flavor **dev** |
 | `Authentication credentials are missing` / 401 | неверный Key ID / Issuer / `.p8`, или ключ не Admin |
 | `match` / git push | не удаляй ветку `match-certs`; у workflow есть `contents: write` |
-| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен `macos-26` + Xcode 26. Не жми Re-run на старом прогоне — дождись вливания в `develop` / `main` |
+| `SDK version issue` / `iOS 18.5` | Apple с апреля 2026 принимает только iOS 26 SDK. Нужен Xcode 26 на `macos-26-intel` (или `macos-26`). Не жми Re-run на старом прогоне — дождись вливания в `develop` / `main` |
+| `not acquired by Runner` | GitHub не выдал машину. `macos-26` — очередь arm64; workflow собирает на `macos-26-intel`. Отмени зависший прогон и запусти workflow заново с ветки, где уже стоит `macos-26-intel` |
 | `Invalid MinimumOSVersion` / `App.framework` | в `client/ios/Flutter/AppFrameworkInfo.plist` должен быть `MinimumOSVersion` 15.0 |
 | `Deployment target too low` / `90068` | приложение целится в iOS 15.0 (с апреля 2027 Apple не примет ниже) |
 | `CFBundleShortVersionString` / `at most three` | версия только три числа (`0.1.0`); номер сборки (`10010`) идёт отдельно в `CFBundleVersion` |

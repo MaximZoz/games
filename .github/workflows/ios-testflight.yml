@@ -44,7 +44,10 @@ concurrency:
 jobs:
   release:
     if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.code_only) && !(github.event_name == 'push' && contains(github.event.head_commit.message, '[skip ipa]')) }}
-    runs-on: macos-26
+    # arm64-метка macos-26 сидит в переполненной очереди и через ~15 минут
+    # отменяется: «not acquired by Runner». macos-26-intel — тот же образ
+    # с Xcode 26 (iOS 26 SDK), но отдельный пул стандартных раннеров.
+    runs-on: macos-26-intel
     outputs:
       flavor: ${{ steps.target.outputs.flavor }}
       build_id: ${{ steps.target.outputs.build_id }}

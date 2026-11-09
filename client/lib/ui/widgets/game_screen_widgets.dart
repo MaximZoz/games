@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
+import 'package:multigames_client/games/game_balance_settle.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart' show GameInvite;
 import 'package:multigames_client/games/rematch_match.dart';
 
@@ -2334,6 +2336,74 @@ Future<bool> playGameSettledReward({
       ref.read(balanceGainProvider.notifier).end();
     }
   }
+}
+
+/// Конец партии 1 на 1: анимация ±, и только после неё новый баланс в тулбаре.
+///
+/// Ничья и стол больше чем на двоих — без ложного ±, только сверка с сервером.
+/// `true` — проигрыш: чип «−N» можно показать после анимации.
+Future<bool> playHeadToHeadFinish({
+  required WidgetRef ref,
+  required BuildContext context,
+  required String gameId,
+  required int stakeBronze,
+  required bool iWon,
+  required bool isDraw,
+  int playerCount = 2,
+  GlobalKey? sourceKey,
+}) async {
+  // Стол ещё жив: не помечаем партию рассчитанной, иначе финальная
+  // анимация места в multi не запустится.
+  if (playerCount > 2) {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    return false;
+  }
+  if (isGameBalanceSettled(ref, gameId)) return false;
+  markGameBalanceSettled(ref, gameId);
+  if (stakeBronze <= 0 || isDraw) {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    return false;
+  }
+  final players = playerCount < 2 ? 2 : playerCount;
+  final credit = iWon
+      ? stakeWinnerCredit(
+          stake: stakeBronze,
+          playerCount: players,
+          winnerCount: 1,
+        )
+      : 0;
+  final display = iWon
+      ? stakeWinnerNetProfit(
+          stake: stakeBronze,
+          playerCount: players,
+          winnerCount: 1,
+        )
+      : 0;
+  final lost = stakeLostOnFinish(
+    stakeBronze: stakeBronze,
+    isDraw: isDraw,
+    iWon: iWon,
+  );
+  if (lost > 0 && credit <= 0) {
+    await playGameSettledLoss(
+      ref: ref,
+      context: context,
+      lostBronze: lost,
+    );
+    return true;
+  }
+  await playGameSettledReward(
+    ref: ref,
+    context: context,
+    creditBronze: credit,
+    displayRewardBronze: display,
+    sourceKey: sourceKey,
+  );
+  return false;
 }
 
 /// Проигрыш ставки: списание в тулбаре → полёт монеты.

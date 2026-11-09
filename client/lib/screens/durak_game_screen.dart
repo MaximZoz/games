@@ -5929,10 +5929,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       onForfeitAndLeave: () async {
         if (!mounted) return;
         final multi = (view?.playerIds.length ?? 0) > 2;
+        var forfeited = false;
         try {
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await ref.read(durakRepositoryProvider).forfeit(widget.gameId);
+          forfeited = true;
         } catch (_) {}
+        if (!mounted) return;
+        if (forfeited && view != null) {
+          await playHeadToHeadFinish(
+            ref: ref,
+            context: context,
+            gameId: widget.gameId,
+            stakeBronze: view.stakeBronze,
+            iWon: false,
+            isDraw: false,
+            playerCount: view.playerIds.length,
+          );
+        }
         if (!mounted) return;
         // Сразу локальная observation с типом durak — иначе карточка/роутер
         // могут увести в крестики до refresh GetActive.

@@ -86,6 +86,41 @@ void main() {
     expect(isMessagesPath('/'), isFalse);
   });
 
+  test('уход со стола на другую вкладку', () {
+    expect(
+      GameAwaySfx.leftBoard(
+        previousPath: '/games/chess/game/g1',
+        nextPath: '/friends',
+        gameId: 'g1',
+      ),
+      isTrue,
+    );
+    expect(
+      GameAwaySfx.leftBoard(
+        previousPath: '/games/chess/game/g1',
+        nextPath: '/',
+        gameId: 'g1',
+      ),
+      isTrue,
+    );
+    expect(
+      GameAwaySfx.leftBoard(
+        previousPath: '/games/chess/game/g1',
+        nextPath: '/games/chess/game/g1',
+        gameId: 'g1',
+      ),
+      isFalse,
+    );
+    expect(
+      GameAwaySfx.leftBoardToMessages(
+        previousPath: '/games/chess/game/g1',
+        nextPath: '/friends',
+        gameId: 'g1',
+      ),
+      isFalse,
+    );
+  });
+
   test('уход со стола в сообщения — notify, на столе — нет', () {
     expect(
       GameAwaySfx.leftBoardToMessages(

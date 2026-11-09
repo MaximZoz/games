@@ -996,15 +996,40 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         if (eliminated && game != null && !game.isOver && !_isOffline) {
           enterGameObservation(ref, widget.gameId, gameType: 'uno');
           _observeEntered = true;
+        } else if (game != null && game.isOver && !_isOffline) {
+          await playHeadToHeadFinish(
+            ref: ref,
+            context: context,
+            gameId: widget.gameId,
+            stakeBronze: game.stakeBronze,
+            iWon: game.iWon,
+            isDraw: game.isDraw,
+            playerCount: game.players.length,
+          );
         }
+        if (!mounted) return;
         _goToGames(keepObservation: eliminated && game != null && !game.isOver);
       },
       onForfeitAndLeave: () async {
         final multi = (game?.players.length ?? 0) > 2;
+        var forfeited = false;
         try {
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await ref.read(unoRepositoryProvider).forfeit(widget.gameId);
+          forfeited = true;
         } catch (_) {}
+        if (!mounted) return;
+        if (forfeited && game != null && !_isOffline) {
+          await playHeadToHeadFinish(
+            ref: ref,
+            context: context,
+            gameId: widget.gameId,
+            stakeBronze: game.stakeBronze,
+            iWon: false,
+            isDraw: false,
+            playerCount: game.players.length,
+          );
+        }
         if (!mounted) return;
         if (multi && !_isOffline) {
           enterGameObservation(ref, widget.gameId, gameType: 'uno');
@@ -1110,6 +1135,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(() async {
+        if (isGameBalanceSettled(ref, widget.gameId)) return;
         markGameBalanceSettled(ref, widget.gameId);
         if (lost > 0 && credit <= 0) {
           await playGameSettledLoss(

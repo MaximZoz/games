@@ -975,14 +975,44 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       isActive: game != null && !game.isOver,
       onLeaveFinished: () async {
         if (!mounted) return;
+        final settled =
+            ref.read(battleshipGameProvider(widget.gameId)).valueOrNull ??
+                game;
+        if (settled != null && settled.isOver) {
+          final me = ref.read(authStateProvider).valueOrNull?.id;
+          await playHeadToHeadFinish(
+            ref: ref,
+            context: context,
+            gameId: widget.gameId,
+            stakeBronze: settled.stakeBronze,
+            iWon: _isWinner(settled, me),
+            isDraw: settled.isDraw,
+            playerCount: 2,
+          );
+        }
+        if (!mounted) return;
         _navigateToGames();
       },
       onForfeitAndLeave: () async {
         if (!mounted) return;
+        var forfeited = false;
         try {
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await ref.read(battleshipRepositoryProvider).forfeit(widget.gameId);
+          forfeited = true;
         } catch (_) {}
+        if (!mounted) return;
+        if (forfeited && game != null) {
+          await playHeadToHeadFinish(
+            ref: ref,
+            context: context,
+            gameId: widget.gameId,
+            stakeBronze: game.stakeBronze,
+            iWon: false,
+            isDraw: false,
+            playerCount: 2,
+          );
+        }
         if (!mounted) return;
         _navigateToGames();
         unawaited(ref.read(activeGameProvider.notifier).refresh());
