@@ -495,6 +495,8 @@ void main() {
       await session.applyMove(type: 'take');
       expect(session.view.phase, 'take_reveal');
       expect(session.view.table, isNotEmpty);
+      // Как онлайн: флаг взятия ещё выключен, пока стол лежит на паузе.
+      expect(session.view.lastWasTake, isFalse);
 
       final after = await session.waitUntilRevealDone();
       expect(after.phase, isNot(equals('take_reveal')));

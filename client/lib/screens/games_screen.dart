@@ -40,6 +40,7 @@ import 'package:multigames_client/ui/widgets/sliding_pill_bar.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/push_nav_paths.dart';
+import 'package:multigames_client/games/match_rules.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -1046,85 +1047,49 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     }
   }
 
-  /// Правила приглашения по game_type: инжектируем нужный набор.
   Widget _inviteRulesWidget(GameInvite inv) {
-    if (inv.isDurak) {
-      return rulesTextLines(durakRuleLines(
-        mode: inv.durakMode,
-        players: inv.maxPlayers,
-        deckSize: inv.deckSize,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-      ));
-    }
-    if (inv.isBattleship) {
-      return rulesTextLines(battleshipRuleLines(
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        l10n: context.l10n,
-      ));
-    }
-    if (inv.isPoker) {
-      return rulesTextLines(pokerRuleLines(
-        players: inv.maxPlayers,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        l10n: context.l10n,
-      ));
-    }
-    if (inv.isUno) {
-      return rulesTextLines(unoRuleLines(
-        players: inv.maxPlayers,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        l10n: context.l10n,
-      ));
-    }
-    if (inv.isDomino) {
-      return rulesTextLines(dominoRuleLines(
-        players: inv.maxPlayers,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        mode: inv.durakMode,
-        l10n: context.l10n,
-      ));
-    }
-    if (inv.isNardy) {
-      return rulesTextLines(nardyRuleLines(
-        gameMode: inv.durakMode,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        l10n: context.l10n,
-      ));
-    }
-    if (inv.isCheckers) {
-      return rulesTextLines(checkersRuleLines(
-        gameMode: inv.durakMode,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        l10n: context.l10n,
-      ));
-    }
-    if (inv.isChess) {
-      return rulesTextLines(chessRuleLines(
-        gameMode: inv.durakMode,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        l10n: context.l10n,
-      ));
-    }
-    return buildTictactoeRulesTextWidget(
+    return buildMatchRulesBody(
+      l10n: context.l10n,
+      isDurak: inv.isDurak,
+      isBattleship: inv.isBattleship,
+      isPoker: inv.isPoker,
+      isUno: inv.isUno,
+      isDomino: inv.isDomino,
+      isNardy: inv.isNardy,
+      isCheckers: inv.isCheckers,
+      isChess: inv.isChess,
+      gameMode: inv.durakMode,
       variant: inv.variant,
-      gridSize: inv.gridSize,
+      maxPlayers: inv.maxPlayers,
+      deckSize: inv.deckSize,
       turnTimeSec: inv.turnTimeSec,
+      stakeBronze: inv.stakeBronze,
+      gridSize: inv.gridSize,
       swapRule: inv.swapRule,
       firstMoveRestriction: inv.firstMoveRestriction,
-      stakeBronze: inv.stakeBronze,
-      style: const TextStyle(
-        color: AppColors.textSecondary,
-        fontSize: 13,
-        height: 1.35,
-      ),
+    );
+  }
+
+  Widget _lobbyRulesBody(LobbyItem lobby) {
+    return buildMatchRulesBody(
+      l10n: context.l10n,
+      isDurak: lobby.isDurak,
+      isBattleship: lobby.isBattleship,
+      isPoker: lobby.isPoker,
+      isUno: lobby.isUno,
+      isDomino: lobby.isDomino,
+      isNardy: lobby.isNardy,
+      isCheckers: lobby.isCheckers,
+      isChess: lobby.isChess,
+      gameMode: lobby.gameMode,
+      variant: lobby.variant,
+      maxPlayers: lobby.maxPlayers,
+      deckSize: lobby.deckSize,
+      turnTimeSec: lobby.turnTimeSec,
+      stakeBronze: lobby.stakeBronze,
+      gridSize: lobby.gridSize,
+      swapRule: lobby.swapRule,
+      firstMoveRestriction: lobby.firstMoveRestriction,
     );
   }
 
@@ -1143,10 +1108,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   }
 
   void _showInviteRules(BuildContext context, GameInvite inv) {
+    _showMatchRulesDialog(context, _inviteRulesWidget(inv));
+  }
+
+  void _showMatchRulesDialog(BuildContext context, Widget body) {
     showDialog<void>(
       context: context,
       builder: (ctx) {
         final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
+        final maxHeight = MediaQuery.sizeOf(ctx).height * 0.85;
         return wrapGamepadScrollDismissDialog(
           dialogContext: ctx,
           child: Dialog(
@@ -1155,9 +1125,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             vertical: isDesktop ? 40 : 20,
           ),
           backgroundColor: Colors.transparent,
-          child: ConstrainedBox(
-            constraints:
-                BoxConstraints(maxWidth: isDesktop ? 380 : double.infinity),
+            child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isDesktop ? 380 : double.infinity,
+              maxHeight: maxHeight,
+            ),
             child: GradientCard(
               animate: false,
               margin: EdgeInsets.zero,
@@ -1186,8 +1158,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    child: _inviteRulesWidget(inv),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: body,
+                    ),
                   ),
                 ],
               ),
@@ -1702,85 +1676,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   }
 
   void _showLobbyRulesInfo(BuildContext context, LobbyItem lobby) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
-        final Widget body;
-        if (lobby.isBattleship) {
-          body = rulesTextLines(battleshipRuleLines(
-            turnTimeSec: lobby.turnTimeSec,
-            stakeBronze: lobby.stakeBronze,
-            l10n: context.l10n,
-          ));
-        } else if (lobby.isDurak) {
-          body = rulesTextLines(durakRuleLines(
-            mode: lobby.gameMode,
-            players: lobby.maxPlayers,
-            deckSize: lobby.deckSize,
-            turnTimeSec: lobby.turnTimeSec,
-            stakeBronze: lobby.stakeBronze,
-          ));
-        } else if (lobby.isPoker) {
-          body = rulesTextLines(pokerRuleLines(
-            players: lobby.maxPlayers,
-            turnTimeSec: lobby.turnTimeSec,
-            stakeBronze: lobby.stakeBronze,
-          ));
-        } else if (lobby.isUno) {
-          body = rulesTextLines(unoRuleLines(
-            players: lobby.maxPlayers,
-            turnTimeSec: lobby.turnTimeSec,
-            stakeBronze: lobby.stakeBronze,
-          ));
-        } else if (lobby.isDomino) {
-          body = rulesTextLines(dominoRuleLines(
-            players: lobby.maxPlayers,
-            turnTimeSec: lobby.turnTimeSec,
-            stakeBronze: lobby.stakeBronze,
-            mode: lobby.gameMode,
-            l10n: context.l10n,
-          ));
-        } else if (lobby.isNardy) {
-          body = rulesTextLines(nardyRuleLines(
-            gameMode: lobby.gameMode,
-            turnTimeSec: lobby.turnTimeSec,
-            stakeBronze: lobby.stakeBronze,
-            l10n: context.l10n,
-          ));
-        } else {
-          body = buildTictactoeRulesTextWidget(
-            variant: lobby.variant,
-            gridSize: lobby.gridSize,
-            turnTimeSec: lobby.turnTimeSec,
-            swapRule: lobby.swapRule,
-            firstMoveRestriction: lobby.firstMoveRestriction,
-            stakeBronze: lobby.stakeBronze,
-          );
-        }
-        return wrapGamepadScrollDismissDialog(
-          dialogContext: ctx,
-          child: AlertDialog(
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 80 : 24,
-            vertical: isDesktop ? 40 : 24,
-          ),
-          title: Text(context.l10n.gamesRules),
-          content: ConstrainedBox(
-            constraints:
-                BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
-            child: SingleChildScrollView(child: body),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(context.l10n.commonClose),
-            ),
-          ],
-        ),
-        );
-      },
-    );
+    _showMatchRulesDialog(context, _lobbyRulesBody(lobby));
   }
 }
 
@@ -2208,8 +2104,13 @@ class _LobbiesPageContent extends ConsumerWidget {
                           ),
                           IconButton(
                             onPressed: () => onShowLobbyRules(context, lobby),
-                            icon: const Icon(Icons.info_outline_rounded),
+                            icon: const Icon(Icons.rule_rounded, size: 20),
                             tooltip: context.l10n.gamesRulesTitle,
+                            style: IconButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              minimumSize: const Size(32, 32),
+                              padding: const EdgeInsets.all(4),
+                            ),
                           ),
                           IconButton.filled(
                             onPressed: () => onJoinLobby(

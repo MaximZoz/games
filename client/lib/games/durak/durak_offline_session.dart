@@ -271,7 +271,9 @@ class OfflineDurakSession extends ChangeNotifier {
           _lastWasTake = false;
         case 'take':
           _game.take();
-          _lastWasTake = true;
+          // Как на сервере: «Беру» ещё не забирает стол. Флаг включится,
+          // когда пауза показа закончится и стол опустеет.
+          _lastWasTake = false;
         case 'bito':
           _applyBito(me);
         case 'done':
@@ -309,8 +311,6 @@ class OfflineDurakSession extends ChangeNotifier {
     _game.confirmTake(playerIndex: player);
     if (_game.turn == DurakTurn.takeReveal) {
       _beginReveal('take_reveal', wasTake: true);
-    } else {
-      _lastWasTake = true;
     }
   }
 
@@ -325,7 +325,10 @@ class OfflineDurakSession extends ChangeNotifier {
   void _beginReveal(String phase, {required bool wasTake}) {
     if (_revealPhase != null) return;
     _revealPhase = phase;
-    _lastWasTake = wasTake;
+    // Онлайн ставит last_was_take вместе с пустым столом, после паузы.
+    // Если включить флаг раньше, клиент не увидит переход и оставит
+    // копию карт на столе, хотя они уже в руке.
+    if (!wasTake) _lastWasTake = false;
     _revealTimer?.cancel();
     final delay = _game.completingRevealEndsMatch()
         ? lastTrickRevealDelay
@@ -336,6 +339,7 @@ class OfflineDurakSession extends ChangeNotifier {
         _game.completeReveal();
       } catch (_) {}
       _revealPhase = null;
+      if (wasTake) _lastWasTake = true;
       notifyListeners();
       _scheduleBot();
     });
@@ -458,8 +462,6 @@ class OfflineDurakSession extends ChangeNotifier {
           _beginReveal('bito_reveal', wasTake: false);
         } else if (_game.turn == DurakTurn.takeReveal) {
           _beginReveal('take_reveal', wasTake: true);
-        } else if (_game.turn == DurakTurn.takeFollowUp) {
-          _lastWasTake = true;
         }
       }
       _handleEngineReveal();
