@@ -389,6 +389,16 @@ bool durakNeedsPendingAttackSlot({
   return !attackAlreadyOnTable;
 }
 
+/// Подтверждённый подкид сажаем только после полёта.
+///
+/// Офлайн обновляет стол сразу, пока overlay ещё в воздухе. Если сесть
+/// раньше, слот перестаёт быть пустым и карта видна дважды.
+bool durakSeatConfirmedAttack({
+  required bool onTable,
+  required bool stillFlying,
+}) =>
+    onTable && !stillFlying;
+
 /// Свой подкид ещё не сел: не запускать чужой FX и не перерисовывать ход.
 bool durakHoldTableFxForLocalAttack({
   required bool optimisticAttack,

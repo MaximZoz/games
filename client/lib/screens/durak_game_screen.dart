@@ -4073,7 +4073,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (_optimisticAttacks.isEmpty) return;
     final done = <PlayingCard>[
       for (final card in _optimisticAttacks)
-        if (_tableHasAttack(view, card)) card,
+        if (durakSeatConfirmedAttack(
+          onTable: _tableHasAttack(view, card),
+          stillFlying: _flyingToTable.contains(card),
+        ))
+          card,
     ];
     for (final card in done) {
       _seatTableCard(card);

@@ -425,6 +425,18 @@ void main() {
         isTrue,
       );
       expect(
+        durakSeatConfirmedAttack(onTable: true, stillFlying: true),
+        isFalse,
+      );
+      expect(
+        durakSeatConfirmedAttack(onTable: true, stillFlying: false),
+        isTrue,
+      );
+      expect(
+        durakSeatConfirmedAttack(onTable: false, stillFlying: false),
+        isFalse,
+      );
+      expect(
         durakHoldTableFxForLocalAttack(
           optimisticAttack: true,
           flyingToTable: false,
