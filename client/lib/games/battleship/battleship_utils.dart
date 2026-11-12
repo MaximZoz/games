@@ -655,6 +655,141 @@ int battleshipFleetSunkCount(List<List<int>> sunkShips) {
 int battleshipFleetRemainingCount(List<List<int>> sunkShips) =>
     kBattleshipFleet.length - battleshipFleetSunkCount(sunkShips);
 
+/// Палубы линии флота: `true` — попадание.
+///
+/// Если [knownShips] известны (своё поле или флот соперника после партии),
+/// краснеет ровно та палуба, в которую попали. Иначе потопленные корабли
+/// занимают слот своей длины целиком, а ещё не потопленные попадания
+/// садятся ранением на самый короткий подходящий слот: кусок из L
+/// попаданий не может быть кораблём короче L+1, иначе он уже был бы потоплен.
+List<List<bool>> battleshipFleetDecks({
+  List<List<int>> knownShips = const [],
+  List<int> hits = const [],
+  List<List<int>> sunkShips = const [],
+}) {
+  if (knownShips.isNotEmpty) {
+    return _knownFleetDecks(knownShips, hits);
+  }
+  return _hiddenFleetDecks(sunkShips, hits);
+}
+
+List<List<bool>> _knownFleetDecks(List<List<int>> ships, List<int> hits) {
+  final hitSet = hits.toSet();
+  final grouped = <int, List<List<int>>>{};
+  for (final ship in ships) {
+    if (ship.isEmpty) continue;
+    final cells = [...ship]..sort();
+    grouped.putIfAbsent(cells.length, () => []).add(cells);
+  }
+  for (final list in grouped.values) {
+    list.sort((a, b) => a.first.compareTo(b.first));
+  }
+  final cursor = <int, int>{};
+  final decks = <List<bool>>[];
+  for (final len in kBattleshipFleet) {
+    final i = cursor[len] ?? 0;
+    cursor[len] = i + 1;
+    final group = grouped[len];
+    if (group == null || i >= group.length) {
+      decks.add(List<bool>.filled(len, false));
+      continue;
+    }
+    decks.add([for (final cell in group[i]) hitSet.contains(cell)]);
+  }
+  return decks;
+}
+
+List<List<bool>> _hiddenFleetDecks(List<List<int>> sunkShips, List<int> hits) {
+  final decks = <List<bool>>[
+    for (final len in kBattleshipFleet) List<bool>.filled(len, false),
+  ];
+  final sunkSlots = battleshipFleetSunkSlots(sunkShips);
+  for (var i = 0; i < decks.length; i++) {
+    if (!sunkSlots[i]) continue;
+    for (var c = 0; c < decks[i].length; c++) {
+      decks[i][c] = true;
+    }
+  }
+  final sunkCells = <int>{for (final ship in sunkShips) ...ship};
+  final clusters = _woundClusters(hits, sunkCells);
+  final free = <int>[
+    for (var i = 0; i < decks.length; i++)
+      if (!sunkSlots[i]) i,
+  ];
+  for (final cluster in clusters) {
+    if (free.isEmpty || cluster.isEmpty) break;
+    final slot = _pickWoundSlot(free, cluster.length);
+    free.remove(slot);
+    final paint = cluster.length < decks[slot].length
+        ? cluster.length
+        : decks[slot].length;
+    for (var c = 0; c < paint; c++) {
+      decks[slot][c] = true;
+    }
+  }
+  return decks;
+}
+
+int _pickWoundSlot(List<int> free, int hits) {
+  int? best;
+  for (final minLen in [hits + 1, hits]) {
+    for (final i in free) {
+      final len = kBattleshipFleet[i];
+      if (len < minLen) continue;
+      if (best == null || len < kBattleshipFleet[best]) best = i;
+    }
+    if (best != null) return best;
+  }
+  var largest = free.first;
+  for (final i in free) {
+    if (kBattleshipFleet[i] > kBattleshipFleet[largest]) largest = i;
+  }
+  return largest;
+}
+
+/// Соседние попадания одного ещё живого корабля. Стык строк поля не склеивает.
+List<List<int>> _woundClusters(List<int> hits, Set<int> sunkCells) {
+  final wounds = <int>{
+    for (final cell in hits)
+      if (cell >= 0 && cell < kBattleshipCellCount && !sunkCells.contains(cell))
+        cell,
+  };
+  final used = <int>{};
+  final clusters = <List<int>>[];
+  final ordered = wounds.toList()..sort();
+  for (final start in ordered) {
+    if (used.contains(start)) continue;
+    final cluster = <int>[];
+    final queue = <int>[start];
+    used.add(start);
+    while (queue.isNotEmpty) {
+      final cell = queue.removeLast();
+      cluster.add(cell);
+      final col = cell % kBattleshipBoardSize;
+      final neighbors = <int>[
+        if (col > 0) cell - 1,
+        if (col < kBattleshipBoardSize - 1) cell + 1,
+        if (cell >= kBattleshipBoardSize) cell - kBattleshipBoardSize,
+        if (cell + kBattleshipBoardSize < kBattleshipCellCount)
+          cell + kBattleshipBoardSize,
+      ];
+      for (final next in neighbors) {
+        if (!wounds.contains(next) || used.contains(next)) continue;
+        used.add(next);
+        queue.add(next);
+      }
+    }
+    cluster.sort();
+    clusters.add(cluster);
+  }
+  clusters.sort((a, b) {
+    final byLen = b.length.compareTo(a.length);
+    if (byLen != 0) return byLen;
+    return a.first.compareTo(b.first);
+  });
+  return clusters;
+}
+
 /// Дефолтная валидная расстановка (как на сервере при таймауте setup).
 List<List<int>> defaultBattleshipShips() {
   return [
