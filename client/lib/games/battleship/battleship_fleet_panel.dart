@@ -3,21 +3,22 @@ import 'package:multigames_client/games/battleship/battleship_utils.dart';
 
 /// Длинная линия силуэтов флота под статусом хода.
 ///
-/// Сбитый корабль красный, оставшийся — серый. Линия на всю ширину
-/// промежутка над полем.
+/// Попадание и потопленная палуба красные, целая — серая. У раненого
+/// корабля красные только задетые палубы, у потопленного — все.
 class BattleshipFleetLine extends StatelessWidget {
   const BattleshipFleetLine({
     super.key,
-    required this.sunkShips,
+    required this.decks,
     required this.semanticsLabel,
   });
 
-  final List<List<int>> sunkShips;
+  /// Палубы по слотам [kBattleshipFleet]. `true` — попадание.
+  final List<List<bool>> decks;
 
   /// Озвучка для экрана: кто и сколько кораблей ещё на плаву.
   final String semanticsLabel;
 
-  static const Color sunk = Color(0xFFE53935);
+  static const Color hit = Color(0xFFE53935);
   static const Color afloat = Color(0xFF607D8B);
 
   @override
@@ -28,7 +29,7 @@ class BattleshipFleetLine extends StatelessWidget {
       child: ExcludeSemantics(
         child: _ShipLine(
           key: const ValueKey('battleship-fleet-line'),
-          sunk: battleshipFleetSunkSlots(sunkShips),
+          decks: decks,
         ),
       ),
     );
@@ -36,9 +37,9 @@ class BattleshipFleetLine extends StatelessWidget {
 }
 
 class _ShipLine extends StatelessWidget {
-  const _ShipLine({super.key, required this.sunk});
+  const _ShipLine({super.key, required this.decks});
 
-  final List<bool> sunk;
+  final List<List<bool>> decks;
 
   static const double _maxCell = 13;
   static const double _innerRatio = 0.22;
@@ -82,8 +83,10 @@ class _ShipLine extends StatelessWidget {
                   if (i > 0) SizedBox(width: gap),
                   _ShipGlyph(
                     key: ValueKey('battleship-ship-$i'),
-                    length: kBattleshipFleet[i],
-                    sunk: i < sunk.length && sunk[i],
+                    ship: i,
+                    hits: i < decks.length
+                        ? decks[i]
+                        : List<bool>.filled(kBattleshipFleet[i], false),
                     cell: cell,
                     gap: inner,
                   ),
@@ -100,38 +103,55 @@ class _ShipLine extends StatelessWidget {
 class _ShipGlyph extends StatelessWidget {
   const _ShipGlyph({
     super.key,
-    required this.length,
-    required this.sunk,
+    required this.ship,
+    required this.hits,
     required this.cell,
     required this.gap,
   });
 
-  final int length;
-  final bool sunk;
+  final int ship;
+  final List<bool> hits;
   final double cell;
   final double gap;
 
   @override
   Widget build(BuildContext context) {
-    final color = sunk ? BattleshipFleetLine.sunk : BattleshipFleetLine.afloat;
+    final sunk = hits.isNotEmpty && hits.every((hit) => hit);
     final radius = cell * 0.45;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (var i = 0; i < length; i++) ...[
+        for (var i = 0; i < hits.length; i++) ...[
           if (i > 0) SizedBox(width: gap),
           AnimatedContainer(
+            key: ValueKey('battleship-deck-$ship-$i'),
             duration: const Duration(milliseconds: 280),
             curve: Curves.easeOutCubic,
             width: cell,
             height: cell,
             decoration: BoxDecoration(
-              color: color,
+              color: hits[i]
+                  ? BattleshipFleetLine.hit
+                  : BattleshipFleetLine.afloat,
               borderRadius: BorderRadius.horizontal(
                 left: Radius.circular(i == 0 ? radius : 0.8),
-                right: Radius.circular(i == length - 1 ? radius : 0.8),
+                right: Radius.circular(i == hits.length - 1 ? radius : 0.8),
               ),
             ),
+            // Точка только у ранения: потопленный корабль остаётся сплошным.
+            child: hits[i] && !sunk
+                ? Center(
+                    child: Container(
+                      key: ValueKey('battleship-wound-$ship-$i'),
+                      width: cell * 0.34,
+                      height: cell * 0.34,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  )
+                : null,
           ),
         ],
       ],
