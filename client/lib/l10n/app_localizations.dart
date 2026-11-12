@@ -1577,6 +1577,24 @@ abstract class AppLocalizations {
   /// **'Корабли не должны соприкасаться'**
   String get gamesBattleshipShipsMustNotTouch;
 
+  /// No description provided for @gamesBattleshipSunk.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбито'**
+  String get gamesBattleshipSunk;
+
+  /// No description provided for @gamesBattleshipRemaining.
+  ///
+  /// In ru, this message translates to:
+  /// **'Осталось'**
+  String get gamesBattleshipRemaining;
+
+  /// No description provided for @gamesBattleshipFleetScore.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name}: {sunk} сбито, {left} осталось'**
+  String gamesBattleshipFleetScore(String name, int sunk, int left);
+
   /// No description provided for @rulesBattleshipTitle.
   ///
   /// In ru, this message translates to:

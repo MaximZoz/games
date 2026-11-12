@@ -749,6 +749,17 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesBattleshipShipsMustNotTouch => 'Кемелер бір-біріне тиіспеуі керек';
 
   @override
+  String get gamesBattleshipSunk => 'Батырылды';
+
+  @override
+  String get gamesBattleshipRemaining => 'Қалды';
+
+  @override
+  String gamesBattleshipFleetScore(String name, int sunk, int left) {
+    return '$name: $sunk батырылды, $left қалды';
+  }
+
+  @override
   String get rulesBattleshipTitle => 'Теңіз шайқасы — ережелер';
 
   @override

@@ -15,6 +15,7 @@ import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/battleship/battleship_fleet_panel.dart';
 import 'package:multigames_client/games/battleship/battleship_offline_session.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
@@ -1242,6 +1243,16 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     }
   }
 
+  String _fleetOpponentLabel(BattleshipGameView game, String? me) {
+    final peers = _peerIds(game, me);
+    if (peers.isEmpty) return context.l10n.gameOpponent;
+    final id = peers.first;
+    final name = game.displayNameOf(id)?.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    if (id.startsWith('bot:')) return context.l10n.gameBot;
+    return context.l10n.gameOpponent;
+  }
+
   List<String> _peerIds(BattleshipGameView game, String? me) {
     return [
       if (game.p1UserId.isNotEmpty && game.p1UserId != me) game.p1UserId,
@@ -1380,6 +1391,19 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                 rewardKey: _winRewardKey,
                                 fontSize: narrow ? 15 : null,
                               ),
+                            if (!game.isSetup) ...[
+                              const SizedBox(height: 8),
+                              BattleshipFleetPanel(
+                                opponentLabel: _fleetOpponentLabel(game, me),
+                                mySunkShips: game.mySunkShips,
+                                opponentSunkShips: game.opponentSunkShips,
+                                focus: !game.isBattle || isOver
+                                    ? BattleshipFleetFocus.none
+                                    : (myTurn
+                                        ? BattleshipFleetFocus.opponent
+                                        : BattleshipFleetFocus.mine),
+                              ),
+                            ],
                           ],
                         ),
                       ),

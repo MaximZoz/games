@@ -749,6 +749,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesBattleshipShipsMustNotTouch => 'Ships must not touch';
 
   @override
+  String get gamesBattleshipSunk => '击沉';
+
+  @override
+  String get gamesBattleshipRemaining => '剩余';
+
+  @override
+  String gamesBattleshipFleetScore(String name, int sunk, int left) {
+    return '$name：击沉 $sunk，剩余 $left';
+  }
+
+  @override
   String get rulesBattleshipTitle => 'Battleship — rules';
 
   @override
