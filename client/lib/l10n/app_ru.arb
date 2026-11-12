@@ -332,6 +332,20 @@
   "gamesBattleshipYouWon": "Вы победили!",
   "gamesBattleshipYouLost": "Вы проиграли",
   "gamesBattleshipShipsMustNotTouch": "Корабли не должны соприкасаться",
+  "gamesBattleshipFleetScore": "{name}: {sunk} сбито, {left} осталось",
+  "@gamesBattleshipFleetScore": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "sunk": {
+        "type": "int"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
+  },
   "rulesBattleshipTitle": "Морской бой — правила",
   "rulesBattleshipPlayers": "Игроки: 2.",
   "rulesBattleshipSetupTime": "Время на расстановку: {time}.",

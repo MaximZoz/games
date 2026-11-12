@@ -749,6 +749,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesBattleshipShipsMustNotTouch => 'Ships must not touch';
 
   @override
+  String gamesBattleshipFleetScore(String name, int sunk, int left) {
+    return '$name: chìm $sunk, còn $left';
+  }
+
+  @override
   String get rulesBattleshipTitle => 'Battleship — rules';
 
   @override

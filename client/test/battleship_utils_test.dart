@@ -627,6 +627,70 @@ void main() {
     });
   });
 
+  group('battleshipFleetSunkSlots', () {
+    test('пустой залп — весь флот на плаву', () {
+      final slots = battleshipFleetSunkSlots(const []);
+      expect(slots, List<bool>.filled(kBattleshipFleet.length, false));
+      expect(battleshipFleetSunkCount(const []), 0);
+      expect(battleshipFleetRemainingCount(const []), 10);
+    });
+
+    test('помечает слоты 4 и 1, лишние единицы не добавляют корабль', () {
+      final slots = battleshipFleetSunkSlots(const [
+        [0, 1, 2, 3],
+        [10],
+        [12],
+        [14],
+        [16],
+        [18],
+      ]);
+      expect(slots, [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+      ]);
+      expect(
+        battleshipFleetSunkCount(const [
+          [0, 1, 2, 3],
+          [10],
+          [12],
+          [14],
+          [16],
+          [18],
+        ]),
+        5,
+      );
+      expect(
+        battleshipFleetRemainingCount(const [
+          [0, 1, 2, 3],
+          [10],
+          [12],
+          [14],
+          [16],
+          [18],
+        ]),
+        5,
+      );
+    });
+
+    test('два трёхпалубных занимают оба слота тройки', () {
+      final slots = battleshipFleetSunkSlots(const [
+        [1, 2, 3],
+        [11, 12, 13],
+      ]);
+      expect(slots[1], isTrue);
+      expect(slots[2], isTrue);
+      expect(slots.where((s) => s).length, 2);
+    });
+  });
+
   group('battleshipNewlySunkShip', () {
     test('возвращает новый корабль после выстрела', () {
       expect(

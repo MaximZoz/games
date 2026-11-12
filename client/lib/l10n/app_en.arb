@@ -332,6 +332,7 @@
   "gamesBattleshipYouWon": "You won!",
   "gamesBattleshipYouLost": "You lost",
   "gamesBattleshipShipsMustNotTouch": "Ships must not touch",
+  "gamesBattleshipFleetScore": "{name}: {sunk} sunk, {left} left",
   "rulesBattleshipTitle": "Battleship — rules",
   "rulesBattleshipPlayers": "Players: 2.",
   "rulesBattleshipSetupTime": "Setup time: {time}.",

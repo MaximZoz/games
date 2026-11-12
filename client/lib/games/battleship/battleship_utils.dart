@@ -620,6 +620,41 @@ double fitBattleshipCellSize({
       .clamp(minCell, maxCell);
 }
 
+/// Какие слоты классического флота уже потоплены.
+///
+/// Слоты идут как [kBattleshipFleet]: 4, 3, 3, 2, 2, 2, 1, 1, 1, 1.
+/// Из нескольких кораблей одной длины сначала помечается более ранний слот.
+/// Лишние потопленные сверх состава флота не добавляют слотов.
+List<bool> battleshipFleetSunkSlots(List<List<int>> sunkShips) {
+  final left = <int, int>{};
+  for (final ship in sunkShips) {
+    if (ship.isEmpty) continue;
+    left[ship.length] = (left[ship.length] ?? 0) + 1;
+  }
+  final marks = <bool>[];
+  for (final len in kBattleshipFleet) {
+    final n = left[len] ?? 0;
+    if (n > 0) {
+      marks.add(true);
+      left[len] = n - 1;
+    } else {
+      marks.add(false);
+    }
+  }
+  return marks;
+}
+
+int battleshipFleetSunkCount(List<List<int>> sunkShips) {
+  var n = 0;
+  for (final sunk in battleshipFleetSunkSlots(sunkShips)) {
+    if (sunk) n++;
+  }
+  return n;
+}
+
+int battleshipFleetRemainingCount(List<List<int>> sunkShips) =>
+    kBattleshipFleet.length - battleshipFleetSunkCount(sunkShips);
+
 /// Дефолтная валидная расстановка (как на сервере при таймауте setup).
 List<List<int>> defaultBattleshipShips() {
   return [

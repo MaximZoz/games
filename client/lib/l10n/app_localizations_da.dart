@@ -749,6 +749,11 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesBattleshipShipsMustNotTouch => 'Ships must not touch';
 
   @override
+  String gamesBattleshipFleetScore(String name, int sunk, int left) {
+    return '$name: $sunk sænket, $left tilbage';
+  }
+
+  @override
   String get rulesBattleshipTitle => 'Battleship — rules';
 
   @override

@@ -15,6 +15,7 @@ import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/battleship/battleship_fleet_panel.dart';
 import 'package:multigames_client/games/battleship/battleship_offline_session.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
@@ -1242,6 +1243,37 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     }
   }
 
+  /// Линия над полем: флот того, чья доска сейчас открыта.
+  Widget _fleetLine(
+    BattleshipGameView game,
+    String? me,
+    bool myTurn,
+    bool isOver,
+  ) {
+    final showMine = _fxShowMineBoard ?? (!isOver && !myTurn);
+    final sunk = showMine ? game.mySunkShips : game.opponentSunkShips;
+    final name =
+        showMine ? context.l10n.gameYou : _fleetOpponentLabel(game, me);
+    return BattleshipFleetLine(
+      sunkShips: sunk,
+      semanticsLabel: context.l10n.gamesBattleshipFleetScore(
+        name,
+        battleshipFleetSunkCount(sunk),
+        battleshipFleetRemainingCount(sunk),
+      ),
+    );
+  }
+
+  String _fleetOpponentLabel(BattleshipGameView game, String? me) {
+    final peers = _peerIds(game, me);
+    if (peers.isEmpty) return context.l10n.gameOpponent;
+    final id = peers.first;
+    final name = game.displayNameOf(id)?.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    if (id.startsWith('bot:')) return context.l10n.gameBot;
+    return context.l10n.gameOpponent;
+  }
+
   List<String> _peerIds(BattleshipGameView game, String? me) {
     return [
       if (game.p1UserId.isNotEmpty && game.p1UserId != me) game.p1UserId,
@@ -1380,6 +1412,10 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                 rewardKey: _winRewardKey,
                                 fontSize: narrow ? 15 : null,
                               ),
+                            if (!game.isSetup) ...[
+                              const SizedBox(height: 6),
+                              _fleetLine(game, me, myTurn, isOver),
+                            ],
                           ],
                         ),
                       ),
