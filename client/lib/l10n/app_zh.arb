@@ -278,8 +278,6 @@
   "gamesBattleshipYouWon": "You won!",
   "gamesBattleshipYouLost": "You lost",
   "gamesBattleshipShipsMustNotTouch": "Ships must not touch",
-  "gamesBattleshipSunk": "击沉",
-  "gamesBattleshipRemaining": "剩余",
   "gamesBattleshipFleetScore": "{name}：击沉 {sunk}，剩余 {left}",
   "rulesBattleshipTitle": "Battleship — rules",
   "rulesBattleshipPlayers": "Players: 2.",

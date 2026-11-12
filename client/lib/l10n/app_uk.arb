@@ -278,8 +278,6 @@
   "gamesBattleshipYouWon": "Ви перемогли!",
   "gamesBattleshipYouLost": "Ви програли",
   "gamesBattleshipShipsMustNotTouch": "Кораблі не повинні торкатися",
-  "gamesBattleshipSunk": "Потоплено",
-  "gamesBattleshipRemaining": "Залишилось",
   "gamesBattleshipFleetScore": "{name}: {sunk} потоплено, {left} залишилось",
   "rulesBattleshipTitle": "Морський бій — правила",
   "rulesBattleshipPlayers": "Гравці: 2.",

@@ -278,8 +278,6 @@
   "gamesBattleshipYouWon": "Сіз жеңдіңіз!",
   "gamesBattleshipYouLost": "Сіз жеңілдіңіз",
   "gamesBattleshipShipsMustNotTouch": "Кемелер бір-біріне тиіспеуі керек",
-  "gamesBattleshipSunk": "Батырылды",
-  "gamesBattleshipRemaining": "Қалды",
   "gamesBattleshipFleetScore": "{name}: {sunk} батырылды, {left} қалды",
   "rulesBattleshipTitle": "Теңіз шайқасы — ережелер",
   "rulesBattleshipPlayers": "Ойыншылар: 2.",

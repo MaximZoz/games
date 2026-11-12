@@ -278,8 +278,6 @@
   "gamesBattleshipYouWon": "You won!",
   "gamesBattleshipYouLost": "You lost",
   "gamesBattleshipShipsMustNotTouch": "Ships must not touch",
-  "gamesBattleshipSunk": "הוטבעו",
-  "gamesBattleshipRemaining": "נותרו",
   "gamesBattleshipFleetScore": "{name}: {sunk} הוטבעו, {left} נותרו",
   "rulesBattleshipTitle": "Battleship — rules",
   "rulesBattleshipPlayers": "Players: 2.",

@@ -1243,6 +1243,27 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     }
   }
 
+  /// Линия над полем: флот того, чья доска сейчас открыта.
+  Widget _fleetLine(
+    BattleshipGameView game,
+    String? me,
+    bool myTurn,
+    bool isOver,
+  ) {
+    final showMine = _fxShowMineBoard ?? (!isOver && !myTurn);
+    final sunk = showMine ? game.mySunkShips : game.opponentSunkShips;
+    final name =
+        showMine ? context.l10n.gameYou : _fleetOpponentLabel(game, me);
+    return BattleshipFleetLine(
+      sunkShips: sunk,
+      semanticsLabel: context.l10n.gamesBattleshipFleetScore(
+        name,
+        battleshipFleetSunkCount(sunk),
+        battleshipFleetRemainingCount(sunk),
+      ),
+    );
+  }
+
   String _fleetOpponentLabel(BattleshipGameView game, String? me) {
     final peers = _peerIds(game, me);
     if (peers.isEmpty) return context.l10n.gameOpponent;
@@ -1392,17 +1413,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                 fontSize: narrow ? 15 : null,
                               ),
                             if (!game.isSetup) ...[
-                              const SizedBox(height: 8),
-                              BattleshipFleetPanel(
-                                opponentLabel: _fleetOpponentLabel(game, me),
-                                mySunkShips: game.mySunkShips,
-                                opponentSunkShips: game.opponentSunkShips,
-                                focus: !game.isBattle || isOver
-                                    ? BattleshipFleetFocus.none
-                                    : (myTurn
-                                        ? BattleshipFleetFocus.opponent
-                                        : BattleshipFleetFocus.mine),
-                              ),
+                              const SizedBox(height: 6),
+                              _fleetLine(game, me, myTurn, isOver),
                             ],
                           ],
                         ),

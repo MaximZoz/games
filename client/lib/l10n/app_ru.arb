@@ -332,8 +332,6 @@
   "gamesBattleshipYouWon": "Вы победили!",
   "gamesBattleshipYouLost": "Вы проиграли",
   "gamesBattleshipShipsMustNotTouch": "Корабли не должны соприкасаться",
-  "gamesBattleshipSunk": "Сбито",
-  "gamesBattleshipRemaining": "Осталось",
   "gamesBattleshipFleetScore": "{name}: {sunk} сбито, {left} осталось",
   "@gamesBattleshipFleetScore": {
     "placeholders": {

@@ -749,12 +749,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesBattleshipShipsMustNotTouch => 'Ships must not touch';
 
   @override
-  String get gamesBattleshipSunk => 'Coulés';
-
-  @override
-  String get gamesBattleshipRemaining => 'Restants';
-
-  @override
   String gamesBattleshipFleetScore(String name, int sunk, int left) {
     return '$name: $sunk coulés, $left restants';
   }

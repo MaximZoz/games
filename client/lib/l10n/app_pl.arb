@@ -278,8 +278,6 @@
   "gamesBattleshipYouWon": "You won!",
   "gamesBattleshipYouLost": "You lost",
   "gamesBattleshipShipsMustNotTouch": "Ships must not touch",
-  "gamesBattleshipSunk": "Zatopione",
-  "gamesBattleshipRemaining": "Zostało",
   "gamesBattleshipFleetScore": "{name}: {sunk} zatopione, {left} zostało",
   "rulesBattleshipTitle": "Battleship — rules",
   "rulesBattleshipPlayers": "Players: 2.",

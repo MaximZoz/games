@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/battleship/battleship_fleet_panel.dart';
 import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/ui/app_theme.dart';
 
 Future<void> _pump(
   WidgetTester tester, {
   required Size size,
-  required BattleshipFleetFocus focus,
-  List<List<int>> mySunk = const [],
-  List<List<int>> opponentSunk = const [],
-  String opponentLabel = 'Бот',
+  required List<List<int>> sunkShips,
+  String semanticsLabel = 'Бот: 2 сбито, 8 осталось',
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -24,11 +21,9 @@ Future<void> _pump(
       home: Scaffold(
         body: Align(
           alignment: Alignment.topCenter,
-          child: BattleshipFleetPanel(
-            opponentLabel: opponentLabel,
-            mySunkShips: mySunk,
-            opponentSunkShips: opponentSunk,
-            focus: focus,
+          child: BattleshipFleetLine(
+            sunkShips: sunkShips,
+            semanticsLabel: semanticsLabel,
           ),
         ),
       ),
@@ -37,15 +32,8 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
-BoxDecoration _plate(WidgetTester tester, String side) {
-  final widget = tester.widget<AnimatedContainer>(
-    find.byKey(ValueKey('battleship-fleet-plate-$side')),
-  );
-  return widget.decoration! as BoxDecoration;
-}
-
-Color _glyphColor(WidgetTester tester, String side, int index) {
-  final glyph = find.byKey(ValueKey('battleship-ship-$side-$index'));
+Color _glyphColor(WidgetTester tester, int index) {
+  final glyph = find.byKey(ValueKey('battleship-ship-$index'));
   final cell = tester.widget<AnimatedContainer>(
     find.descendant(of: glyph, matching: find.byType(AnimatedContainer)).first,
   );
@@ -53,103 +41,46 @@ Color _glyphColor(WidgetTester tester, String side, int index) {
 }
 
 void main() {
-  testWidgets('мой ход подсвечивает флот соперника и считает сбитые',
-      (tester) async {
+  testWidgets('линия кораблей без подписей, сбитые красные', (tester) async {
     await _pump(
       tester,
-      size: const Size(390, 200),
-      focus: BattleshipFleetFocus.opponent,
-      mySunk: const [
-        [40, 41],
-      ],
-      opponentSunk: const [
+      size: const Size(390, 80),
+      sunkShips: const [
         [0, 1, 2, 3],
         [8],
       ],
     );
 
-    expect(find.text('Вы'), findsOneWidget);
-    expect(find.text('Бот'), findsOneWidget);
-    expect(find.text('Сбито'), findsNWidgets(2));
-    expect(find.text('Осталось'), findsNWidgets(2));
-    expect(
-      tester
-          .widget<Text>(
-              find.byKey(const ValueKey('battleship-fleet-mine-sunk')))
-          .data,
-      '1',
-    );
-    expect(
-      tester
-          .widget<Text>(
-              find.byKey(const ValueKey('battleship-fleet-mine-left')))
-          .data,
-      '9',
-    );
-    expect(
-      tester
-          .widget<Text>(
-              find.byKey(const ValueKey('battleship-fleet-opponent-sunk')))
-          .data,
-      '2',
-    );
-    expect(
-      tester
-          .widget<Text>(
-              find.byKey(const ValueKey('battleship-fleet-opponent-left')))
-          .data,
-      '8',
-    );
-
-    final opponent = _plate(tester, 'opponent');
-    final mine = _plate(tester, 'mine');
-    expect(
-      (opponent.border! as Border).top.color,
-      AppColors.accentStart,
-    );
-    expect((mine.border! as Border).top.color, Colors.transparent);
-    expect(_glyphColor(tester, 'opponent', 0), const Color(0xFFE53935));
-    expect(_glyphColor(tester, 'opponent', 1), const Color(0xFF607D8B));
-    expect(_glyphColor(tester, 'opponent', 6), const Color(0xFFE53935));
-    expect(_glyphColor(tester, 'mine', 3), const Color(0xFFE53935));
+    expect(find.text('Сбито'), findsNothing);
+    expect(find.text('Осталось'), findsNothing);
+    expect(find.text('Вы'), findsNothing);
+    expect(find.text('Бот'), findsNothing);
+    expect(find.byKey(const ValueKey('battleship-fleet-line')), findsOneWidget);
+    expect(_glyphColor(tester, 0), BattleshipFleetLine.sunk);
+    expect(_glyphColor(tester, 1), BattleshipFleetLine.afloat);
+    expect(_glyphColor(tester, 6), BattleshipFleetLine.sunk);
+    expect(_glyphColor(tester, 9), BattleshipFleetLine.afloat);
     expect(find.bySemanticsLabel('Бот: 2 сбито, 8 осталось'), findsOneWidget);
-    expect(find.bySemanticsLabel('Вы: 1 сбито, 9 осталось'), findsOneWidget);
+
+    final line =
+        tester.getSize(find.byKey(const ValueKey('battleship-fleet-line')));
+    expect(line.width, greaterThan(300));
+    expect(line.height, lessThan(20));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ход соперника подсвечивает мой флот', (tester) async {
-    await _pump(
-      tester,
-      size: const Size(800, 240),
-      focus: BattleshipFleetFocus.mine,
-      opponentLabel: 'Анна',
-    );
-
-    expect(find.text('Анна'), findsOneWidget);
-    final mine = _plate(tester, 'mine');
-    final opponent = _plate(tester, 'opponent');
-    expect((mine.border! as Border).top.color, const Color(0xFFE53935));
-    expect((opponent.border! as Border).top.color, Colors.transparent);
-    expect(
-      tester
-          .widget<Text>(
-              find.byKey(const ValueKey('battleship-fleet-opponent-left')))
-          .data,
-      '10',
-    );
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('узкий и широкий экран не дают переполнения', (tester) async {
-    for (final size in const [Size(320, 180), Size(900, 220)]) {
+  testWidgets('узкая и широкая линия не переполняются', (tester) async {
+    for (final size in const [Size(320, 80), Size(900, 80)]) {
       await _pump(
         tester,
         size: size,
-        focus: BattleshipFleetFocus.none,
-        opponentLabel: 'Очень длинное имя соперника',
+        sunkShips: const [
+          [40, 41],
+        ],
       );
       expect(tester.takeException(), isNull);
-      expect(find.text('Очень длинное имя соперника'), findsOneWidget);
+      expect(_glyphColor(tester, 3), BattleshipFleetLine.sunk);
+      expect(find.text('Сбито'), findsNothing);
     }
   });
 }

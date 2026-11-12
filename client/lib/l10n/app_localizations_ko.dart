@@ -749,12 +749,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesBattleshipShipsMustNotTouch => 'Ships must not touch';
 
   @override
-  String get gamesBattleshipSunk => '격침';
-
-  @override
-  String get gamesBattleshipRemaining => '남음';
-
-  @override
   String gamesBattleshipFleetScore(String name, int sunk, int left) {
     return '$name: 격침 $sunk, 남음 $left';
   }

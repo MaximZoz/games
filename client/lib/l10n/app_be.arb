@@ -278,8 +278,6 @@
   "gamesBattleshipYouWon": "Вы перамаглі!",
   "gamesBattleshipYouLost": "Вы прайгралі",
   "gamesBattleshipShipsMustNotTouch": "Караблі не павінны датыкацца",
-  "gamesBattleshipSunk": "Патоплена",
-  "gamesBattleshipRemaining": "Засталося",
   "gamesBattleshipFleetScore": "{name}: {sunk} патоплена, {left} засталося",
   "rulesBattleshipTitle": "Марскі бой — правілы",
   "rulesBattleshipPlayers": "Гульцы: 2.",
