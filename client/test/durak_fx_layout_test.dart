@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/ui/durak/overlay_space.dart';
 
@@ -785,6 +786,65 @@ void main() {
       expect(dealt[0], 2);
       expect(dealt[2], isNull);
       expect(dealt[1], 1);
+    });
+
+    test('нажатие бито не теряет отбой, которого нет в prev', () {
+      final attack = PlayingCard(Rank.nine, Suit.hearts);
+      final beat = PlayingCard(Rank.ten, Suit.hearts);
+      final extra = PlayingCard(Rank.jack, Suit.spades);
+      final king = PlayingCard(Rank.king, Suit.clubs);
+      final snap = durakSnapshotTableForClose(
+        live: [
+          DurakHeldPair(attack: attack),
+          DurakHeldPair(attack: extra),
+        ],
+        remembered: [
+          DurakHeldPair(attack: attack),
+        ],
+        lastNonEmpty: [
+          DurakHeldPair(attack: attack, defense: beat),
+        ],
+      );
+      expect(snap.map((p) => p.attack), [attack, extra]);
+      expect(snap.first.defense, beat);
+      expect(snap.last.defense, isNull);
+
+      final older = durakSnapshotTableForClose(
+        live: [DurakHeldPair(attack: king)],
+        remembered: [DurakHeldPair(attack: attack, defense: beat)],
+        lastNonEmpty: [DurakHeldPair(attack: extra)],
+      );
+      expect(older.map((p) => p.attack), [king]);
+    });
+
+    test('пустой живой стол берёт память и дописывает отбой', () {
+      final attack = PlayingCard(Rank.six, Suit.diamonds);
+      final beat = PlayingCard(Rank.ace, Suit.diamonds);
+      final snap = durakSnapshotTableForClose(
+        live: const [],
+        remembered: [DurakHeldPair(attack: attack)],
+        lastNonEmpty: [DurakHeldPair(attack: attack, defense: beat)],
+      );
+      expect(snap, hasLength(1));
+      expect(snap.single.attack, attack);
+      expect(snap.single.defense, beat);
+    });
+
+    test('оптимистичный отбой остаётся в снимке кнопки', () {
+      final attack = PlayingCard(Rank.seven, Suit.clubs);
+      final beat = PlayingCard(Rank.eight, Suit.clubs);
+      final thrown = PlayingCard(Rank.seven, Suit.spades);
+      final snap = durakSnapshotTableForClose(
+        live: [DurakHeldPair(attack: attack)],
+        remembered: const [],
+        lastNonEmpty: const [],
+        optimistic: [
+          DurakHeldPair(attack: attack, defense: beat),
+          DurakHeldPair(attack: thrown),
+        ],
+      );
+      expect(snap.map((p) => p.attack), [attack, thrown]);
+      expect(snap.first.defense, beat);
     });
 
     test('невидимый отбой не записывается в prev', () {

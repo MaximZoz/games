@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect, Size;
 
+import 'package:multigames_client/games/durak/card.dart';
+
 /// Как показать итог партии дурака.
 enum DurakFinishedChrome {
   /// Партия идёт — стол и веер на месте.
@@ -712,6 +714,76 @@ bool durakKeepDefenseInPrevTable({
 }) {
   if (!hasDefense) return false;
   return alreadyVisible || wasInPrevious;
+}
+
+/// Пара, которую держим на столе в момент «Бито» или «Беру».
+class DurakHeldPair {
+  const DurakHeldPair({required this.attack, this.defense});
+
+  final PlayingCard attack;
+  final PlayingCard? defense;
+}
+
+/// Снимок стола на нажатие «Бито»/«Беру».
+///
+/// prev специально без ещё не показанного отбоя, чтобы он не вспыхнул
+/// раньше полёта. Кнопка рисовала именно этот prev и гасила живой стол:
+/// отбой, который уже лежал в партии, пропадал в кадре нажатия.
+/// Берём живой стол, а защиту дописываем из памяти, если она там есть.
+/// Чужой раунд (нет общих атак) не подмешиваем — иначе после биты
+/// на новый заход возвращается карта прошлого стола.
+List<DurakHeldPair> durakSnapshotTableForClose({
+  required List<DurakHeldPair> live,
+  required List<DurakHeldPair> remembered,
+  required List<DurakHeldPair> lastNonEmpty,
+  List<DurakHeldPair> optimistic = const [],
+}) {
+  final base = live.isNotEmpty
+      ? live
+      : (remembered.isNotEmpty ? remembered : lastNonEmpty);
+  final order = <PlayingCard>[];
+  final seen = <PlayingCard>{};
+  void take(Iterable<DurakHeldPair> rows) {
+    for (final row in rows) {
+      if (seen.add(row.attack)) order.add(row.attack);
+    }
+  }
+
+  take(base);
+  take(optimistic);
+  if (live.isNotEmpty) {
+    if (_durakHeldSharesAttack(seen, remembered)) take(remembered);
+    if (_durakHeldSharesAttack(seen, lastNonEmpty)) take(lastNonEmpty);
+  }
+
+  PlayingCard? defenseOf(PlayingCard attack) {
+    PlayingCard? from(List<DurakHeldPair> rows) {
+      for (final row in rows) {
+        final defense = row.defense;
+        if (row.attack == attack && defense != null && defense != attack) {
+          return defense;
+        }
+      }
+      return null;
+    }
+
+    return from(live) ??
+        from(optimistic) ??
+        from(remembered) ??
+        from(lastNonEmpty);
+  }
+
+  return [
+    for (final attack in order)
+      DurakHeldPair(attack: attack, defense: defenseOf(attack)),
+  ];
+}
+
+bool _durakHeldSharesAttack(Set<PlayingCard> seen, List<DurakHeldPair> rows) {
+  for (final row in rows) {
+    if (seen.contains(row.attack)) return true;
+  }
+  return false;
 }
 
 /// Оптимистичный отбой снимаем, когда сервер его уже рисует

@@ -3392,13 +3392,50 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _oppVisualFloor[seat] = current + 1;
   }
 
+  List<DurakHeldPair> _heldPairs(List<DurakTablePairApi> pairs) => [
+        for (final pair in pairs)
+          DurakHeldPair(
+            attack: pair.attack.toPlayingCard(),
+            defense: pair.defense?.toPlayingCard(),
+          ),
+      ];
+
+  List<DurakTablePairApi> _pairsFromHeld(List<DurakHeldPair> pairs) => [
+        for (final pair in pairs)
+          DurakTablePairApi(
+            attack: DurakApiCard.fromCard(pair.attack),
+            defense: pair.defense == null
+                ? null
+                : DurakApiCard.fromCard(pair.defense!),
+          ),
+      ];
+
+  /// Стол на «Бито»/«Беру»: живые карты плюс отбой, который prev ещё прячет.
   List<DurakTablePairApi> _currentTableSnapshot(DurakGameView view) {
-    if (_prevTable.isNotEmpty) return List<DurakTablePairApi>.of(_prevTable);
-    if (view.table.isNotEmpty) return List<DurakTablePairApi>.of(view.table);
-    if (_lastNonEmptyTable.isNotEmpty) {
-      return List<DurakTablePairApi>.of(_lastNonEmptyTable);
+    final optimistic = <DurakHeldPair>[];
+    for (final entry in _optimisticDefends.entries) {
+      final rememberedAttack = _optimisticDefendAttack[entry.key];
+      final attack = rememberedAttack ??
+          (entry.key >= 0 && entry.key < view.table.length
+              ? view.table[entry.key].attack.toPlayingCard()
+              : null);
+      if (attack == null || entry.value == attack) continue;
+      optimistic.add(DurakHeldPair(attack: attack, defense: entry.value));
     }
-    return const [];
+    for (final card in _optimisticAttacks) {
+      final onTable =
+          view.table.any((pair) => pair.attack.toPlayingCard() == card);
+      if (onTable || _flyingToTable.contains(card)) continue;
+      optimistic.add(DurakHeldPair(attack: card));
+    }
+    return _pairsFromHeld(
+      durakSnapshotTableForClose(
+        live: _heldPairs(view.table),
+        remembered: _heldPairs(_prevTable),
+        lastNonEmpty: _heldPairs(_lastNonEmptyTable),
+        optimistic: optimistic,
+      ),
+    );
   }
 
   /// Держать стол на экране, пока офлайн-reveal не очистит view.
@@ -4267,16 +4304,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     }
   }
 
-  /// Снимок стола для ухода в биту: предпочитаем вариант с защитами.
+  /// Снимок стола для ухода в биту: дописываем защиты, пары не выкидываем.
+  ///
+  /// Раньше более длинный last целиком заменял снимок и вместе с лишней
+  /// парой уносил свежую атаку, которой в last ещё не было.
   List<DurakTablePairApi> _tableForBitoHold(List<DurakTablePairApi> snapshot) {
     final last = _lastNonEmptyTable;
     if (last.isEmpty) return snapshot;
     if (snapshot.isEmpty) return List.of(last);
-    final snapDef = snapshot.where((p) => p.defense != null).length;
-    final lastDef = last.where((p) => p.defense != null).length;
-    if (lastDef > snapDef) return List.of(last);
-    if (last.length > snapshot.length) return List.of(last);
-    return snapshot;
+    return _pairsFromHeld(
+      durakSnapshotTableForClose(
+        live: _heldPairs(snapshot),
+        remembered: const [],
+        lastNonEmpty: _heldPairs(last),
+      ),
+    );
   }
 
   void _maybeRunTableFx(DurakGameView view) {
@@ -6186,7 +6228,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Новый заход с пустым столом память прошлого раунда не рисует.
   List<DurakTablePairApi> _sourceTableForPaint(DurakGameView view) {
     final hold = _takeTableHold;
-    if (hold != null) return hold;
+    if (hold != null) {
+      // Пустой кадр после хода держим снимком. Пока партия ещё показывает
+      // стол, рисуем его вместе со снимком: обрезанный hold не гасит отбой.
+      if (view.table.isEmpty ||
+          _hidingTable ||
+          (_localRoundPrevLock && view.isTableReveal)) {
+        return hold;
+      }
+      return _pairsFromHeld(
+        durakSnapshotTableForClose(
+          live: _heldPairs(view.table),
+          remembered: _heldPairs(hold),
+          lastNonEmpty: const [],
+        ),
+      );
+    }
     if (_localRoundPrevLock && view.isTableReveal) return const [];
     if (view.table.isNotEmpty) return view.table;
     final remembered = _prevTable.isNotEmpty ? _prevTable : _lastNonEmptyTable;
