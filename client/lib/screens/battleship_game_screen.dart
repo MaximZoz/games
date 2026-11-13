@@ -1254,19 +1254,20 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final sunk = showMine ? game.mySunkShips : game.opponentSunkShips;
     final name =
         showMine ? context.l10n.gameYou : _fleetOpponentLabel(game, me);
-    final decks = showMine
-        ? battleshipFleetDecks(
-            knownShips: game.myShips,
-            hits: game.opponentShots,
-            sunkShips: sunk,
-          )
-        : battleshipFleetDecks(
-            knownShips: game.opponentShips,
-            hits: game.myHits,
-            sunkShips: sunk,
-          );
+    final known = showMine ? game.myShips : game.opponentShips;
+    // Выстрелы по своему полю включают промахи. Без схемы кораблей
+    // их нельзя отличить от попаданий, поэтому точки не рисуем.
+    final hits = showMine && known.isEmpty
+        ? const <int>[]
+        : (showMine ? game.opponentShots : game.myHits);
+    final wounds = battleshipFleetWoundCount(
+      knownShips: known,
+      hits: hits,
+      sunkShips: sunk,
+    );
     return BattleshipFleetLine(
-      decks: decks,
+      sunk: battleshipFleetSunkSlots(sunk),
+      wounds: wounds,
       semanticsLabel: context.l10n.gamesBattleshipFleetScore(
         name,
         battleshipFleetSunkCount(sunk),

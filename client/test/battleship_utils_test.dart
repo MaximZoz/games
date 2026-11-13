@@ -691,53 +691,39 @@ void main() {
     });
   });
 
-  group('battleshipFleetDecks', () {
-    test('своё поле красит ровно задетую палубу', () {
-      final decks = battleshipFleetDecks(
-        knownShips: const [
-          [0, 1, 2, 3],
-          [5, 6, 7],
-          [20, 21, 22],
-          [40, 41],
-          [43, 44],
-          [46, 47],
-          [60],
-          [62],
-          [64],
-          [66],
-        ],
-        hits: const [6, 7, 60],
+  group('battleshipFleetWoundCount', () {
+    test('попадание по своему кораблю считается, промах и потопление нет', () {
+      expect(
+        battleshipFleetWoundCount(
+          knownShips: const [
+            [0, 1, 2, 3],
+            [5, 6, 7],
+            [60],
+          ],
+          hits: const [6, 7, 60, 8, 6],
+          sunkShips: const [
+            [60],
+          ],
+        ),
+        2,
       );
-      expect(decks[1], [false, true, true]);
-      expect(decks[6], [true]);
-      expect(decks[0], [false, false, false, false]);
-      expect(decks[7], [false]);
     });
 
-    test('попадание без потопления садится на самый короткий живой слот', () {
-      final decks = battleshipFleetDecks(
-        hits: const [15],
-        sunkShips: const [
-          [0, 1],
-        ],
+    test('чужие попадания не садятся на конкретный корабль', () {
+      expect(
+        battleshipFleetWoundCount(
+          hits: const [15, 5, 6, 0, 1],
+          sunkShips: const [
+            [0, 1],
+          ],
+        ),
+        3,
       );
-      expect(decks[3], [true, true]);
-      expect(decks[4], [true, false]);
-      expect(decks[0].any((hit) => hit), isFalse);
-      expect(decks[6], [false]);
-    });
-
-    test('два соседних попадания не притворяются двупалубным', () {
-      final decks = battleshipFleetDecks(hits: const [5, 6]);
-      expect(decks[1], [true, true, false]);
-      expect(decks[3], [false, false]);
-    });
-
-    test('стык строк не склеивает попадания в один корабль', () {
-      final decks = battleshipFleetDecks(hits: const [9, 10]);
-      expect(decks[3], [true, false]);
-      expect(decks[4], [true, false]);
-      expect(decks[1].any((hit) => hit), isFalse);
+      final slots = battleshipFleetSunkSlots(const [
+        [0, 1],
+      ]);
+      expect(slots.where((sunk) => sunk).length, 1);
+      expect(slots[3], isTrue);
     });
   });
 
