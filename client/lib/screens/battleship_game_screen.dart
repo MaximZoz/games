@@ -1254,19 +1254,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final sunk = showMine ? game.mySunkShips : game.opponentSunkShips;
     final name =
         showMine ? context.l10n.gameYou : _fleetOpponentLabel(game, me);
-    final decks = showMine
-        ? battleshipFleetDecks(
-            knownShips: game.myShips,
-            hits: game.opponentShots,
-            sunkShips: sunk,
-          )
-        : battleshipFleetDecks(
-            knownShips: game.opponentShips,
-            hits: game.myHits,
-            sunkShips: sunk,
-          );
     return BattleshipFleetLine(
-      decks: decks,
+      sunk: battleshipFleetSunkSlots(sunk),
       semanticsLabel: context.l10n.gamesBattleshipFleetScore(
         name,
         battleshipFleetSunkCount(sunk),
