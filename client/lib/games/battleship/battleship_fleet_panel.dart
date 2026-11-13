@@ -3,27 +3,23 @@ import 'package:multigames_client/games/battleship/battleship_utils.dart';
 
 /// Длинная линия силуэтов флота под статусом хода.
 ///
-/// Потопленный корабль красный целиком, целый — серый. Попадания, которые
-/// ещё не потопили корабль, стоят отдельными точками и не показывают,
+/// Потопленный корабль красный целиком, целый — серый. Попадание, которое
+/// ещё не потопило корабль, на линии не показано: по ней нельзя понять,
 /// какой силуэт задет.
 class BattleshipFleetLine extends StatelessWidget {
   const BattleshipFleetLine({
     super.key,
     required this.sunk,
-    required this.wounds,
     required this.semanticsLabel,
   });
 
   /// Слоты [kBattleshipFleet]: `true` — корабль потоплен.
   final List<bool> sunk;
 
-  /// Попадания по ещё живым кораблям, без привязки к силуэту.
-  final int wounds;
-
   /// Озвучка для экрана: кто и сколько кораблей ещё на плаву.
   final String semanticsLabel;
 
-  static const Color hit = Color(0xFFE53935);
+  static const Color sunkColor = Color(0xFFE53935);
   static const Color afloat = Color(0xFF607D8B);
 
   @override
@@ -35,7 +31,6 @@ class BattleshipFleetLine extends StatelessWidget {
         child: _ShipLine(
           key: const ValueKey('battleship-fleet-line'),
           sunk: sunk,
-          wounds: wounds < 0 ? 0 : wounds,
         ),
       ),
     );
@@ -43,23 +38,15 @@ class BattleshipFleetLine extends StatelessWidget {
 }
 
 class _ShipLine extends StatelessWidget {
-  const _ShipLine({
-    super.key,
-    required this.sunk,
-    required this.wounds,
-  });
+  const _ShipLine({super.key, required this.sunk});
 
   final List<bool> sunk;
-  final int wounds;
 
   static const double _maxCell = 13;
   static const double _innerRatio = 0.22;
   static const double _gapRatio = 0.62;
-  static const double _woundGapRatio = 1.35;
-  static const double _pipRatio = 0.58;
-  static const double _pipGapRatio = 0.38;
 
-  static double _widthFor(double cell, int wounds) {
+  static double _widthFor(double cell) {
     final inner = cell * _innerRatio;
     final gap = cell * _gapRatio;
     var width = 0.0;
@@ -67,11 +54,6 @@ class _ShipLine extends StatelessWidget {
       if (i > 0) width += gap;
       final len = kBattleshipFleet[i];
       width += len * cell + (len - 1) * inner;
-    }
-    if (wounds > 0) {
-      final pip = cell * _pipRatio;
-      width += cell * _woundGapRatio;
-      width += wounds * pip + (wounds - 1) * cell * _pipGapRatio;
     }
     return width;
   }
@@ -83,13 +65,12 @@ class _ShipLine extends StatelessWidget {
         final maxW = constraints.maxWidth;
         var cell = _maxCell;
         if (maxW.isFinite && maxW > 0) {
-          final full = _widthFor(cell, wounds);
+          final full = _widthFor(cell);
           if (full > maxW) cell = cell * maxW / full;
         }
         if (cell < 4) cell = 4;
         final inner = cell * _innerRatio;
         final gap = cell * _gapRatio;
-        final pip = cell * _pipRatio;
         return SizedBox(
           width: double.infinity,
           height: cell,
@@ -98,7 +79,6 @@ class _ShipLine extends StatelessWidget {
             alignment: Alignment.center,
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 for (var i = 0; i < kBattleshipFleet.length; i++) ...[
                   if (i > 0) SizedBox(width: gap),
@@ -110,16 +90,6 @@ class _ShipLine extends StatelessWidget {
                     cell: cell,
                     gap: inner,
                   ),
-                ],
-                if (wounds > 0) ...[
-                  SizedBox(width: cell * _woundGapRatio),
-                  for (var i = 0; i < wounds; i++) ...[
-                    if (i > 0) SizedBox(width: cell * _pipGapRatio),
-                    _WoundPip(
-                      key: ValueKey('battleship-wound-$i'),
-                      size: pip,
-                    ),
-                  ],
                 ],
               ],
             ),
@@ -148,7 +118,8 @@ class _ShipGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = sunk ? BattleshipFleetLine.hit : BattleshipFleetLine.afloat;
+    final color =
+        sunk ? BattleshipFleetLine.sunkColor : BattleshipFleetLine.afloat;
     final radius = cell * 0.45;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -171,26 +142,6 @@ class _ShipGlyph extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _WoundPip extends StatelessWidget {
-  const _WoundPip({super.key, required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      width: size,
-      height: size,
-      decoration: const BoxDecoration(
-        color: BattleshipFleetLine.hit,
-        shape: BoxShape.circle,
-      ),
     );
   }
 }

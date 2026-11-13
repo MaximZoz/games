@@ -691,42 +691,6 @@ void main() {
     });
   });
 
-  group('battleshipFleetWoundCount', () {
-    test('попадание по своему кораблю считается, промах и потопление нет', () {
-      expect(
-        battleshipFleetWoundCount(
-          knownShips: const [
-            [0, 1, 2, 3],
-            [5, 6, 7],
-            [60],
-          ],
-          hits: const [6, 7, 60, 8, 6],
-          sunkShips: const [
-            [60],
-          ],
-        ),
-        2,
-      );
-    });
-
-    test('чужие попадания не садятся на конкретный корабль', () {
-      expect(
-        battleshipFleetWoundCount(
-          hits: const [15, 5, 6, 0, 1],
-          sunkShips: const [
-            [0, 1],
-          ],
-        ),
-        3,
-      );
-      final slots = battleshipFleetSunkSlots(const [
-        [0, 1],
-      ]);
-      expect(slots.where((sunk) => sunk).length, 1);
-      expect(slots[3], isTrue);
-    });
-  });
-
   group('battleshipNewlySunkShip', () {
     test('возвращает новый корабль после выстрела', () {
       expect(

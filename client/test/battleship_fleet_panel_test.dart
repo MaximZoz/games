@@ -19,7 +19,6 @@ const _sunk = <bool>[
 Future<void> _pump(
   WidgetTester tester, {
   required Size size,
-  int wounds = 3,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -33,9 +32,8 @@ Future<void> _pump(
       home: Scaffold(
         body: Align(
           alignment: Alignment.topCenter,
-          child: BattleshipFleetLine(
+          child: const BattleshipFleetLine(
             sunk: _sunk,
-            wounds: wounds,
             semanticsLabel: 'Бот: 2 сбито, 8 осталось',
           ),
         ),
@@ -53,21 +51,18 @@ Color _deckColor(WidgetTester tester, int ship, int deck) {
 }
 
 void main() {
-  testWidgets('попадания отдельно от силуэтов, потопленный сплошной',
-      (tester) async {
+  testWidgets('линия показывает только потопленные корабли', (tester) async {
     await _pump(tester, size: const Size(390, 80));
 
     expect(find.text('Сбито'), findsNothing);
     expect(find.text('Осталось'), findsNothing);
-    expect(_deckColor(tester, 0, 0), BattleshipFleetLine.hit);
-    expect(_deckColor(tester, 0, 3), BattleshipFleetLine.hit);
+    expect(find.byKey(const ValueKey('battleship-wound-0')), findsNothing);
+    expect(_deckColor(tester, 0, 0), BattleshipFleetLine.sunkColor);
+    expect(_deckColor(tester, 0, 3), BattleshipFleetLine.sunkColor);
     expect(_deckColor(tester, 1, 0), BattleshipFleetLine.afloat);
     expect(_deckColor(tester, 1, 2), BattleshipFleetLine.afloat);
-    expect(_deckColor(tester, 6, 0), BattleshipFleetLine.hit);
+    expect(_deckColor(tester, 6, 0), BattleshipFleetLine.sunkColor);
     expect(_deckColor(tester, 7, 0), BattleshipFleetLine.afloat);
-    expect(find.byKey(const ValueKey('battleship-wound-0')), findsOneWidget);
-    expect(find.byKey(const ValueKey('battleship-wound-2')), findsOneWidget);
-    expect(find.byKey(const ValueKey('battleship-wound-3')), findsNothing);
 
     final line =
         tester.getSize(find.byKey(const ValueKey('battleship-fleet-line')));
@@ -78,7 +73,7 @@ void main() {
 
   testWidgets('узкая и широкая линия не переполняются', (tester) async {
     for (final size in const [Size(320, 80), Size(900, 80)]) {
-      await _pump(tester, size: size, wounds: 8);
+      await _pump(tester, size: size);
       expect(tester.takeException(), isNull);
     }
   });

@@ -655,35 +655,6 @@ int battleshipFleetSunkCount(List<List<int>> sunkShips) {
 int battleshipFleetRemainingCount(List<List<int>> sunkShips) =>
     kBattleshipFleet.length - battleshipFleetSunkCount(sunkShips);
 
-/// Сколько попаданий ещё не потопили корабль.
-///
-/// Число не говорит, какой силуэт задет. Если [knownShips] известны,
-/// клетка мимо корабля не считается. Иначе считаются все [hits]
-/// вне потопленных клеток: на чужом поле это уже только попадания.
-int battleshipFleetWoundCount({
-  List<List<int>> knownShips = const [],
-  List<int> hits = const [],
-  List<List<int>> sunkShips = const [],
-}) {
-  final sunkCells = <int>{for (final ship in sunkShips) ...ship};
-  final liveCells = <int>{};
-  if (knownShips.isNotEmpty) {
-    for (final ship in knownShips) {
-      if (ship.isEmpty || ship.every(sunkCells.contains)) continue;
-      liveCells.addAll(ship);
-    }
-  }
-  final seen = <int>{};
-  var n = 0;
-  for (final cell in hits) {
-    if (cell < 0 || cell >= kBattleshipCellCount) continue;
-    if (sunkCells.contains(cell) || !seen.add(cell)) continue;
-    if (knownShips.isNotEmpty && !liveCells.contains(cell)) continue;
-    n++;
-  }
-  return n;
-}
-
 /// Дефолтная валидная расстановка (как на сервере при таймауте setup).
 List<List<int>> defaultBattleshipShips() {
   return [
