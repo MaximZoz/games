@@ -63,10 +63,14 @@ class GameChrome {
     this.draw,
     this.leadingExtra,
     this.actions = const <Widget>[],
+    this.closeTooltip,
   });
 
   /// Крестик. null — кнопка выключена (идёт запрос).
   final VoidCallback? onClose;
+
+  /// Подсказка крестика; null — системное «Закрыть».
+  final String? closeTooltip;
   final VoidCallback onShowRules;
   final Widget? title;
 
@@ -87,6 +91,15 @@ class GameChrome {
   final List<Widget> actions;
 
   bool get hasRail => onSurrender != null || draw != null;
+
+  /// Высота столбика действий от верха тела экрана; 0 — столбика нет.
+  double get railHeight {
+    final buttons = (onSurrender != null ? 1 : 0) + (draw != null ? 1 : 0);
+    if (buttons == 0) return 0;
+    return GameScreenScaffold.railTop +
+        buttons * GameScreenScaffold.railButton +
+        (buttons - 1) * GameScreenScaffold.railGap;
+  }
 }
 
 /// Место, которое общий хром занял на экране партии.
@@ -97,11 +110,20 @@ class GameChromeScope extends InheritedWidget {
   const GameChromeScope({
     super.key,
     required this.railInset,
+    this.railHeight = 0,
     required super.child,
   });
 
   /// Ширина полосы справа под столбик действий; 0 — столбика нет.
   final double railInset;
+
+  /// Высота этой полосы от верха тела экрана.
+  final double railHeight;
+
+  static double railHeightOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GameChromeScope>()
+          ?.railHeight ??
+      0;
 
   static double railInsetOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<GameChromeScope>()
@@ -110,7 +132,7 @@ class GameChromeScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(GameChromeScope oldWidget) =>
-      oldWidget.railInset != railInset;
+      oldWidget.railInset != railInset || oldWidget.railHeight != railHeight;
 }
 
 /// Каркас экрана партии — общий для всех игр.
@@ -131,8 +153,14 @@ class GameScreenScaffold extends StatelessWidget {
   /// Обернуть тело общим фоном. false — игра рисует фон сама.
   final bool background;
 
-  /// Ширина столбика действий вместе с отступом от края.
+  /// Ширина столбика действий: кнопка с полной зоной нажатия, вплотную
+  /// к правому краю — ровно под кнопкой правил.
   static const double railWidth = 48;
+
+  /// Отступ столбика от верха тела, высота кнопки и зазор между кнопками.
+  static const double railTop = 4;
+  static const double railButton = 48;
+  static const double railGap = 4;
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +180,7 @@ class GameScreenScaffold extends StatelessWidget {
             child: SafeArea(
               left: false,
               bottom: false,
-              minimum: const EdgeInsets.only(top: 4, right: 4),
+              minimum: const EdgeInsets.only(top: railTop),
               child: GameActionsOverlay(
                 key: const ValueKey('game-chrome-rail'),
                 canSurrender: chrome.onSurrender != null,
@@ -181,6 +209,7 @@ class GameScreenScaffold extends StatelessWidget {
         ),
         leading: buildGameAppBarLeading(
           onClose: chrome.onClose,
+          closeTooltip: chrome.closeTooltip,
           extra: chrome.leadingExtra,
         ),
         title: chrome.title,
@@ -197,11 +226,11 @@ class GameScreenScaffold extends StatelessWidget {
             tooltip: l10n.gamesRulesTitle,
             onPressed: chrome.onShowRules,
           ),
-          const SizedBox(width: 4),
         ],
       ),
       body: GameChromeScope(
         railInset: railInset,
+        railHeight: chrome.railHeight,
         child: background ? GradientBackground(child: stack) : stack,
       ),
     );

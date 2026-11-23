@@ -482,6 +482,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
       child: GameScreenScaffold(
         chrome: GameChrome(
           onClose: () => unawaited(_onClose()),
+          closeTooltip: context.l10n.commonClose,
           onShowRules: () => _showRules(game),
           title: game == null
               ? null
