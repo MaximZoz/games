@@ -1508,6 +1508,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                   icon: Icons.chat_bubble_outline_rounded,
                   tooltip: context.l10n.chatGroupTooltip,
                   badge: groupUnread,
+                  opponentTurn: !game.isMyTurn && !game.isOver,
                   onPressed: () => _openGroupChat(game),
                 )
               : null,

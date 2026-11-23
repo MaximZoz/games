@@ -186,6 +186,7 @@ class GameOpponentPanel extends ConsumerWidget {
       frameColor: opponent.frameColor,
       isBot: bot,
       messageUnread: unread,
+      theirTurn: isTheirTurn,
       infoTooltip: bot ? '' : l10n.userInfoTitle,
       messageTooltip: l10n.gameWriteMessage,
       compact: tight,

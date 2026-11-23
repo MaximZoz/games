@@ -22,6 +22,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
+import 'package:multigames_client/ui/widgets/framed_icon_button.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_game_kit/theme/turn_timer_style.dart';
@@ -366,6 +367,7 @@ class GameIconWithBadge extends StatelessWidget {
     required this.tooltip,
     required this.onPressed,
     this.badge = 0,
+    this.opponentTurn = false,
   });
 
   final IconData icon;
@@ -373,20 +375,19 @@ class GameIconWithBadge extends StatelessWidget {
   final VoidCallback? onPressed;
   final int badge;
 
+  /// Ход соперника: иконка внутри фиолетовой рамки становится акцентной.
+  final bool opponentTurn;
+
   @override
   Widget build(BuildContext context) {
     const size = 40.0;
-    final btn = IconButton(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 22),
+    final btn = FramedIconButton(
+      icon: icon,
       tooltip: tooltip,
-      style: IconButton.styleFrom(
-        foregroundColor: AppColors.accentStart,
-        visualDensity: VisualDensity.compact,
-        padding: const EdgeInsets.all(8),
-        minimumSize: const Size(size, size),
-        fixedSize: const Size(size, size),
-      ),
+      onPressed: onPressed,
+      size: size,
+      iconSize: 20,
+      iconColor: opponentTurn ? AppColors.accentEnd : AppColors.textPrimary,
     );
     if (badge <= 0) return SizedBox(width: size, height: size, child: btn);
     return SizedBox(
@@ -398,18 +399,18 @@ class GameIconWithBadge extends StatelessWidget {
         children: [
           btn,
           Positioned(
-            right: 2,
-            top: 2,
+            right: -2,
+            top: -2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
-                color: Colors.red.shade600,
+                color: AppColors.danger,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 badge > 99 ? '99+' : '$badge',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.surfaceCard,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                 ),
@@ -435,6 +436,7 @@ class GameOpponentCard extends StatelessWidget {
     this.frameColor,
     this.isBot = false,
     this.messageUnread = 0,
+    this.theirTurn = false,
     required this.onInfoTap,
     this.onMessageTap,
     this.infoTooltip = '',
@@ -459,6 +461,9 @@ class GameOpponentCard extends StatelessWidget {
   final String? frameColor;
   final bool isBot;
   final int messageUnread;
+
+  /// Ход этого соперника: иконка чата внутри рамки становится фиолетовой.
+  final bool theirTurn;
   final VoidCallback onInfoTap;
   final VoidCallback? onMessageTap;
   final String infoTooltip;
@@ -541,6 +546,7 @@ class GameOpponentCard extends StatelessWidget {
               badge: messageUnread,
               tooltip: messageTooltip,
               onPressed: onMessageTap,
+              opponentTurn: theirTurn,
             ),
           if (!isBot && showAddFriend)
             GameIconWithBadge(
@@ -1592,6 +1598,7 @@ List<Widget> buildGameAppBarActions({
   String? drawOfferedTooltip,
   required VoidCallback onShowRules,
   required String rulesTooltip,
+  Widget? timer,
 }) {
   const constraints = BoxConstraints(minWidth: 40, minHeight: 40);
   final showDraw = onOfferDraw != null || iOfferedDraw || opponentOfferedDraw;
@@ -1616,6 +1623,7 @@ List<Widget> buildGameAppBarActions({
         constraints: constraints,
         iconSize: 22,
       ),
+    if (timer != null) timer,
     IconButton(
       padding: EdgeInsets.zero,
       constraints: constraints,

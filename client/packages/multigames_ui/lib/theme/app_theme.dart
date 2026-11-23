@@ -15,6 +15,9 @@ class AppColors {
   static const Color accentEnd = Color(0xFF8B5CF6);
   static const Color accentSoft = Color(0xFFE0E7FF);
 
+  /// Ошибка и бейдж непрочитанного.
+  static const Color danger = Color(0xFFE53935);
+
   /// Плашка нижнего меню: индиго поверх фона, без заливки на всю ячейку.
   static const Color navPill = Color(0x296366F1);
 
