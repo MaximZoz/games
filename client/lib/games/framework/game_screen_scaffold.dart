@@ -5,6 +5,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_game_kit/motion/game_motion.dart';
+import 'package:multigames_game_kit/theme/game_palette.dart';
 
 /// Часы хода, которые партия отдаёт общему хрому.
 ///
@@ -64,6 +65,7 @@ class GameChrome {
     this.leadingExtra,
     this.actions = const <Widget>[],
     this.closeTooltip,
+    this.railOnDark = false,
   });
 
   /// Крестик. null — кнопка выключена (идёт запрос).
@@ -89,6 +91,9 @@ class GameChrome {
 
   /// Свои кнопки игры в шапке — встают левее таймера.
   final List<Widget> actions;
+
+  /// Столбик действий лежит на тёмном сукне (покер): иконки светлые.
+  final bool railOnDark;
 
   bool get hasRail => onSurrender != null || draw != null;
 
@@ -167,6 +172,19 @@ class GameScreenScaffold extends StatelessWidget {
     final l10n = context.l10n;
     final railInset = chrome.hasRail ? railWidth : 0.0;
     final draw = chrome.draw;
+    final Widget rail = GameActionsOverlay(
+      key: const ValueKey('game-chrome-rail'),
+      canSurrender: chrome.onSurrender != null,
+      canDraw: draw != null,
+      iOfferedDraw: draw?.flags.iOffered ?? false,
+      opponentOfferedDraw: draw?.flags.opponentOffered ?? false,
+      onSurrender: chrome.onSurrender ?? () {},
+      onDraw: draw?.onPressed ?? () {},
+      surrenderTooltip: l10n.gameSurrender,
+      drawTooltip: l10n.gameOfferDraw,
+      acceptDrawTooltip: l10n.gameAcceptDrawTitle,
+      drawOfferedTooltip: l10n.gameDrawOffered,
+    );
     final stack = Stack(
       children: [
         Positioned.fill(child: body),
@@ -181,19 +199,16 @@ class GameScreenScaffold extends StatelessWidget {
               left: false,
               bottom: false,
               minimum: const EdgeInsets.only(top: railTop),
-              child: GameActionsOverlay(
-                key: const ValueKey('game-chrome-rail'),
-                canSurrender: chrome.onSurrender != null,
-                canDraw: draw != null,
-                iOfferedDraw: draw?.flags.iOffered ?? false,
-                opponentOfferedDraw: draw?.flags.opponentOffered ?? false,
-                onSurrender: chrome.onSurrender ?? () {},
-                onDraw: draw?.onPressed ?? () {},
-                surrenderTooltip: l10n.gameSurrender,
-                drawTooltip: l10n.gameOfferDraw,
-                acceptDrawTooltip: l10n.gameAcceptDrawTitle,
-                drawOfferedTooltip: l10n.gameDrawOffered,
-              ),
+              child: chrome.railOnDark
+                  ? IconButtonTheme(
+                      data: IconButtonThemeData(
+                        style: IconButton.styleFrom(
+                          foregroundColor: GamePalette.feltInk,
+                        ),
+                      ),
+                      child: rail,
+                    )
+                  : rail,
             ),
           ),
       ],

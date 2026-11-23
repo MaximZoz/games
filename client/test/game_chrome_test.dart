@@ -10,6 +10,7 @@ import 'package:multigames_client/games/games_repository.dart'
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 import 'test_locale.dart';
 
@@ -47,6 +48,26 @@ void main() {
   setUp(() {
     setUpTestLocaleRu();
     TurnClockSfx.reset();
+  });
+
+  testWidgets('столбик на тёмном сукне рисует флаг светлым', (tester) async {
+    await _pump(
+      tester,
+      GameChrome(onClose: () {}, onShowRules: () {}, onSurrender: () {}),
+    );
+    expect(_flagColor(tester), isNot(GamePalette.feltInk));
+
+    await _pump(
+      tester,
+      GameChrome(
+        onClose: () {},
+        onShowRules: () {},
+        onSurrender: () {},
+        railOnDark: true,
+      ),
+    );
+    expect(_flagColor(tester), GamePalette.feltInk);
+    await _unmount(tester);
   });
 
   testWidgets('таймер своего хода стоит перед правилами, ниже — флаг и ничья',
@@ -263,6 +284,16 @@ void main() {
     expect(ref.read(blockingGamePinProvider)?.gameId, 'g2');
     expect(ref.read(activeGameProvider).valueOrNull?.gameId, 'g2');
   });
+}
+
+Color? _flagColor(WidgetTester tester) {
+  final glyph = tester.widget<RichText>(
+    find.descendant(
+      of: find.byKey(const ValueKey('game-chrome-rail')),
+      matching: find.byType(RichText),
+    ),
+  );
+  return glyph.text.style?.color;
 }
 
 class _FixedActiveGame extends ActiveGameNotifier {
