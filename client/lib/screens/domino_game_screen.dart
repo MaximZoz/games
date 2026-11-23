@@ -13,13 +13,14 @@ import 'package:multigames_client/games/domino/domino_provider.dart';
 import 'package:multigames_client/games/domino/domino_repository.dart';
 import 'package:multigames_client/games/domino/domino_rules.dart';
 import 'package:multigames_client/games/domino/domino_table.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
+import 'package:multigames_client/games/framework/game_session_exit.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
-import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -49,7 +50,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
   bool _iDeclinedRematch = false;
   String? _rematchLobbyId;
   Timer? _rematchPollTimer;
-  bool _expiredSent = false;
+  int _expiredDeadline = -1;
 
   bool get _isOffline =>
       OfflineDominoRegistry.instance.isOffline(widget.gameId);
@@ -132,14 +133,44 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
   }
 
   void _goToGames() {
-    leaveGamesSession(ref);
-    if (mounted) context.go('/games');
+    final rematchLobbyId = _rematchLobbyId;
+    _rematchLobbyId = null;
+    _rematchPollTimer?.cancel();
+    // Иначе «Игры» видят сыгранную партию в active и открывают её снова.
+    forgetGameSession(ref, gameId: widget.gameId, offline: _isOffline);
+    if (!mounted) return;
+    context.go('/games');
+    if (_isOffline) return;
+    if (rematchLobbyId != null) {
+      unawaited(
+        ref
+            .read(dominoRepositoryProvider)
+            .leaveLobby(rematchLobbyId)
+            .catchError((_) {}),
+      );
+    }
+    unawaited(ref.read(activeGameProvider.notifier).refresh());
   }
 
+  /// Время хода вышло (моё или соперника) — забрать с сервера автоход.
   void _onTurnExpired() {
-    if (_expiredSent || _isOffline) return;
-    _expiredSent = true;
+    if (_isOffline) return;
+    final deadline = ref
+            .read(dominoGameProvider(widget.gameId))
+            .valueOrNull
+            ?.turnDeadline ??
+        0;
+    if (deadline == _expiredDeadline) return;
+    _expiredDeadline = deadline;
     unawaited(ref.read(dominoGameProvider(widget.gameId).notifier).reconcile());
+  }
+
+  Future<void> _confirmSurrender() async {
+    final game = ref.read(dominoGameProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.isOver || game.iForfeited) return;
+    final ok = await confirmSurrenderDialog(context);
+    if (!ok || !mounted) return;
+    await _move(dominoActionForfeit);
   }
 
   void _maybeSettle(DominoGameView game) {
@@ -418,9 +449,6 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
       if (game != null) _maybeSettle(game);
     });
     final game = asyncGame.valueOrNull;
-    if (game != null && game.turnDeadline > 0 && game.isMyTurn) {
-      _expiredSent = false;
-    }
     final narrow = isNarrow(context);
     final reward = game == null ? 0 : _netProfit(game);
     final showReward = game != null &&
@@ -451,19 +479,14 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
     return SwipeBackScope.gameBoard(
       onBack: _onClose,
       bottomInset: swipeBottomExclude,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(),
-          leading: buildGameAppBarLeading(
-            onClose: _onClose,
-            closeTooltip: context.l10n.commonClose,
-          ),
+      child: GameScreenScaffold(
+        chrome: GameChrome(
+          onClose: () => unawaited(_onClose()),
+          onShowRules: () => _showRules(game),
           title: game == null
-              ? const SizedBox.shrink()
+              ? null
               : Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     GameStatusWithReward(
                       statusText: _status(game),
@@ -474,50 +497,35 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
                     ),
                     Text(
                       '${dominoModeLabel(game.mode, context.l10n)} · ${context.l10n.unoRoundProgress(game.round, game.targetScore)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
-          actions: [
-            if (game != null && game.turnDeadline > 0 && game.isPlaying)
-              GameTurnCountdown(
-                turnDeadline: game.turnDeadline,
-                isMyTurn: game.isMyTurn,
-                turnTimeSec: game.turnTimeSec,
-                onExpired: _onTurnExpired,
-                labelBuilder: context.l10n.gameSecondsLeft,
-              ),
-            IconButton(
-              tooltip: context.l10n.gamesRulesTitle,
-              onPressed: () => _showRules(game),
-              icon: const Icon(Icons.rule_rounded),
-            ),
-            if (game != null && !_isOffline && !game.isOver)
-              GameActionsOverlay(
-                canDraw: false,
-                iOfferedDraw: false,
-                opponentOfferedDraw: false,
-                onSurrender: () => unawaited(_move(dominoActionForfeit)),
-                onDraw: () {},
-                surrenderTooltip: context.l10n.gameSurrender,
-                drawTooltip: '',
-                acceptDrawTooltip: '',
-                drawOfferedTooltip: '',
-              ),
-          ],
+          turn: game == null || !game.isPlaying
+              ? const GameTurnClock.idle()
+              : GameTurnClock(
+                  isMyTurn: game.isMyTurn,
+                  deadline: game.turnDeadline,
+                  turnTimeSec: game.turnTimeSec,
+                  onExpired: _onTurnExpired,
+                ),
+          onSurrender:
+              game != null && !_isOffline && !game.isOver && !game.iForfeited
+                  ? () => unawaited(_confirmSurrender())
+                  : null,
         ),
-        body: GradientBackground(
-          child: asyncGame.when(
-            skipLoadingOnReload: true,
-            data: (value) => _body(value),
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.accentStart),
-            ),
-            error: (error, _) => Center(
-              child: Text(
-                formatUserError(error),
-                style: const TextStyle(color: Colors.redAccent),
-              ),
+        body: asyncGame.when(
+          skipLoadingOnReload: true,
+          data: (value) => _body(value),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.accentStart),
+          ),
+          error: (error, _) => Center(
+            child: Text(
+              formatUserError(error),
+              style: const TextStyle(color: Colors.redAccent),
             ),
           ),
         ),

@@ -57,7 +57,7 @@ class GameChrome {
     required this.onClose,
     required this.onShowRules,
     this.title,
-    this.centerTitle = false,
+    this.centerTitle,
     this.turn = const GameTurnClock.idle(),
     this.onSurrender,
     this.draw,
@@ -69,7 +69,9 @@ class GameChrome {
   final VoidCallback? onClose;
   final VoidCallback onShowRules;
   final Widget? title;
-  final bool centerTitle;
+
+  /// null — как в теме приложения.
+  final bool? centerTitle;
   final GameTurnClock turn;
 
   /// Флаг «сдаться». null — кнопки нет (партия окончена, офлайн).
