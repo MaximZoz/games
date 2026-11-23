@@ -13,6 +13,11 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
+  # Локальные библиотеки: UI-кит и игровые компоненты (client/packages).
+  multigames_ui:
+    path: packages/multigames_ui
+  multigames_game_kit:
+    path: packages/multigames_game_kit
   intl: any
   http: ^1.2.0
   flutter_riverpod: ^2.6.1

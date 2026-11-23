@@ -10,7 +10,9 @@ WORKDIR /app
 # Кэш pub get: слой пересобирается только при изменении pubspec.
 # pubspec.* — чтобы сборка не падала, если локально нет lock.
 # В репозитории lock всё равно должен быть закоммичен для воспроизводимых сборок.
+# Локальные пакеты (path-зависимости) нужны pub get до копирования кода.
 COPY client/pubspec.* ./
+COPY client/packages ./packages
 RUN flutter pub get
 
 # Остальной код — build web

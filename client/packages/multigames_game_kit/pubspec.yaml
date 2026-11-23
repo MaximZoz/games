@@ -1,0 +1,16 @@
+name: multigames_game_kit
+description: Библиотека игровых компонентов MultiGames — палитра стола, полёты фишек, рука, раскладки.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  multigames_ui:
+    path: ../multigames_ui
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
