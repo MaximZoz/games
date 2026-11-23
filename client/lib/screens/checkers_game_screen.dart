@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/checkers/checkers_board.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
@@ -21,6 +19,8 @@ import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_repository.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
 import 'package:multigames_client/games/board_move_sfx.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -36,7 +36,6 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
-import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 class CheckersGameScreen extends ConsumerStatefulWidget {
@@ -631,116 +630,37 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     }
   }
 
-  Future<void> _openChat(String userId, String displayName) async {
-    try {
-      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
-      if (!mounted || chatId.isEmpty) return;
-      context.push(
-        Uri(
-          path: '/chats/$chatId',
-          queryParameters: {
-            'name': displayName,
-            'from': 'games',
-            'game': '/games/checkers/game/${widget.gameId}',
-          },
-        ).toString(),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      context.push(
-        Uri(
-          path: '/chats',
-          queryParameters: {
-            'peer': userId,
-            'game': '/games/checkers/game/${widget.gameId}',
-          },
-        ).toString(),
-      );
-    }
-  }
+  /// Время хода вышло (моё или соперника) — забрать с сервера итог.
+  void _onTurnExpired() =>
+      ref.invalidate(checkersGameProvider(widget.gameId));
 
-  Future<void> _addFriend(String userId, {String? requestId}) async {
-    final repo = ref.read(friendsRepositoryProvider);
-    try {
-      if (requestId != null) {
-        await repo.acceptRequest(requestId);
-      } else {
-        await repo.sendRequest(userId);
-      }
-      if (!mounted) return;
-      ref.invalidate(friendsSnapshotProvider);
-      showAppSnackBar(
-        context,
-        message: requestId != null
-            ? context.l10n.friendsAcceptRequest
-            : context.l10n.friendsRequestSent,
-        kind: AppSnackKind.success,
-      );
-    } catch (_) {}
-  }
-
-  Widget _buildOpponentCard(CheckersGameView game, String? me) {
+  /// [reserveRail] — карточка стоит по центру под шапкой и сама отступает
+  /// от столбика «сдаться / ничья»; в боковой колонке место даёт колонка.
+  Widget _buildOpponentCard(
+    CheckersGameView game,
+    String? me, {
+    bool reserveRail = true,
+  }) {
     final peers = _peerIds(game, me);
     if (peers.isEmpty) return const SizedBox.shrink();
-    final oppId = peers.first;
     final opp = game.opponent;
-    final isBot = oppId.startsWith('bot:');
-    final name = (opp?.displayName.trim().isNotEmpty ?? false)
-        ? opp!.displayName.trim()
-        : (isBot ? context.l10n.gameBot : context.l10n.gameOpponent);
-    final chats = ref.watch(chatsListProvider).valueOrNull;
-    var unread = 0;
-    if (chats != null) {
-      for (final c in chats) {
-        if (c.user.id == oppId) unread += c.unreadCount;
-      }
-    }
-    final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
-    final isFriend = friends?.friends.any((f) => f.user.id == oppId) == true;
-    final outgoing =
-        friends?.outgoing.where((r) => r.user.id == oppId).toList() ?? const [];
-    final incoming =
-        friends?.incoming.where((r) => r.user.id == oppId).toList() ?? const [];
-    final compact = MediaQuery.sizeOf(context).width < 420;
-
-    return GameOpponentCard(
-      userId: oppId,
-      displayName: name,
-      avatarKind: opp?.avatarKind ?? 'letter',
-      avatarValue: opp?.avatarValue,
-      frameCode: opp?.frameCode,
-      frameColor: opp?.frameColor,
-      isBot: isBot,
-      messageUnread: unread,
-      infoTooltip: context.l10n.userInfoTitle,
-      messageTooltip: context.l10n.gameWriteMessage,
-      compact: compact,
-      maxWidth: 320,
-      showAddFriend: !isBot && !isFriend,
-      addFriendEnabled: outgoing.isEmpty,
-      addFriendBadge: incoming.isNotEmpty ? 1 : 0,
-      addFriendTooltip: incoming.isNotEmpty
-          ? context.l10n.friendsAcceptRequest
-          : (outgoing.isNotEmpty
-              ? context.l10n.friendsRequestSent
-              : context.l10n.friendsAdd),
-      onAddFriendTap: () => unawaited(_addFriend(
-        oppId,
-        requestId: incoming.isNotEmpty ? incoming.first.requestId : null,
-      )),
-      onInfoTap: () => unawaited(showUserProfileDialog(
-        context: context,
-        ref: ref,
-        userId: oppId,
-        displayName: name,
+    return GameOpponentPanel(
+      opponent: GameOpponent(
+        userId: peers.first,
+        displayName: opp?.displayName,
         avatarKind: opp?.avatarKind ?? 'letter',
         avatarValue: opp?.avatarValue,
         frameCode: opp?.frameCode,
         frameColor: opp?.frameColor,
-        messageFrom: 'games',
-        messageReturnPath: '/games/checkers/game/${widget.gameId}',
-      )),
-      onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
+        isBot: opp?.isBot ?? false,
+      ),
+      gameType: 'checkers',
+      gameId: widget.gameId,
+      isTheirTurn: !game.isOver && game.myIndex >= 0 && !game.isMyTurn,
+      turnDeadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+      turnTimeSec: game.turnTimeSec,
+      onTurnExpired: _onTurnExpired,
+      reserveRail: reserveRail,
     );
   }
 
@@ -755,18 +675,35 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     final game = gameAsync.valueOrNull;
     final draw = drawOfferFlags(game?.drawOfferBy, me);
     final canDraw = game != null && !game.isOver && !game.hasBotOpponent;
+    final body = gameAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
+      data: (game) {
+        _syncSelection(game);
+        return _buildGame(game, me);
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: AppColors.accentStart,
+        ),
+      ),
+      error: (e, _) => Center(
+        child: Text(
+          formatUserError(e, fallback: context.l10n.commonGenericError),
+          style: const TextStyle(color: Colors.red),
+        ),
+      ),
+    );
+    // Строго после тела: _reconcile дописывает историю, а от неё зависит
+    // _isReviewing — шапка и доска должны видеть один и тот же «мой ход».
+    final shown = game == null ? null : _shown(game);
 
     return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(),
-          leading: buildGameAppBarLeading(
-            onClose: _busy ? null : () => unawaited(_onClosePressed()),
-          ),
+      child: GameScreenScaffold(
+        chrome: GameChrome(
+          onClose: _busy ? null : () => unawaited(_onClosePressed()),
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -784,56 +721,36 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
             ],
           ),
           centerTitle: true,
-          actions: buildGameAppBarActions(
+          onShowRules: () => showGameRulesDialog(
             context: context,
-            onSurrender: game == null || game.isOver
-                ? null
-                : () => unawaited(_confirmSurrender()),
-            surrenderTooltip: context.l10n.gameSurrender,
-            onOfferDraw: canDraw ? () => unawaited(_confirmDraw()) : null,
-            drawTooltip: context.l10n.gameOfferDraw,
-            iOfferedDraw: draw.iOffered,
-            opponentOfferedDraw: draw.opponentOffered,
-            acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-            drawOfferedTooltip: context.l10n.gameDrawOffered,
-            onShowRules: () => showGameRulesDialog(
-              context: context,
-              content: rulesTextLines(checkersRuleLines(
-                gameMode: game?.gameMode ?? CheckersEngine.modeRussian,
-                turnTimeSec: game?.turnTimeSec ?? 0,
-                stakeBronze: game?.stakeBronze ?? 0,
-                offline: _isOffline,
-                l10n: context.l10n,
-              )),
-              closeLabel: context.l10n.commonClose,
-            ),
-            rulesTooltip: context.l10n.gamesRulesTitle,
+            content: rulesTextLines(checkersRuleLines(
+              gameMode: game?.gameMode ?? CheckersEngine.modeRussian,
+              turnTimeSec: game?.turnTimeSec ?? 0,
+              stakeBronze: game?.stakeBronze ?? 0,
+              offline: _isOffline,
+              l10n: context.l10n,
+            )),
+            closeLabel: context.l10n.commonClose,
           ),
-        ),
-        body: GradientBackground(
-          child: SafeArea(
-            child: gameAsync.when(
-              skipLoadingOnReload: true,
-              skipLoadingOnRefresh: true,
-              data: (game) {
-                _syncSelection(game);
-                return _buildGame(game, me);
-              },
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentStart,
+          turn: shown == null || shown.isOver
+              ? const GameTurnClock.idle()
+              : GameTurnClock(
+                  isMyTurn: shown.isMyTurn && !_isReviewing,
+                  deadline: shown.turnTimeSec > 0 ? shown.turnDeadline : 0,
+                  turnTimeSec: shown.turnTimeSec,
+                  onExpired: _onTurnExpired,
                 ),
-              ),
-              error: (e, _) => Center(
-                child: Text(
-                  formatUserError(e, fallback: context.l10n.commonGenericError),
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
-            ),
-          ),
+          onSurrender: game == null || game.isOver
+              ? null
+              : () => unawaited(_confirmSurrender()),
+          draw: canDraw || draw.iOffered || draw.opponentOffered
+              ? GameDrawOffer(
+                  onPressed: () => unawaited(_confirmDraw()),
+                  flags: draw,
+                )
+              : null,
         ),
+        body: SafeArea(child: body),
       ),
     );
   }
@@ -893,7 +810,6 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     final display = _isReviewing
         ? _history[_reviewIndex!.clamp(0, _history.length - 1)]
         : shown;
-    final myTurn = shown.isMyTurn && !shown.isOver && !_isReviewing;
     final landscape = isPhoneLandscape(context) ||
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
     return BoardChangeSfx(
@@ -903,9 +819,15 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 2, 0, 6),
-            child: landscape
-                ? _buildLandscape(shown, display, me, myTurn)
-                : _buildPortrait(shown, display, me, myTurn),
+            // Builder: ширину столбика хрома видно только ниже каркаса.
+            child: Builder(
+              builder: (context) {
+                final rail = GameChromeScope.railInsetOf(context);
+                return landscape
+                    ? _buildLandscape(shown, display, me, rail: rail)
+                    : _buildPortrait(shown, display, me, rail: rail);
+              },
+            ),
           ),
           if (server.isOver && server.iWon)
             Positioned.fill(
@@ -913,7 +835,6 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
                 key: ValueKey('checkers-confetti-${widget.gameId}'),
               ),
             ),
-          MyTurnAlert.stackLeaf(isMyTurn: myTurn),
         ],
       ),
     );
@@ -922,14 +843,19 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   Widget _buildPortrait(
     CheckersGameView live,
     CheckersGameView display,
-    String? me,
-    bool myTurn,
-  ) {
+    String? me, {
+    required double rail,
+  }) {
     return Column(
       children: [
         _buildOpponentCard(live, me),
         const SizedBox(height: 6),
-        _buildStatusLine(live, myTurn),
+        // Статус стоит на высоте кнопки «ничья»: отступ с обеих сторон,
+        // чтобы длинная строка не зашла под столбик и осталась по центру.
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: rail),
+          child: _buildStatusLine(live),
+        ),
         const SizedBox(height: 6),
         Expanded(child: _buildBoardColumn(live, display)),
         if (live.isOver) ...[
@@ -943,9 +869,9 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   Widget _buildLandscape(
     CheckersGameView live,
     CheckersGameView display,
-    String? me,
-    bool myTurn,
-  ) {
+    String? me, {
+    required double rail,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -961,9 +887,9 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildOpponentCard(live, me),
+                _buildOpponentCard(live, me, reserveRail: false),
                 const SizedBox(height: 8),
-                _buildStatusLine(live, myTurn),
+                _buildStatusLine(live),
                 if (live.isOver) ...[
                   const SizedBox(height: 10),
                   _buildFinishRow(live, me),
@@ -972,6 +898,8 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
             ),
           ),
         ),
+        // Колонка с карточкой встаёт левее столбика «сдаться / ничья».
+        SizedBox(width: rail),
       ],
     );
   }
@@ -1063,43 +991,25 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     );
   }
 
-  Widget _buildStatusLine(CheckersGameView game, bool myTurn) {
+  Widget _buildStatusLine(CheckersGameView game) {
     final rawChip = stakeFinishRewardChip(
       stakeBronze: game.stakeBronze,
       isDraw: game.isDraw,
       iWon: game.iWon,
     );
     final rewardChip = rawChip < 0 && !_lossChipRevealed ? 0 : rawChip;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GameStatusWithReward(
-          statusText: _statusText(game),
-          showReward: stakeShowFinishReward(
-            stakeBronze: game.stakeBronze,
-            isOver: game.isOver,
-            isDraw: game.isDraw,
-            rewardChip: rewardChip,
-          ),
-          rewardBronze: rewardChip,
-          rewardKey: _rewardKey,
-          fontSize: 14,
-          wrap: true,
-        ),
-        if (!game.isOver && game.turnTimeSec > 0 && game.turnDeadline > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: GameTurnCountdown(
-              key: ValueKey('${game.turn}_${game.turnDeadline}'),
-              turnDeadline: game.turnDeadline,
-              isMyTurn: myTurn,
-              turnTimeSec: game.turnTimeSec,
-              onExpired: () =>
-                  ref.invalidate(checkersGameProvider(widget.gameId)),
-              labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-            ),
-          ),
-      ],
+    return GameStatusWithReward(
+      statusText: _statusText(game),
+      showReward: stakeShowFinishReward(
+        stakeBronze: game.stakeBronze,
+        isOver: game.isOver,
+        isDraw: game.isDraw,
+        rewardChip: rewardChip,
+      ),
+      rewardBronze: rewardChip,
+      rewardKey: _rewardKey,
+      fontSize: 14,
+      wrap: true,
     );
   }
 

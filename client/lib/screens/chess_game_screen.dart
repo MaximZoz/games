@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/board_move_sfx.dart';
 import 'package:multigames_client/games/chess/chess_board.dart';
@@ -21,6 +19,8 @@ import 'package:multigames_client/games/chess/chess_offline_session.dart';
 import 'package:multigames_client/games/chess/chess_provider.dart';
 import 'package:multigames_client/games/chess/chess_repository.dart';
 import 'package:multigames_client/games/chess/chess_rules.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -36,7 +36,6 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
-import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 class ChessGameScreen extends ConsumerStatefulWidget {
@@ -681,116 +680,36 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     }
   }
 
-  Future<void> _openChat(String userId, String displayName) async {
-    try {
-      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
-      if (!mounted || chatId.isEmpty) return;
-      context.push(
-        Uri(
-          path: '/chats/$chatId',
-          queryParameters: {
-            'name': displayName,
-            'from': 'games',
-            'game': '/games/chess/game/${widget.gameId}',
-          },
-        ).toString(),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      context.push(
-        Uri(
-          path: '/chats',
-          queryParameters: {
-            'peer': userId,
-            'game': '/games/chess/game/${widget.gameId}',
-          },
-        ).toString(),
-      );
-    }
-  }
+  /// Время хода вышло (моё или соперника) — забрать с сервера итог.
+  void _onTurnExpired() => ref.invalidate(chessGameProvider(widget.gameId));
 
-  Future<void> _addFriend(String userId, {String? requestId}) async {
-    final repo = ref.read(friendsRepositoryProvider);
-    try {
-      if (requestId != null) {
-        await repo.acceptRequest(requestId);
-      } else {
-        await repo.sendRequest(userId);
-      }
-      if (!mounted) return;
-      ref.invalidate(friendsSnapshotProvider);
-      showAppSnackBar(
-        context,
-        message: requestId != null
-            ? context.l10n.friendsAcceptRequest
-            : context.l10n.friendsRequestSent,
-        kind: AppSnackKind.success,
-      );
-    } catch (_) {}
-  }
-
-  Widget _buildOpponentCard(ChessGameView game, String? me) {
+  /// [reserveRail] — карточка стоит по центру под шапкой и сама отступает
+  /// от столбика «сдаться / ничья»; в боковой колонке место даёт колонка.
+  Widget _buildOpponentCard(
+    ChessGameView game,
+    String? me, {
+    bool reserveRail = true,
+  }) {
     final peers = _peerIds(game, me);
     if (peers.isEmpty) return const SizedBox.shrink();
-    final oppId = peers.first;
     final opp = game.opponent;
-    final isBot = oppId.startsWith('bot:');
-    final name = (opp?.displayName.trim().isNotEmpty ?? false)
-        ? opp!.displayName.trim()
-        : (isBot ? context.l10n.gameBot : context.l10n.gameOpponent);
-    final chats = ref.watch(chatsListProvider).valueOrNull;
-    var unread = 0;
-    if (chats != null) {
-      for (final c in chats) {
-        if (c.user.id == oppId) unread += c.unreadCount;
-      }
-    }
-    final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
-    final isFriend = friends?.friends.any((f) => f.user.id == oppId) == true;
-    final outgoing =
-        friends?.outgoing.where((r) => r.user.id == oppId).toList() ?? const [];
-    final incoming =
-        friends?.incoming.where((r) => r.user.id == oppId).toList() ?? const [];
-    final compact = MediaQuery.sizeOf(context).width < 420;
-
-    return GameOpponentCard(
-      userId: oppId,
-      displayName: name,
-      avatarKind: opp?.avatarKind ?? 'letter',
-      avatarValue: opp?.avatarValue,
-      frameCode: opp?.frameCode,
-      frameColor: opp?.frameColor,
-      isBot: isBot,
-      messageUnread: unread,
-      infoTooltip: context.l10n.userInfoTitle,
-      messageTooltip: context.l10n.gameWriteMessage,
-      compact: compact,
-      maxWidth: 320,
-      showAddFriend: !isBot && !isFriend,
-      addFriendEnabled: outgoing.isEmpty,
-      addFriendBadge: incoming.isNotEmpty ? 1 : 0,
-      addFriendTooltip: incoming.isNotEmpty
-          ? context.l10n.friendsAcceptRequest
-          : (outgoing.isNotEmpty
-              ? context.l10n.friendsRequestSent
-              : context.l10n.friendsAdd),
-      onAddFriendTap: () => unawaited(_addFriend(
-        oppId,
-        requestId: incoming.isNotEmpty ? incoming.first.requestId : null,
-      )),
-      onInfoTap: () => unawaited(showUserProfileDialog(
-        context: context,
-        ref: ref,
-        userId: oppId,
-        displayName: name,
+    return GameOpponentPanel(
+      opponent: GameOpponent(
+        userId: peers.first,
+        displayName: opp?.displayName,
         avatarKind: opp?.avatarKind ?? 'letter',
         avatarValue: opp?.avatarValue,
         frameCode: opp?.frameCode,
         frameColor: opp?.frameColor,
-        messageFrom: 'games',
-        messageReturnPath: '/games/chess/game/${widget.gameId}',
-      )),
-      onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
+        isBot: opp?.isBot ?? false,
+      ),
+      gameType: 'chess',
+      gameId: widget.gameId,
+      isTheirTurn: !game.isOver && game.myIndex >= 0 && !game.isMyTurn,
+      turnDeadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+      turnTimeSec: game.turnTimeSec,
+      onTurnExpired: _onTurnExpired,
+      reserveRail: reserveRail,
     );
   }
 
@@ -807,18 +726,36 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         ? drawOfferFlags(game.drawOfferBy, me)
         : const DrawOfferFlags();
     final canDraw = game != null && !game.isOver && !game.hasBotOpponent;
+    final showDraw = canDraw || draw.iOffered || draw.opponentOffered;
+    final body = gameAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
+      data: (game) {
+        _syncSelection(game);
+        return _buildGame(game, me, drawInRail: showDraw);
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: AppColors.accentStart,
+        ),
+      ),
+      error: (e, _) => Center(
+        child: Text(
+          formatUserError(e, fallback: context.l10n.commonGenericError),
+          style: const TextStyle(color: Colors.red),
+        ),
+      ),
+    );
+    // Строго после тела: _reconcile дописывает историю, а от неё зависит
+    // _isReviewing — шапка и доска должны видеть один и тот же «мой ход».
+    final live = game == null ? null : _liveGame(game);
 
     return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(),
-          leading: buildGameAppBarLeading(
-            onClose: _busy ? null : () => unawaited(_onClosePressed()),
-          ),
+      child: GameScreenScaffold(
+        chrome: GameChrome(
+          onClose: _busy ? null : () => unawaited(_onClosePressed()),
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -836,56 +773,36 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
             ],
           ),
           centerTitle: true,
-          actions: buildGameAppBarActions(
+          onShowRules: () => showGameRulesDialog(
             context: context,
-            onSurrender: game == null || game.isOver
-                ? null
-                : () => unawaited(_confirmSurrender()),
-            surrenderTooltip: context.l10n.gameSurrender,
-            onOfferDraw: canDraw ? () => unawaited(_confirmDraw()) : null,
-            drawTooltip: context.l10n.gameOfferDraw,
-            iOfferedDraw: draw.iOffered,
-            opponentOfferedDraw: draw.opponentOffered,
-            acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-            drawOfferedTooltip: context.l10n.gameDrawOffered,
-            onShowRules: () => showGameRulesDialog(
-              context: context,
-              content: rulesTextLines(chessRuleLines(
-                gameMode: game?.gameMode ?? ChessEngine.modeClassic,
-                turnTimeSec: game?.turnTimeSec ?? 0,
-                stakeBronze: game?.stakeBronze ?? 0,
-                offline: _isOffline,
-                l10n: context.l10n,
-              )),
-              closeLabel: context.l10n.commonClose,
-            ),
-            rulesTooltip: context.l10n.gamesRulesTitle,
+            content: rulesTextLines(chessRuleLines(
+              gameMode: game?.gameMode ?? ChessEngine.modeClassic,
+              turnTimeSec: game?.turnTimeSec ?? 0,
+              stakeBronze: game?.stakeBronze ?? 0,
+              offline: _isOffline,
+              l10n: context.l10n,
+            )),
+            closeLabel: context.l10n.commonClose,
           ),
-        ),
-        body: GradientBackground(
-          child: SafeArea(
-            child: gameAsync.when(
-              skipLoadingOnReload: true,
-              skipLoadingOnRefresh: true,
-              data: (game) {
-                _syncSelection(game);
-                return _buildGame(game, me);
-              },
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentStart,
+          turn: live == null || live.isOver
+              ? const GameTurnClock.idle()
+              : GameTurnClock(
+                  isMyTurn: live.isMyTurn && !_isReviewing,
+                  deadline: live.turnTimeSec > 0 ? live.turnDeadline : 0,
+                  turnTimeSec: live.turnTimeSec,
+                  onExpired: _onTurnExpired,
                 ),
-              ),
-              error: (e, _) => Center(
-                child: Text(
-                  formatUserError(e, fallback: context.l10n.commonGenericError),
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
-            ),
-          ),
+          onSurrender: game == null || game.isOver
+              ? null
+              : () => unawaited(_confirmSurrender()),
+          draw: showDraw
+              ? GameDrawOffer(
+                  onPressed: () => unawaited(_confirmDraw()),
+                  flags: draw,
+                )
+              : null,
         ),
+        body: SafeArea(child: body),
       ),
     );
   }
@@ -938,14 +855,18 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     });
   }
 
-  Widget _buildGame(ChessGameView server, String? me) {
+  /// [drawInRail] — в столбике хрома под флагом стоит ещё и ничья.
+  Widget _buildGame(
+    ChessGameView server,
+    String? me, {
+    required bool drawInRail,
+  }) {
     _scheduleHeadToHeadSettle(server);
     _reconcile(server);
     final live = _liveGame(server);
     final display = _isReviewing
         ? _history[_reviewIndex!.clamp(0, _history.length - 1)]
         : live;
-    final myTurn = live.isMyTurn && !live.isOver && !_isReviewing;
     final landscape = isPhoneLandscape(context) ||
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
     return BoardChangeSfx(
@@ -954,9 +875,22 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 2, 0, 6),
-            child: landscape
-                ? _buildLandscape(live, display, me)
-                : _buildPortrait(live, display, me),
+            // Builder: ширину столбика хрома видно только ниже каркаса.
+            child: Builder(
+              builder: (context) {
+                final rail = GameChromeScope.railInsetOf(context);
+                return landscape
+                    ? _buildLandscape(live, display, me, rail: rail)
+                    : _buildPortrait(
+                        live,
+                        display,
+                        me,
+                        // Флаг кончается выше низа карточки соперника; под
+                        // неё, к строке часов, спускается только ничья.
+                        clockRowInset: drawInRail ? rail : 0,
+                      );
+              },
+            ),
           ),
           if (live.isOver && live.iWon)
             Positioned.fill(
@@ -964,7 +898,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                 key: ValueKey('chess-confetti-${widget.gameId}'),
               ),
             ),
-          MyTurnAlert.stackLeaf(isMyTurn: myTurn),
         ],
       ),
     );
@@ -973,13 +906,21 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   Widget _buildPortrait(
     ChessGameView live,
     ChessGameView display,
-    String? me,
-  ) {
+    String? me, {
+    required double clockRowInset,
+  }) {
     return Column(
       children: [
         _buildOpponentCard(live, me),
         const SizedBox(height: 4),
-        Expanded(child: _buildBoardColumn(live, display, me)),
+        Expanded(
+          child: _buildBoardColumn(
+            live,
+            display,
+            me,
+            clockRowInset: clockRowInset,
+          ),
+        ),
       ],
     );
   }
@@ -987,8 +928,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   Widget _buildLandscape(
     ChessGameView live,
     ChessGameView display,
-    String? me,
-  ) {
+    String? me, {
+    required double rail,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1004,11 +946,13 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildOpponentCard(live, me),
+                _buildOpponentCard(live, me, reserveRail: false),
               ],
             ),
           ),
         ),
+        // Колонка с карточкой встаёт левее столбика «сдаться / ничья».
+        SizedBox(width: rail),
       ],
     );
   }
@@ -1038,27 +982,30 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   Widget _buildBoardColumn(
     ChessGameView live,
     ChessGameView display,
-    String? me,
-  ) {
+    String? me, {
+    double clockRowInset = 0,
+  }) {
     return Column(
       children: [
         if (live.isOver) _buildResultHeader(live, me),
-        Expanded(child: _buildBoardArea(live, display)),
+        Expanded(
+          child: _buildBoardArea(live, display, clockRowInset: clockRowInset),
+        ),
       ],
     );
   }
 
-  Widget _buildBoardArea(ChessGameView live, ChessGameView display) {
-    final myTurn = live.isMyTurn && !live.isOver && !_isReviewing;
+  Widget _buildBoardArea(
+    ChessGameView live,
+    ChessGameView display, {
+    required double clockRowInset,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final mine = live.myIndex >= 0;
         const rowH = 40.0;
         const topPad = 6.0;
-        final hasTurnTimer =
-            !live.isOver && live.turnTimeSec > 0 && live.turnDeadline > 0;
-        const timerH = 28.0;
-        final chrome = topPad + rowH * 2 + (hasTurnTimer ? timerH : 0);
+        const chrome = topPad + rowH * 2;
         final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
         final maxH =
             constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
@@ -1080,22 +1027,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                   : const SizedBox.shrink(),
               clock: mine ? _clock(live, oppSeat) : null,
               status: live.isOver ? null : _buildStatusInline(live),
+              endInset: clockRowInset,
             ),
-            if (hasTurnTimer)
-              SizedBox(
-                height: timerH,
-                child: Center(
-                  child: GameTurnCountdown(
-                    key: ValueKey('${live.turn}_${live.turnDeadline}'),
-                    turnDeadline: live.turnDeadline,
-                    isMyTurn: myTurn,
-                    turnTimeSec: live.turnTimeSec,
-                    onExpired: () =>
-                        ref.invalidate(chessGameProvider(widget.gameId)),
-                    labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-                  ),
-                ),
-              ),
             Expanded(child: Center(child: board)),
             _bottomChrome(
               material: mine
@@ -1113,14 +1046,16 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   }
 
   /// Фигуры слева, статус по центру, часы соперника справа — одна линия.
-  /// Небольшой отступ сверху, слева и справа.
+  /// Небольшой отступ сверху, слева и справа. [endInset] — место справа под
+  /// столбик «сдаться / ничья», когда строка стоит на его высоте.
   Widget _topChrome({
     required Widget material,
     required Widget? clock,
     required Widget? status,
+    double endInset = 0,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+      padding: EdgeInsets.fromLTRB(8, 6, 8 + endInset, 0),
       child: SizedBox(
         height: 40,
         width: double.infinity,
@@ -1147,7 +1082,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                 if (status != null)
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: side),
-                    child: status,
+                    // Рядом со столбиком хрома строка уже: статус ужимаем,
+                    // а не обрезаем многоточием.
+                    child: FittedBox(fit: BoxFit.scaleDown, child: status),
                   ),
               ],
             );

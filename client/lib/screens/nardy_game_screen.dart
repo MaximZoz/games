@@ -9,10 +9,10 @@ import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
-import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -40,7 +40,6 @@ import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
-import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 class NardyGameScreen extends ConsumerStatefulWidget {
@@ -679,118 +678,36 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     }
   }
 
-  Future<void> _openChat(String userId, String displayName) async {
-    try {
-      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
-      if (!mounted || chatId.isEmpty) return;
-      context.push(
-        Uri(
-          path: '/chats/$chatId',
-          queryParameters: {
-            'name': displayName,
-            'from': 'games',
-            'game': '/games/nardy/game/${widget.gameId}',
-          },
-        ).toString(),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      context.push(
-        Uri(
-          path: '/chats',
-          queryParameters: {
-            'peer': userId,
-            'game': '/games/nardy/game/${widget.gameId}',
-          },
-        ).toString(),
-      );
-    }
-  }
+  /// Время хода вышло (моё или соперника) — забрать с сервера итог.
+  void _onTurnExpired() => ref.invalidate(nardyGameProvider(widget.gameId));
 
-  Future<void> _addFriend(String userId, {String? requestId}) async {
-    final repo = ref.read(friendsRepositoryProvider);
-    try {
-      if (requestId != null) {
-        await repo.acceptRequest(requestId);
-      } else {
-        await repo.sendRequest(userId);
-      }
-      if (!mounted) return;
-      ref.invalidate(friendsSnapshotProvider);
-      showAppSnackBar(
-        context,
-        message: requestId != null
-            ? context.l10n.friendsAcceptRequest
-            : context.l10n.friendsRequestSent,
-        kind: AppSnackKind.success,
-      );
-    } catch (_) {}
-  }
-
-  Widget _buildOpponentCard(NardyGameView game, String? me) {
+  /// [reserveRail] — карточка стоит по центру под шапкой и сама отступает
+  /// от флага «сдаться»; в боковой колонке место даёт колонка.
+  Widget _buildOpponentCard(
+    NardyGameView game,
+    String? me, {
+    bool reserveRail = true,
+  }) {
     final peers = _peerIds(game, me);
     if (peers.isEmpty) return const SizedBox.shrink();
-    final oppId = peers.first;
     final opp = game.opponent;
-    final isBot = oppId.startsWith('bot:');
-    final name = (opp?.displayName.trim().isNotEmpty ?? false)
-        ? opp!.displayName.trim()
-        : (isBot ? context.l10n.gameBot : context.l10n.gameOpponent);
-    final chats = ref.watch(chatsListProvider).valueOrNull;
-    var unread = 0;
-    if (chats != null) {
-      for (final c in chats) {
-        if (c.user.id == oppId) unread += c.unreadCount;
-      }
-    }
-    final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
-    final isFriend = friends?.friends.any((f) => f.user.id == oppId) == true;
-    final outgoing =
-        friends?.outgoing.where((r) => r.user.id == oppId).toList() ?? const [];
-    final incoming =
-        friends?.incoming.where((r) => r.user.id == oppId).toList() ?? const [];
-    final hasOutgoing = outgoing.isNotEmpty;
-    final hasIncoming = incoming.isNotEmpty;
-    final compact = MediaQuery.sizeOf(context).width < 420;
-
-    return GameOpponentCard(
-      userId: oppId,
-      displayName: name,
-      avatarKind: opp?.avatarKind ?? 'letter',
-      avatarValue: opp?.avatarValue,
-      frameCode: opp?.frameCode,
-      frameColor: opp?.frameColor,
-      isBot: isBot,
-      messageUnread: unread,
-      infoTooltip: context.l10n.userInfoTitle,
-      messageTooltip: context.l10n.gameWriteMessage,
-      compact: compact,
-      maxWidth: 320,
-      showAddFriend: !isBot && !isFriend,
-      addFriendEnabled: !hasOutgoing,
-      addFriendBadge: hasIncoming ? 1 : 0,
-      addFriendTooltip: hasIncoming
-          ? context.l10n.friendsAcceptRequest
-          : (hasOutgoing
-              ? context.l10n.friendsRequestSent
-              : context.l10n.friendsAdd),
-      onAddFriendTap: () => unawaited(_addFriend(
-        oppId,
-        requestId: hasIncoming ? incoming.first.requestId : null,
-      )),
-      onInfoTap: () => unawaited(showUserProfileDialog(
-        context: context,
-        ref: ref,
-        userId: oppId,
-        displayName: name,
+    return GameOpponentPanel(
+      opponent: GameOpponent(
+        userId: peers.first,
+        displayName: opp?.displayName,
         avatarKind: opp?.avatarKind ?? 'letter',
         avatarValue: opp?.avatarValue,
         frameCode: opp?.frameCode,
         frameColor: opp?.frameColor,
-        messageFrom: 'games',
-        messageReturnPath: '/games/nardy/game/${widget.gameId}',
-      )),
-      onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
+        isBot: opp?.isBot ?? false,
+      ),
+      gameType: 'nardy',
+      gameId: widget.gameId,
+      isTheirTurn: !game.isOver && game.myIndex >= 0 && !game.isMyTurn,
+      turnDeadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+      turnTimeSec: game.turnTimeSec,
+      onTurnExpired: _onTurnExpired,
+      reserveRail: reserveRail,
     );
   }
 
@@ -836,15 +753,9 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       },
       child: SwipeBackScope.gameBoard(
         onBack: _onClosePressed,
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            toolbarHeight: gameToolbarHeight(context),
-            leadingWidth: gameAppBarLeadingWidth(),
-            leading: buildGameAppBarLeading(
-              onClose: _busy ? null : () => unawaited(_onClosePressed()),
-            ),
+        child: GameScreenScaffold(
+          chrome: GameChrome(
+            onClose: _busy ? null : () => unawaited(_onClosePressed()),
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -862,47 +773,47 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               ],
             ),
             centerTitle: true,
-            actions: buildGameAppBarActions(
+            onShowRules: () => showGameRulesDialog(
               context: context,
-              onSurrender: game == null || game.isOver
-                  ? null
-                  : () => unawaited(_confirmSurrender()),
-              surrenderTooltip: context.l10n.gameSurrender,
-              onShowRules: () => showGameRulesDialog(
-                context: context,
-                content: rulesTextLines(nardyRuleLines(
-                  gameMode: game?.gameMode ?? nardyModeShort,
-                  turnTimeSec: game?.turnTimeSec ?? 0,
-                  stakeBronze: game?.stakeBronze ?? 0,
-                  offline: _isOffline,
-                  l10n: context.l10n,
-                )),
-                closeLabel: context.l10n.commonClose,
-              ),
-              rulesTooltip: context.l10n.gamesRulesTitle,
+              content: rulesTextLines(nardyRuleLines(
+                gameMode: game?.gameMode ?? nardyModeShort,
+                turnTimeSec: game?.turnTimeSec ?? 0,
+                stakeBronze: game?.stakeBronze ?? 0,
+                offline: _isOffline,
+                l10n: context.l10n,
+              )),
+              closeLabel: context.l10n.commonClose,
             ),
+            turn: game == null || game.isOver
+                ? const GameTurnClock.idle()
+                : GameTurnClock(
+                    isMyTurn: game.isMyTurn,
+                    deadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+                    turnTimeSec: game.turnTimeSec,
+                    onExpired: _onTurnExpired,
+                  ),
+            onSurrender: game == null || game.isOver
+                ? null
+                : () => unawaited(_confirmSurrender()),
           ),
-          body: GradientBackground(
-            child: SafeArea(
-              child: gameAsync.when(
-                skipLoadingOnReload: true,
-                skipLoadingOnRefresh: true,
-                data: (game) => _buildGame(
-                  _optimisticGame?.id == game.id ? _optimisticGame! : game,
-                  me,
+          body: SafeArea(
+            child: gameAsync.when(
+              skipLoadingOnReload: true,
+              skipLoadingOnRefresh: true,
+              data: (game) => _buildGame(
+                _optimisticGame?.id == game.id ? _optimisticGame! : game,
+                me,
+              ),
+              loading: () => const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
                 ),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.accentStart,
-                  ),
-                ),
-                error: (e, _) => Center(
-                  child: Text(
-                    formatUserError(e,
-                        fallback: context.l10n.commonGenericError),
-                    style: const TextStyle(color: Colors.red),
-                  ),
+              ),
+              error: (e, _) => Center(
+                child: Text(
+                  formatUserError(e, fallback: context.l10n.commonGenericError),
+                  style: const TextStyle(color: Colors.red),
                 ),
               ),
             ),
@@ -1033,9 +944,17 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
-          child: landscape
-              ? _buildLandscape(game, me, myTurn)
-              : _buildPortrait(game, me, myTurn),
+          // Builder: ширину столбика хрома видно только ниже каркаса.
+          child: Builder(
+            builder: (context) => landscape
+                ? _buildLandscape(
+                    game,
+                    me,
+                    myTurn,
+                    rail: GameChromeScope.railInsetOf(context),
+                  )
+                : _buildPortrait(game, me, myTurn),
+          ),
         ),
         if (game.isOver && game.iWon)
           Positioned.fill(
@@ -1043,7 +962,6 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               key: ValueKey('nardy-confetti-${widget.gameId}'),
             ),
           ),
-        MyTurnAlert.stackLeaf(isMyTurn: myTurn),
       ],
     );
   }
@@ -1113,7 +1031,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     final panel = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildStatusLine(game, myTurn),
+        _buildStatusLine(game),
         const SizedBox(height: 6),
         _buildControls(game, myTurn),
         if (game.isOver) ...[
@@ -1124,7 +1042,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     );
     return Column(
       children: [
-        _buildOpponentRow(game, me),
+        _buildOpponentCard(game, me),
         const SizedBox(height: 6),
         Expanded(child: _buildBoard(game)),
         const SizedBox(height: 6),
@@ -1136,7 +1054,12 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     );
   }
 
-  Widget _buildLandscape(NardyGameView game, String? me, bool myTurn) {
+  Widget _buildLandscape(
+    NardyGameView game,
+    String? me,
+    bool myTurn, {
+    required double rail,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1149,9 +1072,9 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildOpponentRow(game, me),
+                _buildOpponentCard(game, me, reserveRail: false),
                 const SizedBox(height: 8),
-                _buildStatusLine(game, myTurn),
+                _buildStatusLine(game),
                 const SizedBox(height: 8),
                 _buildControls(game, myTurn),
                 if (game.isOver) ...[
@@ -1162,12 +1085,11 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             ),
           ),
         ),
+        // Колонка с карточкой встаёт левее флага «сдаться».
+        SizedBox(width: rail),
       ],
     );
   }
-
-  Widget _buildOpponentRow(NardyGameView game, String? me) =>
-      _buildOpponentCard(game, me);
 
   /// Полоса «осталось» на двоих — по ширине доски.
   Widget _buildPipsBar(NardyGameView game, double width) {
@@ -1194,42 +1116,25 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     );
   }
 
-  Widget _buildStatusLine(NardyGameView game, bool myTurn) {
+  Widget _buildStatusLine(NardyGameView game) {
     final rawChip = stakeFinishRewardChip(
       stakeBronze: game.stakeBronze,
       isDraw: game.isDraw,
       iWon: game.iWon,
     );
     final rewardChip = rawChip < 0 && !_lossChipRevealed ? 0 : rawChip;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GameStatusWithReward(
-          statusText: _statusText(game),
-          showReward: stakeShowFinishReward(
-            stakeBronze: game.stakeBronze,
-            isOver: game.isOver,
-            isDraw: game.isDraw,
-            rewardChip: rewardChip,
-          ),
-          rewardBronze: rewardChip,
-          rewardKey: _rewardKey,
-          fontSize: 14,
-          wrap: true,
-        ),
-        if (!game.isOver && game.turnTimeSec > 0 && game.turnDeadline > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: GameTurnCountdown(
-              key: ValueKey('${game.turn}_${game.turnDeadline}'),
-              turnDeadline: game.turnDeadline,
-              isMyTurn: myTurn,
-              turnTimeSec: game.turnTimeSec,
-              onExpired: () => ref.invalidate(nardyGameProvider(widget.gameId)),
-              labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-            ),
-          ),
-      ],
+    return GameStatusWithReward(
+      statusText: _statusText(game),
+      showReward: stakeShowFinishReward(
+        stakeBronze: game.stakeBronze,
+        isOver: game.isOver,
+        isDraw: game.isDraw,
+        rewardChip: rewardChip,
+      ),
+      rewardBronze: rewardChip,
+      rewardKey: _rewardKey,
+      fontSize: 14,
+      wrap: true,
     );
   }
 
