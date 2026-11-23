@@ -9,7 +9,10 @@
 
 | Слой | Что |
 |------|-----|
-| Клиент UI | `GameLobbyWaitingLayout`, `LobbyMultiPlayersCard`, `GameActionsOverlay` (флаг/ничья), `handleGameScreenClose`, таймеры хода, `GameRematchSection`, `GameStatusWithReward`, `GameCardShell`, `GameObservationCard` |
+| Клиент UI | `GameLobbyWaitingLayout`, `LobbyMultiPlayersCard`, `handleGameScreenClose`, `GameRematchSection`, `GameStatusWithReward`, `GameCardShell`, `GameObservationCard` |
+| Клиент хром партии | `GameScreenScaffold` + `GameChrome` (шапка, таймер своего хода перед правилами, столбик «сдаться / ничья»), `GameOpponentPanel` (карточка соперника: профиль, чат, друзья, рамка-таймер его хода), `forgetGameSession` (выход в каталог) — `client/lib/games/framework/` |
+| Клиент UI-библиотека | пакет `client/packages/multigames_ui`: токены темы, адаптив, примитивы |
+| Клиент игровой кит | пакет `client/packages/multigames_game_kit`: `GamePalette`, `GameMotion`, `GameFlightController` / `GameFlightStage`, `GameHandStrip`, `scatterSlots`, `GameTableSurface` |
 | Клиент навигация | `GameRegistry` → пути лобби/партии/оффлайн; `active_game_guard`, `LobbyGameNavigationWatcher` |
 | Клиент сессия | `GameSessionApi` (leave/forfeit/draw/resolve type) |
 | Клиент настройки | `userGameSettingsProvider(gameType)` + `gameCardSettings(...)` / `GameCardStakeHelper` — кеш + БД |
@@ -26,7 +29,44 @@
    - Лобби: собрать на `GameLobbyWaitingLayout`.
    - Шапка: `GameLobbyAppBarTitle` + `lobbyAppBarTitle` — везде «Своя игра» /
      «Лобби», не название игры.
-   - Партия: хром через `GameActionsOverlay` + `handleGameScreenClose` + таймеры.
+   - Партия: экран — `GameScreenScaffold(chrome: GameChrome(...), body: ...)`.
+     Свой `Scaffold` / `AppBar`, таймер хода, флаг и ничью не верстать: игра
+     только описывает их в `GameChrome` (`onClose`, `onShowRules`, `turn`,
+     `onSurrender`, `draw`), а каркас ставит всё на общие места — таймер
+     своего хода перед кнопкой правил, под ней столбик «сдаться / ничья».
+
+     ```dart
+     GameScreenScaffold(
+       chrome: GameChrome(
+         onClose: _onClose,
+         title: Text(context.l10n.gamesMyGame),
+         onShowRules: _showRules,
+         turn: GameTurnClock(
+           isMyTurn: game.isMyTurn,
+           deadline: game.turnDeadline,
+           turnTimeSec: game.turnTimeSec,
+           onExpired: _onTurnExpired,
+         ),
+         onSurrender: game.isOver ? null : _confirmSurrender,
+         draw: canDraw ? GameDrawOffer(onPressed: _offerDraw) : null,
+       ),
+       body: MyGameTable(game: game),
+     )
+     ```
+   - Соперник 1×1 — `GameOpponentPanel(opponent: GameOpponent(...), gameType,
+     gameId, isTheirTurn, turnDeadline, turnTimeSec)`: профиль по аватару, чат,
+     заявка в друзья и рамка-таймер его хода подключаются сами. За столом на
+     3+ игроков — тот же виджет с `layout: GameOpponentLayout.seat`.
+     Ширину столбика действий отдаёт `GameChromeScope.railInsetOf(context)`.
+   - Выход крестиком в каталог — `forgetGameSession(ref, gameId: ...)`, иначе
+     вкладка «Игры» вернёт на сыгранный стол.
+   - Цвета стола и фишек — из `GamePalette`, длительности — из `GameMotion`;
+     своих литералов цвета и «сукна» игра не заводит.
+   - Движение фишек — `GameFlightStage` + `GameFlightController`: полёт
+     запускается при смене состояния партии (`didUpdateWidget`), место посадки
+     уточняет `GameFlight.toResolver`. Рука — `GameHandStrip`, прикуп россыпью —
+     `scatterSlots`, поверхность стола — `GameTableSurface`. Пример —
+     `client/lib/games/domino/domino_table.dart`.
    - Экран партии оборачивать в `SwipeBackScope.gameBoard`, не в обычный
      `SwipeBackScope`. Непрозрачная полоса 48px у левого края перехватывает
      тап по крайней левой кости, карте или клетке. Если рука вдоль низа —
@@ -91,5 +131,6 @@
 
 ```bash
 cd server && go test ./internal/gameregistry/... ./internal/api/ -count=1
-cd client && flutter test test/game_registry_test.dart test/game_stake_test.dart
+cd client && flutter test test/game_registry_test.dart test/game_stake_test.dart \
+  test/game_chrome_test.dart test/game_kit_test.dart
 ```
