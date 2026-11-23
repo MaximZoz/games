@@ -55,9 +55,24 @@
      ```
    - Соперник 1×1 — `GameOpponentPanel(opponent: GameOpponent(...), gameType,
      gameId, isTheirTurn, turnDeadline, turnTimeSec)`: профиль по аватару, чат,
-     заявка в друзья и рамка-таймер его хода подключаются сами. За столом на
-     3+ игроков — тот же виджет с `layout: GameOpponentLayout.seat`.
+     заявка в друзья и рамка-таймер его хода подключаются сами. Карточка у
+     всех игр одна — как в морском бою: аватар, имя, чат. Слота под своё
+     содержимое у неё нет: счёт, число карт, стек и прочее состояние партии
+     игра рисует на столе рядом (как `UnoOpponentTally` или чип счёта в
+     домино), а `GameOpponentCard` сама не создаёт. За столом на 3+ игроков —
+     `GameOpponentPanel.seat(...)`, у него есть `seatBadges`.
      Ширину столбика действий отдаёт `GameChromeScope.railInsetOf(context)`.
+     Новый экран партии допиши в `_duelSources` в
+     `client/test/duel_opponent_card_usage_test.dart`: тест роняет экран
+     `*_game_screen.dart`, которого нет в списке или который не ставит
+     `GameOpponentPanel(`.
+   - Правила — только через `gameRuleLines(...)` из
+     `client/lib/games/game_rules_template.dart`. Шапка у всех игр одна и в
+     одном порядке: ставка, игроки, режим, время на ход; все четыре строки
+     есть всегда («Без ставки.», «Без ограничения по времени на ход.»). Всё
+     остальное — колода, часы партии, пометка «офлайн» — уходит в `rules`
+     после шапки. Новую игру допиши в
+     `client/test/game_rules_template_test.dart`.
    - Выход крестиком в каталог — `forgetGameSession(ref, gameId: ...)`, иначе
      вкладка «Игры» вернёт на сыгранный стол.
    - Цвета стола и фишек — из `GamePalette`, длительности — из `GameMotion`;
