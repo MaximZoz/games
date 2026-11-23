@@ -1181,12 +1181,48 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _playedAwayCards.removeAll(cards);
   }
 
-  void _forgetPlayedAwayIfReturning() {
+  /// Карты стола, которые ещё нельзя возвращать в веер.
+  List<PlayingCard> _tableCardsBlockingHand(DurakGameView view) {
+    final holding = _takeTableHold != null &&
+        (_busy || _fxScheduled || _hidingTable || _cardFlightActive);
+    final rows = <DurakTablePairApi>[
+      ...view.table,
+      if (holding) ..._takeTableHold!,
+    ];
+    return [
+      for (final pair in rows) ...[
+        pair.attack.toPlayingCard(),
+        if (pair.defense != null) pair.defense!.toPlayingCard(),
+      ],
+    ];
+  }
+
+  /// Свой ход ещё на столе или в полёте — карту в веер не возвращаем.
+  List<PlayingCard> _cardsStillInLocalPlay() {
+    return [
+      ..._optimisticAttacks,
+      ..._optimisticDefends.values,
+      ..._flyingToTable,
+      ..._flyingFromHand,
+    ];
+  }
+
+  void _forgetPlayedAwayIfReturning(
+    List<PlayingCard> serverHand,
+    DurakGameView view,
+  ) {
     if (_playedAwayCards.isEmpty) return;
+    final returned = durakCardsReturnedToHand(
+      playedAway: _playedAwayCards,
+      serverHand: serverHand,
+      tableCards: _tableCardsBlockingHand(view),
+      stillInPlay: _cardsStillInLocalPlay(),
+    );
     final keep = durakRetainPlayedAway(
       playedAway: _playedAwayCards,
       incomingFanCards: _incomingFanCards,
       pendingDealCards: _pendingDealCards,
+      returnedToHand: returned,
     );
     if (keep.length == _playedAwayCards.length) return;
     _playedAwayCards
@@ -1213,8 +1249,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   ///
   /// Свой ход до посадки — дырка в том же слоте (лицо в hiddenCards).
   /// Иначе clearLift и схлопывание на кадр вспыхивают картой и всем веером.
-  List<PlayingCard> _orderedHand(List<PlayingCard> serverHand, Suit trump) {
-    _forgetPlayedAwayIfReturning();
+  List<PlayingCard> _orderedHand(
+    List<PlayingCard> serverHand,
+    Suit trump,
+    DurakGameView view,
+  ) {
+    _forgetPlayedAwayIfReturning(serverHand, view);
     final pending = durakOpeningDealPendingSet(
       concealOpeningHand: _concealOpeningHand,
       pendingDealCards: _pendingDealCards,
@@ -1245,6 +1285,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     bool animate = true,
     bool keepFreeze = false,
   }) {
+    final live = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    if (live != null) _forgetPlayedAwayIfReturning(hand, live);
     final sorted = _handWithoutLeaving(hand)
       ..sort((a, b) => _compareHandCards(a, b, trump));
     if (!keepFreeze) _unfreezeFanLayout();
@@ -2055,7 +2097,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           ? (v.hands[v.myIndex].cards ?? const [])
           : const [],
     );
-    _forgetPlayedAwayIfReturning();
+    _forgetPlayedAwayIfReturning(hand, v);
     if (hand.isEmpty) {
       if (_pendingDealCards.isEmpty) _handOrder = [];
       return;
@@ -5651,38 +5693,54 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     return incoming;
   }
 
+  bool get _dealVisualBusy => durakDealVisualBusy(
+        busy: _busy,
+        fxScheduled: _fxScheduled,
+        // Стол ещё уходит в биту или в руку — колоду и добор не вскрываем.
+        flightActive:
+            _cardFlightActive || _hidingTable || _takeTableHold != null,
+      );
+
   /// Добор спрятан, а полёт уже кончился — показать карты в веере.
   /// Иначе рука остаётся короткой, пока соперник ходит и колода не пуста.
+  /// Залипшие флаги раунда без полёта короткую руку не держат.
   void _releaseStuckFanDeals() {
-    if (!durakReleaseStuckDealCards(
-      pendingDeal: _pendingDealCards.isNotEmpty,
-      animatingDeal: _busy ||
-          _fxScheduled ||
-          _localRoundFx ||
-          _suppressRemoteBitoFx ||
-          _concealOpeningHand ||
-          _cardFlightActive,
-    )) {
+    bool releasePending(bool busy) => durakReleaseStuckDealCards(
+          pendingDeal: _pendingDealCards.isNotEmpty,
+          animatingDeal: busy,
+        );
+    bool releaseConceal(bool busy) => durakReleaseStuckOpeningConceal(
+          concealOpeningHand: _concealOpeningHand,
+          animatingDeal: busy,
+        );
+    bool releaseFreeze(bool busy) => durakClearIdleDeckFreeze(
+          frozen: _deckCountFreeze != null,
+          pendingDeal: _pendingDealCards.isNotEmpty,
+          animatingDeal: busy,
+        );
+    final busy = _dealVisualBusy;
+    if (!releasePending(busy) &&
+        !releaseConceal(busy) &&
+        !releaseFreeze(busy)) {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (!durakReleaseStuckDealCards(
-        pendingDeal: _pendingDealCards.isNotEmpty,
-        animatingDeal: _busy ||
-            _fxScheduled ||
-            _localRoundFx ||
-            _suppressRemoteBitoFx ||
-            _concealOpeningHand ||
-            _cardFlightActive,
-      )) {
-        return;
-      }
+      final stillBusy = _dealVisualBusy;
+      final stillPending = releasePending(stillBusy);
+      final stillConceal = releaseConceal(stillBusy);
+      final stillFreeze = releaseFreeze(stillBusy);
+      if (!stillPending && !stillConceal && !stillFreeze) return;
       setState(() {
-        _pendingDealCards.clear();
-        _dealFaceDownTail = 0;
-        _deckCountFreeze = null;
-        _handOrder = null;
+        if (stillPending || stillConceal) {
+          _concealOpeningHand = false;
+          _pendingDealCards.clear();
+          _dealFaceDownTail = 0;
+          _handOrder = null;
+          _deckCountFreeze = null;
+        } else if (stillFreeze) {
+          _deckCountFreeze = null;
+        }
       });
     });
   }
@@ -6927,7 +6985,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           ? (view.hands[view.myIndex].cards ?? const [])
           : const [],
     );
-    return _orderedHand(serverHand, trump);
+    return _orderedHand(serverHand, trump, view);
   }
 
   bool _onGamepad(DurakGameView view, GamepadAction action) {
@@ -7004,7 +7062,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           : const [],
     );
     _releaseStuckFanDeals();
-    final myHand = _orderedHand(serverHand, trump);
+    final myHand = _orderedHand(serverHand, trump, view);
     final hideFinishedHand = durakFinishChromeVisible(
       isOver: view.isOver,
       finishReady: _finishChromeReady,

@@ -493,6 +493,32 @@ bool durakReleaseStuckDealCards({
 }) =>
     pendingDeal && !animatingDeal;
 
+/// Полёт добора ещё на экране.
+///
+/// Залипший флаг раунда без busy/полёта сюда не входит: иначе веер
+/// остаётся коротким, а бейдж колоды держит старое число.
+bool durakDealVisualBusy({
+  required bool busy,
+  required bool fxScheduled,
+  required bool flightActive,
+}) =>
+    busy || fxScheduled || flightActive;
+
+/// Бейдж колоды больше не должен врать, когда добор уже не летит.
+bool durakClearIdleDeckFreeze({
+  required bool frozen,
+  required bool pendingDeal,
+  required bool animatingDeal,
+}) =>
+    frozen && !pendingDeal && !animatingDeal;
+
+/// Стартовая раздача спрятала руку, а полёт уже кончился.
+bool durakReleaseStuckOpeningConceal({
+  required bool concealOpeningHand,
+  required bool animatingDeal,
+}) =>
+    concealOpeningHand && !animatingDeal;
+
 /// После «Беру» соперника: секунда подписи, потом кнопка «Готово».
 const Duration kDurakOpponentTakeHold = Duration(seconds: 1);
 

@@ -1055,6 +1055,111 @@ func TestTransferInPerevodnoi(t *testing.T) {
 	}
 }
 
+// Пустой стол и непустая колода — руки снова по 6, даже после перевода.
+func TestPerevodnoiRefillRestoresSix(t *testing.T) {
+	deck := []Card{
+		{6, Hearts},
+		{7, Hearts},
+		{8, Hearts},
+		{9, Hearts},
+		{10, Hearts},
+		{11, Hearts},
+		{12, Hearts},
+	}
+	def1 := Card{11, Clubs}
+	def2 := Card{12, Clubs}
+	def3 := Card{13, Clubs}
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{14, Spades}, {9, Spades}, {13, Spades}},
+			{
+				{6, Clubs},
+				{7, Clubs},
+				{8, Clubs},
+				{9, Clubs},
+				{10, Clubs},
+				{14, Clubs},
+			},
+		},
+		Deck: deck,
+		Table: []Pair{
+			{Attack: Card{10, Diamonds}, Defense: &def1},
+			{Attack: Card{10, Hearts}, Defense: &def2},
+			{Attack: Card{10, Spades}, Defense: &def3},
+		},
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		Phase:         PhaseBitoReveal,
+		Mode:          ModePerevodnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		LoserIndex:    -1,
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
+	if len(st.Table) != 0 {
+		t.Fatalf("table = %v, want empty", st.Table)
+	}
+	if len(st.Hands[0]) != 6 {
+		t.Fatalf("attacker hand = %v, want 6", st.Hands[0])
+	}
+	if len(st.Hands[1]) != 6 {
+		t.Fatalf("defender hand = %v, want 6", st.Hands[1])
+	}
+	if len(st.Deck) != 4 {
+		t.Fatalf("deck = %d, want 4", len(st.Deck))
+	}
+}
+
+// Неотбитые атаки переводного возвращаются атакующему, затем добор до 6.
+func TestPerevodnoiUnbeatenAttacksReturnBeforeRefill(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{14, Spades}, {9, Spades}, {13, Spades}},
+			{},
+		},
+		Deck: []Card{
+			{6, Hearts},
+			{7, Hearts},
+			{8, Hearts},
+			{9, Hearts},
+		},
+		Table: []Pair{
+			{Attack: Card{10, Diamonds}},
+			{Attack: Card{10, Hearts}},
+			{Attack: Card{10, Spades}},
+		},
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		Mode:          ModePerevodnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		LoserIndex:    -1,
+	}
+	st.HealDefenderEmpty()
+	if len(st.Table) != 0 {
+		t.Fatalf("table = %v, want empty", st.Table)
+	}
+	if st.Phase != PhaseAttack {
+		t.Fatalf("phase = %s, want attack", st.Phase)
+	}
+	if len(st.Hands[0]) != 6 {
+		t.Fatalf("attacker hand = %v, want 6 (3 + returned)", st.Hands[0])
+	}
+	if len(st.Hands[1]) != 4 {
+		t.Fatalf("defender hand = %v, want 4 drawn", st.Hands[1])
+	}
+	if len(st.Deck) != 0 {
+		t.Fatalf("deck = %d, want 0", len(st.Deck))
+	}
+}
+
 // Нельзя перевести, если у следующего защитника карт меньше, чем будет атак на столе.
 func TestTransferBlockedWhenNextHasTooFewCards(t *testing.T) {
 	st := &State{
