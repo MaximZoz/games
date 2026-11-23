@@ -869,13 +869,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesDominoSeaSame => 'Jako, avaus ja nosto kuten Pukissa. Ketjulla on kaksi päätä.';
 
   @override
-  String get rulesDominoSeaScore => 'Vain painavin käsi kirjaa pisteet. Alle 25 ei kirjaudu.';
+  String get rulesDominoSeaScore => 'Pisteet kirjaa vain jaon häviäjä – se, jolle jäi eniten silmälukuja. Jos heitä on kaksi, kukaan ei kirjaa. Alle 25 ei kirjaudu.';
 
   @override
   String get rulesDominoSeaWipe => 'Jos kahdella on 25 tai enemmän, sitä jakoa ei kirjata kenellekään.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 päättää jaon heti: ainoa painavin vastustaja saa 75. Tasatilanteessa ei kukaan.';
+  String get rulesDominoSeaBlank => 'Päättäminen 0-0:lla lopettaa ottelun heti: pukki on se, jolle jäi eniten silmälukuja, tilanteesta riippumatta.';
 
   @override
   String get rulesDominoSeaSix => 'Päättäminen viimeisellä 6-6:lla kirjaa häviäjälle 100 ja nollaa päättäjän ottelupisteet.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Ei panosta.';
+
+  @override
+  String get rulesDominoSeaPair => 'Kaksi paria yhdellä siirrolla: jos sinulla on molempien avoimien päiden parit, voit laittaa ne kerralla, yhden kumpaankin päähän.';
+
+  @override
+  String get rulesDominoSeaLone => 'Jos käteen jää vain 0-0, kirjataan 25; jos vain 6-6, kirjataan 50. Jos jäljellä ovat juuri 0-0 ja 6-6, kirjataan 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Nopea jako: jos jako avataan 6-6:lla, häviäjälle kirjataan tasan 50, jos 0-0:lla, 75. 6-6:lla tai 0-0:lla saa avata vain, kun kaikilla vastustajilla on jo pisteitä kirjattuna. Kalaa nopeassa jaossa ei lasketa.';
+
+  @override
+  String get dominoPlayPair => 'Kaksi paria';
 }

@@ -869,13 +869,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesDominoSeaSame => 'बाँटना, पहली चाल और खींचना बकरा जैसा। श्रृंखला के दो सिरे।';
 
   @override
-  String get rulesDominoSeaScore => 'अंक केवल सबसे भारी हाथ लिखता है। 25 से कम नहीं लिखा जाता।';
+  String get rulesDominoSeaScore => 'अंक केवल दाँव हारने वाला लिखता है — जिसके हाथ में सबसे अधिक अंक बचे। ऐसे दो हों तो कोई नहीं लिखता। 25 से कम नहीं लिखा जाता।';
 
   @override
   String get rulesDominoSeaWipe => 'यदि दो के पास 25 या अधिक हों, तो यह दाँव किसी को नहीं लिखा जाता।';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 डालते ही दाँव खत्म: सबसे भारी विरोधी अकेला हो तो 75। बराबरी पर किसी को नहीं।';
+  String get rulesDominoSeaBlank => '0-0 से दाँव बंद करते ही मैच तुरंत खत्म: बकरा वह है जिसके हाथ में सबसे अधिक अंक बचे, स्कोर चाहे जो हो।';
 
   @override
   String get rulesDominoSeaSix => 'अंतिम 6-6 से बंद होने पर हारने वाले को 100, बंद करने वाले का मैच स्कोर शून्य।';
@@ -3363,4 +3363,16 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'कोई दाँव नहीं।';
+
+  @override
+  String get rulesDominoSeaPair => 'एक चाल में दो डबल: यदि आपके पास दोनों खुले सिरों के डबल हैं, तो उन्हें एक साथ लगा सकते हैं — हर सिरे पर एक।';
+
+  @override
+  String get rulesDominoSeaLone => 'हाथ में केवल 0-0 बचे तो 25 लिखे जाते हैं, केवल 6-6 बचे तो 50। केवल 0-0 और 6-6 साथ बचें तो 12 लिखे जाते हैं।';
+
+  @override
+  String get rulesDominoSeaFast => 'तेज़ दाँव: दाँव 6-6 से शुरू हो तो हारने वाले को ठीक 50, 0-0 से शुरू हो तो 75 लिखे जाते हैं। 6-6 या 0-0 से शुरुआत तभी कर सकते हैं जब सभी विरोधियों के अंक पहले से लिखे हों। तेज़ दाँव में मछली नहीं गिनी जाती।';
+
+  @override
+  String get dominoPlayPair => 'दो डबल';
 }

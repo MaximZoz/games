@@ -869,13 +869,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesDominoSeaSame => 'החלוקה, הפתיחה והשליפה כמו בעז. לשרשרת שני קצוות.';
 
   @override
-  String get rulesDominoSeaScore => 'רק היד הכבדה ביותר רושמת. פחות מ-25 לא נרשם.';
+  String get rulesDominoSeaScore => 'רק המפסיד ביד רושם: מי שנשארו לו הכי הרבה נקודות. אם יש שניים כאלה, אף אחד לא רושם. פחות מ-25 לא נרשם.';
 
   @override
   String get rulesDominoSeaWipe => 'אם לשניים יש 25 או יותר, היד הזו לא נרשמת לאף אחד.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 מסיים את היד מיד: ליריב הכבד היחיד נרשמים 75. בתיקו לאף אחד.';
+  String get rulesDominoSeaBlank => 'סגירה ב-0-0 מסיימת את המשחק מיד: העז הוא מי שנשארו לו הכי הרבה נקודות, ולא משנה מה הניקוד.';
 
   @override
   String get rulesDominoSeaSix => 'סגירה ב-6-6 האחרון רושמת למפסיד 100 ומאפסת את ניקוד המשחק של הסוגר.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'ללא הימור.';
+
+  @override
+  String get rulesDominoSeaPair => 'שני כפילים במהלך אחד: אם יש לך את הכפילים של שני הקצוות הפתוחים, אפשר להניח אותם יחד, אחד בכל קצה.';
+
+  @override
+  String get rulesDominoSeaLone => 'נשארה ביד רק האבן 0-0 — נרשמים 25, רק 6-6 — נרשמים 50. נשארו בדיוק 0-0 ו-6-6 יחד — נרשמים 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'יד מהירה: אם היד נפתחת ב-6-6, למפסיד בה נרשמים בדיוק 50; אם ב-0-0 — 75. מותר לפתוח ב-6-6 או ב-0-0 רק כשלכל היריבים כבר יש ניקוד רשום. דג ביד מהירה לא נחשב.';
+
+  @override
+  String get dominoPlayPair => 'שני כפילים';
 }

@@ -30,6 +30,7 @@ class DominoTable extends StatefulWidget {
     super.key,
     required this.view,
     required this.onPlay,
+    this.onPlayPair,
     this.onDraw,
     this.onPass,
     this.onTurnExpired,
@@ -38,6 +39,10 @@ class DominoTable extends StatefulWidget {
 
   final DominoGameView view;
   final ValueChanged<DominoMove> onPlay;
+
+  /// Морской режим: положить два дубля одним ходом. Кнопка появляется,
+  /// только когда такой ход есть ([DominoGameView.canPair]).
+  final VoidCallback? onPlayPair;
 
   /// Взять кость из базара; null — брать нельзя (зритель).
   final VoidCallback? onDraw;
@@ -280,8 +285,7 @@ class _DominoTableState extends State<DominoTable>
 
   /// Кто из соперников положил кость [tile].
   int? _playedSeat(DominoGameView before, DominoGameView after, int tile) {
-    if (after.lastAction == dominoActionPlay &&
-        after.lastTile == tile &&
+    if (_lastPlayed(after).contains(tile) &&
         after.lastActor >= 0 &&
         after.lastActor != after.myIndex) {
       return after.lastActor;
@@ -293,6 +297,13 @@ class _DominoTableState extends State<DominoTable>
     }
     return null;
   }
+
+  /// Кости последнего хода: одна, а после хода двумя дублями — обе.
+  Set<int> _lastPlayed(DominoGameView view) => switch (view.lastAction) {
+        dominoActionPlay => {view.lastTile},
+        dominoActionPlayPair => {view.lastTile, view.lastTile2},
+        _ => const <int>{},
+      };
 
   ({Rect rect, double angle})? _boneSlot(int index) {
     final field = _flights.rectOf(_boneFieldKey);
@@ -483,6 +494,12 @@ class _DominoTableState extends State<DominoTable>
         return;
       }
     }
+  }
+
+  void _tapPair() {
+    if (widget.busy || !widget.view.isMyTurn || !widget.view.canPair) return;
+    setState(() => _choosing = null);
+    widget.onPlayPair?.call();
   }
 
   // ---- Вёрстка ----------------------------------------------------------
@@ -821,9 +838,7 @@ class _DominoTableState extends State<DominoTable>
           for (final slot in fit.slots) slot.id: slot.leadingOnRight,
         };
         _placed = placed;
-        final last = view.lastAction == dominoActionPlay && view.isPlaying
-            ? view.lastTile
-            : -1;
+        final last = view.isPlaying ? _lastPlayed(view) : const <int>{};
         final me = view.me;
         return Stack(
           key: _chainKey,
@@ -852,7 +867,7 @@ class _DominoTableState extends State<DominoTable>
                         rects: now,
                         leadingOnRight: leading,
                         hidden: Set<int>.of(_landing),
-                        lastTile: last,
+                        lastTiles: last,
                       ),
                     );
                   },
@@ -878,11 +893,19 @@ class _DominoTableState extends State<DominoTable>
     );
   }
 
-  /// «Взять» / «Пас» поверх стола: появляются, только когда ходить нечем.
+  /// Кнопка хода поверх стола. «Взять» / «Пас» появляются, только когда
+  /// ходить нечем; «Два дубля» — когда оба дубля можно положить сразу.
   Widget _turnAction(DominoGameView view) {
     final l10n = context.l10n;
     Widget action = const SizedBox.shrink(key: ValueKey('domino-no-action'));
-    if (view.canDraw && widget.onDraw != null) {
+    if (view.canPair && view.isMyTurn && widget.onPlayPair != null) {
+      action = FilledButton.icon(
+        key: const ValueKey('domino-pair'),
+        onPressed: widget.busy ? null : _tapPair,
+        icon: const Icon(Icons.call_split_rounded),
+        label: Text(l10n.dominoPlayPair),
+      );
+    } else if (view.canDraw && widget.onDraw != null) {
       action = FilledButton.icon(
         key: const ValueKey('domino-draw'),
         onPressed: widget.busy ? null : widget.onDraw,
@@ -1136,7 +1159,7 @@ class _ChainPainter extends CustomPainter {
     required this.rects,
     required this.leadingOnRight,
     required this.hidden,
-    required this.lastTile,
+    required this.lastTiles,
   });
 
   final List<DominoPlaced> chain;
@@ -1146,8 +1169,8 @@ class _ChainPainter extends CustomPainter {
   /// Кости, которые ещё летят: место под них оставлено пустым.
   final Set<int> hidden;
 
-  /// Последняя положенная кость — её мягко подсвечиваем.
-  final int lastTile;
+  /// Кости последнего хода — их мягко подсвечиваем.
+  final Set<int> lastTiles;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1167,7 +1190,7 @@ class _ChainPainter extends CustomPainter {
         vertical: tile.isDouble,
       ).paint(canvas, rect.size);
       canvas.restore();
-      if (tile.id == lastTile) {
+      if (lastTiles.contains(tile.id)) {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             rect.inflate(1.5),

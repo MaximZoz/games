@@ -4,6 +4,7 @@ import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
 import 'package:multigames_client/games/chess/chess_rules.dart';
+import 'package:multigames_client/games/domino/domino_engine.dart';
 import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/domino/domino_rules.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
@@ -158,5 +159,39 @@ void main() {
     expect(rules['durak']![4], 'Колода: 36 карт.');
     expect(rules['chess']![4], t.rulesChessClockBlitz);
     expect(rules['battleship']![4], startsWith('Время на расстановку: '));
+  });
+
+  test('морское домино: правила описывают то, что делает движок', () {
+    final sea = dominoRuleLines(
+      players: 2,
+      turnTimeSec: 60,
+      mode: dominoModeSea,
+      l10n: t,
+    ).skip(kGameRulesHeaderLines).toList();
+    expect(sea, [
+      t.rulesDominoSeaSame,
+      t.rulesDominoPlay,
+      t.rulesDominoSeaPair,
+      t.rulesDominoDraw,
+      t.rulesDominoSeaScore,
+      t.rulesDominoSeaWipe,
+      t.rulesDominoSeaLone,
+      t.rulesDominoSeaFast,
+      t.rulesDominoSeaSix,
+      t.rulesDominoSeaBlank,
+      t.rulesDominoSeaMatch,
+    ]);
+    // Числа в тексте — те же константы, что и в движке.
+    expect(t.rulesDominoSeaLone, contains('$dominoSeaLoneBlank'));
+    expect(t.rulesDominoSeaLone, contains('$dominoSeaLoneSix'));
+    expect(t.rulesDominoSeaLone, contains('$dominoSeaBlankSix'));
+    expect(t.rulesDominoSeaFast, contains('$dominoSeaFastSix'));
+    expect(t.rulesDominoSeaFast, contains('$dominoSeaFastBlank'));
+    expect(t.rulesDominoSeaSix, contains('$dominoSeaSixHit'));
+    expect(t.rulesDominoSeaScore, contains('$dominoSeaRecordMin'));
+    expect(t.rulesDominoSeaMatch, contains('$dominoSeaScore'));
+    // Ход двумя дублями есть только в морском режиме.
+    final goat = dominoRuleLines(players: 2, turnTimeSec: 60, l10n: t);
+    expect(goat, isNot(contains(t.rulesDominoSeaPair)));
   });
 }

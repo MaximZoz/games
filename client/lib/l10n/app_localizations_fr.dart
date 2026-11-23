@@ -869,13 +869,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesDominoSeaSame => 'Distribution, ouverture et pioche comme au Bouc. La chaîne a deux bouts.';
 
   @override
-  String get rulesDominoSeaScore => 'Seul la main la plus lourde marque. Moins de 25 ne compte pas.';
+  String get rulesDominoSeaScore => 'Seul le perdant de la donne marque : celui à qui il reste le plus de points. S’ils sont deux, personne ne marque. Moins de 25 ne compte pas.';
 
   @override
   String get rulesDominoSeaWipe => 'Si deux joueurs ont 25 ou plus, personne ne marque cette donne.';
 
   @override
-  String get rulesDominoSeaBlank => 'Jouer 0-0 termine la donne : l’adversaire le plus lourd, s’il est seul, prend 75. À égalité, personne.';
+  String get rulesDominoSeaBlank => 'Sortir sur le 0-0 termine aussitôt la partie : le bouc est celui à qui il reste le plus de points, quel que soit le score.';
 
   @override
   String get rulesDominoSeaSix => 'Sortir sur 6-6 donne 100 au perdant et remet à zéro le score de partie de celui qui ferme.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Sans mise.';
+
+  @override
+  String get rulesDominoSeaPair => 'Deux doubles en un coup : si vous avez les doubles des deux extrémités, vous pouvez les poser ensemble, un à chaque bout.';
+
+  @override
+  String get rulesDominoSeaLone => 'S’il ne vous reste que le 0-0, on marque 25 ; que le 6-6, 50. S’il reste exactement le 0-0 et le 6-6, on marque 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Donne rapide : si la donne s’ouvre sur le 6-6, son perdant prend exactement 50 ; sur le 0-0, 75. On ne peut ouvrir sur le 6-6 ou le 0-0 que si tous les adversaires ont déjà des points marqués. Un poisson dans une donne rapide ne compte pas.';
+
+  @override
+  String get dominoPlayPair => 'Deux doubles';
 }

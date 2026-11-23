@@ -869,13 +869,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesDominoSeaSame => 'Deling, åpning og trekk som i Geita. Kjeden har to ender.';
 
   @override
-  String get rulesDominoSeaScore => 'Bare den tyngste hånden skriver poeng. Under 25 skrives ingenting.';
+  String get rulesDominoSeaScore => 'Bare rundens taper skriver poeng – den som har flest øyne igjen. Er de to, skriver ingen. Under 25 skrives ingenting.';
 
   @override
   String get rulesDominoSeaWipe => 'Har to spillere 25 eller mer, skriver ingen den runden.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 avslutter runden med en gang: den unikt tyngste motstanderen får 75. Ved likt får ingen.';
+  String get rulesDominoSeaBlank => 'Å gå ut med 0-0 avslutter kampen med en gang: geita er den som har flest øyne igjen, uansett stilling.';
 
   @override
   String get rulesDominoSeaSix => 'Å gå ut med 6-6 gir taperen 100 og nullstiller lukkerens kamppoeng.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Ingen innsats.';
+
+  @override
+  String get rulesDominoSeaPair => 'To dobler i ett trekk: har du doblene til begge åpne ender, kan du legge dem samtidig, én i hver ende.';
+
+  @override
+  String get rulesDominoSeaLone => 'Sitter du igjen med bare 0-0, skrives 25; bare 6-6 gir 50. Har du akkurat 0-0 og 6-6 igjen, skrives 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Rask runde: åpner runden med 6-6, får taperen nøyaktig 50; med 0-0 er det 75. Du kan bare åpne med 6-6 eller 0-0 når alle motstandere allerede har poeng skrevet. En fisk i en rask runde teller ikke.';
+
+  @override
+  String get dominoPlayPair => 'To dobler';
 }

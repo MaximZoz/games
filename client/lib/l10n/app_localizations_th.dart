@@ -869,13 +869,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesDominoSeaSame => 'แจก เปิด และจั่วเหมือนแพะ สายมีสองปลาย';
 
   @override
-  String get rulesDominoSeaScore => 'คนที่แต้มในมือมากที่สุดคนเดียวได้บันทึก น้อยกว่า 25 ไม่บันทึก';
+  String get rulesDominoSeaScore => 'บันทึกแต้มเฉพาะผู้แพ้ของมือนั้น คือคนที่เหลือแต้มในมือมากที่สุด ถ้ามีสองคนเท่ากันไม่มีใครได้บันทึก น้อยกว่า 25 ไม่บันทึก';
 
   @override
   String get rulesDominoSeaWipe => 'ถ้าสองคนมี 25 ขึ้นไปพร้อมกัน มือนี้ไม่มีใครได้บันทึก';
 
   @override
-  String get rulesDominoSeaBlank => 'ลง 0-0 จบมือทันที คนที่หนักที่สุดคนเดียวได้ 75 ถ้าเสมอกันไม่มีใครได้';
+  String get rulesDominoSeaBlank => 'ปิดมือด้วย 0-0 แมตช์จบทันที คนที่เหลือแต้มในมือมากที่สุดเป็นแพะ ไม่ว่าคะแนนจะเป็นเท่าไร';
 
   @override
   String get rulesDominoSeaSix => 'ปิดมือด้วย 6-6 ใบสุดท้าย คนแพ้ได้ 100 และคะแนนแมตช์ของผู้ปิดถูกล้าง';
@@ -3363,4 +3363,16 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'ไม่มีเดิมพัน';
+
+  @override
+  String get rulesDominoSeaPair => 'ลงคู่สองตัวในตาเดียว: ถ้ามีตัวคู่ของปลายเปิดทั้งสองข้าง ลงพร้อมกันได้ ข้างละหนึ่งตัว';
+
+  @override
+  String get rulesDominoSeaLone => 'ถ้าเหลือ 0-0 ตัวเดียวในมือ บันทึก 25 ถ้าเหลือ 6-6 ตัวเดียว บันทึก 50 ถ้าเหลือ 0-0 กับ 6-6 สองตัวพอดี บันทึก 12';
+
+  @override
+  String get rulesDominoSeaFast => 'มือเร็ว: ถ้าเปิดมือด้วย 6-6 ผู้แพ้ได้ 50 พอดี ถ้าเปิดด้วย 0-0 ได้ 75 จะเปิดด้วย 6-6 หรือ 0-0 ได้ก็ต่อเมื่อคู่แข่งทุกคนมีแต้มบันทึกแล้ว ปลาในมือเร็วไม่นับ';
+
+  @override
+  String get dominoPlayPair => 'คู่สองตัว';
 }

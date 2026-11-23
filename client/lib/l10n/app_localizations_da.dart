@@ -869,13 +869,13 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesDominoSeaSame => 'Deling, åbning og træk som i Geden. Kæden har to ender.';
 
   @override
-  String get rulesDominoSeaScore => 'Kun den tungeste hånd skriver point. Under 25 skrives intet.';
+  String get rulesDominoSeaScore => 'Kun rundens taber skriver point – den, der har flest øjne tilbage. Er de to, skriver ingen. Under 25 skrives intet.';
 
   @override
   String get rulesDominoSeaWipe => 'Har to spillere 25 eller mere, skriver ingen den runde.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 afslutter runden med det samme: den unikt tungeste modstander får 75. Ved lige får ingen.';
+  String get rulesDominoSeaBlank => 'At gå ud med 0-0 afslutter kampen med det samme: geden er den, der har flest øjne tilbage, uanset stillingen.';
 
   @override
   String get rulesDominoSeaSix => 'At gå ud med 6-6 giver taberen 100 og nulstiller lukkerens kamppoint.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Ingen indsats.';
+
+  @override
+  String get rulesDominoSeaPair => 'To dobbelte i ét træk: har du dobbeltbrikkerne til begge åbne ender, må du lægge dem sammen, én i hver ende.';
+
+  @override
+  String get rulesDominoSeaLone => 'Står du tilbage med kun 0-0, skrives 25; kun 6-6 giver 50. Har du netop 0-0 og 6-6 tilbage, skrives 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Hurtig runde: åbner runden med 6-6, får taberen præcis 50; med 0-0 er det 75. Du må kun åbne med 6-6 eller 0-0, når alle modstandere allerede har point skrevet. En fisk i en hurtig runde tæller ikke.';
+
+  @override
+  String get dominoPlayPair => 'To dobbelte';
 }

@@ -1808,7 +1808,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesDominoSeaScore.
   ///
   /// In ru, this message translates to:
-  /// **'Очки пишет только тот, у кого в конце кона больше всех на руках. Меньше 25 не записывается.'**
+  /// **'Очки пишет только проигравший кон — тот, у кого на руках больше всех. Если таких двое, не пишут никому. Меньше 25 не записывается.'**
   String get rulesDominoSeaScore;
 
   /// No description provided for @rulesDominoSeaWipe.
@@ -1820,7 +1820,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesDominoSeaBlank.
   ///
   /// In ru, this message translates to:
-  /// **'Выложенный 0-0 сразу заканчивает кон: игроку с самой тяжёлой рукой пишут 75. Если таких двое — не пишут никому.'**
+  /// **'Если кон закрыт костью 0-0, партия сразу заканчивается: козёл — тот, у кого на руках больше очков, какой бы ни был счёт.'**
   String get rulesDominoSeaBlank;
 
   /// No description provided for @rulesDominoSeaSix.
@@ -6304,6 +6304,30 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Без ставки.'**
   String get rulesStakeNone;
+
+  /// No description provided for @rulesDominoSeaPair.
+  ///
+  /// In ru, this message translates to:
+  /// **'Два дубля за ход: если у вас есть дубли обоих концов цепочки, их можно положить сразу — по одному на каждый конец.'**
+  String get rulesDominoSeaPair;
+
+  /// No description provided for @rulesDominoSeaLone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Осталась на руках одна кость 0-0 — пишут 25, одна 6-6 — 50. Остались только 0-0 и 6-6 вместе — пишут 12.'**
+  String get rulesDominoSeaLone;
+
+  /// No description provided for @rulesDominoSeaFast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Быстрый кон: если кон начат с 6-6, проигравшему пишут ровно 50, если с 0-0 — 75. Зайти с 6-6 или 0-0 можно, только когда у всех соперников уже есть запись. Рыба в быстром коне не считается.'**
+  String get rulesDominoSeaFast;
+
+  /// No description provided for @dominoPlayPair.
+  ///
+  /// In ru, this message translates to:
+  /// **'Два дубля'**
+  String get dominoPlayPair;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

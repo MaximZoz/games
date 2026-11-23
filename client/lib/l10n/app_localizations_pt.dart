@@ -869,13 +869,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesDominoSeaSame => 'Distribuição, abertura e compra como n’O Bode. A cadeia tem duas pontas.';
 
   @override
-  String get rulesDominoSeaScore => 'Só a mão mais pesada marca. Menos de 25 não se regista.';
+  String get rulesDominoSeaScore => 'Só o perdedor da mão marca: quem fica com mais pontos. Se forem dois, ninguém marca. Menos de 25 não se regista.';
 
   @override
   String get rulesDominoSeaWipe => 'Se dois jogadores têm 25 ou mais, ninguém regista essa mão.';
 
   @override
-  String get rulesDominoSeaBlank => 'Jogar 0-0 fecha a mão: o adversário mais pesado, se for único, leva 75. Em empate, ninguém.';
+  String get rulesDominoSeaBlank => 'Sair com 0-0 termina logo a partida: o bode é quem fica com mais pontos, seja qual for o placar.';
 
   @override
   String get rulesDominoSeaSix => 'Sair com 6-6 marca 100 ao perdedor e zera o placar da partida de quem fecha.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Sem aposta.';
+
+  @override
+  String get rulesDominoSeaPair => 'Dois dobros numa jogada: se tem os dobros das duas pontas, pode jogá-los juntos, um em cada ponta.';
+
+  @override
+  String get rulesDominoSeaLone => 'Se só lhe resta o 0-0, marcam-se 25; se só o 6-6, 50. Se restam apenas o 0-0 e o 6-6, marcam-se 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Mão rápida: se a mão abre com 6-6, o perdedor leva exatamente 50; com 0-0, 75. Só se pode abrir com 6-6 ou 0-0 quando todos os adversários já têm pontos marcados. Um peixe numa mão rápida não conta.';
+
+  @override
+  String get dominoPlayPair => 'Dois dobros';
 }

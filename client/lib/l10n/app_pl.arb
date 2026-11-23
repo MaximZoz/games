@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "Ryba: kto ma ściśle najmniej, zapisuje różnicę z każdą obcą ręką. Przy remisie minimum nikt nie zapisuje.",
   "rulesDominoClassicMatch": "Ten sam najwyższy wynik dzieli wygraną. Gdy wszyscy mają równo — remis.",
   "rulesDominoSeaSame": "Rozdanie, pierwsze zagranie i dobieranie jak w Koziołku. Łańcuch ma dwa końce.",
-  "rulesDominoSeaScore": "Punkty zapisuje tylko najcięższa ręka. Poniżej 25 się nie zapisuje.",
+  "rulesDominoSeaScore": "Punkty zapisuje tylko przegrany rozdania — ten, komu zostało najwięcej oczek. Jeśli jest ich dwóch, nikt nie zapisuje. Poniżej 25 się nie zapisuje.",
   "rulesDominoSeaWipe": "Jeśli dwóch ma 25 lub więcej, tego rozdania nikt nie zapisuje.",
-  "rulesDominoSeaBlank": "Zagranie 0-0 kończy rozdanie: najcięższy przeciwnik, jeśli jeden, dostaje 75. Przy remisie nikt.",
+  "rulesDominoSeaBlank": "Wyjście na 0-0 od razu kończy partię: kozłem zostaje ten, komu zostało najwięcej oczek, bez względu na wynik.",
   "rulesDominoSeaSix": "Wyjście na 6-6 zapisuje przegranemu 100, a zamykającemu zeruje wynik partii.",
   "rulesDominoSeaMatch": "Partia do 125. Kto uzbiera — przegrywa.",
   "dominoBoneyard": "Kupka",
@@ -1623,5 +1623,9 @@
   "gamesModeClassic": "Klasyka",
   "rulesDeck": "Talia: {deck}.",
   "gamesPokerModeHoldem": "Texas Hold’em",
-  "rulesStakeNone": "Bez stawki."
+  "rulesStakeNone": "Bez stawki.",
+  "rulesDominoSeaPair": "Dwa duble w jednym ruchu: jeśli masz duble obu otwartych końców, możesz dołożyć je razem — po jednym na każdy koniec.",
+  "rulesDominoSeaLone": "Został na ręce sam kamień 0-0 — zapisuje się 25, sam 6-6 — 50. Zostały tylko 0-0 i 6-6 razem — zapisuje się 12.",
+  "rulesDominoSeaFast": "Szybkie rozdanie: jeśli rozdanie zaczyna 6-6, przegrany dostaje dokładnie 50, jeśli 0-0 — 75. Zacząć od 6-6 lub 0-0 można tylko wtedy, gdy wszyscy przeciwnicy mają już zapis. Ryba w szybkim rozdaniu się nie liczy.",
+  "dominoPlayPair": "Dwa duble"
 }

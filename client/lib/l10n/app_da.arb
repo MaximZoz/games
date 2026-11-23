@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "Ved fisk skriver den unikt letteste hånd forskellen mod hver anden. Delt minimum giver intet.",
   "rulesDominoClassicMatch": "Delt højeste score deler sejren. Er alle lige, er det uafgjort.",
   "rulesDominoSeaSame": "Deling, åbning og træk som i Geden. Kæden har to ender.",
-  "rulesDominoSeaScore": "Kun den tungeste hånd skriver point. Under 25 skrives intet.",
+  "rulesDominoSeaScore": "Kun rundens taber skriver point – den, der har flest øjne tilbage. Er de to, skriver ingen. Under 25 skrives intet.",
   "rulesDominoSeaWipe": "Har to spillere 25 eller mere, skriver ingen den runde.",
-  "rulesDominoSeaBlank": "0-0 afslutter runden med det samme: den unikt tungeste modstander får 75. Ved lige får ingen.",
+  "rulesDominoSeaBlank": "At gå ud med 0-0 afslutter kampen med det samme: geden er den, der har flest øjne tilbage, uanset stillingen.",
   "rulesDominoSeaSix": "At gå ud med 6-6 giver taberen 100 og nulstiller lukkerens kamppoint.",
   "rulesDominoSeaMatch": "Kampen går til 125. Den der når det taber.",
   "dominoBoneyard": "Bunke",
@@ -1623,5 +1623,9 @@
   "gamesModeClassic": "Klassisk",
   "rulesDeck": "Kortspil: {deck}.",
   "gamesPokerModeHoldem": "Texas Hold’em",
-  "rulesStakeNone": "Ingen indsats."
+  "rulesStakeNone": "Ingen indsats.",
+  "rulesDominoSeaPair": "To dobbelte i ét træk: har du dobbeltbrikkerne til begge åbne ender, må du lægge dem sammen, én i hver ende.",
+  "rulesDominoSeaLone": "Står du tilbage med kun 0-0, skrives 25; kun 6-6 giver 50. Har du netop 0-0 og 6-6 tilbage, skrives 12.",
+  "rulesDominoSeaFast": "Hurtig runde: åbner runden med 6-6, får taberen præcis 50; med 0-0 er det 75. Du må kun åbne med 6-6 eller 0-0, når alle modstandere allerede har point skrevet. En fisk i en hurtig runde tæller ikke.",
+  "dominoPlayPair": "To dobbelte"
 }

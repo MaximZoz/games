@@ -869,13 +869,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesDominoSeaSame => '配り、最初の一手、山からの補充はゴートと同じ。列は両端だけ。';
 
   @override
-  String get rulesDominoSeaScore => '点数を書くのは手札が一番重い人だけ。25未満は記録しない。';
+  String get rulesDominoSeaScore => '点数を書くのはその手の敗者、つまり手札の目が一番多い人だけ。同数が二人なら誰も書かない。25未満は記録しない。';
 
   @override
   String get rulesDominoSeaWipe => '25以上が二人いるとその手は誰にも入らない。';
 
   @override
-  String get rulesDominoSeaBlank => '0-0を出すとその手は即終了。一番重い相手が一人なら75。同点なら誰も書かない。';
+  String get rulesDominoSeaBlank => '0-0で上がると対戦はその場で終了。点数に関係なく、手札の目が一番多い人がゴートになる。';
 
   @override
   String get rulesDominoSeaSix => '最後の牌が6-6なら敗者に100、閉じた人の対戦点は0に戻る。';
@@ -3363,4 +3363,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rulesStakeNone => '掛け金なし。';
+
+  @override
+  String get rulesDominoSeaPair => '1手でダブル2枚：両端それぞれのダブルを持っていれば、両端に1枚ずつ同時に出せます。';
+
+  @override
+  String get rulesDominoSeaLone => '手札に0-0だけが残ると25、6-6だけが残ると50を記録。0-0と6-6の2枚だけが残ると12を記録。';
+
+  @override
+  String get rulesDominoSeaFast => '速い手：6-6で始まった手は敗者にちょうど50、0-0で始まった手は75を記録。6-6や0-0で始められるのは、相手全員にすでに記録があるときだけ。速い手のフィッシュは数えない。';
+
+  @override
+  String get dominoPlayPair => 'ダブル2枚';
 }

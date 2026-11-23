@@ -869,13 +869,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesDominoSeaSame => 'Rozdání, první tah a dobírání jako v Kozlu. Řetěz má dva konce.';
 
   @override
-  String get rulesDominoSeaScore => 'Body zapíše jen nejtěžší ruka. Pod 25 se nezapisuje.';
+  String get rulesDominoSeaScore => 'Body zapíše jen poražený kola — ten, komu zbylo nejvíc bodů. Jsou-li takoví dva, nezapisuje nikdo. Pod 25 se nezapisuje.';
 
   @override
   String get rulesDominoSeaWipe => 'Mají-li dva hráči 25 a víc, to kolo se nikomu nezapíše.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 hned končí kolo: jediný nejtěžší soupeř dostane 75. Při shodě nikdo.';
+  String get rulesDominoSeaBlank => 'Zavření kamenem 0-0 hned končí zápas: kozlem je ten, komu zbylo nejvíc bodů, ať je skóre jakékoli.';
 
   @override
   String get rulesDominoSeaSix => 'Zavření posledním 6-6 zapíše poraženému 100 a vynuluje zápasové skóre zavírajícího.';
@@ -3366,4 +3366,16 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Bez sázky.';
+
+  @override
+  String get rulesDominoSeaPair => 'Dva dublety v jednom tahu: máte-li dublety obou otevřených konců, můžete je přiložit najednou — ke každému konci jeden.';
+
+  @override
+  String get rulesDominoSeaLone => 'Zbude-li v ruce jen kámen 0-0, zapisuje se 25, jen 6-6 — 50. Zbudou-li právě 0-0 a 6-6 spolu, zapisuje se 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Rychlé kolo: začíná-li kolo kamenem 6-6, poražený dostane přesně 50, začíná-li 0-0 — 75. Začít kamenem 6-6 nebo 0-0 lze jen tehdy, když už všichni soupeři mají zápis. Ryba v rychlém kole se nepočítá.';
+
+  @override
+  String get dominoPlayPair => 'Dva dublety';
 }

@@ -869,13 +869,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesDominoSeaSame => '发牌、首张和补牌与山羊相同。链只有两端。';
 
   @override
-  String get rulesDominoSeaScore => '只有手里点数最多的人记分。少于 25 不记。';
+  String get rulesDominoSeaScore => '只有这一局的输家记分——手里剩余点数最多的人。若有两人并列，谁也不记。少于 25 不记。';
 
   @override
   String get rulesDominoSeaWipe => '如果两人都有 25 或更多，这一局谁也不记。';
 
   @override
-  String get rulesDominoSeaBlank => '打出 0-0 立刻结束这一局：唯一最重的对手记 75。并列则谁也不记。';
+  String get rulesDominoSeaBlank => '用 0-0 出完手牌，整场立刻结束：不论比分，手里剩余点数最多的人就是山羊。';
 
   @override
   String get rulesDominoSeaSix => '用最后一张 6-6 结束时，输家记 100，出牌者的整场分数清零。';
@@ -3363,4 +3363,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesStakeNone => '无赌注。';
+
+  @override
+  String get rulesDominoSeaPair => '一步出两张对子：如果你同时有两端数字的对子，可以一起打出，每端各接一张。';
+
+  @override
+  String get rulesDominoSeaLone => '手里只剩一张 0-0 记 25，只剩一张 6-6 记 50。只剩 0-0 和 6-6 两张时记 12。';
+
+  @override
+  String get rulesDominoSeaFast => '快局：以 6-6 开局，输家正好记 50；以 0-0 开局，记 75。只有当所有对手都已有记分时，才能用 6-6 或 0-0 开局。快局里的“鱼”不算。';
+
+  @override
+  String get dominoPlayPair => '两张对子';
 }

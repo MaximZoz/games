@@ -548,6 +548,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
                   onPlay: (move) => unawaited(
                     _move(dominoActionPlay, tile: move.tile, end: move.end),
                   ),
+                  onPlayPair: () => unawaited(_move(dominoActionPlayPair)),
                   onDraw: () => unawaited(_move(dominoActionDraw)),
                   onPass: () => unawaited(_move(dominoActionPass)),
                   onTurnExpired: _onTurnExpired,

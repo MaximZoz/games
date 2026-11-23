@@ -869,13 +869,13 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesDominoSeaSame => 'Tarqatish, birinchi yurish va olish — «Kozel» rejimidagidek. Zanjir ikki uchli.';
 
   @override
-  String get rulesDominoSeaScore => 'Ochkoni kon oxirida qo‘lida eng ko‘pi bor odam yozadi. 25 dan kam yozilmaydi.';
+  String get rulesDominoSeaScore => 'Ochkoni faqat konda yutqazgan yozadi — qo‘lida eng ko‘pi qolgan o‘yinchi. Bundaylar ikkita bo‘lsa, hech kimga yozilmaydi. 25 dan kam yozilmaydi.';
 
   @override
   String get rulesDominoSeaWipe => 'Ikki kishida birdaniga 25 va undan ko‘p bo‘lsa, bu kon hech kimga yozilmaydi.';
 
   @override
-  String get rulesDominoSeaBlank => 'Qo‘yilgan 0-0 konni darhol tugatadi: eng og‘ir qo‘lga 75 yoziladi. Ikkitasi bo‘lsa — hech kimga yozilmaydi.';
+  String get rulesDominoSeaBlank => 'Kon 0-0 toshi bilan yopilsa, partiya darhol tugaydi: hisob qanday bo‘lmasin, qo‘lida eng ko‘p ochko qolgan o‘yinchi — kozel.';
 
   @override
   String get rulesDominoSeaSix => 'Kon oxirgi 6-6 tosh bilan yopilsa, yutqazganga 100 yoziladi, yopganning partiya hisobi nolga tushadi.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Stavkasiz.';
+
+  @override
+  String get rulesDominoSeaPair => 'Bir yurishda ikki dubl: qo‘lingizda zanjirning ikkala uchining dubllari bo‘lsa, ularni birdaniga qo‘yish mumkin — har uchga bittadan.';
+
+  @override
+  String get rulesDominoSeaLone => 'Qo‘lda yolg‘iz 0-0 toshi qolsa — 25, yolg‘iz 6-6 qolsa — 50 yoziladi. Faqat 0-0 va 6-6 birga qolsa — 12 yoziladi.';
+
+  @override
+  String get rulesDominoSeaFast => 'Tez kon: kon 6-6 dan boshlansa, yutqazganga roppa-rosa 50, 0-0 dan boshlansa — 75 yoziladi. 6-6 yoki 0-0 dan faqat barcha raqiblarda yozuv bo‘lgandagina boshlash mumkin. Tez kondagi baliq hisoblanmaydi.';
+
+  @override
+  String get dominoPlayPair => 'Ikki dubl';
 }

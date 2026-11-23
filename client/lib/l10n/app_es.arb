@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "En el bloqueo, la mano más ligera, si es única, anota la diferencia con cada otra. Si hay empate, nadie anota.",
   "rulesDominoClassicMatch": "Quienes empatan en el máximo se reparten la victoria. Si todos están iguales, hay empate.",
   "rulesDominoSeaSame": "Reparto, apertura y robo como en El Chivo. La cadena tiene dos extremos.",
-  "rulesDominoSeaScore": "Solo anota la mano más pesada. Menos de 25 no se anota.",
+  "rulesDominoSeaScore": "Solo anota el perdedor de la mano: quien se queda con más puntos. Si son dos, no anota nadie. Menos de 25 no se anota.",
   "rulesDominoSeaWipe": "Si dos jugadores tienen 25 o más, nadie anota esa mano.",
-  "rulesDominoSeaBlank": "Jugar 0-0 cierra la mano: al rival más pesado, si es único, se le anotan 75. Si hay empate, a nadie.",
+  "rulesDominoSeaBlank": "Salir con 0-0 termina la partida al instante: el chivo es quien se queda con más puntos, sea cual sea el marcador.",
   "rulesDominoSeaSix": "Salir con 6-6 anota 100 al perdedor y pone a cero el marcador de partida de quien cierra.",
   "rulesDominoSeaMatch": "La partida llega a 125. Quien los alcanza pierde.",
   "dominoBoneyard": "Pozo",
@@ -1623,5 +1623,9 @@
   "gamesModeClassic": "Clásico",
   "rulesDeck": "Baraja: {deck}.",
   "gamesPokerModeHoldem": "Texas Hold’em",
-  "rulesStakeNone": "Sin apuesta."
+  "rulesStakeNone": "Sin apuesta.",
+  "rulesDominoSeaPair": "Dos dobles en una jugada: si tienes los dobles de los dos extremos, puedes colocarlos juntos, uno en cada extremo.",
+  "rulesDominoSeaLone": "Si solo te queda el 0-0, se anotan 25; si solo el 6-6, 50. Si quedan justo el 0-0 y el 6-6, se anotan 12.",
+  "rulesDominoSeaFast": "Mano rápida: si la mano se abre con 6-6, a su perdedor se le anotan exactamente 50; con 0-0, 75. Solo se puede abrir con 6-6 o 0-0 cuando todos los rivales ya tienen puntos anotados. Un pescado en una mano rápida no cuenta.",
+  "dominoPlayPair": "Dos dobles"
 }

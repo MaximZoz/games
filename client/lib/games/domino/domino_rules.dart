@@ -43,11 +43,14 @@ List<String> _modeLines(String mode, AppLocalizations t) {
       return [
         t.rulesDominoSeaSame,
         t.rulesDominoPlay,
+        t.rulesDominoSeaPair,
         t.rulesDominoDraw,
         t.rulesDominoSeaScore,
         t.rulesDominoSeaWipe,
-        t.rulesDominoSeaBlank,
+        t.rulesDominoSeaLone,
+        t.rulesDominoSeaFast,
         t.rulesDominoSeaSix,
+        t.rulesDominoSeaBlank,
         t.rulesDominoSeaMatch,
       ];
     default:

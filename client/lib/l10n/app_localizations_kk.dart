@@ -869,13 +869,13 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesDominoSeaSame => 'Тарату, алғашқы жүріс және алу — «Козёл» режиміндегідей. Тізбек екі ұшынан.';
 
   @override
-  String get rulesDominoSeaScore => 'Ұпайды қон соңында қолында ең көбі бар адам ғана жазады. 25-тен аз жазылмайды.';
+  String get rulesDominoSeaScore => 'Ұпайды тек қонда жеңілген ойыншы жазады — қолында ең көбі қалған адам. Ондайлар екеу болса, ешкімге жазылмайды. 25-тен аз жазылмайды.';
 
   @override
   String get rulesDominoSeaWipe => 'Екеуінде бірден 25 және одан көп болса, бұл қон ешкімге жазылмайды.';
 
   @override
-  String get rulesDominoSeaBlank => 'Қойылған 0-0 қонды бірден аяқтайды: ең ауыр қолға 75 жазылады. Екеу болса — ешкімге жазылмайды.';
+  String get rulesDominoSeaBlank => 'Қон 0-0 сүйегімен жабылса, партия бірден аяқталады: есепке қарамастан, қолында ең көп ұпай қалған ойыншы — козёл.';
 
   @override
   String get rulesDominoSeaSix => 'Қон соңғы 6-6 сүйегімен жабылса, жеңілгенге 100 жазылады, жапқанның партиялық есебі нөлденеді.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Ставкасыз.';
+
+  @override
+  String get rulesDominoSeaPair => 'Бір жүрісте екі дубль: қолыңызда тізбектің екі ұшының да дубльдері болса, оларды бірден қоюға болады — әр ұшқа біреуден.';
+
+  @override
+  String get rulesDominoSeaLone => 'Қолда жалғыз 0-0 сүйегі қалса — 25, жалғыз 6-6 қалса — 50 жазылады. Тек 0-0 мен 6-6 бірге қалса — 12 жазылады.';
+
+  @override
+  String get rulesDominoSeaFast => 'Жылдам қон: қон 6-6-дан басталса, жеңілгенге тура 50, 0-0-ден басталса — 75 жазылады. 6-6 немесе 0-0-ден тек барлық қарсыластарда жазба болғанда ғана бастауға болады. Жылдам қондағы балық есептелмейді.';
+
+  @override
+  String get dominoPlayPair => 'Екі дубль';
 }

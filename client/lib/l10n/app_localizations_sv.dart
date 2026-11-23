@@ -869,13 +869,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesDominoSeaSame => 'Giv, öppning och drag som i Geten. Kedjan har två ändar.';
 
   @override
-  String get rulesDominoSeaScore => 'Bara den tyngsta handen skriver poäng. Under 25 skrivs inget.';
+  String get rulesDominoSeaScore => 'Bara givens förlorare skriver poäng – den som har flest prickar kvar. Är de två skriver ingen. Under 25 skrivs inget.';
 
   @override
   String get rulesDominoSeaWipe => 'Har två spelare 25 eller mer skriver ingen den given.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 avslutar given genast: den unikt tyngsta motståndaren får 75. Vid lika får ingen.';
+  String get rulesDominoSeaBlank => 'Att gå ut med 0-0 avslutar matchen genast: geten är den som har flest prickar kvar, oavsett ställning.';
 
   @override
   String get rulesDominoSeaSix => 'Att gå ut med 6-6 ger förloraren 100 och nollställer stängarens matchpoäng.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Ingen insats.';
+
+  @override
+  String get rulesDominoSeaPair => 'Två dubblar i ett drag: har du dubblarna till båda öppna ändar får du lägga dem samtidigt, en i varje ände.';
+
+  @override
+  String get rulesDominoSeaLone => 'Har du bara 0-0 kvar skrivs 25; bara 6-6 ger 50. Har du exakt 0-0 och 6-6 kvar skrivs 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Snabb giv: öppnas given med 6-6 får förloraren exakt 50; med 0-0 blir det 75. Du får bara öppna med 6-6 eller 0-0 när alla motståndare redan har poäng skrivna. En fisk i en snabb giv räknas inte.';
+
+  @override
+  String get dominoPlayPair => 'Två dubblar';
 }

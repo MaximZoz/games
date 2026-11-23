@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "Baliq: ochkosi hammadan kam bo‘lgan har bir begona qo‘l bilan farqni yozadi. Minimum bir nechtada bo‘lsa, ochko yozilmaydi.",
   "rulesDominoClassicMatch": "Bir xil eng yuqori hisob g‘alabani bo‘lishadi. Hamma hisob teng bo‘lsa — durang.",
   "rulesDominoSeaSame": "Tarqatish, birinchi yurish va olish — «Kozel» rejimidagidek. Zanjir ikki uchli.",
-  "rulesDominoSeaScore": "Ochkoni kon oxirida qo‘lida eng ko‘pi bor odam yozadi. 25 dan kam yozilmaydi.",
+  "rulesDominoSeaScore": "Ochkoni faqat konda yutqazgan yozadi — qo‘lida eng ko‘pi qolgan o‘yinchi. Bundaylar ikkita bo‘lsa, hech kimga yozilmaydi. 25 dan kam yozilmaydi.",
   "rulesDominoSeaWipe": "Ikki kishida birdaniga 25 va undan ko‘p bo‘lsa, bu kon hech kimga yozilmaydi.",
-  "rulesDominoSeaBlank": "Qo‘yilgan 0-0 konni darhol tugatadi: eng og‘ir qo‘lga 75 yoziladi. Ikkitasi bo‘lsa — hech kimga yozilmaydi.",
+  "rulesDominoSeaBlank": "Kon 0-0 toshi bilan yopilsa, partiya darhol tugaydi: hisob qanday bo‘lmasin, qo‘lida eng ko‘p ochko qolgan o‘yinchi — kozel.",
   "rulesDominoSeaSix": "Kon oxirgi 6-6 tosh bilan yopilsa, yutqazganga 100 yoziladi, yopganning partiya hisobi nolga tushadi.",
   "rulesDominoSeaMatch": "Partiya 125 gacha. Yig‘gan yutqazadi.",
   "dominoBoneyard": "Bozor",
@@ -1623,5 +1623,9 @@
   "gamesModeClassic": "Klassika",
   "rulesDeck": "Koloda: {deck}.",
   "gamesPokerModeHoldem": "Texas Hold’em",
-  "rulesStakeNone": "Stavkasiz."
+  "rulesStakeNone": "Stavkasiz.",
+  "rulesDominoSeaPair": "Bir yurishda ikki dubl: qo‘lingizda zanjirning ikkala uchining dubllari bo‘lsa, ularni birdaniga qo‘yish mumkin — har uchga bittadan.",
+  "rulesDominoSeaLone": "Qo‘lda yolg‘iz 0-0 toshi qolsa — 25, yolg‘iz 6-6 qolsa — 50 yoziladi. Faqat 0-0 va 6-6 birga qolsa — 12 yoziladi.",
+  "rulesDominoSeaFast": "Tez kon: kon 6-6 dan boshlansa, yutqazganga roppa-rosa 50, 0-0 dan boshlansa — 75 yoziladi. 6-6 yoki 0-0 dan faqat barcha raqiblarda yozuv bo‘lgandagina boshlash mumkin. Tez kondagi baliq hisoblanmaydi.",
+  "dominoPlayPair": "Ikki dubl"
 }

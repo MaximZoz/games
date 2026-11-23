@@ -869,13 +869,13 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesDominoSeaSame => 'Раздача, першы ход і дабор — як у рэжыме «Казёл». Ланцужок на два канцы.';
 
   @override
-  String get rulesDominoSeaScore => 'Ачкі піша толькі той, у каго ў канцы кону больш за ўсіх на руках. Менш за 25 не запісваецца.';
+  String get rulesDominoSeaScore => 'Ачкі піша толькі той, хто прайграў кон, — у каго на руках больш за ўсіх. Калі такіх двое, не пішуць нікому. Менш за 25 не запісваецца.';
 
   @override
   String get rulesDominoSeaWipe => 'Калі 25 і больш адразу ў дваіх, гэты кон нікому не пішацца.';
 
   @override
-  String get rulesDominoSeaBlank => 'Выкладзены 0-0 адразу заканчвае кон: гульцу з самай цяжкай рукой пішуць 75. Калі такіх двое — не пішуць нікому.';
+  String get rulesDominoSeaBlank => 'Калі кон закрыты косткай 0-0, партыя адразу заканчваецца: казёл — той, у каго на руках больш ачкоў, які б ні быў лік.';
 
   @override
   String get rulesDominoSeaSix => 'Калі кон закрыты апошняй косткай 6-6, прайграўшаму пішуць 100, а ў таго, хто закрыў, лік партыі скідаецца.';
@@ -3369,4 +3369,16 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Без стаўкі.';
+
+  @override
+  String get rulesDominoSeaPair => 'Два дублі за ход: калі ў вас ёсць дублі абодвух канцоў ланцужка, іх можна пакласці адразу — па адным на кожны канец.';
+
+  @override
+  String get rulesDominoSeaLone => 'Засталася на руках адна костка 0-0 — пішуць 25, адна 6-6 — 50. Засталіся толькі 0-0 і 6-6 разам — пішуць 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Хуткі кон: калі кон пачаты з 6-6, таму, хто прайграў, пішуць роўна 50, калі з 0-0 — 75. Зайсці з 6-6 або 0-0 можна, толькі калі ва ўсіх сапернікаў ужо ёсць запіс. Рыба ў хуткім коне не лічыцца.';
+
+  @override
+  String get dominoPlayPair => 'Два дублі';
 }

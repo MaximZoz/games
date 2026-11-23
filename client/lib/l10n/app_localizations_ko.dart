@@ -869,13 +869,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesDominoSeaSame => '패 돌리기, 첫 수, 보충은 염소와 같다. 줄은 양쪽 끝만 있다.';
 
   @override
-  String get rulesDominoSeaScore => '점수는 손에 가장 많은 사람만 적는다. 25 미만은 적지 않는다.';
+  String get rulesDominoSeaScore => '점수는 그 판에서 진 사람, 즉 손에 점이 가장 많이 남은 사람만 적는다. 그런 사람이 둘이면 아무도 적지 않는다. 25 미만은 적지 않는다.';
 
   @override
   String get rulesDominoSeaWipe => '둘이 25 이상이면 그 판은 아무도 적지 않는다.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0을 내면 그 판이 바로 끝난다. 가장 무거운 상대가 한 명이면 75. 같으면 아무도 안 적는다.';
+  String get rulesDominoSeaBlank => '0-0으로 판을 닫으면 경기가 바로 끝난다. 점수와 상관없이 손에 점이 가장 많이 남은 사람이 염소가 된다.';
 
   @override
   String get rulesDominoSeaSix => '마지막 패가 6-6이면 진 사람에게 100, 닫은 사람의 경기 점수는 0이 된다.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesStakeNone => '판돈 없음.';
+
+  @override
+  String get rulesDominoSeaPair => '한 번에 더블 두 장: 열린 두 끝의 더블을 모두 들고 있으면 양쪽 끝에 한 장씩 함께 낼 수 있습니다.';
+
+  @override
+  String get rulesDominoSeaLone => '손에 0-0 한 장만 남으면 25, 6-6 한 장만 남으면 50을 적는다. 0-0과 6-6 두 장만 남으면 12를 적는다.';
+
+  @override
+  String get rulesDominoSeaFast => '빠른 판: 6-6으로 시작한 판은 진 사람에게 정확히 50, 0-0으로 시작한 판은 75를 적는다. 6-6이나 0-0으로 시작하려면 모든 상대에게 이미 적힌 점수가 있어야 한다. 빠른 판의 물고기는 세지 않는다.';
+
+  @override
+  String get dominoPlayPair => '더블 두 장';
 }

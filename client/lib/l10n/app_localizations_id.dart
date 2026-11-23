@@ -869,13 +869,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesDominoSeaSame => 'Bagi, buka, dan ambil seperti Kambing. Rantai punya dua ujung.';
 
   @override
-  String get rulesDominoSeaScore => 'Hanya tangan terberat yang mencatat. Di bawah 25 tidak dicatat.';
+  String get rulesDominoSeaScore => 'Hanya yang kalah di tangan itu yang mencatat — pemain dengan sisa angka terbanyak. Jika ada dua, tidak ada yang mencatat. Di bawah 25 tidak dicatat.';
 
   @override
   String get rulesDominoSeaWipe => 'Jika dua pemain sama-sama 25 atau lebih, tangan itu tidak dicatat siapa pun.';
 
   @override
-  String get rulesDominoSeaBlank => 'Memainkan 0-0 langsung mengakhiri tangan: lawan terberat yang tunggal kena 75. Seri tidak kena siapa pun.';
+  String get rulesDominoSeaBlank => 'Menutup dengan 0-0 langsung mengakhiri pertandingan: kambingnya adalah pemain dengan sisa angka terbanyak, berapa pun skornya.';
 
   @override
   String get rulesDominoSeaSix => 'Menutup dengan 6-6 terakhir mengenakan 100 pada yang kalah dan mengosongkan skor pertandingan penutup.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'Tanpa taruhan.';
+
+  @override
+  String get rulesDominoSeaPair => 'Dua dobel dalam satu langkah: jika kamu memegang dobel kedua ujung terbuka, keduanya boleh diletakkan sekaligus, satu di tiap ujung.';
+
+  @override
+  String get rulesDominoSeaLone => 'Jika yang tersisa hanya 0-0, dicatat 25; hanya 6-6, dicatat 50. Jika yang tersisa tepat 0-0 dan 6-6, dicatat 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Tangan cepat: jika tangan dibuka dengan 6-6, yang kalah kena tepat 50; jika dengan 0-0, kena 75. Membuka dengan 6-6 atau 0-0 hanya boleh jika semua lawan sudah punya catatan angka. Ikan di tangan cepat tidak dihitung.';
+
+  @override
+  String get dominoPlayPair => 'Dua dobel';
 }

@@ -869,13 +869,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesDominoSeaSame => 'The deal, opening and draw match Goat. The chain has two ends.';
 
   @override
-  String get rulesDominoSeaScore => 'Only the heaviest hand records points. Less than 25 is not recorded.';
+  String get rulesDominoSeaScore => 'Only the loser of the hand records points — the player with the most pips left. If two share the most, nobody records. Less than 25 is not recorded.';
 
   @override
   String get rulesDominoSeaWipe => 'If two players both have 25 or more, nobody records that hand.';
 
   @override
-  String get rulesDominoSeaBlank => 'Playing 0-0 ends the hand at once: the unique heaviest opponent is charged 75. A tie charges nobody.';
+  String get rulesDominoSeaBlank => 'Going out with 0-0 ends the match at once: the player with the most pips left is the goat, whatever the scores.';
 
   @override
   String get rulesDominoSeaSix => 'Going out with 6-6 charges the loser 100 and resets the closer\'s match score.';
@@ -3363,4 +3363,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesStakeNone => 'No stake.';
+
+  @override
+  String get rulesDominoSeaPair => 'Two doubles in one move: if you hold the doubles of both open ends, you may play them together, one on each end.';
+
+  @override
+  String get rulesDominoSeaLone => 'A lone 0-0 left in hand records 25, a lone 6-6 records 50. Exactly 0-0 and 6-6 together record 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Fast hand: a hand opened with 6-6 charges its loser exactly 50, one opened with 0-0 charges 75. You may open with 6-6 or 0-0 only when every opponent already has points recorded. A block in a fast hand records nothing.';
+
+  @override
+  String get dominoPlayPair => 'Two doubles';
 }
