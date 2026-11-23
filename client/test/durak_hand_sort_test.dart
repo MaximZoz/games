@@ -753,6 +753,72 @@ void main() {
         {aceSpades},
       );
     });
+
+    test('вернувшиеся карты снова в веере: было 3, должно быть 6', () {
+      const nineSpades = PlayingCard(Rank.nine, Suit.spades);
+      const kingSpades = PlayingCard(Rank.king, Suit.spades);
+      const sevenClubs = PlayingCard(Rank.seven, Suit.clubs);
+      const eightClubs = PlayingCard(Rank.eight, Suit.clubs);
+      // На столе пусто, ход наш. Три карты так и лежали, три сыгранных
+      // сервер вернул (неотбитая атака или взятие).
+      const stayed = [aceSpades, nineSpades, kingSpades];
+      const returned = [sixClubs, sevenClubs, eightClubs];
+      final serverHand = [...stayed, ...returned];
+      final back = durakCardsReturnedToHand(
+        playedAway: returned,
+        serverHand: serverHand,
+        tableCards: const [],
+        stillInPlay: const [],
+      );
+      expect(back, returned.toSet());
+      final keep = durakRetainPlayedAway(
+        playedAway: returned,
+        incomingFanCards: const [],
+        pendingDealCards: const [],
+        returnedToHand: back,
+      );
+      expect(keep, isEmpty);
+      final slots = durakOrderedHandSlots(
+        prevOrder: stayed,
+        serverHand: serverHand,
+        pendingDeal: const {},
+        leavingHand: keep,
+        holeCards: const {},
+      );
+      expect(slots.toSet(), serverHand.toSet());
+      expect(slots, hasLength(6));
+    });
+
+    test('свой ход ещё летит — карту в руку не возвращаем', () {
+      final back = durakCardsReturnedToHand(
+        playedAway: const [sixClubs],
+        serverHand: const [sixClubs, aceSpades],
+        tableCards: const [],
+        stillInPlay: const [sixClubs],
+      );
+      expect(back, isEmpty);
+      expect(
+        durakRetainPlayedAway(
+          playedAway: const [sixClubs],
+          incomingFanCards: const [],
+          pendingDealCards: const [],
+          returnedToHand: back,
+        ),
+        {sixClubs},
+      );
+    });
+
+    test('карта ещё на столе не возвращается в веер', () {
+      expect(
+        durakCardsReturnedToHand(
+          playedAway: const [sixClubs, aceSpades],
+          serverHand: const [sixClubs, aceSpades],
+          tableCards: const [sixClubs],
+          stillInPlay: const [],
+        ),
+        {aceSpades},
+      );
+    });
   });
 
   group('durakFreshDealCards', () {

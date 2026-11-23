@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 /// Колода: рубашки наполовину за левым краем + козырь лицом вправо.
 ///
@@ -258,7 +259,7 @@ class _CountBadge extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: const Color(0xE6121218),
+        color: GamePalette.feltPlate.withValues(alpha: 0.9),
         shape: BoxShape.circle,
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.18),

@@ -1118,10 +1118,10 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesUnoPlay => 'Spring over — den næste mister turen. Retningsskift med to spillere virker som spring over. +2 stables kun på +2 og +4 kun på +4: straffen lægges sammen (to +2 betyder, at næste trækker 4). +2 må ikke lægges på +4. Den, der ikke stabler, trækker hele bunken og mister turen. To ens ikke-sorte kort (f.eks. to gule 8) kasseres sammen: spil ét, så følger tvillingen automatisk med.';
 
   @override
-  String get rulesUnoWild => 'Et sort kort sætter en ny farve. Spil +4 kun hvis du ikke har kort i den aktuelle farve. Modstanderen kan udfordre: var +4 lovligt, trækker hen 6; ellers trækker +4-spilleren 4, og udfordreren spiller.';
+  String get rulesUnoWild => 'Et sort kort sætter en ny farve. Efter +4 trækker den næste 4 kort eller spiller endnu et +4.';
 
   @override
-  String get rulesUnoDraw => 'Uden lovligt kort, træk ét fra bunken. Matcher det, kan du spille det med det samme eller beholde det og passe. Du må ikke trække, mens du har et lovligt træk.';
+  String get rulesUnoDraw => 'I din tur må du trække et kort, også selv om du har et, der passer. Passer det trukne, kan du spille det med det samme eller beholde det og passe.';
 
   @override
   String get rulesUnoWin => 'To spillere til 100, 3+ til 200. En runde vindes ved at tømme hånden.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsDa extends AppLocalizations {
   String get unoChooseColorHint => 'Vælg en farve til jokeren';
 
   @override
-  String get unoWd4Hint => 'Træk 4 kort eller udfordr Wild +4';
+  String get unoWd4Hint => 'Træk strafkortene eller spil et magen til';
 
   @override
   String get unoDrawnHint => 'Spil det trukne kort eller behold det';
 
   @override
-  String get unoPlayHint => 'Spil en matchende farve eller værdi';
+  String get unoPlayHint => 'Spil et kort eller træk fra bunken';
 
   @override
-  String get unoDrawHint => 'Intet matchende kort — træk fra bunken';
+  String get unoDrawHint => 'Du kan trække et kort fra bunken';
 
   @override
   String unoPendingDraw(int count) {

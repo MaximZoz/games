@@ -1118,10 +1118,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesUnoPlay => '跳过——下家失去回合。两人时转向等同跳过。+2 只能叠在 +2 上，+4 只能叠在 +4 上：罚牌累加（两张 +2 则下家摸 4）。不能把 +2 叠在 +4 上。不叠牌者摸走整叠并跳过。两张相同的非万能牌（例如两张黄 8）会一起打出：打出一张，另一张自动跟上。';
 
   @override
-  String get rulesUnoWild => '黑色牌指定新颜色。仅当没有当前颜色的牌时才能打 +4。下家可质疑：若 +4 合法则质疑者摸 6 张；否则打 +4 者摸 4 张，由质疑者出牌。';
+  String get rulesUnoWild => '黑色牌指定新颜色。打出 +4 后，下家摸 4 张或再打一张 +4。';
 
   @override
-  String get rulesUnoDraw => '没有可出的牌时从牌堆摸 1 张。若可出，可立即打出或留下并结束回合。仍有合法出牌时不能摸牌。';
+  String get rulesUnoDraw => '轮到你时，即使有可出的牌也可以从牌堆摸 1 张。若摸到的牌可出，可以立即打出，或留下并结束回合。';
 
   @override
   String get rulesUnoWin => '双人先到 100 分，三人及以上先到 200。一局由出完手牌者获胜。';
@@ -1193,16 +1193,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unoChooseColorHint => '为万能牌选择颜色';
 
   @override
-  String get unoWd4Hint => '抽4张牌或挑战万能+4';
+  String get unoWd4Hint => '摸罚牌，或打出同样的牌';
 
   @override
   String get unoDrawnHint => '打出抽到的牌或保留';
 
   @override
-  String get unoPlayHint => '打出相同颜色或点数的牌';
+  String get unoPlayHint => '出牌，或从牌堆摸一张';
 
   @override
-  String get unoDrawHint => '没有可出的牌——从牌堆抽牌';
+  String get unoDrawHint => '可以从牌堆摸一张牌';
 
   @override
   String unoPendingDraw(int count) {

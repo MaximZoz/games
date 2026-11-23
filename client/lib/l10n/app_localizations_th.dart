@@ -1118,10 +1118,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesUnoPlay => 'ข้าม — คนถัดไปเสียตา กลับทางเมื่อเล่นสองคนทำงานเหมือนข้าม +2 ซ้อนได้เฉพาะบน +2 และ +4 เฉพาะบน +4 โทษรวมกัน (สองใบ +2 คนถัดไปจั่ว 4) ห้ามวาง +2 บน +4 ใครไม่ซ้อนต้องจั่วทั้งกองและเสียตาไพ่ธรรมดาที่เหมือนกันสองใบ (เช่น 8 เหลืองสองใบ) ทิ้งพร้อมกัน เล่นใบหนึ่ง อีกใบออกอัตโนมัติ';
 
   @override
-  String get rulesUnoWild => 'ไพ่ดำกำหนดสีใหม่ ลง +4 ได้เมื่อไม่มีไพ่สีปัจจุบัน คู่แข่งท้าได้: ถ้า +4 ถูกกติกา ผู้ท้าจั่ว 6 ถ้าไม่ถูก ผู้ลง +4 จั่ว 4 และผู้ท้าได้ลงไพ่';
+  String get rulesUnoWild => 'ไพ่ดำกำหนดสีใหม่ หลัง +4 คนถัดไปจั่ว 4 ใบหรือลง +4 อีกใบ';
 
   @override
-  String get rulesUnoDraw => 'ไม่มีไพ่ที่ลงได้ ให้จั่วหนึ่งใบจากกอง ถ้าเข้ากันได้ลงทันทีหรือเก็บแล้วส่งตา ห้ามจั่วถ้ายังมีไพ่ที่ลงได้';
+  String get rulesUnoDraw => 'ในตาของคุณจั่วได้หนึ่งใบแม้มีไพ่ที่ลงได้ ถ้าใบที่จั่วเข้ากันได้ให้ลงทันทีหรือเก็บแล้วส่งตา';
 
   @override
   String get rulesUnoWin => 'เดี่ยวถึง 100 แต้ม ตั้งแต่ 3 คนถึง 200 ชนะรอบคือผู้ลงไพ่หมดมือ';
@@ -1193,16 +1193,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get unoChooseColorHint => 'เลือกสีสำหรับไพ่เปลี่ยนสี';
 
   @override
-  String get unoWd4Hint => 'จั่ว 4 ใบหรือท้า Wild +4';
+  String get unoWd4Hint => 'จั่วไพ่โทษหรือลงไพ่แบบเดียวกัน';
 
   @override
   String get unoDrawnHint => 'ลงไพ่ที่จั่วหรือเก็บไว้';
 
   @override
-  String get unoPlayHint => 'ลงไพ่สีหรือค่าเดียวกัน';
+  String get unoPlayHint => 'ลงไพ่หรือจั่วจากกอง';
 
   @override
-  String get unoDrawHint => 'ไม่มีไพ่ที่ลงได้ — จั่วจากกอง';
+  String get unoDrawHint => 'จั่วไพ่จากกองได้';
 
   @override
   String unoPendingDraw(int count) {

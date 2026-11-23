@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/uno/uno_card.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 class UnoCardWidget extends StatelessWidget {
   const UnoCardWidget({
@@ -62,6 +63,18 @@ class UnoCardBackWidget extends StatelessWidget {
   }
 }
 
+/// Цвет масти Уно — один на карту, точку «текущий цвет» и выбор цвета.
+///
+/// Масти — правило игры, а не оформление: они не берутся из общей палитры,
+/// кроме красного, который совпадает с её «опасностью».
+Color unoCardColor(UnoColor color) => switch (color) {
+      UnoColor.red => GamePalette.danger,
+      UnoColor.yellow => const Color(0xFFF9A825),
+      UnoColor.green => const Color(0xFF2E7D32),
+      UnoColor.blue => const Color(0xFF1565C0),
+      UnoColor.wild => const Color(0xFF181B22),
+    };
+
 class UnoCardPainter extends CustomPainter {
   const UnoCardPainter({
     required this.card,
@@ -75,24 +88,12 @@ class UnoCardPainter extends CustomPainter {
   final bool elevated;
   final bool highlighted;
 
-  static const _red = Color(0xFFE53935);
-  static const _yellow = Color(0xFFF9A825);
-  static const _green = Color(0xFF2E7D32);
-  static const _blue = Color(0xFF1565C0);
-  static const _black = Color(0xFF181B22);
-
-  Color get _faceColor => switch (card.color) {
-        UnoColor.red => _red,
-        UnoColor.yellow => _yellow,
-        UnoColor.green => _green,
-        UnoColor.blue => _blue,
-        UnoColor.wild => _black,
-      };
+  Color get _faceColor => unoCardColor(card.color);
 
   /// Контрастный цвет символа на белом овале / в углу на цветном фоне.
   Color get _inkOnWhite => switch (card.color) {
         UnoColor.yellow => const Color(0xFF5D4037),
-        UnoColor.wild => _black,
+        UnoColor.wild => unoCardColor(UnoColor.wild),
         _ => _faceColor,
       };
 
@@ -119,17 +120,20 @@ class UnoCardPainter extends CustomPainter {
         false,
       );
     }
-    canvas.drawRRect(
-      cardRRect,
-      Paint()..color = faceDown ? _black : _faceColor,
-    );
+    final base = Paint();
+    if (faceDown) {
+      base.shader = GamePalette.pieceBackGradient.createShader(cardRect);
+    } else {
+      base.color = _faceColor;
+    }
+    canvas.drawRRect(cardRRect, base);
     canvas.drawRRect(
       cardRRect,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = highlighted ? scale * 0.07 : scale * 0.04
         ..color = highlighted
-            ? const Color(0xFFFFE45C)
+            ? GamePalette.amberSoft
             : Colors.white.withValues(alpha: 0.98),
     );
 
@@ -145,7 +149,7 @@ class UnoCardPainter extends CustomPainter {
 
   void _paintBack(Canvas canvas, Size size, double scale) {
     final stripe = Paint()
-      ..color = const Color(0xFFCB262D)
+      ..color = GamePalette.pieceBackInk.withValues(alpha: 0.16)
       ..strokeWidth = scale * 0.12;
     for (var x = -size.height; x < size.width + size.height; x += scale * 0.3) {
       canvas.drawLine(
@@ -168,14 +172,14 @@ class UnoCardPainter extends CustomPainter {
         width: oval.width,
         height: oval.height,
       ),
-      Paint()..color = const Color(0xFFF5C329),
+      Paint()..color = GamePalette.pieceFace,
     );
     _paintPlainText(
       canvas,
       'UNO',
       Offset.zero,
       scale * 0.34,
-      color: const Color(0xFFCC202C),
+      color: GamePalette.pieceBackStart,
     );
     canvas.restore();
   }
@@ -330,7 +334,12 @@ class UnoCardPainter extends CustomPainter {
   }
 
   void _paintWild(Canvas canvas, Offset center, double scale) {
-    final colors = [_red, _yellow, _green, _blue];
+    final colors = [
+      unoCardColor(UnoColor.red),
+      unoCardColor(UnoColor.yellow),
+      unoCardColor(UnoColor.green),
+      unoCardColor(UnoColor.blue),
+    ];
     final rect = Rect.fromCenter(
       center: center,
       width: scale * 0.62,

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/chess/chess_board.dart';
 import 'package:multigames_client/games/chess/chess_engine.dart';
 import 'package:multigames_client/games/chess/chess_repository.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 void main() {
   ChessGameView viewOf(ChessEngine g) {
@@ -38,10 +39,10 @@ void main() {
   }
 
   test('клетки последнего хода отличаются от обычных', () {
-    expect(chessLastMoveSquare(dark: false), const Color(0xFFCDD26A));
-    expect(chessLastMoveSquare(dark: true), const Color(0xFFAAA23A));
-    expect(chessLastMoveSquare(dark: false), isNot(const Color(0xFFEBECD0)));
-    expect(chessLastMoveSquare(dark: true), isNot(const Color(0xFF739552)));
+    expect(chessLastMoveSquare(dark: false), GamePalette.boardMarkLight);
+    expect(chessLastMoveSquare(dark: true), GamePalette.boardMarkDark);
+    expect(chessLastMoveSquare(dark: false), isNot(GamePalette.boardLight));
+    expect(chessLastMoveSquare(dark: true), isNot(GamePalette.boardDark));
   });
 
   test('обычный ход — один слайд, рокировка — король и ладья', () {

@@ -3,26 +3,27 @@ import 'package:multigames_client/games/nardy/nardy_board_layout.dart';
 import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
 import 'package:multigames_client/games/nardy/nardy_engine.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
-const Color _kBoardBg = Color(0xFF241C3B);
-const Color _kBoardFrame = Color(0xFF3B2F63);
-const Color _kPointLight = Color(0xFF7C68C4);
-const Color _kPointDark = Color(0xFF43376F);
-const Color _kHomeTint = Color(0xFF9B6BE8);
+const Color _kBoardBg = GamePalette.feltDeep;
+const Color _kBoardFrame = GamePalette.feltFrame;
+const Color _kPointLight = GamePalette.feltStripeLight;
+const Color _kPointDark = GamePalette.feltStripeDark;
+const Color _kHomeTint = GamePalette.pieceBackEnd;
 
 /// Свои шашки — светлые, чужие — тёплые янтарные: на тёмной доске
 /// прежний почти чёрный цвет соперника сливался с пунктами.
-const Color _kMyChecker = Color(0xFFF6F1FF);
-const Color _kMyCheckerEdge = Color(0xFF9C8FD6);
-const Color _kOppChecker = Color(0xFFFF9E45);
-const Color _kOppCheckerEdge = Color(0xFFC2560E);
+const Color _kMyChecker = GamePalette.sideLight;
+const Color _kMyCheckerEdge = GamePalette.sideLightEdge;
+const Color _kOppChecker = GamePalette.amber;
+const Color _kOppCheckerEdge = GamePalette.amberDeep;
 
-const Color _kSelected = Color(0xFF56E39F);
-const Color _kTarget = Color(0xFF56E39F);
-const Color _kCursor = Color(0xFF7EE0FF);
+const Color _kSelected = GamePalette.go;
+const Color _kTarget = GamePalette.go;
+const Color _kCursor = GamePalette.focus;
 
 /// Куда вернётся шашка при отмене хода.
-const Color _kUndoTarget = Color(0xFFFFC46B);
+const Color _kUndoTarget = GamePalette.amberSoft;
 
 /// Доска нард глазами игрока с плавным переездом шашек.
 class NardyBoard extends StatefulWidget {

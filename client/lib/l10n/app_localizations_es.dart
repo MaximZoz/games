@@ -1118,10 +1118,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesUnoPlay => 'Salto: el siguiente pierde el turno. El cambio de sentido con dos jugadores actúa como salto. +2 solo se apila sobre +2 y +4 solo sobre +4: la penalización se suma (dos +2 hacen robar 4). No se puede poner +2 sobre +4. Quien no apile roba todo el montón y pierde el turno. Dos cartas iguales no negras (por ejemplo dos 8 amarillos) se descartan juntas: juega una y la gemela se lanza sola.';
 
   @override
-  String get rulesUnoWild => 'Una carta negra elige un color nuevo. Juega +4 solo si no tienes carta del color actual. El rival puede impugnarlo: si el +4 era legal, roba 6; si no, el autor del +4 roba 4 y el impugnador juega.';
+  String get rulesUnoWild => 'Una carta negra elige un color nuevo. Tras un +4, el siguiente roba 4 cartas o juega otro +4.';
 
   @override
-  String get rulesUnoDraw => 'Si no tienes carta válida, roba una del mazo. Si encaja, puedes jugarla ahora o quedártela y pasar. No puedes robar si aún tienes jugada.';
+  String get rulesUnoDraw => 'En tu turno puedes robar una carta aunque tengas una válida. Si la robada encaja, juégala ahora o quédate con ella y pasa.';
 
   @override
   String get rulesUnoWin => 'En 1v1 hasta 100 puntos; con 3+ jugadores, hasta 200. La ronda la gana quien se queda sin cartas.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get unoChooseColorHint => 'Elige un color para el comodín';
 
   @override
-  String get unoWd4Hint => 'Roba 4 cartas o desafía el Wild +4';
+  String get unoWd4Hint => 'Roba la penalización o juega otra igual';
 
   @override
   String get unoDrawnHint => 'Juega la carta robada o consérvala';
 
   @override
-  String get unoPlayHint => 'Juega un color o valor coincidente';
+  String get unoPlayHint => 'Juega una carta o roba del mazo';
 
   @override
-  String get unoDrawHint => 'No hay carta válida: roba del mazo';
+  String get unoDrawHint => 'Puedes robar una carta del mazo';
 
   @override
   String unoPendingDraw(int count) {

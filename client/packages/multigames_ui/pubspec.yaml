@@ -1,0 +1,14 @@
+name: multigames_ui
+description: UI-библиотека MultiGames — токены оформления и базовые виджеты без зависимостей от приложения.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^4.0.0

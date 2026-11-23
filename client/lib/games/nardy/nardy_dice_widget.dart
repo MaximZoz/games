@@ -2,11 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
-const Color _kDieFace = Color(0xFFF7F3FF);
-const Color _kDiePip = Color(0xFF241E38);
-const Color _kDieUsedFace = Color(0x33FFFFFF);
-const Color _kDieUsedPip = Color(0x66FFFFFF);
+const Color _kDieFace = GamePalette.sideLight;
+const Color _kDiePip = GamePalette.pieceInk;
+final Color _kDieUsedFace = GamePalette.feltInk.withValues(alpha: 0.2);
+final Color _kDieUsedPip = GamePalette.feltInk.withValues(alpha: 0.4);
 
 /// Кубики хода: бросок прокручивается, потраченные гаснут.
 class NardyDiceRow extends StatefulWidget {

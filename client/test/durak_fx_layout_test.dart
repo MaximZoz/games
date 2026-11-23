@@ -540,6 +540,49 @@ void main() {
       );
     });
 
+    test('залипший флаг раунда без полёта не держит короткую руку', () {
+      expect(
+        durakDealVisualBusy(
+            busy: false, fxScheduled: false, flightActive: false),
+        isFalse,
+      );
+      expect(
+        durakDealVisualBusy(
+            busy: true, fxScheduled: false, flightActive: false),
+        isTrue,
+      );
+      expect(
+        durakClearIdleDeckFreeze(
+          frozen: true,
+          pendingDeal: false,
+          animatingDeal: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakClearIdleDeckFreeze(
+          frozen: true,
+          pendingDeal: true,
+          animatingDeal: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakReleaseStuckOpeningConceal(
+          concealOpeningHand: true,
+          animatingDeal: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakReleaseStuckOpeningConceal(
+          concealOpeningHand: true,
+          animatingDeal: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('победа и реванш — после паузы на последний отбой', () {
       expect(kDurakLastTrickLook.inMilliseconds, 2000);
       expect(

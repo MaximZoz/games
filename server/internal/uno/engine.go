@@ -304,8 +304,8 @@ func (g *Game) View(forUserID string) GameView {
 	view.UnoVulnerableAtMs = g.UnoVulnerableAtMs
 	view.CanChallengeUno = g.canViewerChallengeUno(viewerIndex)
 	view.CanCallUno = g.canViewerCallUno(viewerIndex)
-	view.CanChallengeWD4 = viewerIndex == g.CurrentIndex &&
-		g.Status == StatusAwaitingWD4Challenge
+	// Оспаривание +4 убрано: флаг остаётся в JSON и всегда ложный.
+	view.CanChallengeWD4 = false
 	view.MustChooseColor = viewerIndex == g.ColorChooserIndex &&
 		g.Status == StatusAwaitingColor
 	view.CanKeepOrPlayDrawn = viewerIndex == g.CurrentIndex &&
@@ -526,7 +526,7 @@ func (g *Game) applyPlay(action Action) error {
 		}
 		g.CurrentColor = chosenColor
 		g.CurrentIndex = g.nextActive(playerIndex)
-		g.Status = StatusAwaitingWD4Challenge
+		g.Status = StatusActive
 	default:
 		return fmt.Errorf("uno: unsupported card kind %q", card.Kind)
 	}
@@ -556,9 +556,6 @@ func (g *Game) applyDraw() error {
 	}
 	if g.Status != StatusActive {
 		return fmt.Errorf("uno: cannot draw while status is %q", g.Status)
-	}
-	if g.hasLegalPlay(g.CurrentIndex) {
-		return fmt.Errorf("uno: current player has a legal card to play")
 	}
 
 	g.expireUnoWindow()
@@ -632,36 +629,7 @@ func (g *Game) applyChallengeUno(actorUserID, targetUserID string) error {
 }
 
 func (g *Game) applyChallengeWD4() error {
-	if g.Status != StatusAwaitingWD4Challenge {
-		return fmt.Errorf("uno: no Wild Draw Four can be challenged")
-	}
-	g.expireUnoWindow()
-	challenger := g.CurrentIndex
-	offender := g.Wild4PlayerIndex
-	if offender < 0 || offender >= len(g.Players) {
-		return fmt.Errorf("uno: invalid Wild Draw Four player")
-	}
-
-	if g.Wild4WasLegal {
-		penalty := g.PendingDraw + 2
-		if penalty < 6 {
-			penalty = 6
-		}
-		g.noteEvent("draw", g.Players[challenger].UserID, penalty, nil)
-		g.drawCards(challenger, penalty)
-		g.CurrentIndex = g.nextActive(challenger)
-	} else {
-		g.noteEvent("wd4_reveal", g.Players[offender].UserID, 0, g.Wild4ProofCard)
-		g.drawCards(offender, 4)
-		g.CurrentIndex = challenger
-		g.PendingRoundWinnerIndex = -1
-	}
-	g.PendingDraw = 0
-	g.Wild4PlayerIndex = -1
-	g.Wild4WasLegal = false
-	g.Wild4ProofCard = nil
-	g.Status = StatusActive
-	return g.finishPendingRound()
+	return fmt.Errorf("uno: no Wild Draw Four can be challenged")
 }
 
 func (g *Game) applyChooseColor(color Color) error {
@@ -677,11 +645,6 @@ func (g *Game) applyChooseColor(color Color) error {
 	}
 	g.CurrentColor = color
 	g.ColorChooserIndex = -1
-	if g.Wild4PlayerIndex == chooser && g.PendingDraw > 0 {
-		g.CurrentIndex = g.nextActive(chooser)
-		g.Status = StatusAwaitingWD4Challenge
-		return nil
-	}
 	g.CurrentIndex = g.nextActive(chooser)
 	g.Status = StatusActive
 	return g.finishPendingRound()

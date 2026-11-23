@@ -252,7 +252,7 @@ func TestWildDrawFourStacksOnWildDrawFour(t *testing.T) {
 	if err := game.Apply(Action{Type: ActionPlay, CardID: second.ID, Color: string(ColorGreen)}); err != nil {
 		t.Fatal(err)
 	}
-	if game.PendingDraw != 8 || game.Status != StatusAwaitingWD4Challenge || game.CurrentIndex != 2 {
+	if game.PendingDraw != 8 || game.Status != StatusActive || game.CurrentIndex != 2 {
 		t.Fatalf("stacked +4: pending=%d status=%s current=%d",
 			game.PendingDraw, game.Status, game.CurrentIndex)
 	}
@@ -265,14 +265,40 @@ func TestWildDrawFourStacksOnWildDrawFour(t *testing.T) {
 }
 
 func TestDrawnPlayableCardMayBeKeptOrPlayed(t *testing.T) {
-	t.Run("draw requires no legal play", func(t *testing.T) {
+	t.Run("draw is allowed while a legal play exists", func(t *testing.T) {
 		game := controlledGame(t, 2)
 		game.Players[0].Hand = []Card{
 			testNumber("matching-red", ColorRed, 2),
 			testNumber("other", ColorBlue, 1),
 		}
-		if err := game.Apply(Action{Type: ActionDraw}); err == nil {
-			t.Fatal("draw should fail while the player has a legal play")
+		before := len(game.Players[0].Hand)
+		if err := game.Apply(Action{Type: ActionDraw}); err != nil {
+			t.Fatal(err)
+		}
+		if len(game.Players[0].Hand) != before+1 {
+			t.Fatal("voluntary draw did not take a card")
+		}
+		if game.CurrentIndex != 1 || game.Status != StatusActive {
+			t.Fatalf("unplayable draw should pass the turn: index=%d status=%s", game.CurrentIndex, game.Status)
+		}
+	})
+
+	t.Run("voluntary draw of a matching card can be kept", func(t *testing.T) {
+		game := controlledGame(t, 2)
+		game.Players[0].Hand = []Card{testNumber("matching-red", ColorRed, 2)}
+		drawn := testNumber("drawn-red", ColorRed, 8)
+		game.DrawPile = append(game.DrawPile, drawn)
+		if err := game.Apply(Action{Type: ActionDraw}); err != nil {
+			t.Fatal(err)
+		}
+		if game.Status != StatusAwaitingDrawnPlay || game.DrawnCardID != drawn.ID {
+			t.Fatalf("matching voluntary draw: status=%s id=%q", game.Status, game.DrawnCardID)
+		}
+		if err := game.Apply(Action{Type: ActionKeep}); err != nil {
+			t.Fatal(err)
+		}
+		if game.CurrentIndex != 1 || game.Status != StatusActive {
+			t.Fatalf("keep after bluff draw: index=%d status=%s", game.CurrentIndex, game.Status)
 		}
 	})
 
@@ -340,63 +366,34 @@ func TestWildRequiresAndAppliesColorChoice(t *testing.T) {
 	}
 }
 
-func TestWildDrawFourChallenge(t *testing.T) {
-	t.Run("legal play makes challenger draw six and skip", func(t *testing.T) {
+func TestWildDrawFourHasNoChallenge(t *testing.T) {
+	t.Run("next player draws four and the challenge action is rejected", func(t *testing.T) {
 		game := controlledGame(t, 3)
 		wd4 := testAction("wd4-legal", ColorWild, KindWildDrawFour)
-		// Matching the top number does not make WD4 illegal; only a card
-		// matching the current color does.
 		game.Players[0].Hand = []Card{wd4, testNumber("yellow-five", ColorYellow, 5)}
 		before := len(game.Players[1].Hand)
 
 		if err := game.Apply(Action{Type: ActionPlay, CardID: wd4.ID, Color: string(ColorBlue)}); err != nil {
 			t.Fatal(err)
 		}
-		if game.Status != StatusAwaitingWD4Challenge || game.PendingDraw != 4 || game.CurrentIndex != 1 {
-			t.Fatalf("unexpected pending challenge: status=%s draw=%d current=%d", game.Status, game.PendingDraw, game.CurrentIndex)
-		}
-		if err := game.Apply(Action{Type: ActionChallengeWD4}); err != nil {
-			t.Fatal(err)
-		}
-		if got := len(game.Players[1].Hand); got != before+6 {
-			t.Fatalf("challenger hand = %d, want %d", got, before+6)
-		}
-		if game.CurrentIndex != 2 {
-			t.Fatalf("current index = %d, want challenger skipped to 2", game.CurrentIndex)
-		}
-	})
-
-	t.Run("illegal play makes offender draw four", func(t *testing.T) {
-		game := controlledGame(t, 3)
-		wd4 := testAction("wd4-illegal", ColorWild, KindWildDrawFour)
-		game.Players[0].Hand = []Card{wd4, testNumber("matching-red", ColorRed, 2)}
-		beforeOffender := len(game.Players[0].Hand)
-		beforeChallenger := len(game.Players[1].Hand)
-
-		if err := game.Apply(Action{Type: ActionPlay, CardID: wd4.ID, Color: string(ColorBlue)}); err != nil {
-			t.Fatal(err)
-		}
-		if game.Wild4WasLegal {
-			t.Fatal("Wild Draw Four should be marked illegal when a matching-color card exists")
-		}
-		if err := game.Apply(Action{Type: ActionChallengeWD4}); err != nil {
-			t.Fatal(err)
-		}
-		if got := len(game.Players[0].Hand); got != beforeOffender-1+4 {
-			t.Fatalf("offender hand = %d, want %d", got, beforeOffender-1+4)
-		}
-		if got := len(game.Players[1].Hand); got != beforeChallenger {
-			t.Fatalf("challenger hand changed to %d", got)
-		}
-		if game.CurrentIndex != 1 {
-			t.Fatalf("challenger should retain turn, current=%d", game.CurrentIndex)
-		}
-		if game.LastEventType != "wd4_reveal" || game.LastEventCard == nil || game.LastEventCard.Color != ColorRed {
-			t.Fatalf("expected red proof card, event=%s card=%#v", game.LastEventType, game.LastEventCard)
+		if game.Status != StatusActive || game.PendingDraw != 4 || game.CurrentIndex != 1 {
+			t.Fatalf("unexpected +4 state: status=%s draw=%d current=%d", game.Status, game.PendingDraw, game.CurrentIndex)
 		}
 		view := game.View("p1")
-		if view.MyIndex != 1 || view.LastEventCard == nil || view.LastEventCard.Color != ColorRed {
-			t.Fatalf("view should expose proof card to challenger: my=%d card=%#v", view.MyIndex, view.LastEventCard)
+		if view.CanChallengeWD4 {
+			t.Fatal("Wild Draw Four challenge must stay unavailable")
+		}
+		if err := game.Apply(Action{Type: ActionChallengeWD4}); err == nil {
+			t.Fatal("challenge_wd4 should be rejected")
+		}
+		if err := game.Apply(Action{Type: ActionDraw}); err != nil {
+			t.Fatal(err)
+		}
+		if got := len(game.Players[1].Hand); got != before+4 {
+			t.Fatalf("next hand = %d, want %d", got, before+4)
+		}
+		if game.CurrentIndex != 2 || game.PendingDraw != 0 || game.Status != StatusActive {
+			t.Fatalf("after penalty: index=%d draw=%d status=%s", game.CurrentIndex, game.PendingDraw, game.Status)
 		}
 	})
 
@@ -735,11 +732,14 @@ func TestPendingStateSurvivesJSONRoundTrip(t *testing.T) {
 	if err := restored.Apply(Action{Type: ActionChooseColor, Color: string(ColorBlue)}); err != nil {
 		t.Fatal(err)
 	}
-	if err := restored.Apply(Action{Type: ActionChallengeWD4}); err != nil {
+	if restored.Status != StatusActive || restored.PendingDraw != 4 || restored.CurrentIndex != 1 {
+		t.Fatalf("restored +4 status=%s draw=%d current=%d", restored.Status, restored.PendingDraw, restored.CurrentIndex)
+	}
+	if err := restored.Apply(Action{Type: ActionDraw}); err != nil {
 		t.Fatal(err)
 	}
-	if restored.Status != StatusActive || restored.CurrentIndex != 2 {
-		t.Fatalf("restored challenge status=%s current=%d", restored.Status, restored.CurrentIndex)
+	if restored.Status != StatusActive || restored.CurrentIndex != 2 || restored.PendingDraw != 0 {
+		t.Fatalf("restored draw status=%s draw=%d current=%d", restored.Status, restored.PendingDraw, restored.CurrentIndex)
 	}
 }
 

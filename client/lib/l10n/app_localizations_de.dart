@@ -1118,10 +1118,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoPlay => 'Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 nur auf +2 und +4 nur auf +4: die Strafe addiert sich (zwei +2 bedeuten 4 ziehen). +2 darf nicht auf +4. Wer nicht stapelt, zieht den ganzen Stapel und setzt aus. Zwei gleiche nicht-schwarze Karten (z. B. zwei gelbe 8) werden zusammen abgelegt: eine spielen — die zweite fliegt automatisch mit.';
 
   @override
-  String get rulesUnoWild => 'Eine schwarze Karte bestimmt eine neue Farbe. +4 nur, wenn du keine Karte der aktuellen Farbe hast. Der Nächste kann anfechten: war +4 legal, zieht er 6; sonst zieht der +4-Spieler 4 und der Anfechtende ist am Zug.';
+  String get rulesUnoWild => 'Eine schwarze Karte bestimmt eine neue Farbe. Nach +4 zieht der Nächste 4 Karten oder spielt ein weiteres +4.';
 
   @override
-  String get rulesUnoDraw => 'Ohne passende Karte ziehe eine vom Stapel. Passt sie, darfst du sie sofort spielen oder behalten und passen. Ziehen ist verboten, solange ein legaler Zug möglich ist.';
+  String get rulesUnoDraw => 'Im eigenen Zug darfst du eine Karte ziehen, auch wenn du eine passende hast. Passt die gezogene, spiele sie sofort oder behalte sie und passe.';
 
   @override
   String get rulesUnoWin => 'Zu zweit bis 100 Punkte, bei drei oder mehr Spielern bis 200. Eine Runde gewinnt, wer alle Karten ablegt.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get unoChooseColorHint => 'Wähle eine Farbe für die schwarze Karte';
 
   @override
-  String get unoWd4Hint => 'Ziehe 4 Karten oder fechte Wild +4 an';
+  String get unoWd4Hint => 'Ziehe die Strafkarten oder spiele noch eine gleiche';
 
   @override
   String get unoDrawnHint => 'Spiele die gezogene Karte oder behalte sie';
 
   @override
-  String get unoPlayHint => 'Spiele eine passende Farbe oder einen passenden Wert';
+  String get unoPlayHint => 'Spiele eine Karte oder ziehe vom Stapel';
 
   @override
-  String get unoDrawHint => 'Keine passende Karte — ziehe vom Stapel';
+  String get unoDrawHint => 'Du kannst eine Karte vom Stapel ziehen';
 
   @override
   String unoPendingDraw(int count) {

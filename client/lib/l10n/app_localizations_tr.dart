@@ -1118,10 +1118,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoPlay => 'Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 yalnızca +2 üzerine, +4 yalnızca +4 üzerine konur: ceza toplanır (iki +2 sonraki 4 kart çeker). +2, +4 üzerine oynanamaz. Cevap vermeyen tüm yığını çeker ve turunu kaybeder. Aynı iki siyah olmayan kart (ör. iki sarı 8) birlikte atılır: birini oynayın, ikizi otomatik gider.';
 
   @override
-  String get rulesUnoWild => 'Siyah kart yeni renk seçer. +4 yalnızca elde mevcut renk yoksa oynanır. Rakip itiraz edebilir: +4 yasal ise 6 çeker; değilse +4 oynayan 4 çeker ve itiraz eden oynar.';
+  String get rulesUnoWild => 'Siyah kart yeni renk seçer. +4’ten sonra sıradaki 4 kart çeker ya da başka bir +4 oynar.';
 
   @override
-  String get rulesUnoDraw => 'Uygun kart yoksa desteden bir kart çekin. Uyuyorsa hemen oynayabilir veya tutup sırayı geçebilirsiniz. Elde hamle varken çekilemez.';
+  String get rulesUnoDraw => 'Sıranızda uygun kartınız olsa bile desteden bir kart çekebilirsiniz. Çekilen kart uyuyorsa hemen oynayın ya da tutup sırayı geçin.';
 
   @override
   String get rulesUnoWin => 'İkişer 100, 3+ oyuncuda 200. Turu elini bitiren kazanır.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unoChooseColorHint => 'Joker için bir renk seçin';
 
   @override
-  String get unoWd4Hint => '4 kart çekin veya Wild +4’e itiraz edin';
+  String get unoWd4Hint => 'Ceza kartlarını çekin veya aynısından oynayın';
 
   @override
   String get unoDrawnHint => 'Çekilen kartı oynayın veya tutun';
 
   @override
-  String get unoPlayHint => 'Eşleşen renk veya değeri oynayın';
+  String get unoPlayHint => 'Kart oynayın veya desteden çekin';
 
   @override
-  String get unoDrawHint => 'Eşleşen kart yok — desteden çekin';
+  String get unoDrawHint => 'Desteden kart çekebilirsiniz';
 
   @override
   String unoPendingDraw(int count) {

@@ -2282,13 +2282,13 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoWild.
   ///
   /// In ru, this message translates to:
-  /// **'Чёрная карта задаёт новый цвет. +4 кладут, только если нет карты текущего цвета. Соперник может оспорить: если +4 был законным — оспаривающий берёт 6, если нет — автор +4 берёт 4, а оспаривающий ходит.'**
+  /// **'Чёрная карта задаёт новый цвет. После +4 следующий берёт 4 карты или кладёт свою +4.'**
   String get rulesUnoWild;
 
   /// No description provided for @rulesUnoDraw.
   ///
   /// In ru, this message translates to:
-  /// **'Если подходящей карты нет — возьмите одну из колоды. Если она подходит, можно сразу сходить ею или оставить и передать ход. Пока есть ход, брать нельзя.'**
+  /// **'В свой ход можно взять одну карту из колоды, даже если есть подходящая. Если взятая карта подходит, можно сразу сходить ею или оставить и передать ход.'**
   String get rulesUnoDraw;
 
   /// No description provided for @rulesUnoWin.
@@ -2420,7 +2420,7 @@ abstract class AppLocalizations {
   /// No description provided for @unoWd4Hint.
   ///
   /// In ru, this message translates to:
-  /// **'Возьмите 4 карты или оспорьте Wild +4'**
+  /// **'Возьмите карты штрафа или положите такую же'**
   String get unoWd4Hint;
 
   /// No description provided for @unoDrawnHint.
@@ -2432,13 +2432,13 @@ abstract class AppLocalizations {
   /// No description provided for @unoPlayHint.
   ///
   /// In ru, this message translates to:
-  /// **'Сыграйте карту по цвету или значению'**
+  /// **'Сыграйте карту или возьмите из колоды'**
   String get unoPlayHint;
 
   /// No description provided for @unoDrawHint.
   ///
   /// In ru, this message translates to:
-  /// **'Подходящей карты нет — возьмите из колоды'**
+  /// **'Можно взять карту из колоды'**
   String get unoDrawHint;
 
   /// No description provided for @unoPendingDraw.

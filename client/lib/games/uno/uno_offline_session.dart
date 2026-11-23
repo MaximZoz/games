@@ -137,8 +137,7 @@ class OfflineUnoSession extends ChangeNotifier {
       canChallengeUno: game.canChallengeUno(me),
       canCallUno: game.canCallUno(me),
       unoVulnerableAtMs: game.unoVulnerableAtMs,
-      canChallengeWd4: game.currentIndex == me &&
-          game.status == UnoStatus.awaitingWd4Challenge,
+      canChallengeWd4: false,
       mustChooseColor: game.colorChooserIndex == me &&
           game.status == UnoStatus.awaitingColor,
       canKeepOrPlayDrawn:

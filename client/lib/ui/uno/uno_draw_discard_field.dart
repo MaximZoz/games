@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/uno/uno_center_table_style.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
-/// Зелёный овал колоды и сброса. В альбоме родитель жмёт его через [FittedBox].
+/// Овал колоды и сброса на общем тёмном сукне. В альбоме родитель жмёт его через [FittedBox].
 class UnoDrawDiscardField extends StatelessWidget {
   const UnoDrawDiscardField({
     super.key,
@@ -27,20 +28,15 @@ class UnoDrawDiscardField extends StatelessWidget {
     final pending = pendingDrawLabel?.trim() ?? '';
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF125D42).withValues(alpha: 0.92),
-            const Color(0xFF0A3E3A).withValues(alpha: 0.95),
-          ],
-        ),
+        gradient: GamePalette.feltGradient,
         borderRadius: BorderRadius.circular(style.borderRadius),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.16),
+          color: GamePalette.feltEdge,
           width: 2,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black38,
+            color: GamePalette.shadow,
             blurRadius: 18,
             offset: Offset(0, 8),
           ),
@@ -59,7 +55,7 @@ class UnoDrawDiscardField extends StatelessWidget {
               Text(
                 drawLabel,
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: GamePalette.feltInkSoft,
                   fontSize: style.labelFontSize,
                 ),
               ),
@@ -80,14 +76,14 @@ class UnoDrawDiscardField extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: currentColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white70),
+                      border: Border.all(color: GamePalette.feltInkSoft),
                     ),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     discardLabel,
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: GamePalette.feltInkSoft,
                       fontSize: style.labelFontSize,
                     ),
                   ),
@@ -100,13 +96,13 @@ class UnoDrawDiscardField extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.redAccent,
+                color: GamePalette.danger,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 pending,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: GamePalette.feltInk,
                   fontWeight: FontWeight.w800,
                 ),
               ),

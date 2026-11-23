@@ -11,6 +11,7 @@ import 'package:multigames_client/games/games_provider.dart' show GameInvite;
 import 'package:multigames_client/games/rematch_match.dart';
 
 export 'package:multigames_client/games/rematch_match.dart' show RematchTable;
+export 'package:multigames_game_kit/theme/turn_timer_style.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/l10n/l10n.dart';
@@ -23,6 +24,7 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_game_kit/theme/turn_timer_style.dart';
 
 /// Салют при победе — общий для всех игр.
 class GameConfettiOverlay extends StatefulWidget {
@@ -570,6 +572,7 @@ class GameOpponentCard extends StatelessWidget {
 class GameActionsOverlay extends StatelessWidget {
   const GameActionsOverlay({
     super.key,
+    this.canSurrender = true,
     required this.canDraw,
     required this.iOfferedDraw,
     required this.opponentOfferedDraw,
@@ -581,6 +584,8 @@ class GameActionsOverlay extends StatelessWidget {
     required this.drawOfferedTooltip,
   });
 
+  /// Флаг «сдаться». false — в столбике остаётся только ничья.
+  final bool canSurrender;
   final bool canDraw;
   final bool iOfferedDraw;
   final bool opponentOfferedDraw;
@@ -596,16 +601,17 @@ class GameActionsOverlay extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          iconSize: 22,
-          icon: const Icon(Icons.flag_outlined),
-          tooltip: surrenderTooltip,
-          onPressed: onSurrender,
-        ),
+        if (canSurrender)
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            iconSize: 22,
+            icon: const Icon(Icons.flag_outlined),
+            tooltip: surrenderTooltip,
+            onPressed: onSurrender,
+          ),
         if (canDraw) ...[
-          const SizedBox(height: 4),
+          if (canSurrender) const SizedBox(height: 4),
           DrawOfferButton(
             iOffered: iOfferedDraw,
             opponentOffered: opponentOfferedDraw,
@@ -856,44 +862,6 @@ class _MyTurnAlertState extends State<MyTurnAlert> {
 
   @override
   Widget build(BuildContext context) => const SizedBox.shrink();
-}
-
-/// Цвет/градиент таймера хода: много времени — зелёный, мало — красный;
-/// без лимита — мягкий фиолетовый.
-class TurnTimerStyle {
-  TurnTimerStyle._();
-
-  static const Color noTimerA = Color(0xFF8B5CF6);
-  static const Color noTimerB = Color(0xFFA78BFA);
-  static const Color green = Color(0xFF34D399);
-  static const Color orange = Color(0xFFFBBF24);
-  static const Color red = Color(0xFFF87171);
-
-  /// [fraction] = оставшаяся доля времени 0..1.
-  static List<Color> colorsFor({
-    required bool hasTimer,
-    required double fraction,
-  }) {
-    if (!hasTimer) return const [noTimerA, noTimerB];
-    final t = fraction.clamp(0.0, 1.0);
-    if (t > 0.45) {
-      final k = ((t - 0.45) / 0.55).clamp(0.0, 1.0);
-      return [
-        Color.lerp(orange, green, k)!,
-        Color.lerp(
-            orange.withValues(alpha: 0.75), green.withValues(alpha: 0.85), k)!,
-      ];
-    }
-    if (t > 0.18) {
-      final k = ((t - 0.18) / 0.27).clamp(0.0, 1.0);
-      return [
-        Color.lerp(red, orange, k)!,
-        Color.lerp(
-            red.withValues(alpha: 0.8), orange.withValues(alpha: 0.75), k)!,
-      ];
-    }
-    return [red, red.withValues(alpha: 0.7)];
-  }
 }
 
 /// Мягкий бордер-прогресс вокруг [child]: линия по периметру укорачивается.

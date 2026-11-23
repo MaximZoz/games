@@ -189,14 +189,41 @@ bool durakCardLeftHandForPlay({
 
 /// Сыгранные карты не забываем, пока они снова не сядут в веер.
 /// Иначе кадр со старой рукой снова вспыхнет лицом после хода.
+///
+/// [returnedToHand] — сервер уже вернул карту в руку (взятие или неотбитая
+/// атака). Без этого веер остаётся коротким: на ходу видны 3 карты из 6.
 Set<PlayingCard> durakRetainPlayedAway({
   required Iterable<PlayingCard> playedAway,
   required Iterable<PlayingCard> incomingFanCards,
   required Iterable<PlayingCard> pendingDealCards,
+  Iterable<PlayingCard> returnedToHand = const [],
 }) {
+  final back = returnedToHand.toSet();
   return {
     for (final c in playedAway)
-      if (!incomingFanCards.contains(c) && !pendingDealCards.contains(c)) c,
+      if (!incomingFanCards.contains(c) &&
+          !pendingDealCards.contains(c) &&
+          !back.contains(c))
+        c,
+  };
+}
+
+/// Карты, которые сервер уже вернул в руку.
+///
+/// Пока карта лежит на столе или ещё летит своим ходом, в веер её не
+/// кладём: старый снимок иначе вспыхнет лицом сразу после хода.
+Set<PlayingCard> durakCardsReturnedToHand({
+  required Iterable<PlayingCard> playedAway,
+  required Iterable<PlayingCard> serverHand,
+  required Iterable<PlayingCard> tableCards,
+  required Iterable<PlayingCard> stillInPlay,
+}) {
+  final hand = serverHand.toSet();
+  final table = tableCards.toSet();
+  final busy = stillInPlay.toSet();
+  return {
+    for (final c in playedAway)
+      if (hand.contains(c) && !table.contains(c) && !busy.contains(c)) c,
   };
 }
 

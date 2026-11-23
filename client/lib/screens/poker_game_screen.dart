@@ -15,6 +15,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
@@ -44,6 +45,7 @@ import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 /// Экран партии Texas Hold'em — общий для онлайна и офлайна.
 ///
@@ -1097,70 +1099,58 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       },
       child: SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(withExtra: showGroupChat),
-          leading: buildGameAppBarLeading(
-            onClose: _onClosePressed,
-            extra: showGroupChat
-                ? GameIconWithBadge(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    tooltip: context.l10n.chatGroupTooltip,
-                    badge: groupUnread,
-                    onPressed: () => _openGroupChat(game),
-                  )
-                : null,
-          ),
+      child: GameScreenScaffold(
+        chrome: GameChrome(
+          onClose: _onClosePressed,
+          leadingExtra: showGroupChat
+              ? GameIconWithBadge(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: context.l10n.chatGroupTooltip,
+                  badge: groupUnread,
+                  onPressed: () => _openGroupChat(game),
+                )
+              : null,
           title: Text(context.l10n.gamesPoker),
           centerTitle: true,
-          actions: [
-            if (gameAsync.valueOrNull != null &&
-                !gameAsync.valueOrNull!.isOver &&
-                !gameAsync.valueOrNull!.iAmEliminated)
-              IconButton(
-                tooltip: context.l10n.gameSurrender,
-                icon: const Icon(Icons.flag_outlined),
-                onPressed: () => unawaited(_confirmSurrender()),
-              ),
-            IconButton(
-              tooltip: context.l10n.gamesRulesTitle,
-              icon: const Icon(Icons.rule_rounded),
-              onPressed: () {
-                final game = gameAsync.valueOrNull;
-                showGameRulesDialog(
-                  context: context,
-                  content: rulesTextLines(pokerRuleLines(
-                    players: game?.playerIds.length ?? 2,
-                    turnTimeSec: game?.turnTimeSec ?? 0,
-                    stakeBronze: game?.stakeBronze ?? 0,
-                    offlineBot: _isOffline,
-                    l10n: context.l10n,
-                  )),
-                  closeLabel: context.l10n.commonClose,
-                );
-              },
-            ),
-          ],
-        ),
-        body: GradientBackground(
-          child: SafeArea(
-            child: gameAsync.when(
-              skipLoadingOnReload: true,
-              skipLoadingOnRefresh: true,
-              data: (game) => _buildContent(game, narrow),
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.accentStart),
-              ),
-              error: (e, _) => Center(
-                child: Text(
-                  formatUserError(e,
-                      fallback: context.l10n.commonServerErrorShort),
-                  style: const TextStyle(color: Colors.red),
+          railOnDark: true,
+          onShowRules: () {
+            showGameRulesDialog(
+              context: context,
+              content: rulesTextLines(pokerRuleLines(
+                players: game?.playerIds.length ?? 2,
+                turnTimeSec: game?.turnTimeSec ?? 0,
+                stakeBronze: game?.stakeBronze ?? 0,
+                offlineBot: _isOffline,
+                l10n: context.l10n,
+              )),
+              closeLabel: context.l10n.commonClose,
+            );
+          },
+          turn: game == null || game.isOver || game.isHandOver
+              ? const GameTurnClock.idle()
+              : GameTurnClock(
+                  isMyTurn: game.isMyTurn,
+                  deadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+                  turnTimeSec: game.turnTimeSec,
                 ),
+          onSurrender: game != null && !game.isOver && !game.iAmEliminated
+              ? () => unawaited(_confirmSurrender())
+              : null,
+        ),
+        body: SafeArea(
+          child: gameAsync.when(
+            skipLoadingOnReload: true,
+            skipLoadingOnRefresh: true,
+            data: (game) => _buildContent(game, narrow),
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppColors.accentStart),
+            ),
+            error: (e, _) => Center(
+              child: Text(
+                formatUserError(e,
+                    fallback: context.l10n.commonServerErrorShort),
+                style: const TextStyle(color: GamePalette.danger),
               ),
             ),
           ),
@@ -1256,9 +1246,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
-            MyTurnAlert.stackLeaf(
-              isMyTurn: game.isMyTurn && !isOver && !game.isHandOver,
-            ),
             Positioned.fill(
               child: _buildTable(
                 game,
@@ -1554,6 +1541,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ? (constraints.maxWidth * 0.22).clamp(28.0, 44.0)
             : (constraints.maxWidth * 0.18).clamp(40.0, 64.0);
         final sidePad = narrow ? 2.0 : 6.0;
+        const seatAreaTop = 4.0;
+        final railInset = GameChromeScope.railInsetOf(context);
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -1567,11 +1556,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(radius),
                     gradient: const RadialGradient(
-                      colors: [Color(0xFF1F7A4D), Color(0xFF135C39)],
+                      colors: [GamePalette.feltTop, GamePalette.feltBottom],
                       radius: 0.95,
                     ),
                     border: Border.all(
-                      color: const Color(0xFF0C3D26),
+                      color: GamePalette.feltEdge,
                       width: narrow ? 4 : 6,
                     ),
                   ),
@@ -1581,7 +1570,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             // Борд + соперники — фиксированная зона (не прыгает с кнопками).
             Positioned.fill(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(sidePad, 4, sidePad, 8),
+                padding: EdgeInsets.fromLTRB(sidePad, seatAreaTop, sidePad, 8),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -1635,8 +1624,18 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                         padding: EdgeInsets.only(
                           bottom: tight ? heroBottom : 0,
                         ),
-                        child: Align(
-                          alignment: oppAnchors[i],
+                        child: CustomSingleChildLayout(
+                          delegate: _PokerSeatAnchorLayout(
+                            anchor: oppAnchors[i],
+                            // Область мест уже отступает от края на sidePad.
+                            railWidth: railInset > 0 ? railInset - sidePad : 0,
+                            railHeight: GameChromeScope.railHeightOf(context) - seatAreaTop,
+                            mirrored: oppAnchors.any(
+                              (a) =>
+                                  a.x == -oppAnchors[i].x &&
+                                  a.y == oppAnchors[i].y,
+                            ),
+                          ),
                           child: _buildSeat(
                             game,
                             opponents[i],
@@ -1779,7 +1778,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         fontWeight: FontWeight.w700,
         letterSpacing: 0.4,
         shadows: const [
-          Shadow(color: Color(0x99000000), blurRadius: 6),
+          Shadow(color: GamePalette.feltShadow, blurRadius: 6),
         ],
       ),
     );
@@ -1871,7 +1870,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               fontSize: 12,
               fontWeight: FontWeight.w800,
               shadows: [
-                Shadow(color: Color(0x99000000), blurRadius: 6),
+                Shadow(color: GamePalette.feltShadow, blurRadius: 6),
               ],
             ),
           ),
@@ -2063,7 +2062,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             fromKey: _tableChipsKey,
             toKey: _seatKey(seat),
             count: 5,
-            color: const Color(0xFFF5B301),
+            color: GamePalette.amber,
           ));
         }
       });
@@ -2089,7 +2088,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required GlobalKey fromKey,
     required GlobalKey toKey,
     int count = 3,
-    Color color = const Color(0xFFE8C547),
+    Color color = GamePalette.amber,
   }) async {
     if (!mounted || _disposed) return;
     if (GameFlyOverlay.shouldPlayGameSfx(context: context)) {
@@ -2244,11 +2243,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       width: plateW,
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: dim ? const Color(0xFF2A2A2A) : const Color(0xFF161616),
+        color: dim ? GamePalette.feltPlateDim : GamePalette.feltPlate,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isWinner
-              ? const Color(0xFFF5B301)
+              ? GamePalette.amber
               : Colors.white.withValues(alpha: 0.08),
           width: isWinner ? 1.5 : 1,
         ),
@@ -2279,8 +2278,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               color: dim
                   ? Colors.white38
                   : p.allIn
-                      ? const Color(0xFFFBBF24)
-                      : const Color(0xFFF5D76E),
+                      ? GamePalette.amber
+                      : GamePalette.amberSoft,
               fontSize: 11,
               fontWeight: FontWeight.w800,
               height: 1.15,
@@ -2466,8 +2465,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   gradient: LinearGradient(
                     colors: [
                       Color.lerp(
-                          const Color(0xFFE8C547), Colors.white, i * 0.1)!,
-                      const Color(0xFFC9A227),
+                          GamePalette.amber, Colors.white, i * 0.1)!,
+                      GamePalette.amberDeep,
                     ],
                   ),
                   border: Border.all(color: Colors.white, width: 0.8),
@@ -2619,13 +2618,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFE082), Color(0xFFF5B301)],
+          colors: [GamePalette.amberSoft, GamePalette.amber],
         ),
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF5B301).withValues(alpha: 0.5),
+            color: GamePalette.amber.withValues(alpha: 0.5),
             blurRadius: 6,
             spreadRadius: 0.5,
           ),
@@ -2634,7 +2633,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       child: Text(
         'D',
         style: TextStyle(
-          color: const Color(0xFF5C3B00),
+          color: GamePalette.amberInk,
           fontSize: size * 0.5,
           fontWeight: FontWeight.w900,
         ),
@@ -2678,11 +2677,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       width: plateW,
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: dim ? const Color(0xFF2A2A2A) : const Color(0xFF161616),
+        color: dim ? GamePalette.feltPlateDim : GamePalette.feltPlate,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isWinner
-              ? const Color(0xFFF5B301)
+              ? GamePalette.amber
               : Colors.white.withValues(alpha: 0.08),
           width: isWinner ? 1.5 : 1,
         ),
@@ -2712,8 +2711,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               color: dim
                   ? Colors.white38
                   : me.allIn
-                      ? const Color(0xFFFBBF24)
-                      : const Color(0xFFF5D76E),
+                      ? GamePalette.amber
+                      : GamePalette.amberSoft,
               fontSize: 11,
               fontWeight: FontWeight.w800,
               height: 1.15,
@@ -2792,7 +2791,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                     borderWidth: borderW,
                     radius: 10,
                     showIdleBorder: false,
-                    myTurnClock: true,
                     child: namePlate,
                   ),
                 ),
@@ -2937,7 +2935,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ? null
             : () => unawaited(_showCards()),
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF3E7CB1),
+          backgroundColor: GamePalette.goDeep,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
           minimumSize: Size(160, height),
@@ -3058,7 +3056,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           PokerActionType.fold,
           _actionButton(
             label: l10n.pokerFold,
-            color: const Color(0xFFB0384A),
+            color: GamePalette.danger,
             height: buttonHeight,
             onTap: (_busy || _turnAction.held)
                 ? null
@@ -3071,7 +3069,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           _actionButton(
             label: l10n.pokerCheck,
             height: buttonHeight,
-            color: const Color(0xFF3E7CB1),
+            color: GamePalette.goDeep,
             onTap: (_busy || _turnAction.held)
                 ? null
                 : () => unawaited(_move(PokerActionType.check)),
@@ -3085,7 +3083,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 ? l10n.pokerCall(game.callAmount)
                 : l10n.pokerCallShort,
             height: buttonHeight,
-            color: const Color(0xFF3E7CB1),
+            color: GamePalette.goDeep,
             onTap: (_busy || _turnAction.held)
                 ? null
                 : () => unawaited(_move(PokerActionType.call)),
@@ -3109,7 +3107,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           _actionButton(
             label: l10n.pokerAllIn,
             height: buttonHeight,
-            color: const Color(0xFFC9782B),
+            color: GamePalette.amberDeep,
             onTap: (_busy || _turnAction.held)
                 ? null
                 : () => unawaited(_move(PokerActionType.allIn)),
@@ -3159,6 +3157,56 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
   }
+}
+
+/// Ставит место соперника по якорю, но не под столбик действий общего хрома.
+///
+/// Столбик занимает правый верхний угол стола. Место, попавшее в этот угол,
+/// сдвигается к центру ровно на перекрытие; [mirrored] — левое место-близнец
+/// уходит на столько же, чтобы стол остался симметричным.
+class _PokerSeatAnchorLayout extends SingleChildLayoutDelegate {
+  const _PokerSeatAnchorLayout({
+    required this.anchor,
+    required this.railWidth,
+    required this.railHeight,
+    this.mirrored = false,
+  });
+
+  final Alignment anchor;
+
+  /// Занятая полоса от правой кромки области мест; 0 — столбика нет.
+  final double railWidth;
+
+  /// Высота занятого угла от верха области мест.
+  final double railHeight;
+  final bool mirrored;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
+      constraints.loosen();
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final free = Offset(
+      size.width - childSize.width,
+      size.height - childSize.height,
+    );
+    final pos = anchor.alongOffset(free);
+    if (railWidth <= 0 || pos.dy >= railHeight) return pos;
+    final onRight = anchor.x > 0;
+    if (!onRight && !mirrored) return pos;
+    final edgeGap = onRight ? free.dx - pos.dx : pos.dx;
+    final push = railWidth - edgeGap;
+    if (push <= 0) return pos;
+    return Offset(onRight ? pos.dx - push : pos.dx + push, pos.dy);
+  }
+
+  @override
+  bool shouldRelayout(_PokerSeatAnchorLayout oldDelegate) =>
+      oldDelegate.anchor != anchor ||
+      oldDelegate.railWidth != railWidth ||
+      oldDelegate.railHeight != railHeight ||
+      oldDelegate.mirrored != mirrored;
 }
 
 /// Бейдж банка: плавный пульс при изменении суммы (акцент на прибавке банка).
@@ -3260,8 +3308,8 @@ class _TableChipStack extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       Color.lerp(
-                          const Color(0xFFE8C547), Colors.white, i * 0.08)!,
-                      Color.lerp(const Color(0xFFC9A227), Colors.black, 0.2)!,
+                          GamePalette.amber, Colors.white, i * 0.08)!,
+                      Color.lerp(GamePalette.amberDeep, Colors.black, 0.2)!,
                     ],
                   ),
                   border: Border.all(color: Colors.white, width: 1),
