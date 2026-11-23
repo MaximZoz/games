@@ -6,6 +6,7 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/uno/uno_offline_session.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
@@ -128,8 +129,21 @@ void main() {
 
     // Звук хода ведёт отсчёт шапки — отдельного сигнала в теле нет.
     expect(find.byType(MyTurnAlert), findsNothing);
-    // В Уно сдаются через крестик: столбика действий под правилами нет.
-    expect(find.byIcon(Icons.flag_outlined), findsNothing);
+    // Флаг «сдаться» — в общем столбике под правилами, как в остальных играх.
+    final rail = tester.getRect(find.byKey(const ValueKey('game-chrome-rail')));
+    expect(find.byIcon(Icons.flag_outlined), findsOneWidget);
+    expect(rail.top, greaterThanOrEqualTo(rules.bottom - 4));
+    expect((rail.center.dx - rules.center.dx).abs(), lessThan(6));
+    // Столбик не накрывает ни статус, ни места соперников.
+    final flag = tester.getRect(find.byIcon(Icons.flag_outlined));
+    for (final seat in tester.widgetList<GameActorHighlight>(
+      find.byType(GameActorHighlight),
+    )) {
+      final rect = tester.getRect(find.byWidget(seat));
+      expect(rect.overlaps(flag), isFalse, reason: 'место $rect под флагом');
+    }
+    final status = tester.getRect(find.byType(GameStatusWithReward));
+    expect(status.overlaps(flag), isFalse);
     await _unmount(tester);
   });
 
@@ -202,6 +216,49 @@ void main() {
     expect(find.byType(GameTurnCountdown, skipOffstage: false), findsNothing);
     final alert = tester.widget<MyTurnAlert>(find.byType(MyTurnAlert));
     expect(alert.isMyTurn, isTrue);
+    await _unmount(tester);
+  });
+
+  testWidgets('офлайн-уно: флаг под правилами сдаёт партию', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(390, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final session = OfflineUnoSession.create(humanUserId: 'local:player');
+    addTearDown(OfflineUnoRegistry.instance.disposeAll);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: UnoGameScreen(gameId: session.gameId),
+        ),
+      ),
+    );
+    await tester.pump();
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    final flag = find.descendant(
+      of: find.byKey(const ValueKey('game-chrome-rail')),
+      matching: find.byIcon(Icons.flag_outlined),
+    );
+    expect(flag, findsOneWidget);
+    await tester.tap(flag);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Сдаться'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(session.view.isOver, isTrue);
+    expect(session.view.iWon, isFalse);
+    expect(find.byKey(const ValueKey('game-chrome-rail')), findsNothing);
+    expect(tester.takeException(), isNull);
+    OfflineUnoRegistry.instance.disposeAll();
     await _unmount(tester);
   });
 }

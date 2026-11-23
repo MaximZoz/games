@@ -231,6 +231,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   /// Подгонка под доступную высоту — в альбоме телефона её ~330 px.
   GameTableFit _fit = const GameTableFit(scale: 1, compact: false);
 
+  /// Ширина столбика действий под правилами (0, когда сдаться нельзя).
+  double _railInset = 0;
+
   Size _flyCardSize(BuildContext context) => _fit.scaled(
         isNarrow(context) ? const Size(52, 78) : const Size(62, 93),
       );
@@ -1112,6 +1115,30 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
   }
 
+  Future<void> _confirmSurrender() async {
+    final game = ref.read(unoGameProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.isOver || game.iAmEliminated) return;
+    final ok = await confirmSurrenderDialog(context);
+    if (!ok || !mounted) return;
+    try {
+      await ref.read(unoRepositoryProvider).forfeit(widget.gameId);
+    } catch (error) {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          message: formatUserError(error),
+          kind: AppSnackKind.error,
+        );
+      }
+      return;
+    }
+    if (!mounted || _isOffline) return;
+    // За столом на троих и больше партия идёт дальше: наблюдение включит
+    // [_observeView], когда придёт состояние с выбывшим игроком.
+    ref.invalidate(unoGameProvider(widget.gameId));
+    unawaited(ref.read(activeGameProvider.notifier).refresh());
+  }
+
   void _goToGames({bool keepObservation = false}) {
     leaveGamesSession(ref);
     final rematchLobbyId = _rematchLobbyId;
@@ -1508,6 +1535,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                   turnTimeSec: game.turnTimeSec,
                   onExpired: _onTurnTimeExpired,
                 ),
+          onSurrender: game != null && !game.isOver && !game.iAmEliminated
+              ? () => unawaited(_confirmSurrender())
+              : null,
         ),
         body: SafeArea(
           top: false,
@@ -1616,6 +1646,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           designHeight: _tableDesignHeight,
           minScale: 0.6,
         );
+        _railInset = GameChromeScope.railInsetOf(context);
         return _buildGameBody(game);
       },
     );
@@ -1694,6 +1725,14 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                     ? context.l10n.unoYouLostTimeout
                     : context.l10n.unoYouLost))
         : _statusHint(game);
+    // Статус по центру, столбик действий справа: отступ с обеих сторон.
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: _railInset),
+      child: _buildHeaderLines(game, status, rewardChip),
+    );
+  }
+
+  Widget _buildHeaderLines(UnoGameView game, String status, int rewardChip) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
