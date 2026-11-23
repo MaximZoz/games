@@ -39,7 +39,7 @@
      GameScreenScaffold(
        chrome: GameChrome(
          onClose: _onClose,
-         title: Text(context.l10n.gamesMyGame),
+         title: Text(context.l10n.gamesDurak), // название своей игры
          onShowRules: _showRules,
          turn: GameTurnClock(
            isMyTurn: game.isMyTurn,
