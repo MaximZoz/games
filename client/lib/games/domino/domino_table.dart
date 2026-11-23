@@ -1,123 +1,50 @@
 import 'dart:math' as math;
-import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/games/domino/domino_chain_layout.dart';
 import 'package:multigames_client/games/domino/domino_engine.dart';
 import 'package:multigames_client/games/domino/domino_repository.dart';
+import 'package:multigames_client/games/domino/domino_tile.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
-const double kDominoLong = 54;
-const double kDominoShort = 28;
-const double kDominoGap = 3;
-const Duration kDominoFlight = Duration(milliseconds: 240);
+export 'package:multigames_client/games/domino/domino_chain_layout.dart';
+export 'package:multigames_client/games/domino/domino_tile.dart';
 
-const List<Offset> _pipGrid = [
-  Offset(0.28, 0.28),
-  Offset(0.72, 0.28),
-  Offset(0.28, 0.50),
-  Offset(0.72, 0.50),
-  Offset(0.28, 0.72),
-  Offset(0.72, 0.72),
-  Offset(0.50, 0.50),
-];
+/// Пауза между костями при раздаче.
+const Duration _dealStagger = Duration(milliseconds: 55);
 
-const List<List<int>> _pipIndex = [
-  [],
-  [6],
-  [0, 5],
-  [0, 6, 5],
-  [0, 1, 4, 5],
-  [0, 1, 6, 4, 5],
-  [0, 2, 4, 1, 3, 5],
-];
+/// Высота подписи «Базар N» над россыпью костей.
+const double _boneLabelHeight = 20;
 
-class DominoLayoutSlot {
-  const DominoLayoutSlot({
-    required this.id,
-    required this.rect,
-    required this.leadingOnRight,
-  });
-
-  final int id;
-  final Rect rect;
-
-  /// true, пока ряд идёт вправо: открытый конец кости — справа.
-  /// На обратном ряду открытый конец слева, и половины надо поменять местами.
-  final bool leadingOnRight;
-}
-
-/// Какую половину рисовать слева и справа.
-/// [leadingOnRight] — открытый конец (к следующей кости цепи) справа.
-({int left, int right}) dominoHalfPips(
-  DominoPlaced tile, {
-  required bool leadingOnRight,
-}) {
-  if (tile.isDouble) return (left: tile.lo, right: tile.hi);
-  final towardLower = tile.end == 'left' ? tile.outward : tile.inward;
-  final towardHigher = tile.end == 'left' ? tile.inward : tile.outward;
-  if (leadingOnRight) return (left: towardLower, right: towardHigher);
-  return (left: towardHigher, right: towardLower);
-}
-
-/// Раскладка цепи: слева направо, с переносом, когда ряд не влезает.
-/// Координаты относительно левого верхнего угла цепи, не холста.
-List<DominoLayoutSlot> layoutDominoChain(
-  List<DominoPlaced> chain,
-  double maxWidth,
-) {
-  if (chain.isEmpty) return const [];
-  final width = math.max(maxWidth, kDominoLong + 8);
-  final slots = <DominoLayoutSlot>[];
-  var x = 0.0;
-  var y = 0.0;
-  var rowHeight = 0.0;
-  var dir = 1;
-  for (final tile in chain) {
-    final tileWidth = tile.isDouble ? kDominoShort : kDominoLong;
-    final tileHeight = tile.isDouble ? kDominoLong : kDominoShort;
-    if (slots.isNotEmpty && dir == 1 && x + tileWidth > width) {
-      dir = -1;
-      y += rowHeight + 10;
-      rowHeight = 0;
-      x = slots.last.rect.right - tileWidth;
-    } else if (slots.isNotEmpty && dir == -1 && x < 0) {
-      dir = 1;
-      y += rowHeight + 10;
-      rowHeight = 0;
-      x = 0;
-    }
-    final rect = Rect.fromLTWH(
-      dir == 1 ? x : x,
-      y + (kDominoLong - tileHeight) / 2,
-      tileWidth,
-      tileHeight,
-    );
-    slots.add(DominoLayoutSlot(
-      id: tile.id,
-      rect: rect,
-      leadingOnRight: dir == 1,
-    ));
-    rowHeight = math.max(rowHeight, kDominoLong);
-    if (dir == 1) {
-      x += tileWidth + kDominoGap;
-    } else {
-      x -= tileWidth + kDominoGap;
-    }
-  }
-  return slots;
-}
-
+/// Стол домино: соперники, базар, цепь и рука.
+///
+/// Всё движение костей — полёты поверх стола ([GameFlightStage]): кость
+/// уходит из руки или из базара и ложится на своё место, а не возникает там.
 class DominoTable extends StatefulWidget {
   const DominoTable({
     super.key,
     required this.view,
     required this.onPlay,
+    this.onDraw,
+    this.onPass,
+    this.onTurnExpired,
     this.busy = false,
   });
 
   final DominoGameView view;
   final ValueChanged<DominoMove> onPlay;
+
+  /// Взять кость из базара; null — брать нельзя (зритель).
+  final VoidCallback? onDraw;
+  final VoidCallback? onPass;
+
+  /// Время хода соперника вышло — экран забирает итог с сервера.
+  final VoidCallback? onTurnExpired;
   final bool busy;
 
   @override
@@ -125,64 +52,411 @@ class DominoTable extends StatefulWidget {
 }
 
 class _DominoTableState extends State<DominoTable>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _flight;
-  Map<int, Rect> _from = const {};
-  Map<int, Rect> _to = const {};
-  int? _spawnId;
-  String _chainSig = '';
+    with TickerProviderStateMixin {
+  late final GameFlightController _flights = GameFlightController(vsync: this);
+  late final AnimationController _relayout = AnimationController(
+    vsync: this,
+    duration: GameMotion.settle,
+    value: 1,
+  );
+
+  final GlobalKey<GameHandStripState> _handStripKey =
+      GlobalKey<GameHandStripState>();
+  final GlobalKey _chainKey = GlobalKey(debugLabel: 'domino-chain');
+  final GlobalKey _boneFieldKey = GlobalKey(debugLabel: 'domino-boneyard');
+  final Map<int, GlobalKey> _handKeys = <int, GlobalKey>{};
+  final Map<int, GlobalKey> _seatKeys = <int, GlobalKey>{};
+
+  /// Кости цепи, которые ещё летят на своё место.
+  final Set<int> _landing = <int>{};
+
+  /// Кости моей руки, которые ещё летят из базара.
+  final Set<int> _arriving = <int>{};
+
+  /// Сколько костей ещё летит к сопернику (по месту).
+  final Map<int, int> _incoming = <int, int>{};
+
+  /// Меняется с каждым новым коном: полёты прошлого кона не трогают новый.
+  int _generation = 0;
+
+  Map<int, Rect> _from = const <int, Rect>{};
+  Map<int, Rect> _shown = const <int, Rect>{};
+  Map<int, Rect> _placed = const <int, Rect>{};
+  Size _chainArea = Size.zero;
+  double _chainMaxScale = 1;
+
+  List<ScatterSlot> _boneSlots = const <ScatterSlot>[];
+  Size _boneTile = const Size(20, 38);
+  int _boneCapacity = 0;
+  Size _seatTile = const Size(17, 32);
+
   int? _choosing;
-  Set<int> _handBefore = const {};
-  Set<int> _newHand = const {};
 
   @override
   void initState() {
     super.initState();
-    _flight = AnimationController(vsync: this, duration: kDominoFlight)
-      ..value = 1;
-    _chainSig = _sig(widget.view);
-    _handBefore = widget.view.me?.hand.toSet() ?? const {};
+    final view = widget.view;
+    _boneCapacity = view.boneyardCount;
+    if (view.isPlaying && view.chain.isEmpty && view.eventSeq == 0) {
+      _scheduleDeal(view);
+    }
   }
 
   @override
   void didUpdateWidget(covariant DominoTable oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final nextSig = _sig(widget.view);
-    final hand = widget.view.me?.hand.toSet() ?? const {};
-    _newHand = hand.difference(_handBefore);
-    if (nextSig != _chainSig) {
-      _from = Map<int, Rect>.of(_to);
-      _spawnId = _freshId(oldWidget.view.chain, widget.view.chain);
-      _chainSig = nextSig;
-      _flight.forward(from: 0);
-    } else if (_newHand.isNotEmpty) {
-      _from = Map<int, Rect>.of(_to);
-      _spawnId = null;
-      _flight.forward(from: 0);
-    }
-    _handBefore = hand;
-    if (_choosing != null &&
-        !widget.view.legal.any((move) => move.tile == _choosing)) {
+    final before = oldWidget.view;
+    final after = widget.view;
+    if (_choosing != null && !after.legal.any((m) => m.tile == _choosing)) {
       _choosing = null;
     }
+    final newTable = after.id != before.id ||
+        after.round != before.round ||
+        after.chain.length < before.chain.length;
+    if (newTable) {
+      _resetTable(after);
+      if (after.isPlaying && after.chain.isEmpty) _scheduleDeal(after);
+      return;
+    }
+    _boneCapacity = math.max(_boneCapacity, after.boneyardCount);
+    if (_chainSig(before) != _chainSig(after)) {
+      _from = Map<int, Rect>.of(_shown);
+      _relayout.forward(from: 0);
+    }
+    _launchMoves(before, after);
+    final hand = after.me?.hand.toSet() ?? const <int>{};
+    _handKeys.removeWhere((id, _) => !hand.contains(id));
   }
 
   @override
   void dispose() {
-    _flight.dispose();
+    _flights.dispose();
+    _relayout.dispose();
     super.dispose();
   }
 
-  String _sig(DominoGameView view) =>
+  String _chainSig(DominoGameView view) =>
       view.chain.map((tile) => tile.id).join(',');
 
-  int? _freshId(List<DominoPlaced> before, List<DominoPlaced> after) {
-    final known = before.map((tile) => tile.id).toSet();
-    for (final tile in after) {
-      if (!known.contains(tile.id)) return tile.id;
+  GlobalKey _handKey(int id) => _handKeys.putIfAbsent(
+        id,
+        () => GlobalKey(debugLabel: 'domino-hand-$id'),
+      );
+
+  GlobalKey _seatKey(int seat) => _seatKeys.putIfAbsent(
+        seat,
+        () => GlobalKey(debugLabel: 'domino-seat-$seat'),
+      );
+
+  void _resetTable(DominoGameView view) {
+    _generation++;
+    _flights.clear();
+    _landing.clear();
+    _arriving.clear();
+    _incoming.clear();
+    _handKeys.clear();
+    _from = const <int, Rect>{};
+    _shown = const <int, Rect>{};
+    _relayout.value = 1;
+    _boneCapacity = view.boneyardCount;
+    _choosing = null;
+  }
+
+  // ---- Полёты ----------------------------------------------------------
+
+  /// Прячет розданные кости и со следующего кадра раздаёт их из базара.
+  void _scheduleDeal(DominoGameView view) {
+    final hand = view.me?.hand ?? const <int>[];
+    _arriving.addAll(hand);
+    for (final player in view.players) {
+      if (player.seat == view.myIndex) continue;
+      _incoming[player.seat] = player.handCount;
+    }
+    final generation = _generation;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || generation != _generation) return;
+      _launchDeal(widget.view);
+    });
+  }
+
+  void _launchDeal(DominoGameView view) {
+    final field = _flights.rectOf(_boneFieldKey);
+    if (field == null) {
+      setState(() {
+        _arriving.clear();
+        _incoming.clear();
+      });
+      return;
+    }
+    final from = Rect.fromCenter(
+      center: field.center,
+      width: _boneTile.width,
+      height: _boneTile.height,
+    );
+    final hand = view.me?.hand ?? const <int>[];
+    for (var i = 0; i < hand.length; i++) {
+      final id = hand[i];
+      if (!_arriving.contains(id)) continue;
+      _flyToHand(id, from: from, delay: _dealStagger * i);
+    }
+    for (final player in view.players) {
+      if (player.seat == view.myIndex) continue;
+      final count = _incoming[player.seat] ?? 0;
+      for (var i = 0; i < count; i++) {
+        _flyToSeat(
+          player.seat,
+          from: from,
+          delay: _dealStagger * i,
+          counted: true,
+        );
+      }
+    }
+  }
+
+  /// Сравнивает прошлое и новое состояние и запускает полёты за ход.
+  void _launchMoves(DominoGameView before, DominoGameView after) {
+    var order = 0;
+    Duration nextDelay() => GameMotion.stagger * order++;
+
+    final known = {for (final tile in before.chain) tile.id};
+    final mineBefore = before.me?.hand.toSet() ?? const <int>{};
+    for (final placed in after.chain) {
+      if (known.contains(placed.id)) continue;
+      final mine = mineBefore.contains(placed.id);
+      Rect? from;
+      if (mine) {
+        final key = _handKeys[placed.id];
+        from = key == null ? null : _flights.rectOf(key);
+      } else {
+        final seat = _playedSeat(before, after, placed.id);
+        from = seat == null ? null : _seatTileRect(seat);
+      }
+      _flyToChain(placed, after, from: from, faceUp: mine, delay: nextDelay());
+    }
+
+    var bone = before.boneyardCount;
+    final hand = after.me?.hand ?? const <int>[];
+    for (var i = 0; i < hand.length; i++) {
+      final id = hand[i];
+      if (mineBefore.contains(id)) continue;
+      final slot = _boneSlot(--bone);
+      if (slot == null) continue;
+      _arriving.add(id);
+      _flyToHand(
+        id,
+        from: slot.rect,
+        fromAngle: slot.angle,
+        delay: nextDelay(),
+      );
+      final index = i;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _handStripKey.currentState?.reveal(index);
+      });
+    }
+
+    for (final player in after.players) {
+      if (player.seat == after.myIndex) continue;
+      final was = _handCount(before, player.seat);
+      if (was == null) continue;
+      for (var i = was; i < player.handCount; i++) {
+        final slot = _boneSlot(--bone);
+        if (slot == null) continue;
+        _flyToSeat(
+          player.seat,
+          from: slot.rect,
+          fromAngle: slot.angle,
+          delay: nextDelay(),
+        );
+      }
+    }
+  }
+
+  int? _handCount(DominoGameView view, int seat) {
+    for (final player in view.players) {
+      if (player.seat == seat) return player.handCount;
     }
     return null;
   }
+
+  /// Кто из соперников положил кость [tile].
+  int? _playedSeat(DominoGameView before, DominoGameView after, int tile) {
+    if (after.lastAction == dominoActionPlay &&
+        after.lastTile == tile &&
+        after.lastActor >= 0 &&
+        after.lastActor != after.myIndex) {
+      return after.lastActor;
+    }
+    for (final player in after.players) {
+      if (player.seat == after.myIndex) continue;
+      final was = _handCount(before, player.seat);
+      if (was != null && player.handCount < was) return player.seat;
+    }
+    return null;
+  }
+
+  ({Rect rect, double angle})? _boneSlot(int index) {
+    final field = _flights.rectOf(_boneFieldKey);
+    if (field == null) return null;
+    if (index < 0 || index >= _boneSlots.length) {
+      return (
+        rect: Rect.fromCenter(
+          center: field.center,
+          width: _boneTile.width,
+          height: _boneTile.height,
+        ),
+        angle: 0,
+      );
+    }
+    final slot = _boneSlots[index];
+    return (
+      rect: Rect.fromCenter(
+        center: field.topLeft + slot.center,
+        width: _boneTile.width,
+        height: _boneTile.height,
+      ),
+      angle: slot.angle,
+    );
+  }
+
+  /// Крайняя кость в ряду рубашек соперника — оттуда и туда летят его кости.
+  Rect? _seatTileRect(int seat) {
+    final key = _seatKeys[seat];
+    if (key == null) return null;
+    final row = _flights.rectOf(key);
+    if (row == null) return null;
+    return Rect.fromLTWH(
+      row.right - _seatTile.width,
+      row.center.dy - _seatTile.height / 2,
+      _seatTile.width,
+      _seatTile.height,
+    );
+  }
+
+  /// Рамка летящей кости над слотом цепи: кость летит «стоя» и доворачивается,
+  /// поэтому над лежачим слотом рамка — тот же слот, повёрнутый на 90°.
+  Rect _upright(DominoPlaced placed, Rect slot) => placed.isDouble
+      ? slot
+      : Rect.fromCenter(
+          center: slot.center,
+          width: slot.height,
+          height: slot.width,
+        );
+
+  void _flyToChain(
+    DominoPlaced placed,
+    DominoGameView view, {
+    required Rect? from,
+    required bool faceUp,
+    required Duration delay,
+  }) {
+    final origin = _flights.rectOf(_chainKey)?.topLeft;
+    if (origin == null || _chainArea.isEmpty) return;
+    final fit = fitDominoChain(view.chain, _chainArea, maxScale: _chainMaxScale);
+    DominoLayoutSlot? slot;
+    for (final candidate in fit.slots) {
+      if (candidate.id == placed.id) slot = candidate;
+    }
+    if (slot == null) return;
+    final centering = Offset(
+      (_chainArea.width - fit.size.width) / 2,
+      (_chainArea.height - fit.size.height) / 2,
+    );
+    final target = _upright(placed, slot.rect.shift(centering + origin));
+    final pips = dominoPips(placed.id);
+    final halves = dominoHalfPips(placed, leadingOnRight: slot.leadingOnRight);
+    // Стоячая кость: меньшее число сверху. Поворот по часовой уводит верх
+    // вправо — так кость ложится той половиной, что нужна стыку.
+    final angle = placed.isDouble
+        ? 0.0
+        : (halves.right == pips.$1 ? math.pi / 2 : -math.pi / 2);
+    final start = from ??
+        Rect.fromCenter(
+          center: Offset(target.center.dx, origin.dy - target.height),
+          width: target.width,
+          height: target.height,
+        );
+    final id = placed.id;
+    final generation = _generation;
+    _landing.add(id);
+    _flights
+        .launch(GameFlight(
+      from: start,
+      to: target,
+      toAngle: angle,
+      delay: delay,
+      toResolver: () {
+        final live = _flights.rectOf(_chainKey)?.topLeft;
+        final rect = _placed[id];
+        if (live == null || rect == null) return null;
+        return _upright(placed, rect.shift(live));
+      },
+      builder: faceUp
+          ? (_, __) => DominoTileFace(tile: id)
+          : (_, t) => DominoFlipTile(tile: id, t: t),
+    ))
+        .then((_) {
+      if (!mounted || generation != _generation) return;
+      setState(() => _landing.remove(id));
+    });
+  }
+
+  void _flyToHand(
+    int id, {
+    required Rect from,
+    double fromAngle = 0,
+    Duration delay = Duration.zero,
+  }) {
+    final key = _handKey(id);
+    final generation = _generation;
+    _flights
+        .launch(GameFlight(
+      from: from,
+      to: from,
+      fromAngle: fromAngle,
+      delay: delay,
+      lift: 26,
+      toResolver: () => _flights.rectOf(key),
+      builder: (_, t) => DominoFlipTile(tile: id, t: t),
+    ))
+        .then((_) {
+      if (!mounted || generation != _generation) return;
+      setState(() => _arriving.remove(id));
+    });
+  }
+
+  /// [counted] — кость уже учтена в [_incoming] (раздача).
+  void _flyToSeat(
+    int seat, {
+    required Rect from,
+    double fromAngle = 0,
+    Duration delay = Duration.zero,
+    bool counted = false,
+  }) {
+    if (!counted) _incoming[seat] = (_incoming[seat] ?? 0) + 1;
+    final generation = _generation;
+    _flights
+        .launch(GameFlight(
+      from: from,
+      to: from,
+      fromAngle: fromAngle,
+      delay: delay,
+      toResolver: () => _seatTileRect(seat),
+      builder: (_, __) => const DominoTileBack(),
+    ))
+        .then((_) {
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        final left = (_incoming[seat] ?? 0) - 1;
+        if (left > 0) {
+          _incoming[seat] = left;
+        } else {
+          _incoming.remove(seat);
+        }
+      });
+    });
+  }
+
+  // ---- Ходы -------------------------------------------------------------
 
   void _tapHand(int id) {
     if (widget.busy || !widget.view.isMyTurn) return;
@@ -196,7 +470,7 @@ class _DominoTableState extends State<DominoTable>
       widget.onPlay(moves.first);
       return;
     }
-    setState(() => _choosing = id);
+    setState(() => _choosing = _choosing == id ? null : id);
   }
 
   void _tapEnd(String end) {
@@ -211,134 +485,593 @@ class _DominoTableState extends State<DominoTable>
     }
   }
 
+  // ---- Вёрстка ----------------------------------------------------------
+
+  List<DominoPlayerView> _others(DominoGameView view) {
+    final n = view.players.length;
+    final me = view.myIndex;
+    final others = [
+      for (final player in view.players)
+        if (player.seat != me) player,
+    ];
+    if (n > 0 && me >= 0) {
+      others.sort((a, b) =>
+          ((a.seat - me + n) % n).compareTo((b.seat - me + n) % n));
+    }
+    return others;
+  }
+
   @override
   Widget build(BuildContext context) {
     final view = widget.view;
-    final narrow = isNarrow(context);
-    final n = view.players.length;
-    final me = view.myIndex;
-    final seats = <int, DominoPlayerView>{};
-    for (final player in view.players) {
-      if (player.seat == me) continue;
-      seats[(player.seat - me + n) % n] = player;
-    }
-    final felt = Expanded(child: _felt(view));
-    final hand = _hand(view, narrow);
-    if (!narrow && n >= 3) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (seats[n - 1] != null) _sideSeat(seats[n - 1]!, view),
-          Expanded(
-            child: Column(
+    _chainMaxScale = isNarrow(context) ? 1.0 : 1.3;
+    return GameFlightStage(
+      controller: _flights,
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final others = _others(view);
+          final rail = GameChromeScope.railInsetOf(context);
+          // Альбом телефона: по высоте стол не помещается под карточкой.
+          final short = box.maxHeight < 430;
+          final duel = others.length == 1;
+          _seatTile =
+              duel && !short ? const Size(17, 32) : const Size(13, 25);
+          final hand = _hand(view, box.maxWidth, short);
+          final table = _table(view);
+          if (duel && short && box.maxWidth > box.maxHeight * 1.3) {
+            return Column(
               children: [
-                if (seats[n == 4 ? 2 : 1] != null && n == 4)
-                  _topSeat(seats[2]!, view),
-                if (n == 3) const SizedBox(height: 4),
-                felt,
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: math.min(240, box.maxWidth * 0.32),
+                        child: Center(
+                          child: _duelOpponent(
+                            view,
+                            others.first,
+                            rail: 0,
+                            compact: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: table),
+                      SizedBox(width: rail),
+                    ],
+                  ),
+                ),
                 hand,
               ],
-            ),
-          ),
-          if (seats[1] != null && n >= 3) _sideSeat(seats[1]!, view),
-        ],
+            );
+          }
+          return Column(
+            children: [
+              if (duel)
+                _duelOpponent(view, others.first, rail: rail)
+              else if (others.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(right: rail),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final player in others)
+                        Expanded(child: _seat(view, player, short: short)),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 6),
+              Expanded(child: table),
+              hand,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  GameOpponent _opponentOf(DominoPlayerView player) => GameOpponent(
+        userId: player.id,
+        displayName: player.displayName,
+        avatarKind: player.avatarKind,
+        avatarValue: player.avatarValue,
+        frameCode: player.frameCode,
+        frameColor: player.frameColor,
+        isBot: player.isBot,
       );
-    }
+
+  bool _isTurnOf(DominoGameView view, DominoPlayerView player) =>
+      view.isPlaying && view.turn == player.seat && !player.forfeited;
+
+  /// Соперник 1×1: общая карточка партии и ряд его костей под ней.
+  Widget _duelOpponent(
+    DominoGameView view,
+    DominoPlayerView player, {
+    required double rail,
+    bool? compact,
+  }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (seats.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-            child: Row(
-              children: [
-                for (final player in seats.values)
-                  Expanded(child: _topSeat(player, view)),
-              ],
-            ),
-          ),
-        felt,
-        hand,
+        GameOpponentPanel(
+          opponent: _opponentOf(player),
+          gameType: 'domino',
+          gameId: view.id,
+          isTheirTurn: _isTurnOf(view, player),
+          turnDeadline: view.turnTimeSec > 0 ? view.turnDeadline : 0,
+          turnTimeSec: view.turnTimeSec,
+          onTurnExpired: widget.onTurnExpired,
+          reserveRail: rail > 0,
+          compact: compact,
+          trailing: [
+            const SizedBox(width: 6),
+            _ScoreChip(score: player.score),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: rail),
+          child: _opponentTiles(view, player, maxWidth: 300),
+        ),
       ],
     );
   }
 
-  Widget _felt(DominoGameView view) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final slots = layoutDominoChain(
-          view.chain,
-          math.max(120, constraints.maxWidth - 28),
-        );
-        final bounds = _bounds(slots);
-        final dx = (constraints.maxWidth - bounds.width) / 2 - bounds.left;
-        final dy = (constraints.maxHeight - bounds.height) / 2 - bounds.top;
-        final placed = {
-          for (final slot in slots) slot.id: slot.rect.shift(Offset(dx, dy)),
-        };
-        final leading = {
-          for (final slot in slots) slot.id: slot.leadingOnRight,
-        };
-        if (_to.isEmpty) _to = placed;
-        final spawn = _spawnRect(constraints.biggest, view);
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1B5E3B),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFF13462C)),
+  /// Место за столом на 3–4 игроков. [short] — альбом телефона: кости
+  /// встают сбоку от аватара, а не под ним, чтобы столу осталась высота.
+  Widget _seat(
+    DominoGameView view,
+    DominoPlayerView player, {
+    required bool short,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Flex(
+        direction: short ? Axis.horizontal : Axis.vertical,
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GameOpponentPanel(
+            opponent: _opponentOf(player),
+            gameType: 'domino',
+            gameId: view.id,
+            layout: GameOpponentLayout.seat,
+            isTheirTurn: _isTurnOf(view, player),
+            turnDeadline: view.turnTimeSec > 0 ? view.turnDeadline : 0,
+            turnTimeSec: view.turnTimeSec,
+            onTurnExpired: widget.onTurnExpired,
+            maxWidth: 140,
+            trailing: [_ScoreChip(score: player.score, dense: true)],
           ),
-          child: Stack(
+          const SizedBox(width: 6, height: 4),
+          if (short)
+            Flexible(child: _opponentTiles(view, player, maxWidth: 110))
+          else
+            _opponentTiles(view, player, maxWidth: 140),
+        ],
+      ),
+    );
+  }
+
+  Widget _opponentTiles(
+    DominoGameView view,
+    DominoPlayerView player, {
+    required double maxWidth,
+  }) {
+    final reveal = (view.isRoundEnd || view.isOver) && player.hand.isNotEmpty;
+    final flying = _incoming[player.seat] ?? 0;
+    return _OpponentTiles(
+      rowKey: _seatKey(player.seat),
+      count: math.max(0, player.handCount - flying),
+      revealed: reveal ? player.hand : const <int>[],
+      tile: _seatTile,
+      maxWidth: maxWidth,
+    );
+  }
+
+  Widget _table(DominoGameView view) {
+    return GameTableSurface(
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final size = box.biggest;
+          final capacity = math.max(_boneCapacity, view.boneyardCount);
+          final hasBones = capacity > 0;
+          final sideways = hasBones && size.width > size.height * 1.5;
+          final extent = !hasBones
+              ? 34.0
+              : sideways
+                  ? (size.width * 0.27).clamp(112.0, 220.0)
+                  : (size.height * 0.3).clamp(84.0, 150.0);
+          final bones = Padding(
+            padding: const EdgeInsets.all(6),
+            child: _boneyard(view, capacity),
+          );
+          final chain = Padding(
+            padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+            child: _chain(view),
+          );
+          if (sideways) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(width: extent, child: bones),
+                Expanded(child: chain),
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Positioned(
-                left: 10,
-                top: 8,
-                child: _boneyard(view),
-              ),
-              Positioned.fill(
-                child: RepaintBoundary(
-                  child: AnimatedBuilder(
-                    animation: _flight,
-                    builder: (context, _) {
-                      final t = Curves.easeOutCubic.transform(_flight.value);
-                      final now = <int, Rect>{};
-                      for (final entry in placed.entries) {
-                        var origin = _from[entry.key] ?? entry.value;
-                        if (entry.key == _spawnId &&
-                            !_from.containsKey(entry.key)) {
-                          origin = spawn;
-                        }
-                        now[entry.key] =
-                            Rect.lerp(origin, entry.value, t) ?? entry.value;
-                      }
-                      _to = placed;
-                      return CustomPaint(
-                        painter: _ChainPainter(
-                          chain: view.chain,
-                          rects: now,
-                          leadingOnRight: leading,
-                        ),
-                      );
-                    },
-                  ),
+              SizedBox(height: extent, child: bones),
+              Expanded(child: chain),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Базар: кости лежат россыпью рубашкой вверх; нажатие берёт кость.
+  Widget _boneyard(DominoGameView view, int capacity) {
+    final canDraw = view.canDraw && !widget.busy && widget.onDraw != null;
+    return GestureDetector(
+      key: const ValueKey('domino-boneyard'),
+      behavior: HitTestBehavior.opaque,
+      onTap: canDraw ? widget.onDraw : null,
+      child: AnimatedContainer(
+        duration: GameMotion.fade,
+        decoration: BoxDecoration(
+          color: canDraw
+              ? GamePalette.highlightSoft
+              : GamePalette.tableInk.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: canDraw ? GamePalette.highlight : Colors.transparent,
+            width: 1.6,
+          ),
+        ),
+        // Stack, а не Column: в узкой полоске без костей подпись не должна
+        // спорить с полем за доли пикселя.
+        child: Stack(
+          children: [
+            Positioned(
+              left: 10,
+              right: 10,
+              top: 2,
+              child: Text(
+                '${context.l10n.dominoBoneyard} ${view.boneyardCount}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: GamePalette.tableInkSoft,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  height: 1.3,
                 ),
               ),
-              if (_choosing != null)
-                Positioned.fill(
-                  child: Row(
+            ),
+            Positioned.fill(
+              top: _boneLabelHeight,
+              child: LayoutBuilder(
+                builder: (context, box) {
+                  final field = box.biggest;
+                  // В тесном поле кости мельче, чтобы россыпь не слиплась.
+                  final room = capacity <= 0
+                      ? 40.0
+                      : math.sqrt(field.width * field.height / capacity) * 0.8;
+                  final height =
+                      math.min(field.height * 0.6, room).clamp(18.0, 40.0);
+                  final tile = Size(height / kDominoAspect, height);
+                  final slots = scatterSlots(
+                    capacity: capacity,
+                    area: field,
+                    item: tile,
+                    seed: view.round * 131 + capacity,
+                  );
+                  _boneSlots = slots;
+                  _boneTile = tile;
+                  final shown = math.min(view.boneyardCount, slots.length);
+                  return Stack(
+                    key: _boneFieldKey,
+                    clipBehavior: Clip.none,
                     children: [
-                      Expanded(
-                        child: _endTap(
-                          context.l10n.dominoLeft,
-                          () => _tapEnd('left'),
+                      for (var i = 0; i < shown; i++)
+                        Positioned(
+                          left: slots[i].center.dx - tile.width / 2,
+                          top: slots[i].center.dy - tile.height / 2,
+                          width: tile.width,
+                          height: tile.height,
+                          child: Transform.rotate(
+                            angle: slots[i].angle,
+                            child: const DominoTileBack(),
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: _endTap(
-                          context.l10n.dominoRight,
-                          () => _tapEnd('right'),
-                        ),
-                      ),
                     ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _chain(DominoGameView view) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final area = box.biggest;
+        _chainArea = area;
+        final fit = fitDominoChain(view.chain, area, maxScale: _chainMaxScale);
+        final centering = Offset(
+          (area.width - fit.size.width) / 2,
+          (area.height - fit.size.height) / 2,
+        );
+        final placed = {
+          for (final slot in fit.slots) slot.id: slot.rect.shift(centering),
+        };
+        final leading = {
+          for (final slot in fit.slots) slot.id: slot.leadingOnRight,
+        };
+        _placed = placed;
+        final last = view.lastAction == dominoActionPlay && view.isPlaying
+            ? view.lastTile
+            : -1;
+        final me = view.me;
+        return Stack(
+          key: _chainKey,
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _relayout,
+                  builder: (context, _) {
+                    final t =
+                        GameMotion.settleCurve.transform(_relayout.value);
+                    final now = <int, Rect>{
+                      for (final entry in placed.entries)
+                        entry.key: Rect.lerp(
+                              _from[entry.key] ?? entry.value,
+                              entry.value,
+                              t,
+                            ) ??
+                            entry.value,
+                    };
+                    _shown = now;
+                    return CustomPaint(
+                      painter: _ChainPainter(
+                        chain: view.chain,
+                        rects: now,
+                        leadingOnRight: leading,
+                        hidden: Set<int>.of(_landing),
+                        lastTile: last,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            if (me != null)
+              Positioned(
+                left: 0,
+                bottom: 0,
+                child: _ScoreChip(score: me.score),
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Center(child: _turnAction(view)),
+            ),
+            if (_choosing != null) Positioned.fill(child: _endChooser()),
+          ],
+        );
+      },
+    );
+  }
+
+  /// «Взять» / «Пас» поверх стола: появляются, только когда ходить нечем.
+  Widget _turnAction(DominoGameView view) {
+    final l10n = context.l10n;
+    Widget action = const SizedBox.shrink(key: ValueKey('domino-no-action'));
+    if (view.canDraw && widget.onDraw != null) {
+      action = FilledButton.icon(
+        key: const ValueKey('domino-draw'),
+        onPressed: widget.busy ? null : widget.onDraw,
+        icon: const Icon(Icons.style_rounded),
+        label: Text(l10n.durakActionTake),
+      );
+    } else if (view.canPass && widget.onPass != null) {
+      action = FilledButton.tonalIcon(
+        key: const ValueKey('domino-pass'),
+        onPressed: widget.busy ? null : widget.onPass,
+        icon: const Icon(Icons.skip_next_rounded),
+        label: Text(l10n.durakActionPass),
+      );
+    }
+    return AnimatedSwitcher(
+      duration: GameMotion.fade,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.85, end: 1).animate(animation),
+          child: child,
+        ),
+      ),
+      child: action,
+    );
+  }
+
+  /// Кость подходит к обоим концам цепи — спрашиваем, куда класть.
+  Widget _endChooser() {
+    final l10n = context.l10n;
+    Widget side(String end, IconData icon, String label) {
+      return Expanded(
+        child: Center(
+          child: FilledButton.icon(
+            key: ValueKey('domino-end-$end'),
+            onPressed: widget.busy ? null : () => _tapEnd(end),
+            icon: Icon(icon),
+            label: Text(label),
+          ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _choosing = null),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: GamePalette.tableTop.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            side('left', Icons.arrow_back_rounded, l10n.dominoLeft),
+            side('right', Icons.arrow_forward_rounded, l10n.dominoRight),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Моя рука: кости крупные, с зазором под палец; не влезают — листаются.
+  Widget _hand(DominoGameView view, double width, bool short) {
+    final hand = view.me?.hand ?? const <int>[];
+    const spacing = 10.0;
+    const padding = EdgeInsets.symmetric(horizontal: 14);
+    // Семь костей раздачи должны помещаться без прокрутки.
+    final fit = (width - padding.horizontal - spacing * 6) / 7;
+    final tileWidth = short ? 32.0 : fit.clamp(38.0, 54.0);
+    final tileHeight = tileWidth * 1.9;
+    final lift = tileHeight * 0.16;
+    return GameHandStrip(
+      key: _handStripKey,
+      itemCount: hand.length,
+      itemSize: Size(tileWidth, tileHeight),
+      height: tileHeight + lift * 2 + 6,
+      spacing: spacing,
+      padding: padding,
+      itemKeyBuilder: (index) => hand[index],
+      itemBuilder: (context, index) => _handTile(view, hand[index]),
+    );
+  }
+
+  Widget _handTile(DominoGameView view, int id) {
+    final legal = view.legal.any((move) => move.tile == id);
+    final selected = _choosing == id;
+    final playable = view.isMyTurn && legal;
+    final radius = BorderRadius.circular(9);
+    return GestureDetector(
+      key: ValueKey('domino-hand-$id'),
+      behavior: HitTestBehavior.opaque,
+      onTap: legal ? () => _tapHand(id) : null,
+      child: AnimatedSlide(
+        duration: GameMotion.settle,
+        curve: GameMotion.settleCurve,
+        offset: Offset(0, selected ? -0.16 : (playable ? -0.05 : 0)),
+        child: AnimatedOpacity(
+          duration: GameMotion.fade,
+          opacity: view.isMyTurn && !legal ? 0.42 : 1,
+          child: Opacity(
+            // Пока кость летит из базара, её место в руке пустует.
+            opacity: _arriving.contains(id) ? 0 : 1,
+            child: AnimatedContainer(
+              key: _handKey(id),
+              duration: GameMotion.fade,
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                boxShadow: [
+                  if (selected)
+                    BoxShadow(
+                      color: GamePalette.highlight.withValues(alpha: 0.45),
+                      blurRadius: 14,
+                    ),
+                ],
+              ),
+              foregroundDecoration: BoxDecoration(
+                borderRadius: radius,
+                border: Border.all(
+                  color: selected
+                      ? GamePalette.highlight
+                      : (playable
+                          ? GamePalette.highlight.withValues(alpha: 0.55)
+                          : Colors.transparent),
+                  width: selected ? 2.4 : 1.6,
+                ),
+              ),
+              child: DominoTileFace(tile: id),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Кости соперника: рубашками, а в конце кона — лицом.
+class _OpponentTiles extends StatelessWidget {
+  const _OpponentTiles({
+    required this.rowKey,
+    required this.count,
+    required this.revealed,
+    required this.tile,
+    required this.maxWidth,
+  });
+
+  final GlobalKey rowKey;
+  final int count;
+  final List<int> revealed;
+  final Size tile;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final width = math.min(maxWidth, box.maxWidth);
+        if (revealed.isNotEmpty) {
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: width),
+            child: Wrap(
+              key: rowKey,
+              alignment: WrapAlignment.center,
+              spacing: 3,
+              runSpacing: 3,
+              children: [
+                for (final id in revealed)
+                  SizedBox.fromSize(
+                    size: tile,
+                    child: DominoTileFace(tile: id),
                   ),
+              ],
+            ),
+          );
+        }
+        final shown = math.max(count, 1);
+        final step = shown <= 1
+            ? 0.0
+            : math.min(
+                tile.width + 3,
+                math.max(4.0, (width - tile.width) / (shown - 1)),
+              );
+        return SizedBox(
+          key: rowKey,
+          width: tile.width + step * (shown - 1),
+          height: tile.height,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (var i = 0; i < count; i++)
+                Positioned(
+                  left: i * step,
+                  top: 0,
+                  width: tile.width,
+                  height: tile.height,
+                  child: const DominoTileBack(),
                 ),
             ],
           ),
@@ -346,297 +1079,49 @@ class _DominoTableState extends State<DominoTable>
       },
     );
   }
+}
 
-  Rect _spawnRect(Size size, DominoGameView view) {
-    final mine = view.lastActor == view.myIndex;
-    final y = mine ? size.height + 8 : -kDominoLong;
-    return Rect.fromCenter(
-      center: Offset(size.width / 2, y),
-      width: kDominoLong,
-      height: kDominoShort,
-    );
-  }
+class _ScoreChip extends StatelessWidget {
+  const _ScoreChip({required this.score, this.dense = false});
 
-  Rect _bounds(List<DominoLayoutSlot> slots) {
-    if (slots.isEmpty) return Rect.zero;
-    var rect = slots.first.rect;
-    for (final slot in slots.skip(1)) {
-      rect = rect.expandToInclude(slot.rect);
-    }
-    return rect;
-  }
+  final int score;
+  final bool dense;
 
-  Widget _boneyard(DominoGameView view) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _backTile(width: 22, height: 34),
-        const SizedBox(width: 6),
-        Text(
-          '${context.l10n.dominoBoneyard} ${view.boneyardCount}',
-          style: const TextStyle(
-            color: Color(0xFFF4E7C5),
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: context.l10n.unoScore(score),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: dense ? 6 : 8,
+          vertical: dense ? 1 : 3,
         ),
-      ],
-    );
-  }
-
-  Widget _endTap(String label, VoidCallback onTap) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: widget.busy ? null : onTap,
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFFF4E7C5),
+        decoration: BoxDecoration(
+          color: AppColors.accentSoft,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.star_rounded,
+              size: dense ? 12 : 14,
+              color: AppColors.accentStart,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              '$score',
+              style: TextStyle(
+                color: GamePalette.tableInk,
                 fontWeight: FontWeight.w800,
+                fontSize: dense ? 11 : 12,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
-
-  Widget _hand(DominoGameView view, bool narrow) {
-    final hand = view.me?.hand ?? const <int>[];
-    final scale = narrow ? 0.86 : 1.0;
-    final width = kDominoShort * scale;
-    final height = kDominoLong * scale;
-    return SizedBox(
-      height: height + 18,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        itemCount: hand.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          final id = hand[index];
-          final legal = view.legal.any((move) => move.tile == id);
-          final selected = _choosing == id;
-          return GestureDetector(
-            key: ValueKey('domino-hand-$id'),
-            onTap: legal ? () => _tapHand(id) : null,
-            child: AnimatedBuilder(
-              animation: _flight,
-              builder: (context, child) {
-                final grow = _newHand.contains(id)
-                    ? lerpDouble(0.72, 1, _flight.value)!
-                    : 1.0;
-                return Opacity(
-                  opacity: legal || !view.isMyTurn ? 1 : 0.38,
-                  child: Transform.scale(scale: grow, child: child),
-                );
-              },
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color:
-                        selected ? const Color(0xFFFFD54F) : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-                child: CustomPaint(
-                  size: Size(width, height),
-                  painter: DominoFacePainter(
-                    lo: dominoPips(id).$1,
-                    hi: dominoPips(id).$2,
-                    vertical: true,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _topSeat(DominoPlayerView player, DominoGameView view) {
-    return _seat(player, view);
-  }
-
-  Widget _sideSeat(DominoPlayerView player, DominoGameView view) {
-    return SizedBox(
-      width: 92,
-      child: Align(alignment: Alignment.center, child: _seat(player, view)),
-    );
-  }
-
-  Widget _seat(DominoPlayerView player, DominoGameView view) {
-    final reveal = view.isRoundEnd || view.isOver;
-    final name = (player.displayName ?? '').trim().isEmpty
-        ? (player.isBot ? context.l10n.gameBot : context.l10n.commonPlayer)
-        : player.displayName!.trim();
-    final active = view.turn == player.seat && view.isPlaying;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: active ? const Color(0xFFFFD54F) : null,
-              fontSize: 12,
-            ),
-          ),
-          Text(
-            '${player.score}',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          if (reveal && player.hand.isNotEmpty)
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 2,
-              runSpacing: 2,
-              children: [
-                for (final id in player.hand)
-                  CustomPaint(
-                    size: Size(kDominoShort * 0.55, kDominoLong * 0.55),
-                    painter: DominoFacePainter(
-                      lo: dominoPips(id).$1,
-                      hi: dominoPips(id).$2,
-                      vertical: true,
-                    ),
-                  ),
-              ],
-            )
-          else
-            _backStack(player.handCount),
-        ],
-      ),
-    );
-  }
-
-  Widget _backStack(int count) {
-    return SizedBox(
-      width: 36,
-      height: 28,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          if (count > 1)
-            Transform.translate(
-              offset: const Offset(4, -3),
-              child: _backTile(width: 18, height: 26),
-            ),
-          _backTile(width: 18, height: 26),
-          Text(
-            '$count',
-            style: const TextStyle(
-              color: Color(0xFFF4E7C5),
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _backTile({required double width, required double height}) {
-    return CustomPaint(
-      size: Size(width, height),
-      painter: const _BackPainter(),
-    );
-  }
-}
-
-class DominoFacePainter extends CustomPainter {
-  const DominoFacePainter({
-    required this.lo,
-    required this.hi,
-    required this.vertical,
-  });
-
-  final int lo;
-  final int hi;
-  final bool vertical;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(5));
-    canvas.drawRRect(rrect, Paint()..color = const Color(0xFFF7F1E3));
-    canvas.drawRRect(
-      rrect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..color = const Color(0xFFD8C7A1),
-    );
-    final line = Paint()
-      ..color = const Color(0xFFC9B48A)
-      ..strokeWidth = 1;
-    if (vertical) {
-      final mid = size.height / 2;
-      canvas.drawLine(Offset(4, mid), Offset(size.width - 4, mid), line);
-      _pips(canvas, Rect.fromLTWH(0, 0, size.width, mid), lo);
-      _pips(canvas, Rect.fromLTWH(0, mid, size.width, mid), hi);
-    } else {
-      final mid = size.width / 2;
-      canvas.drawLine(Offset(mid, 4), Offset(mid, size.height - 4), line);
-      _pips(canvas, Rect.fromLTWH(0, 0, mid, size.height), lo);
-      _pips(canvas, Rect.fromLTWH(mid, 0, mid, size.height), hi);
-    }
-  }
-
-  void _pips(Canvas canvas, Rect area, int count) {
-    if (count <= 0 || count >= _pipIndex.length) return;
-    final paint = Paint()..color = const Color(0xFF243042);
-    final radius = math.min(area.width, area.height) * 0.08;
-    for (final index in _pipIndex[count]) {
-      final spot = _pipGrid[index];
-      canvas.drawCircle(
-        Offset(
-            area.left + area.width * spot.dx, area.top + area.height * spot.dy),
-        radius.clamp(1.2, 3.4),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant DominoFacePainter oldDelegate) =>
-      oldDelegate.lo != lo ||
-      oldDelegate.hi != hi ||
-      oldDelegate.vertical != vertical;
-}
-
-class _BackPainter extends CustomPainter {
-  const _BackPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rrect = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      const Radius.circular(4),
-    );
-    canvas.drawRRect(rrect, Paint()..color = const Color(0xFF0E3A24));
-    canvas.drawRRect(
-      rrect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..color = const Color(0xFFF4E7C5),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ChainPainter extends CustomPainter {
@@ -644,15 +1129,24 @@ class _ChainPainter extends CustomPainter {
     required this.chain,
     required this.rects,
     required this.leadingOnRight,
+    required this.hidden,
+    required this.lastTile,
   });
 
   final List<DominoPlaced> chain;
   final Map<int, Rect> rects;
   final Map<int, bool> leadingOnRight;
 
+  /// Кости, которые ещё летят: место под них оставлено пустым.
+  final Set<int> hidden;
+
+  /// Последняя положенная кость — её мягко подсвечиваем.
+  final int lastTile;
+
   @override
   void paint(Canvas canvas, Size size) {
     for (final tile in chain) {
+      if (hidden.contains(tile.id)) continue;
       final rect = rects[tile.id];
       if (rect == null) continue;
       canvas.save();
@@ -667,6 +1161,18 @@ class _ChainPainter extends CustomPainter {
         vertical: tile.isDouble,
       ).paint(canvas, rect.size);
       canvas.restore();
+      if (tile.id == lastTile) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            rect.inflate(1.5),
+            Radius.circular(rect.shortestSide * 0.2 + 1.5),
+          ),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = GamePalette.highlight.withValues(alpha: 0.8),
+        );
+      }
     }
   }
 

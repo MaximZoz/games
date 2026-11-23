@@ -548,6 +548,9 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
                   onPlay: (move) => unawaited(
                     _move(dominoActionPlay, tile: move.tile, end: move.end),
                   ),
+                  onDraw: () => unawaited(_move(dominoActionDraw)),
+                  onPass: () => unawaited(_move(dominoActionPass)),
+                  onTurnExpired: _onTurnExpired,
                 ),
               ),
               _actions(game),
@@ -598,27 +601,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
         ),
       );
     }
-    if (!game.canDraw && !game.canPass) return const SizedBox(height: 8);
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        children: [
-          if (game.canDraw)
-            FilledButton.icon(
-              onPressed: _busy ? null : () => unawaited(_move(dominoActionDraw)),
-              icon: const Icon(Icons.style_rounded),
-              label: Text(context.l10n.durakActionTake),
-            ),
-          if (game.canPass)
-            OutlinedButton.icon(
-              onPressed: _busy ? null : () => unawaited(_move(dominoActionPass)),
-              icon: const Icon(Icons.skip_next_rounded),
-              label: Text(context.l10n.durakActionPass),
-            ),
-        ],
-      ),
-    );
+    // «Взять» и «Пас» живут на столе: высота стола не скачет между ходами.
+    return const SizedBox(height: 8);
   }
 }

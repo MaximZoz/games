@@ -20,7 +20,8 @@ class OfflineDominoSession extends ChangeNotifier {
     _startFresh();
   }
 
-  static const Duration botDelay = Duration(milliseconds: 420);
+  /// Пауза перед ходом бота: предыдущая кость успевает долететь до места.
+  static const Duration botDelay = Duration(milliseconds: 750);
   static const Duration roundPause = Duration(milliseconds: 2200);
 
   final String gameId;
