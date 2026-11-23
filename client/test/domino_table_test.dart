@@ -8,6 +8,7 @@ import 'package:multigames_client/games/domino/domino_table.dart';
 import 'package:multigames_client/games/live_game_sync.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/domino_game_screen.dart';
+import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 import 'test_locale.dart';
@@ -367,6 +368,36 @@ void main() {
         .length;
     expect(backs, greaterThanOrEqualTo(9), reason: 'кости базара повёрнуты');
     expect(find.byKey(const ValueKey('game-opponent-frame')), findsOneWidget);
+  });
+
+  testWidgets('1×1: счёт соперника у его костей, а не в карточке',
+      (tester) async {
+    for (final size in const [Size(420, 640), Size(800, 380)]) {
+      await _pumpTable(
+        tester,
+        _duel(hand: [dominoTileId(1, 2)], boneyard: 9),
+        size: size,
+      );
+      expect(tester.takeException(), isNull, reason: '$size');
+      final card = find.byType(GameOpponentCard);
+      expect(card, findsOneWidget);
+      final score = find.byKey(const ValueKey('domino-opponent-score'));
+      expect(score, findsOneWidget, reason: '$size');
+      expect(
+        find.descendant(of: card, matching: score),
+        findsNothing,
+        reason: '$size',
+      );
+      expect(
+        find.descendant(of: card, matching: find.byIcon(Icons.star_rounded)),
+        findsNothing,
+      );
+      expect(
+        tester.getRect(score).overlaps(tester.getRect(card)),
+        isFalse,
+        reason: '$size',
+      );
+    }
   });
 
   testWidgets('мой ход: кость летит из руки в цепь', (tester) async {

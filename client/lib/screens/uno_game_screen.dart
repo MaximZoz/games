@@ -1801,6 +1801,32 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     // Альбом: соперники уходят на боковые колонки. Любая карточка сверху
     // съедает вертикаль, и овал с колодой и сбросом перестаёт помещаться —
     // подписи вылезают под ряд кнопок.
+    final duel = seats.length == 1;
+    if (isPhoneLandscape(context) && duel) {
+      // 1×1 в альбоме: общая карточка соперника слева, стол по центру.
+      const side = 216.0;
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              width: side,
+              child: _duelOpponent(game, seats.first, compact: true),
+            ),
+          ),
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: side + 8),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: _buildCenterTable(game, tight: true),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     if (isPhoneLandscape(context)) {
       final columns = unoLandscapeSideColumns(seats);
       return Stack(
@@ -1839,7 +1865,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (seats.length <= 1) {
       return Column(
         children: [
-          if (seats.isNotEmpty) _opponentChip(game, seats.first),
+          if (duel) _duelOpponent(game, seats.first),
           SizedBox(height: isNarrow(context) ? 8 : 12),
           Expanded(child: _buildCenterTable(game)),
         ],
@@ -1876,6 +1902,58 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         ),
       ],
     );
+  }
+
+  /// Соперник 1×1: общая карточка партии — как в остальных играх — и под
+  /// ней его рука: рубашки, число карт и счёт. В самой карточке игровых
+  /// значков нет.
+  Widget _duelOpponent(UnoGameView game, int index, {bool? compact}) {
+    if (index < 0 || index >= game.players.length) {
+      return const SizedBox.shrink();
+    }
+    final player = game.players[index];
+    final acting = GameActorHighlight.isActingSeat(
+      isCurrentActor: index == game.currentIndex,
+      isOver: game.isOver,
+      eliminated: player.forfeited,
+      paused: _dealing,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GameOpponentPanel(
+          opponent: GameOpponent(
+            userId: player.id,
+            displayName: _playerName(player, index),
+            avatarKind: player.avatarKind,
+            avatarValue: player.avatarValue,
+            frameCode: player.frameCode,
+            frameColor: player.frameColor,
+            isBot: player.isBot,
+          ),
+          gameType: 'uno',
+          gameId: widget.gameId,
+          isTheirTurn: acting,
+          turnDeadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+          turnTimeSec: game.turnTimeSec,
+          onTurnExpired: _onTurnTimeExpired,
+          compact: compact,
+          reserveRail: compact != true,
+        ),
+        const SizedBox(height: 4),
+        UnoOpponentTally(
+          key: _opponentKeys.putIfAbsent(index, GlobalKey.new),
+          player: player,
+          displayCount: _opponentDisplayCount(player, index),
+        ),
+      ],
+    );
+  }
+
+  int _opponentDisplayCount(UnoPlayerView player, int index) {
+    if (player.forfeited) return 0;
+    if (_dealing) return _dealOppShown[index] ?? 0;
+    return math.max(0, player.handCount - (_pendingOppDraw[index] ?? 0));
   }
 
   /// Колонка карточек соперников у боковой кромки (альбом).
@@ -1933,14 +2011,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         player: player,
         name: _playerName(player, index),
         active: !game.isOver && !player.forfeited && index == game.currentIndex,
-        displayCount: player.forfeited
-            ? 0
-            : _dealing
-                ? (_dealOppShown[index] ?? 0)
-                : math.max(
-                    0,
-                    player.handCount - (_pendingOppDraw[index] ?? 0),
-                  ),
+        displayCount: _opponentDisplayCount(player, index),
         vertical: vertical,
         onProfileTap: player.isBot
             ? null
@@ -2433,6 +2504,80 @@ class UnoOpponentHand extends StatelessWidget {
             child: body,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Рука соперника 1×1 под его карточкой: рубашки, число карт, счёт.
+///
+/// Игровая информация живёт здесь, а не в общей карточке соперника. Сюда же
+/// летят карты, которые он берёт, и отсюда — которые он кладёт.
+class UnoOpponentTally extends StatelessWidget {
+  const UnoOpponentTally({
+    super.key,
+    required this.player,
+    required this.displayCount,
+  });
+
+  final UnoPlayerView player;
+  final int displayCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final narrow = isNarrow(context);
+    final size = narrow ? const Size(22, 33) : const Size(26, 39);
+    final left = player.forfeited;
+    return Opacity(
+      opacity: left ? 0.45 : 1,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!left) ...[
+            SizedBox(
+              width: size.width + 8,
+              height: size.height,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 7,
+                    child: UnoCardBackWidget(size: size, elevated: false),
+                  ),
+                  UnoCardBackWidget(size: size, elevated: false),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Text(
+              context.l10n.unoCardsCount(displayCount),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            context.l10n.unoScore(player.score),
+            style: TextStyle(
+              color: left ? AppColors.textSecondary : AppColors.accentStart,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          if (player.saidUno && !left) ...[
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.campaign_rounded,
+              size: 16,
+              color: GamePalette.danger,
+            ),
+          ],
+        ],
       ),
     );
   }

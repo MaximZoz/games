@@ -604,15 +604,22 @@ class _DominoTableState extends State<DominoTable>
           onTurnExpired: widget.onTurnExpired,
           reserveRail: rail > 0,
           compact: compact,
-          trailing: [
-            const SizedBox(width: 6),
-            _ScoreChip(score: player.score),
-          ],
         ),
         const SizedBox(height: 6),
+        // Счёт соперника — у его костей, не в карточке: она у всех игр одна.
         Padding(
           padding: EdgeInsets.symmetric(horizontal: rail),
-          child: _opponentTiles(view, player, maxWidth: 300),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(child: _opponentTiles(view, player, maxWidth: 260)),
+              const SizedBox(width: 8),
+              _ScoreChip(
+                key: const ValueKey('domino-opponent-score'),
+                score: player.score,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -632,17 +639,16 @@ class _DominoTableState extends State<DominoTable>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          GameOpponentPanel(
+          GameOpponentPanel.seat(
             opponent: _opponentOf(player),
             gameType: 'domino',
             gameId: view.id,
-            layout: GameOpponentLayout.seat,
             isTheirTurn: _isTurnOf(view, player),
             turnDeadline: view.turnTimeSec > 0 ? view.turnDeadline : 0,
             turnTimeSec: view.turnTimeSec,
             onTurnExpired: widget.onTurnExpired,
             maxWidth: 140,
-            trailing: [_ScoreChip(score: player.score, dense: true)],
+            seatBadges: [_ScoreChip(score: player.score, dense: true)],
           ),
           const SizedBox(width: 6, height: 4),
           if (short)
@@ -1082,7 +1088,7 @@ class _OpponentTiles extends StatelessWidget {
 }
 
 class _ScoreChip extends StatelessWidget {
-  const _ScoreChip({required this.score, this.dense = false});
+  const _ScoreChip({super.key, required this.score, this.dense = false});
 
   final int score;
   final bool dense;

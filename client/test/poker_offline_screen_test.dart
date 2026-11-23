@@ -8,6 +8,7 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_repository.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/poker_game_screen.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 
 import 'test_locale.dart';
@@ -263,7 +264,40 @@ void main() {
                 (w) => tester.getRect(find.byWidget(w)),
               ),
         ];
-        expect(seats.length, players * 2, reason: '$size, игроков $players');
+        // 1×1: к рамкам мест добавляется рамка общей карточки соперника.
+        expect(
+          seats.length,
+          players == 2 ? 5 : players * 2,
+          reason: '$size, игроков $players',
+        );
+        expect(
+          find.byType(GameOpponentPanel),
+          players == 2 ? findsOneWidget : findsNothing,
+          reason: '$size, игроков $players',
+        );
+        if (players == 2) {
+          final card = find.byType(GameOpponentCard);
+          final cardRect = tester.getRect(card);
+          final screen = Offset.zero & size;
+          expect(screen.contains(cardRect.topLeft), isTrue, reason: '$size');
+          expect(
+            screen.contains(cardRect.bottomRight),
+            isTrue,
+            reason: '$size',
+          );
+          expect(cardRect.overlaps(flag), isFalse, reason: '$size');
+          // Стек соперника — на фетре, не в карточке.
+          expect(
+            find.descendant(
+              of: card,
+              matching: find.byWidgetPredicate(
+                (w) => w is Text && RegExp(r'^\d+$').hasMatch(w.data ?? ''),
+              ),
+            ),
+            findsNothing,
+            reason: '$size',
+          );
+        }
         for (final seat in seats) {
           expect(
             seat.overlaps(flag),

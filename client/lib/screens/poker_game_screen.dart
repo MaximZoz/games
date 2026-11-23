@@ -15,6 +15,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
 import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
@@ -1643,6 +1644,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                             align: oppAnchors[i],
                             compact: short || veryShort,
                             sideways: tight,
+                            duel: opponents.length == 1,
                           ),
                         ),
                       ),
@@ -2215,6 +2217,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required Alignment align,
     bool compact = false,
     bool sideways = false,
+    bool duel = false,
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
@@ -2228,6 +2231,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         : (narrow ? const Size(44, 62) : const Size(52, 74));
     final plateW = compact ? (narrow ? 72.0 : 80.0) : (narrow ? 78.0 : 86.0);
     const borderW = 2.0;
+    // 1×1: вместо аватара с именем — общая карточка соперника, как в других
+    // играх. Стек, ставка и карты остаются на фетре под ней.
+    final seatW = duel ? pokerDuelCardWidth(narrow: narrow) : plateW;
 
     // Подсветка карт победителя — из его winner_hand, не из моей комбинации.
     final wh = _winnerHandForSeat(game, p.seat);
@@ -2255,18 +2261,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            _playerName(p),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: dim ? 0.4 : 1),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              height: 1.15,
+          if (!duel)
+            Text(
+              _playerName(p),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: dim ? 0.4 : 1),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                height: 1.15,
+              ),
             ),
-          ),
           Text(
             p.folded
                 ? context.l10n.pokerFolded
@@ -2293,23 +2300,52 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final plateColumn = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedOpacity(
-          duration: const Duration(milliseconds: 220),
-          opacity: dim ? 0.35 : 1,
-          child: GestureDetector(
-            onTap: () => unawaited(_showPlayerCard(p)),
-            behavior: HitTestBehavior.opaque,
-            child: GamePlayerAvatar(
-              userId: p.id,
-              displayName: _playerName(p),
-              avatarKind: p.avatarKind,
-              avatarValue: p.avatarValue,
-              frameCode: p.frameCode,
-              frameColor: p.frameColor,
-              compact: true,
+        if (duel)
+          SizedBox(
+            width: seatW,
+            height: kPokerDuelCardHeight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: GameOpponentPanel(
+                opponent: GameOpponent(
+                  userId: p.id,
+                  displayName: _playerName(p),
+                  avatarKind: p.avatarKind,
+                  avatarValue: p.avatarValue,
+                  frameCode: p.frameCode,
+                  frameColor: p.frameColor,
+                  isBot: p.isBot,
+                ),
+                gameType: 'poker',
+                gameId: widget.gameId,
+                isTheirTurn: acting,
+                turnDeadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+                turnTimeSec: game.turnTimeSec,
+                compact: true,
+                maxWidth: seatW,
+                align: Alignment.center,
+                reserveRail: false,
+              ),
+            ),
+          )
+        else
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 220),
+            opacity: dim ? 0.35 : 1,
+            child: GestureDetector(
+              onTap: () => unawaited(_showPlayerCard(p)),
+              behavior: HitTestBehavior.opaque,
+              child: GamePlayerAvatar(
+                userId: p.id,
+                displayName: _playerName(p),
+                avatarKind: p.avatarKind,
+                avatarValue: p.avatarValue,
+                frameCode: p.frameCode,
+                frameColor: p.frameColor,
+                compact: true,
+              ),
             ),
           ),
-        ),
         const SizedBox(height: 4),
         // Рамка только на ход — idle без обводки, padding стабильный.
         GestureDetector(
@@ -2317,7 +2353,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           behavior: HitTestBehavior.opaque,
           child: TurnTimerBorder(
             key: ValueKey('poker-seat-${p.seat}-${game.turnDeadline}'),
-            active: acting,
+            // 1×1: время хода показывает рамка карточки соперника.
+            active: acting && !duel,
             turnDeadline: game.turnDeadline,
             turnTimeSec: game.turnTimeSec,
             borderWidth: borderW,
@@ -2332,10 +2369,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final cardsWidth = holeSize.width * 1.55;
     final holePlace = pokerOppHolePlacement(align, sideways: sideways);
     final cardsOnLeft = align.x < -0.05;
-    final plateH = pokerOppPlateHeight(compact: compact);
+    final plateH = duel
+        ? pokerDuelPlateHeight()
+        : pokerOppPlateHeight(compact: compact);
     final holeOffset = pokerOppHoleOffset(
       align: align,
-      plateWidth: plateW,
+      plateWidth: seatW,
       plateHeight: plateH,
       cardsWidth: cardsWidth,
       cardsHeight: holeSize.height,
@@ -2390,8 +2429,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           if (showBet || isDealer)
             Positioned(
               // Ставка со стороны центра стола / свободной стороны.
-              left: cardsOnLeft ? plateW + betGap : null,
-              right: cardsOnLeft ? null : plateW + betGap,
+              left: cardsOnLeft ? (seatW + plateW) / 2 + betGap : null,
+              right: cardsOnLeft ? null : (seatW + plateW) / 2 + betGap,
               // На уровне неймплейта — не на круге аватара.
               bottom: 2,
               child: Column(

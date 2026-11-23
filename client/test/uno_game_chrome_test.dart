@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/uno/uno_offline_session.dart';
@@ -13,6 +14,7 @@ import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/uno_game_screen.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
+import 'package:multigames_client/ui/uno/uno_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -38,9 +40,10 @@ class _FixedUnoGame extends UnoGameNotifier {
 // Префикс offline — экран не ходит в сеть; саму партию отдаёт провайдер ниже.
 const _gameId = 'offline:uno:chrome-test';
 
-/// Партия на троих; ходит место [current]. [deadline] == 0 — без лимита.
-UnoGameView _view({required int current, int deadline = 0}) {
-  const ids = ['user-1', 'user-2', 'user-3'];
+/// Партия на троих (или [players]); ходит место [current].
+/// [deadline] == 0 — без лимита.
+UnoGameView _view({required int current, int deadline = 0, int players = 3}) {
+  final ids = ['user-1', 'user-2', 'user-3'].take(players).toList();
   return UnoGameView.fromJson({
     'id': _gameId,
     'status': 'active',
@@ -51,6 +54,7 @@ UnoGameView _view({required int current, int deadline = 0}) {
           'display_name': 'player${i + 1}',
           'seat': i,
           'hand_count': 2,
+          'score': i * 15,
           if (i == 0)
             'hand': [
               {'id': 'c1', 'color': 'red', 'kind': 'number', 'number': 3},
@@ -78,8 +82,9 @@ Future<void> _pump(
   WidgetTester tester,
   UnoGameView view, {
   List<Override> overrides = const [],
+  Size size = const Size(390, 800),
 }) async {
-  tester.view.physicalSize = const Size(390, 800);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
@@ -205,6 +210,78 @@ void main() {
     expect(find.byType(Dialog), findsOneWidget);
     expect(find.text('player2'), findsNWidgets(2));
     expect(find.byIcon(Icons.person_add_alt_1_rounded), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('1×1: соперник в общей карточке, карты и счёт — под ней',
+      (tester) async {
+    for (final size in const [Size(390, 800), Size(800, 390), Size(1200, 800)]) {
+      final deadline = _deadlineIn(30);
+      await _pump(
+        tester,
+        _view(current: 1, deadline: deadline, players: 2),
+        size: size,
+      );
+      expect(tester.takeException(), isNull, reason: '$size');
+
+      final panel = find.byType(GameOpponentPanel);
+      expect(panel, findsOneWidget, reason: '$size');
+      final card = find.byType(GameOpponentCard);
+      expect(
+        find.descendant(of: card, matching: find.text('player2')),
+        findsOneWidget,
+      );
+      // В карточке только соперник: ни карт, ни счёта.
+      for (final gameInfo in [
+        find.byType(UnoCardBackWidget),
+        find.text('Карт: 2'),
+        find.text('Очки: 15'),
+      ]) {
+        expect(
+          find.descendant(of: card, matching: gameInfo),
+          findsNothing,
+          reason: '$size',
+        );
+      }
+      final tally = find.byType(UnoOpponentTally);
+      expect(tally, findsOneWidget);
+      expect(
+        find.descendant(of: tally, matching: find.text('Карт: 2')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: tally, matching: find.text('Очки: 15')),
+        findsOneWidget,
+      );
+      // Рамка карточки — таймер его хода; старой плашки места нет.
+      expect(find.byType(UnoOpponentHand), findsNothing);
+      final frame = tester.widget<TurnTimerBorder>(
+        find.byKey(const ValueKey('game-opponent-frame')),
+      );
+      expect(frame.active, isTrue);
+      expect(frame.turnDeadline, deadline);
+      // Карточка и рука целиком на экране и не под столбиком действий.
+      final screen = Offset.zero & size;
+      final cardRect = tester.getRect(card);
+      final tallyRect = tester.getRect(tally);
+      expect(screen.contains(cardRect.topLeft), isTrue, reason: '$size');
+      expect(screen.contains(cardRect.bottomRight), isTrue, reason: '$size');
+      expect(screen.contains(tallyRect.topLeft), isTrue, reason: '$size');
+      expect(screen.contains(tallyRect.bottomRight), isTrue, reason: '$size');
+      final flag = tester.getRect(
+        find.widgetWithIcon(IconButton, Icons.flag_outlined),
+      );
+      expect(cardRect.overlaps(flag), isFalse, reason: '$size');
+      await _unmount(tester);
+    }
+  });
+
+  testWidgets('на троих места за столом остаются со своими значками',
+      (tester) async {
+    await _pump(tester, _view(current: 0));
+    expect(find.byType(GameOpponentPanel), findsNothing);
+    expect(find.byType(UnoOpponentTally), findsNothing);
+    expect(find.byType(UnoOpponentHand), findsNWidgets(2));
     await _unmount(tester);
   });
 

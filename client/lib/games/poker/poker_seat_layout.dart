@@ -112,6 +112,19 @@ double pokerOppPlateHeight({required bool compact}) {
   return avatar + columnGap + namePlate;
 }
 
+/// Высота слота под общую карточку соперника в партии 1×1.
+const double kPokerDuelCardHeight = 66;
+
+/// Ширина места соперника 1×1: в него встаёт общая карточка.
+double pokerDuelCardWidth({required bool narrow}) => narrow ? 208 : 240;
+
+/// Высота колонки «карточка соперника + стек» в партии 1×1.
+double pokerDuelPlateHeight() {
+  const columnGap = 4.0;
+  const stackPlate = 21.0;
+  return kPokerDuelCardHeight + columnGap + stackPlate;
+}
+
 /// Смещение hole cards от левого-верхнего угла колонки профиля.
 Offset pokerOppHoleOffset({
   required Alignment align,

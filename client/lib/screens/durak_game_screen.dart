@@ -11,7 +11,6 @@ import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_hand_sort.dart';
@@ -21,6 +20,7 @@ import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/games/durak/durak_table_layout.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
 import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
@@ -7814,168 +7814,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           seat: oppIndex,
           tableReveal: phase == 'take_reveal' || phase == 'bito_reveal',
         );
-    final isBot = oppId.startsWith('bot:');
     final meta = view.playerMeta(oppId);
-
-    return Consumer(
-      builder: (context, ref, _) {
-        var name = isBot
-            ? context.l10n.gameBot
-            : (meta?.displayName?.trim().isNotEmpty == true
-                ? meta!.displayName!.trim()
-                : context.l10n.gameOpponent);
-        var avatarKind = meta?.avatarKind ?? 'letter';
-        var avatarValue = meta?.avatarValue;
-        var frameCode = meta?.frameCode;
-        var frameColor = meta?.frameColor;
-
-        final chats = ref.watch(chatsListProvider).valueOrNull;
-        var unread = 0;
-        if (chats != null) {
-          for (final c in chats) {
-            if (c.user.id == oppId) {
-              final dn = c.user.displayName?.trim();
-              if (name == context.l10n.gameOpponent &&
-                  dn != null &&
-                  dn.isNotEmpty) {
-                name = dn;
-              }
-              if (avatarValue == null || avatarValue.isEmpty) {
-                avatarKind = c.user.avatarKind;
-                avatarValue = c.user.avatarValue;
-              }
-              frameCode ??= c.user.frameCode;
-              frameColor ??= c.user.frameColor;
-              unread += c.unreadCount;
-            }
-          }
-        }
-
-        final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
-        final isFriend =
-            friends?.friends.any((f) => f.user.id == oppId) == true;
-        final outgoing =
-            friends?.outgoing.where((r) => r.user.id == oppId).toList() ??
-                const [];
-        final incoming =
-            friends?.incoming.where((r) => r.user.id == oppId).toList() ??
-                const [];
-        final hasOutgoing = outgoing.isNotEmpty;
-        final hasIncoming = incoming.isNotEmpty;
-        final incomingRequestId = hasIncoming ? incoming.first.requestId : null;
-
-        // Рамка всегда смонтирована с одним padding — без прыжка layout.
-        return TurnTimerBorder(
-          key: const ValueKey('opp-timer-border'),
-          active: oppTurn && view.turnTimeSec > 0 && view.turnDeadline > 0,
-          turnDeadline: view.turnDeadline,
-          turnTimeSec: view.turnTimeSec,
-          borderWidth: 2.5,
-          radius: 22,
-          onExpired: _onTurnTimeExpired,
-          child: GameOpponentCard(
-            userId: oppId,
-            displayName: name,
-            avatarKind: avatarKind,
-            avatarValue: avatarValue,
-            frameCode: frameCode,
-            frameColor: frameColor,
-            isBot: isBot,
-            messageUnread: unread,
-            infoTooltip: context.l10n.userInfoTitle,
-            messageTooltip: context.l10n.gameWriteMessage,
-            compact: MediaQuery.sizeOf(context).width < 420 ||
-                isPhoneLandscape(context),
-            maxWidth: 300,
-            align: Alignment.center,
-            borderWidth: 0,
-            showAddFriend: !isBot && !isFriend,
-            addFriendEnabled: !hasOutgoing,
-            addFriendBadge: hasIncoming ? 1 : 0,
-            addFriendTooltip: hasIncoming
-                ? context.l10n.friendsAcceptRequest
-                : (hasOutgoing
-                    ? context.l10n.friendsRequestSent
-                    : context.l10n.friendsAdd),
-            onAddFriendTap: () => unawaited(_addFriend(
-              oppId,
-              name,
-              requestId: hasIncoming ? incomingRequestId : null,
-            )),
-            onInfoTap: () => unawaited(showUserProfileDialog(
-              context: context,
-              ref: ref,
-              userId: oppId,
-              displayName: name,
-              avatarKind: avatarKind,
-              avatarValue: avatarValue,
-              frameCode: frameCode,
-              frameColor: frameColor,
-              messageFrom: 'games',
-              messageReturnPath: '/games/durak/game/${widget.gameId}',
-            )),
-            onMessageTap:
-                isBot ? null : () => unawaited(_openChat(oppId, name)),
-          ),
-        );
-      },
+    // Общая карточка соперника 1×1 — та же, что в остальных играх.
+    return GameOpponentPanel(
+      opponent: GameOpponent(
+        userId: oppId,
+        displayName: meta?.displayName,
+        avatarKind: meta?.avatarKind ?? 'letter',
+        avatarValue: meta?.avatarValue,
+        frameCode: meta?.frameCode,
+        frameColor: meta?.frameColor,
+      ),
+      gameType: 'durak',
+      gameId: widget.gameId,
+      isTheirTurn: oppTurn && view.turnTimeSec > 0 && view.turnDeadline > 0,
+      turnDeadline: view.turnDeadline,
+      turnTimeSec: view.turnTimeSec,
+      onTurnExpired: _onTurnTimeExpired,
+      compact: MediaQuery.sizeOf(context).width < 420 ||
+          isPhoneLandscape(context),
+      maxWidth: 300,
+      align: Alignment.center,
+      reserveRail: false,
     );
-  }
-
-  Future<void> _addFriend(
-    String userId,
-    String displayName, {
-    String? requestId,
-  }) async {
-    try {
-      final repo = ref.read(friendsRepositoryProvider);
-      if (requestId != null && requestId.isNotEmpty) {
-        await repo.acceptRequest(requestId);
-        if (!mounted) return;
-        ref.invalidate(friendsSnapshotProvider);
-        showAppSnackBar(
-          context,
-          message: context.l10n.friendsRequestAccepted,
-          kind: AppSnackKind.success,
-        );
-      } else {
-        await repo.sendRequest(userId);
-        if (!mounted) return;
-        ref.invalidate(friendsSnapshotProvider);
-        showAppSnackBar(
-          context,
-          message: context.l10n.friendsRequestSent,
-          kind: AppSnackKind.success,
-        );
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _openChat(String userId, String displayName) async {
-    try {
-      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
-      if (!mounted || chatId.isEmpty) return;
-      final uri = Uri(
-        path: '/chats/$chatId',
-        queryParameters: {
-          'name': displayName,
-          'from': 'games',
-          'game': '/games/durak/game/${widget.gameId}',
-        },
-      );
-      context.push(uri.toString());
-    } catch (_) {
-      if (!mounted) return;
-      context.push(
-        Uri(
-          path: '/chats',
-          queryParameters: {
-            'peer': userId,
-            'game': '/games/durak/game/${widget.gameId}',
-          },
-        ).toString(),
-      );
-    }
   }
 
   /// Плашка соперника: аватар над именем, а в альбоме — рядом с ним.
