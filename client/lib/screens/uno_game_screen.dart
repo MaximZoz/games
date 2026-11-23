@@ -35,7 +35,6 @@ import 'package:multigames_client/games/uno/uno_center_table_style.dart';
 import 'package:multigames_client/games/uno/uno_seats.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/game_table_fit.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/uno/uno_discard_stack.dart';
 import 'package:multigames_client/ui/uno/uno_draw_discard_field.dart';
@@ -48,6 +47,7 @@ import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 class UnoGameScreen extends ConsumerStatefulWidget {
   const UnoGameScreen({super.key, required this.gameId});
@@ -777,13 +777,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         UnoColor.wild => context.l10n.unoChooseColor,
       };
 
-  Color _colorValue(UnoColor color) => switch (color) {
-        UnoColor.red => const Color(0xFFE53935),
-        UnoColor.yellow => const Color(0xFFFBC02D),
-        UnoColor.green => const Color(0xFF2EAD62),
-        UnoColor.blue => const Color(0xFF2583E8),
-        UnoColor.wild => const Color(0xFF181B22),
-      };
+  Color _colorValue(UnoColor color) => unoCardColor(color);
 
   Future<void> _playCard(UnoGameView game, UnoCard card) async {
     if (_busy || !game.isMyTurn) return;
@@ -1562,7 +1556,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                     Text(
                       formatUserError(error),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.redAccent),
+                      style: const TextStyle(color: GamePalette.danger),
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
@@ -2390,7 +2384,7 @@ class UnoOpponentHand extends StatelessWidget {
         ? const Icon(
             Icons.campaign_rounded,
             size: 16,
-            color: Color(0xFFE53935),
+            color: GamePalette.danger,
           )
         : const SizedBox.shrink();
     final body = vertical
