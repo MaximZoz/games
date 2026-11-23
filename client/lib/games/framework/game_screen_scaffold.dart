@@ -1,0 +1,269 @@
+import 'package:flutter/material.dart';
+import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
+import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_game_kit/motion/game_motion.dart';
+
+/// Часы хода, которые партия отдаёт общему хрому.
+///
+/// [deadline] — unix-время (сек) конца хода, 0 — лимита нет. Хром сам решает,
+/// где это показать: свой ход — таймер в шапке перед правилами, ход
+/// соперника — рамка его карточки ([GameOpponentPanel]).
+class GameTurnClock {
+  const GameTurnClock({
+    required this.isMyTurn,
+    this.deadline = 0,
+    this.turnTimeSec = 0,
+    this.onExpired,
+  });
+
+  /// Партия не идёт или ходов по очереди нет.
+  const GameTurnClock.idle()
+      : isMyTurn = false,
+        deadline = 0,
+        turnTimeSec = 0,
+        onExpired = null;
+
+  final bool isMyTurn;
+  final int deadline;
+  final int turnTimeSec;
+
+  /// Моё время вышло. Зовётся один раз за ход.
+  final VoidCallback? onExpired;
+
+  bool get hasTimer => deadline > 0;
+}
+
+/// Ничья: кто предложил и что делает кнопка.
+class GameDrawOffer {
+  const GameDrawOffer({
+    required this.onPressed,
+    this.flags = const DrawOfferFlags(),
+  });
+
+  final VoidCallback onPressed;
+  final DrawOfferFlags flags;
+}
+
+/// Всё, что игра сообщает общему хрому партии.
+///
+/// Новая игра описывает только это — расположение, порядок и вид кнопок
+/// у всех игр одни: крестик слева, название, таймер своего хода, правила;
+/// под правилами столбиком «сдаться» и «ничья».
+class GameChrome {
+  const GameChrome({
+    required this.onClose,
+    required this.onShowRules,
+    this.title,
+    this.centerTitle = false,
+    this.turn = const GameTurnClock.idle(),
+    this.onSurrender,
+    this.draw,
+    this.leadingExtra,
+    this.actions = const <Widget>[],
+  });
+
+  /// Крестик. null — кнопка выключена (идёт запрос).
+  final VoidCallback? onClose;
+  final VoidCallback onShowRules;
+  final Widget? title;
+  final bool centerTitle;
+  final GameTurnClock turn;
+
+  /// Флаг «сдаться». null — кнопки нет (партия окончена, офлайн).
+  final VoidCallback? onSurrender;
+
+  /// Рукопожатие «ничья». null — игра ничью не предлагает.
+  final GameDrawOffer? draw;
+
+  /// Кнопка рядом с крестиком (групповой чат стола).
+  final Widget? leadingExtra;
+
+  /// Свои кнопки игры в шапке — встают левее таймера.
+  final List<Widget> actions;
+
+  bool get hasRail => onSurrender != null || draw != null;
+}
+
+/// Место, которое общий хром занял на экране партии.
+///
+/// Тело игры читает отсюда ширину столбика «сдаться / ничья», чтобы не
+/// положить под него карточку соперника.
+class GameChromeScope extends InheritedWidget {
+  const GameChromeScope({
+    super.key,
+    required this.railInset,
+    required super.child,
+  });
+
+  /// Ширина полосы справа под столбик действий; 0 — столбика нет.
+  final double railInset;
+
+  static double railInsetOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GameChromeScope>()
+          ?.railInset ??
+      0;
+
+  @override
+  bool updateShouldNotify(GameChromeScope oldWidget) =>
+      oldWidget.railInset != railInset;
+}
+
+/// Каркас экрана партии — общий для всех игр.
+///
+/// Игра передаёт [GameChrome] и своё [body]; шапка, таймер своего хода,
+/// правила и столбик «сдаться / ничья» появляются сами и стоят одинаково.
+class GameScreenScaffold extends StatelessWidget {
+  const GameScreenScaffold({
+    super.key,
+    required this.chrome,
+    required this.body,
+    this.background = true,
+  });
+
+  final GameChrome chrome;
+  final Widget body;
+
+  /// Обернуть тело общим фоном. false — игра рисует фон сама.
+  final bool background;
+
+  /// Ширина столбика действий вместе с отступом от края.
+  static const double railWidth = 48;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final railInset = chrome.hasRail ? railWidth : 0.0;
+    final draw = chrome.draw;
+    final stack = Stack(
+      children: [
+        Positioned.fill(child: body),
+        // Без таймера о своём ходе сообщает звук — как в играх без лимита.
+        if (!chrome.turn.hasTimer)
+          MyTurnAlert.stackLeaf(isMyTurn: chrome.turn.isMyTurn),
+        if (chrome.hasRail)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: SafeArea(
+              left: false,
+              bottom: false,
+              minimum: const EdgeInsets.only(top: 4, right: 4),
+              child: GameActionsOverlay(
+                key: const ValueKey('game-chrome-rail'),
+                canSurrender: chrome.onSurrender != null,
+                canDraw: draw != null,
+                iOfferedDraw: draw?.flags.iOffered ?? false,
+                opponentOfferedDraw: draw?.flags.opponentOffered ?? false,
+                onSurrender: chrome.onSurrender ?? () {},
+                onDraw: draw?.onPressed ?? () {},
+                surrenderTooltip: l10n.gameSurrender,
+                drawTooltip: l10n.gameOfferDraw,
+                acceptDrawTooltip: l10n.gameAcceptDrawTitle,
+                drawOfferedTooltip: l10n.gameDrawOffered,
+              ),
+            ),
+          ),
+      ],
+    );
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        toolbarHeight: gameToolbarHeight(context),
+        leadingWidth: gameAppBarLeadingWidth(
+          withExtra: chrome.leadingExtra != null,
+        ),
+        leading: buildGameAppBarLeading(
+          onClose: chrome.onClose,
+          extra: chrome.leadingExtra,
+        ),
+        title: chrome.title,
+        centerTitle: chrome.centerTitle,
+        actions: [
+          ...chrome.actions,
+          GameMyTurnTimer(turn: chrome.turn),
+          IconButton(
+            key: const ValueKey('game-chrome-rules'),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            iconSize: 22,
+            icon: const Icon(Icons.rule_rounded),
+            tooltip: l10n.gamesRulesTitle,
+            onPressed: chrome.onShowRules,
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: GameChromeScope(
+        railInset: railInset,
+        child: background ? GradientBackground(child: stack) : stack,
+      ),
+    );
+  }
+}
+
+/// Таймер своего хода в шапке — сразу перед кнопкой правил.
+///
+/// Виден только в мой ход; ход соперника показывает рамка его карточки.
+/// Виджет остаётся в дереве и в чужой ход, чтобы звук «ваш ход» и тики
+/// считались непрерывно.
+class GameMyTurnTimer extends StatelessWidget {
+  const GameMyTurnTimer({super.key, required this.turn});
+
+  final GameTurnClock turn;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!turn.hasTimer) return const SizedBox.shrink();
+    final mine = turn.isMyTurn;
+    final chip = TurnTimerBorder(
+      active: mine && turn.turnTimeSec > 0,
+      turnDeadline: turn.deadline,
+      turnTimeSec: turn.turnTimeSec,
+      borderWidth: 2,
+      radius: 16,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          child: GameTurnCountdown(
+            key: ValueKey('game-chrome-clock-${turn.deadline}'),
+            turnDeadline: turn.deadline,
+            turnTimeSec: turn.turnTimeSec,
+            isMyTurn: mine,
+            onExpired: turn.onExpired ?? () {},
+            labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
+          ),
+        ),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(right: 2),
+      child: Center(
+        child: AnimatedSize(
+          duration: GameMotion.fade,
+          curve: GameMotion.settleCurve,
+          alignment: Alignment.centerRight,
+          child: AnimatedOpacity(
+            key: const ValueKey('game-chrome-timer'),
+            duration: GameMotion.fade,
+            opacity: mine ? 1 : 0,
+            child: Visibility(
+              visible: mine,
+              maintainState: true,
+              maintainAnimation: true,
+              child: chip,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
