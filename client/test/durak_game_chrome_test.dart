@@ -68,6 +68,11 @@ void main() {
       tester.getRect(deck).top - tester.getRect(board).top,
       lessThanOrEqualTo(8),
     );
+    // Бита (пока пустая — только якорь полёта) стоит на одной линии с колодой.
+    expect(
+      tester.getRect(find.byType(DurakBitoPile)).top,
+      tester.getRect(deck).top,
+    );
 
     OfflineDurakRegistry.instance.disposeAll();
     await tester.pumpWidget(const SizedBox.shrink());
