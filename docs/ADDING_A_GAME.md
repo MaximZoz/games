@@ -71,7 +71,8 @@
      `Color(0x…)` или `Colors.red` в `lib/games`, `lib/ui/uno`, `lib/ui/durak`
      и `*_game_screen.dart` роняет тест.
    - Если столбик «сдаться / ничья» ложится на тёмное сукно, передай
-     `GameChrome(railOnDark: true)` — иконки станут светлыми.
+     `GameChrome(railOnDark: true)` — иконки станут светлыми на тёмной
+     плашке и не потеряются на скруглённом углу стола.
    - Движение фишек — `GameFlightStage` + `GameFlightController`: полёт
      запускается при смене состояния партии (`didUpdateWidget`), место посадки
      уточняет `GameFlight.toResolver`. Рука — `GameHandStrip`, прикуп россыпью —
