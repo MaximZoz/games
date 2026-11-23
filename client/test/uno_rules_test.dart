@@ -29,8 +29,8 @@ void main() {
 
   test('второй взять не показывает «не ваш ход»', () {
     expect(
-      isStaleUnoDrawError(GamesException(400, 'Сейчас не ваш ход',
-          errorKey: 'not your turn')),
+      isStaleUnoDrawError(
+          GamesException(400, 'Сейчас не ваш ход', errorKey: 'not your turn')),
       isTrue,
     );
     expect(isStaleUnoDrawError(GamesException(400, 'lobby full')), isFalse);
@@ -86,8 +86,10 @@ void main() {
     expect(find.textContaining('+2 на +4 класть нельзя'), findsOneWidget);
     expect(find.textContaining('одинаковые цифровые'), findsOneWidget);
     expect(find.textContaining('парой не кидаются'), findsOneWidget);
-    expect(find.textContaining('оспорить'), findsOneWidget);
-    expect(find.textContaining('одну из колоды'), findsOneWidget);
+    expect(find.textContaining('оспорить'), findsNothing);
+    expect(find.textContaining('кладёт свою +4'), findsOneWidget);
+    expect(find.textContaining('даже если есть подходящая'), findsOneWidget);
+    expect(find.textContaining('одну карту из колоды'), findsOneWidget);
     expect(find.textContaining('до 100'), findsOneWidget);
     expect(find.textContaining('до 200'), findsOneWidget);
     expect(find.textContaining('Не забудьте сказать'), findsNothing);

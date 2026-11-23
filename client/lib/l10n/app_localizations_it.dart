@@ -1118,10 +1118,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesUnoPlay => 'Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 si impila solo su +2 e +4 solo su +4: la penalità si somma (due +2 fanno pescare 4). Non si può mettere +2 su +4. Chi non risponde pesca tutto il mucchio e salta. Due carte identiche non nere (ad es. due 8 gialli) si scartano insieme: giocane una e la gemella va via da sola.';
 
   @override
-  String get rulesUnoWild => 'Una carta nera imposta un nuovo colore. Gioca +4 solo se non hai carte del colore corrente. L’avversario può contestare: se il +4 era legale pesca 6; altrimenti chi ha giocato +4 pesca 4 e il contestatore gioca.';
+  String get rulesUnoWild => 'Una carta nera imposta un nuovo colore. Dopo un +4 il prossimo pesca 4 carte o gioca un altro +4.';
 
   @override
-  String get rulesUnoDraw => 'Senza carta valida pesca una dal mazzo. Se va bene, puoi giocarla subito o tenerla e passare. Non puoi pescare se hai ancora una giocata.';
+  String get rulesUnoDraw => 'Nel tuo turno puoi pescare una carta anche se ne hai una valida. Se quella pescata va bene, giocala subito o tienila e passa.';
 
   @override
   String get rulesUnoWin => 'In due si va a 100, con 3+ giocatori a 200. Il round lo vince chi svuota la mano.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get unoChooseColorHint => 'Scegli un colore per il jolly';
 
   @override
-  String get unoWd4Hint => 'Pesca 4 carte o sfida il Wild +4';
+  String get unoWd4Hint => 'Pesca la penalità o gioca un’altra uguale';
 
   @override
   String get unoDrawnHint => 'Gioca la carta pescata o tienila';
 
   @override
-  String get unoPlayHint => 'Gioca un colore o valore corrispondente';
+  String get unoPlayHint => 'Gioca una carta o pesca dal mazzo';
 
   @override
-  String get unoDrawHint => 'Nessuna carta valida: pesca dal mazzo';
+  String get unoDrawHint => 'Puoi pescare una carta dal mazzo';
 
   @override
   String unoPendingDraw(int count) {

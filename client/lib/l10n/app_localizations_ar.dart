@@ -1118,10 +1118,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesUnoPlay => 'التخطي — يفقد التالي دوره. عكس الاتجاه مع لاعبين يعمل كتخطي. تُكدَّس +2 على +2 فقط و+4 على +4 فقط: تتراكم العقوبة (بطاقتا +2 تجعل التالي يسحب 4). لا يجوز وضع +2 على +4. من لا يرد يسحب الكومة كلها ويفقد دوره. ورقتان متطابقتان غير سوداوين (مثل ثمانيتين صفراوين) تُرميان معًا: العب واحدة فتخرج التوأم تلقائيًا.';
 
   @override
-  String get rulesUnoWild => 'البطاقة السوداء تختار لونًا جديدًا. العب +4 فقط إن لم تكن لديك بطاقة باللون الحالي. يمكن للخصم الاعتراض: إن كان +4 قانونيًا يسحب 6؛ وإلا يسحب لاعب +4 أربعًا ويلعب المعترض.';
+  String get rulesUnoWild => 'البطاقة السوداء تختار لونًا جديدًا. بعد +4 يسحب التالي 4 بطاقات أو يلعب +4 آخر.';
 
   @override
-  String get rulesUnoDraw => 'إن لم توجد بطاقة صالحة فاسحب واحدة من الرزمة. إن ناسبت يمكنك لعبها فورًا أو الاحتفاظ بها وتمرير الدور. لا تسحب طالما لديك حركة قانونية.';
+  String get rulesUnoDraw => 'في دورك يمكنك سحب بطاقة حتى لو كانت لديك بطاقة صالحة. إن ناسبت المسحوبة، العبها فورًا أو احتفظ بها ومرّر الدور.';
 
   @override
   String get rulesUnoWin => 'اثنان حتى 100 نقطة، و3+ حتى 200. وتُربَح الجولة بتفريغ اليد.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unoChooseColorHint => 'اختر لونًا للبطاقة السوداء';
 
   @override
-  String get unoWd4Hint => 'اسحب 4 بطاقات أو تحدَّ Wild +4';
+  String get unoWd4Hint => 'اسحب بطاقات الجزاء أو العب بطاقة مثلها';
 
   @override
   String get unoDrawnHint => 'العب البطاقة المسحوبة أو احتفظ بها';
 
   @override
-  String get unoPlayHint => 'العب لونًا أو قيمة مطابقة';
+  String get unoPlayHint => 'العب بطاقة أو اسحب من الرزمة';
 
   @override
-  String get unoDrawHint => 'لا توجد بطاقة مطابقة — اسحب من الكومة';
+  String get unoDrawHint => 'يمكنك سحب بطاقة من الرزمة';
 
   @override
   String unoPendingDraw(int count) {

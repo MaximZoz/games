@@ -1118,10 +1118,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesUnoPlay => 'דילוג — הבא מפסיד תור. היפוך כיוון בשניים פועל כדילוג. +2 רק על +2 ו-+4 רק על +4: הקנס מצטבר (שתי +2 — הבא שולף 4). אסור לשים +2 על +4. מי שלא מגיב שולף את כל הערימה ומדלג. שתי קלפים זהים שאינם שחורים (למשל שתי 8 צהובות) נזרקים יחד: משחקים אחד והתאום יוצא אוטומטית.';
 
   @override
-  String get rulesUnoWild => 'קלף שחור קובע צבע חדש. משחקים +4 רק בלי קלף בצבע הנוכחי. היריב יכול לערער: אם ה-+4 היה חוקי הוא שולף 6; אחרת משחק ה-+4 שולף 4 והמערער משחק.';
+  String get rulesUnoWild => 'קלף שחור קובע צבע חדש. אחרי +4 הבא שולף 4 קלפים או משחק +4 נוסף.';
 
   @override
-  String get rulesUnoDraw => 'בלי קלף חוקי — שלפו אחד מהחפיסה. אם הוא מתאים אפשר לשחק אותו מיד או להשאיר ולהעביר תור. אסור לשלוף כשיש מהלך חוקי.';
+  String get rulesUnoDraw => 'בתורך אפשר לשלוף קלף גם אם יש לך קלף מתאים. אם הקלף שנשלף מתאים, שחקו אותו מיד או השאירו והעבירו תור.';
 
   @override
   String get rulesUnoWin => 'אחד על אחד עד 100, ב־3+ עד 200. את הסיבוב זוכה מי שמרוקן את היד.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsHe extends AppLocalizations {
   String get unoChooseColorHint => 'בחרו צבע לקלף החופשי';
 
   @override
-  String get unoWd4Hint => 'משכו 4 קלפים או אתגרו Wild +4';
+  String get unoWd4Hint => 'משכו את קלפי העונש או שחקו קלף זהה';
 
   @override
   String get unoDrawnHint => 'שחקו בקלף שנמשך או שמרו אותו';
 
   @override
-  String get unoPlayHint => 'שחקו צבע או ערך תואם';
+  String get unoPlayHint => 'שחקו קלף או שלפו מהחפיסה';
 
   @override
-  String get unoDrawHint => 'אין קלף מתאים — משכו מהערימה';
+  String get unoDrawHint => 'אפשר לשלוף קלף מהחפיסה';
 
   @override
   String unoPendingDraw(int count) {

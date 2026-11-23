@@ -1118,10 +1118,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesUnoPlay => 'Skip — the next player loses a turn. Reverse with two players acts as Skip. +2 stacks only on +2, and +4 only on +4: the penalty adds up (two +2s make the next player draw 4). A +2 cannot be played on a +4. A player who does not stack draws the whole pile and is skipped. Two identical number cards (for example two yellow 8s) are discarded together: play one and the twin is thrown automatically. Action cards (+2, skip, reverse) and wilds are never dumped as a pair.';
 
   @override
-  String get rulesUnoWild => 'A black card sets a new color. Play +4 only if you have no card of the current color. The next player may challenge: if the +4 was legal they draw 6; if not, the +4 player draws 4 and the challenger plays.';
+  String get rulesUnoWild => 'A black card sets a new color. After +4 the next player draws 4 cards or plays another +4.';
 
   @override
-  String get rulesUnoDraw => 'If you have no legal card, draw one from the deck. If it matches, you may play it now or keep it and pass. You cannot draw while you still have a legal play.';
+  String get rulesUnoDraw => 'On your turn you may draw one card even if you have a match. If the drawn card matches, play it now or keep it and pass.';
 
   @override
   String get rulesUnoWin => 'Heads-up is first to 100 points; with 3+ players, first to 200. A round is won by emptying your hand.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unoChooseColorHint => 'Choose a color for the wild card';
 
   @override
-  String get unoWd4Hint => 'Draw 4 cards or challenge the Wild +4';
+  String get unoWd4Hint => 'Draw the penalty cards or play another of the same kind';
 
   @override
   String get unoDrawnHint => 'Play the drawn card or keep it';
 
   @override
-  String get unoPlayHint => 'Play a matching color or value';
+  String get unoPlayHint => 'Play a card or draw from the deck';
 
   @override
-  String get unoDrawHint => 'No matching card — draw from the deck';
+  String get unoDrawHint => 'You can draw a card from the deck';
 
   @override
   String unoPendingDraw(int count) {

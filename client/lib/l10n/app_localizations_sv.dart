@@ -1118,10 +1118,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesUnoPlay => 'Hoppa över — nästa mister turen. Vänd med två spelare fungerar som hoppa över. +2 staplas bara på +2 och +4 bara på +4: straffet adderas (två +2 gör att nästa drar 4). +2 får inte läggas på +4. Den som inte staplar drar hela högen och mister turen. Två identiska icke-svarta kort (t.ex. två gula 8) slängs tillsammans: spela ett så följer tvillingen med automatiskt.';
 
   @override
-  String get rulesUnoWild => 'Ett svart kort sätter en ny färg. Spela +4 bara om du saknar kort i aktuell färg. Motståndaren kan utmana: var +4 lagligt drar hen 6; annars drar +4-spelaren 4 och utmanaren spelar.';
+  String get rulesUnoWild => 'Ett svart kort sätter en ny färg. Efter +4 drar nästa 4 kort eller spelar ett nytt +4.';
 
   @override
-  String get rulesUnoDraw => 'Utan lagligt kort, dra ett från högen. Passar det kan du spela det direkt eller behålla det och passa. Du får inte dra medan du har ett lagligt drag.';
+  String get rulesUnoDraw => 'På din tur får du dra ett kort även om du har ett som passar. Passar det dragna kortet kan du spela det direkt eller behålla det och passa.';
 
   @override
   String get rulesUnoWin => 'Två spelare till 100, 3+ till 200. En rond vinns genom att tömma handen.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get unoChooseColorHint => 'Välj en färg för jokern';
 
   @override
-  String get unoWd4Hint => 'Dra 4 kort eller utmana Wild +4';
+  String get unoWd4Hint => 'Dra straffkorten eller spela ett likadant';
 
   @override
   String get unoDrawnHint => 'Spela det dragna kortet eller behåll det';
 
   @override
-  String get unoPlayHint => 'Spela matchande färg eller värde';
+  String get unoPlayHint => 'Spela ett kort eller dra från högen';
 
   @override
-  String get unoDrawHint => 'Inget matchande kort — dra från högen';
+  String get unoDrawHint => 'Du kan dra ett kort från högen';
 
   @override
   String unoPendingDraw(int count) {

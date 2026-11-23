@@ -1118,10 +1118,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoPlay => 'Pular — o próximo perde a vez. Inverter com dois jogadores vale como Pular. +2 só empilha em +2 e +4 só em +4: a penalidade soma (dois +2 fazem o próximo comprar 4). Não se joga +2 em +4. Quem não empilhar compra o monte inteiro e perde a vez. Duas cartas iguais não pretas (por exemplo dois 8 amarelos) são descartadas juntas: jogue uma e a gémea sai automaticamente.';
 
   @override
-  String get rulesUnoWild => 'Uma carta preta define uma nova cor. Jogue +4 só se não tiver carta da cor atual. O adversário pode contestar: se o +4 era legal, compra 6; senão o autor do +4 compra 4 e o contestador joga.';
+  String get rulesUnoWild => 'Uma carta preta define uma nova cor. Depois de +4, o próximo compra 4 cartas ou joga outro +4.';
 
   @override
-  String get rulesUnoDraw => 'Sem carta válida, compre uma do baralho. Se servir, jogue-a agora ou fique com ela e passe. Não se compra enquanto houver jogada.';
+  String get rulesUnoDraw => 'No seu turno pode comprar uma carta mesmo tendo uma válida. Se a comprada servir, jogue-a agora ou fique com ela e passe.';
 
   @override
   String get rulesUnoWin => 'Em 1x1 até 100 pontos; com 3+ jogadores, até 200. A rodada é de quem esvaziar a mão.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unoChooseColorHint => 'Escolha uma cor para o curinga';
 
   @override
-  String get unoWd4Hint => 'Compre 4 cartas ou desafie o Wild +4';
+  String get unoWd4Hint => 'Compre a penalidade ou jogue outra igual';
 
   @override
   String get unoDrawnHint => 'Jogue a carta comprada ou mantenha-a';
 
   @override
-  String get unoPlayHint => 'Jogue uma cor ou valor correspondente';
+  String get unoPlayHint => 'Jogue uma carta ou compre do monte';
 
   @override
-  String get unoDrawHint => 'Sem carta válida — compre do monte';
+  String get unoDrawHint => 'Pode comprar uma carta do monte';
 
   @override
   String unoPendingDraw(int count) {

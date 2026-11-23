@@ -1118,10 +1118,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesUnoPlay => 'Přeskočení — další hráč ztrácí tah. Otočení ve dvou funguje jako přeskočení. +2 se klade jen na +2 a +4 jen na +4: trest se sčítá (dvě +2 — další lízne 4). +2 na +4 dát nelze. Kdo neodpoví, lízne celý balíček a ztrácí tah. Dvě stejné nečerné karty (např. dvě žluté 8) se odhodí spolu: zahrajte jednu a dvojče odletí samo.';
 
   @override
-  String get rulesUnoWild => 'Černá karta určí novou barvu. +4 jen když nemáte kartu aktuální barvy. Soupeř může vyzvat: bylo-li +4 legální, lízne 6; jinak autor +4 lízne 4 a vyzývatel hraje.';
+  String get rulesUnoWild => 'Černá karta určí novou barvu. Po +4 další lízne 4 karty, nebo zahraje další +4.';
 
   @override
-  String get rulesUnoDraw => 'Bez vhodné karty lízněte jednu z balíčku. Pokud sedí, můžete ji ihned zahrát, nebo si ji nechat a předat tah. Nelze lízat, dokud máte tah.';
+  String get rulesUnoDraw => 'Ve svém tahu můžete líznout kartu, i když máte vhodnou. Pokud líznutá sedí, zahrajte ji hned, nebo si ji nechte a předejte tah.';
 
   @override
   String get rulesUnoWin => 'Ve dvou do 100 bodů, při 3+ hráčích do 200. Kolo vyhraje hráč, který shodí všechny karty.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsCs extends AppLocalizations {
   String get unoChooseColorHint => 'Vyberte barvu pro žolíka';
 
   @override
-  String get unoWd4Hint => 'Lízněte 4 karty nebo vyzvěte Wild +4';
+  String get unoWd4Hint => 'Lízněte trestné karty nebo zahrajte stejnou';
 
   @override
   String get unoDrawnHint => 'Zahrajte líznutou kartu nebo si ji ponechte';
 
   @override
-  String get unoPlayHint => 'Zahrajte shodnou barvu nebo hodnotu';
+  String get unoPlayHint => 'Zahrajte kartu nebo lízněte';
 
   @override
-  String get unoDrawHint => 'Žádná shodná karta — lízněte si';
+  String get unoDrawHint => 'Můžete líznout kartu z balíčku';
 
   @override
   String unoPendingDraw(int count) {

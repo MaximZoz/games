@@ -1118,10 +1118,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoPlay => 'Pominięcie — następny traci turę. Zmiana kierunku we dwójkę działa jak pominięcie. +2 kładzie się tylko na +2, a +4 tylko na +4: kara się sumuje (dwa +2 — następny dobiera 4). +2 na +4 kłaść nie wolno. Kto nie odpowie, dobiera cały stos i traci turę. Dwie takie same niedzika karty (np. dwie żółte 8) zrzuca się razem: zagraj jedną — druga leci automatycznie.';
 
   @override
-  String get rulesUnoWild => 'Czarna karta ustala nowy kolor. +4 tylko gdy nie masz karty bieżącego koloru. Przeciwnik może zakwestionować: jeśli +4 było legalne, dobiera 6; jeśli nie — autor +4 dobiera 4, a kwestionujący gra.';
+  String get rulesUnoWild => 'Czarna karta ustala nowy kolor. Po +4 następny dobiera 4 karty albo zagrywa kolejne +4.';
 
   @override
-  String get rulesUnoDraw => 'Bez pasującej karty dobierz jedną z talii. Jeśli pasuje, zagraj ją od razu albo zatrzymaj i oddaj turę. Nie dobierasz, gdy masz legalny ruch.';
+  String get rulesUnoDraw => 'W swojej turze możesz dobrać kartę, nawet gdy masz pasującą. Jeśli dobrana pasuje, zagraj ją od razu albo zatrzymaj i oddaj turę.';
 
   @override
   String get rulesUnoWin => 'We dwóch do 100 punktów, przy 3+ graczach do 200. Rundę wygrywa gracz, który zrzuci wszystkie karty.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get unoChooseColorHint => 'Wybierz kolor dla jokera';
 
   @override
-  String get unoWd4Hint => 'Dobierz 4 karty albo podważ Wild +4';
+  String get unoWd4Hint => 'Dobierz karty kary albo zagraj taką samą';
 
   @override
   String get unoDrawnHint => 'Zagraj dobraną kartę albo ją zatrzymaj';
 
   @override
-  String get unoPlayHint => 'Zagraj pasujący kolor lub wartość';
+  String get unoPlayHint => 'Zagraj kartę albo dobierz ze stosu';
 
   @override
-  String get unoDrawHint => 'Brak pasującej karty — dobierz ze stosu';
+  String get unoDrawHint => 'Możesz dobrać kartę ze stosu';
 
   @override
   String unoPendingDraw(int count) {

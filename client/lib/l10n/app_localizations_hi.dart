@@ -1118,10 +1118,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesUnoPlay => 'छोड़ो — अगला अपनी बारी खोता है। दो खिलाड़ियों में दिशा बदलना छोड़ने जैसा है। +2 केवल +2 पर और +4 केवल +4 पर रखा जा सकता है: जुर्माना जुड़ता है (दो +2 पर अगला 4 उठाता है)। +2 को +4 पर नहीं रखा जा सकता। जो जवाब नहीं देता, पूरी गड्डी उठाता है और बारी खोता है। दो एक जैसी गैर-काली पत्तियाँ (जैसे दो पीले 8) साथ फेंकी जाती हैं: एक चलाएँ तो जोड़ी अपने आप जाएगी।';
 
   @override
-  String get rulesUnoWild => 'काला पत्ता नया रंग तय करता है। +4 तभी जब वर्तमान रंग का पत्ता न हो। विरोधी चुनौती दे सकता है: +4 वैध हो तो वह 6 उठाए; नहीं तो +4 वाला 4 उठाए और चुनौती देने वाला खेले।';
+  String get rulesUnoWild => 'काला पत्ता नया रंग तय करता है। +4 के बाद अगला 4 पत्ते उठाता है या दूसरा +4 खेलता है।';
 
   @override
-  String get rulesUnoDraw => 'कोई वैध पत्ता न हो तो डेक से एक उठाएँ। मेल खाए तो तुरंत खेलें या रख कर बारी दें। वैध चाल रहते उठाना मना है।';
+  String get rulesUnoDraw => 'अपनी बारी में मिलता पत्ता होने पर भी डेक से एक पत्ता उठा सकते हैं। उठाया पत्ता मेल खाए तो तुरंत खेलें या रख कर बारी दें।';
 
   @override
   String get rulesUnoWin => 'आमने-सामने 100 अंक, 3+ खिलाड़ियों में 200। राउंड हाथ खाली करने वाला जीते।';
@@ -1193,16 +1193,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unoChooseColorHint => 'वाइल्ड पत्ते के लिए रंग चुनें';
 
   @override
-  String get unoWd4Hint => '4 पत्ते उठाएँ या Wild +4 को चुनौती दें';
+  String get unoWd4Hint => 'जुर्माना पत्ते उठाएँ या वैसा ही पत्ता खेलें';
 
   @override
   String get unoDrawnHint => 'उठाया पत्ता खेलें या रखें';
 
   @override
-  String get unoPlayHint => 'मिलता रंग या मूल्य खेलें';
+  String get unoPlayHint => 'पत्ता खेलें या डेक से उठाएँ';
 
   @override
-  String get unoDrawHint => 'कोई मिलता पत्ता नहीं — ढेर से उठाएँ';
+  String get unoDrawHint => 'डेक से पत्ता उठा सकते हैं';
 
   @override
   String unoPendingDraw(int count) {

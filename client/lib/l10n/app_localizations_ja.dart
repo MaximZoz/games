@@ -1118,10 +1118,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoPlay => 'スキップ — 次の人は手番を失います。2人ではリバースはスキップと同じです。+2は+2の上だけ、+4は+4の上だけ重ねられ、罰が加算されます（+2が2枚なら次は4枚）。+2を+4の上には置けません。重ねない人は山札をすべて引き、手番を飛ばされます。同じ色・数字の非ワイルド2枚（例：黄色い8が2枚）は一緒に捨てます。1枚出せばもう1枚も自動で出ます。';
 
   @override
-  String get rulesUnoWild => '黒いカードは新しい色を決めます。+4は現在の色のカードがないときだけ出せます。次の人はチャレンジできます。+4が合法ならチャレンジ側が6枚、違法なら+4を出した人が4枚引き、チャレンジ側がプレイします。';
+  String get rulesUnoWild => '黒いカードは新しい色を決めます。+4のあと、次の人は4枚引くか、もう1枚の+4を出します。';
 
   @override
-  String get rulesUnoDraw => '出せるカードがなければ山札から1枚引きます。出せるならすぐ出すか、手元に残してパスできます。出せる手があるうちは引けません。';
+  String get rulesUnoDraw => '自分の番では、出せるカードがあっても山札から1枚引けます。引いたカードが出せるなら、すぐ出すか手元に残してパスできます。';
 
   @override
   String get rulesUnoWin => '2人は100点、3人以上は200点先取。ラウンドは手札をなくした人が勝ちます。';
@@ -1193,16 +1193,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unoChooseColorHint => 'ワイルドの色を選んでください';
 
   @override
-  String get unoWd4Hint => '4枚引くかワイルド+4に挑戦します';
+  String get unoWd4Hint => 'ペナルティを引くか、同じカードを出してください';
 
   @override
   String get unoDrawnHint => '引いたカードを出すか保持します';
 
   @override
-  String get unoPlayHint => '同じ色または値のカードを出してください';
+  String get unoPlayHint => 'カードを出すか、山札から引いてください';
 
   @override
-  String get unoDrawHint => '出せるカードがありません — 山札から引きます';
+  String get unoDrawHint => '山札からカードを引けます';
 
   @override
   String unoPendingDraw(int count) {

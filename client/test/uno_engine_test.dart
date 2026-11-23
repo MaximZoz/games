@@ -85,7 +85,7 @@ void main() {
     expect(engine.currentIndex, 0);
   });
 
-  test('Wild Draw Four can be played illegally and challenged', () {
+  test('Wild Draw Four cannot be challenged and the next player draws', () {
     final wildDrawFour = action(
       'wild-draw-four',
       UnoColor.wild,
@@ -105,15 +105,39 @@ void main() {
       color: UnoColor.blue,
     ));
 
-    expect(engine.status, UnoStatus.awaitingWd4Challenge);
-    expect(engine.wild4WasLegal, isFalse);
-    engine.apply(const UnoAction(UnoActionType.challengeWd4));
-
-    expect(engine.players[0].hand, hasLength(5));
-    expect(engine.currentIndex, 1);
     expect(engine.status, UnoStatus.active);
-    expect(engine.lastEventType, 'wd4_reveal');
-    expect(engine.lastEventCard?.color, UnoColor.red);
+    expect(engine.pendingDraw, 4);
+    expect(engine.currentIndex, 1);
+    expect(
+      engine.legalActions(1),
+      isNot(contains(UnoActionType.challengeWd4)),
+    );
+    expect(
+      () => engine.apply(const UnoAction(UnoActionType.challengeWd4)),
+      throwsStateError,
+    );
+    final before = engine.players[1].hand.length;
+    engine.apply(const UnoAction(UnoActionType.draw));
+    expect(engine.players[1].hand, hasLength(before + 4));
+    expect(engine.currentIndex, 0);
+    expect(engine.pendingDraw, 0);
+  });
+
+  test('a player may draw even when a legal card is in hand', () {
+    final engine = controlled(
+      firstHand: [number('matching-red', UnoColor.red, 2)],
+    );
+    expect(engine.legalActions(0), contains(UnoActionType.draw));
+    engine.drawPile = [
+      ...engine.drawPile,
+      number('drawn-red', UnoColor.red, 8),
+    ];
+    engine.apply(const UnoAction(UnoActionType.draw));
+    expect(engine.status, UnoStatus.awaitingDrawnPlay);
+    expect(engine.drawnCardId, 'drawn-red');
+    engine.apply(const UnoAction(UnoActionType.keep));
+    expect(engine.currentIndex, 1);
+    expect(engine.players[0].hand, hasLength(2));
   });
 
   test('round scoring uses card values and ends match at 100', () {
@@ -174,8 +198,14 @@ void main() {
     final wd4 = action('plus-four', UnoColor.wild, UnoCardKind.wildDrawFour);
     final engine = UnoEngine.controlled(
       players: [
-        UnoPlayer(userId: 'p0', seat: 0, hand: [first, number('r0', UnoColor.blue, 1)]),
-        UnoPlayer(userId: 'p1', seat: 1, hand: [second, number('r1', UnoColor.yellow, 3)]),
+        UnoPlayer(
+            userId: 'p0',
+            seat: 0,
+            hand: [first, number('r0', UnoColor.blue, 1)]),
+        UnoPlayer(
+            userId: 'p1',
+            seat: 1,
+            hand: [second, number('r1', UnoColor.yellow, 3)]),
         UnoPlayer(
           userId: 'p2',
           seat: 2,
@@ -247,7 +277,7 @@ void main() {
       color: UnoColor.green,
     ));
     expect(engine.pendingDraw, 8);
-    expect(engine.status, UnoStatus.awaitingWd4Challenge);
+    expect(engine.status, UnoStatus.active);
   });
 
   test('bot draws on Wild Draw Four instead of stalling', () {
@@ -264,7 +294,8 @@ void main() {
       cardId: wildDrawFour.id,
       color: UnoColor.blue,
     ));
-    expect(engine.status, UnoStatus.awaitingWd4Challenge);
+    expect(engine.status, UnoStatus.active);
+    expect(engine.pendingDraw, 4);
     expect(engine.currentIndex, 1);
 
     engine.apply(pickUnoBotAction(engine));
@@ -336,7 +367,7 @@ void main() {
       cardId: wd4.id,
       color: UnoColor.red,
     ));
-    expect(engine.status, UnoStatus.awaitingWd4Challenge);
+    expect(engine.status, UnoStatus.active);
     expect(engine.pendingDraw, 4);
     expect(engine.canPlay(1, plusTwo), isFalse);
   });
@@ -387,7 +418,8 @@ void main() {
         ),
       ],
       drawPile: [
-        for (var i = 0; i < 20; i++) number('draw-3p-$i', UnoColor.yellow, i % 10),
+        for (var i = 0; i < 20; i++)
+          number('draw-3p-$i', UnoColor.yellow, i % 10),
       ],
       topDiscard: number('top-red-5-3p', UnoColor.red, 5),
     );

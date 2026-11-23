@@ -1118,10 +1118,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesUnoPlay => 'Lewati — pemain berikutnya kehilangan giliran. Balik arah berdua berfungsi seperti Lewati. +2 hanya menumpuk di +2 dan +4 hanya di +4: penalti dijumlahkan (dua +2 membuat berikutnya mengambil 4). +2 tidak boleh di atas +4. Yang tidak menumpuk mengambil seluruh tumpukan dan dilewati. Dua kartu identik non-hitam (mis. dua 8 kuning) dibuang bersama: mainkan satu, kembarannya ikut otomatis.';
 
   @override
-  String get rulesUnoWild => 'Kartu hitam menetapkan warna baru. Mainkan +4 hanya jika tidak ada kartu warna saat ini. Lawan bisa menantang: jika +4 sah ia mengambil 6; jika tidak, pemain +4 mengambil 4 dan penantang bermain.';
+  String get rulesUnoWild => 'Kartu hitam menetapkan warna baru. Setelah +4, pemain berikutnya mengambil 4 kartu atau memainkan +4 lain.';
 
   @override
-  String get rulesUnoDraw => 'Tanpa kartu sah, ambil satu dari dek. Jika cocok, mainkan sekarang atau simpan dan lewat. Tidak boleh mengambil selama masih ada langkah sah.';
+  String get rulesUnoDraw => 'Pada giliran Anda, Anda boleh mengambil satu kartu meskipun punya kartu yang sah. Jika kartu yang diambil cocok, mainkan sekarang atau simpan dan lewat.';
 
   @override
   String get rulesUnoWin => '1 lawan 1 sampai 100, 3+ pemain sampai 200. Ronde dimenangkan dengan menghabiskan kartu.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get unoChooseColorHint => 'Pilih warna untuk kartu liar';
 
   @override
-  String get unoWd4Hint => 'Ambil 4 kartu atau tantang Wild +4';
+  String get unoWd4Hint => 'Ambil kartu penalti atau mainkan kartu yang sama';
 
   @override
   String get unoDrawnHint => 'Mainkan kartu yang diambil atau simpan';
 
   @override
-  String get unoPlayHint => 'Mainkan warna atau nilai yang cocok';
+  String get unoPlayHint => 'Mainkan kartu atau ambil dari dek';
 
   @override
-  String get unoDrawHint => 'Tidak ada kartu cocok — ambil dari tumpukan';
+  String get unoDrawHint => 'Anda bisa mengambil kartu dari dek';
 
   @override
   String unoPendingDraw(int count) {

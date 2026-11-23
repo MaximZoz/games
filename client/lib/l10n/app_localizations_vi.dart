@@ -1118,10 +1118,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesUnoPlay => 'Bỏ lượt — người kế mất lượt. Đổi chiều khi còn hai người như bỏ lượt. +2 chỉ chồng lên +2, +4 chỉ chồng lên +4: phạt cộng dồn (hai lá +2 thì người kế rút 4). Không được chồng +2 lên +4. Ai không chồng sẽ rút cả chồng và mất lượt.Hai lá giống nhau không phải đen (ví dụ hai quân 8 vàng) bỏ cùng lúc: đánh một lá, lá cặp đi tự động.';
 
   @override
-  String get rulesUnoWild => 'Lá đen chọn màu mới. Chỉ đánh +4 khi không có lá màu hiện tại. Đối thủ có thể thách: nếu +4 hợp lệ họ rút 6; nếu không, người đánh +4 rút 4 và người thách được đánh.';
+  String get rulesUnoWild => 'Lá đen chọn màu mới. Sau +4, người kế rút 4 lá hoặc đánh thêm một +4.';
 
   @override
-  String get rulesUnoDraw => 'Không có lá hợp lệ thì rút một lá từ bộ. Nếu khớp, có thể đánh ngay hoặc giữ và bỏ lượt. Còn nước đi thì không được rút.';
+  String get rulesUnoDraw => 'Đến lượt bạn có thể rút một lá dù đang có lá hợp lệ. Nếu lá rút khớp, đánh ngay hoặc giữ và bỏ lượt.';
 
   @override
   String get rulesUnoWin => '1v1 đến 100 điểm, từ 3 người đến 200. Thắng vòng là người hết bài.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get unoChooseColorHint => 'Chọn màu cho lá đổi màu';
 
   @override
-  String get unoWd4Hint => 'Rút 4 lá hoặc thách Wild +4';
+  String get unoWd4Hint => 'Rút lá phạt hoặc đánh lá giống vậy';
 
   @override
   String get unoDrawnHint => 'Đánh lá vừa rút hoặc giữ lại';
 
   @override
-  String get unoPlayHint => 'Đánh lá cùng màu hoặc giá trị';
+  String get unoPlayHint => 'Đánh một lá hoặc rút từ bộ';
 
   @override
-  String get unoDrawHint => 'Không có lá phù hợp — rút từ chồng';
+  String get unoDrawHint => 'Bạn có thể rút một lá từ bộ';
 
   @override
   String unoPendingDraw(int count) {

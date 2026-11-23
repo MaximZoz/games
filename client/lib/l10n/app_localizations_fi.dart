@@ -1118,10 +1118,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoPlay => 'Ohitus — seuraava menettää vuoron. Suunnanvaihto kahdella toimii ohituksena. +2 pinotaan vain +2:n päälle ja +4 vain +4:n päälle: rangaistus kertyy (kaksi +2:ta, seuraava nostaa 4). +2:ta ei saa laittaa +4:n päälle. Joka ei pinoa, nostaa koko pinon ja menettää vuoron. Kaksi samaa ei-mustaa korttia (esim. kaksi keltaista 8) hylätään yhdessä: pelaa yksi, kaksonen lähtee automaattisesti.';
 
   @override
-  String get rulesUnoWild => 'Musta kortti asettaa uuden värin. Pelaa +4 vain, jos sinulla ei ole nykyisen värin korttia. Vastustaja voi haastaa: jos +4 oli laillinen, hän nostaa 6; muuten +4:n pelaaja nostaa 4 ja haastaja pelaa.';
+  String get rulesUnoWild => 'Musta kortti asettaa uuden värin. +4:n jälkeen seuraava nostaa 4 korttia tai pelaa toisen +4:n.';
 
   @override
-  String get rulesUnoDraw => 'Ilman laillista korttia nosta yksi pakasta. Jos se sopii, voit pelata sen heti tai pitää ja luovuttaa vuoron. Et saa nostaa, jos sinulla on laillinen siirto.';
+  String get rulesUnoDraw => 'Omalla vuorollasi saat nostaa kortin, vaikka sinulla olisi sopiva. Jos nostettu sopii, pelaa se heti tai pidä se ja luovuta vuoro.';
 
   @override
   String get rulesUnoWin => 'Kaksin 100 pisteeseen, 3+ pelaajalla 200. Erän voittaa se, joka tyhjentää kätensä.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsFi extends AppLocalizations {
   String get unoChooseColorHint => 'Valitse jokerille väri';
 
   @override
-  String get unoWd4Hint => 'Nosta 4 korttia tai haasta Wild +4';
+  String get unoWd4Hint => 'Nosta rangaistuskortit tai pelaa samanlainen';
 
   @override
   String get unoDrawnHint => 'Pelaa nostettu kortti tai pidä se';
 
   @override
-  String get unoPlayHint => 'Pelaa sopiva väri tai arvo';
+  String get unoPlayHint => 'Pelaa kortti tai nosta pakasta';
 
   @override
-  String get unoDrawHint => 'Ei sopivaa korttia — nosta pakasta';
+  String get unoDrawHint => 'Voit nostaa kortin pakasta';
 
   @override
   String unoPendingDraw(int count) {

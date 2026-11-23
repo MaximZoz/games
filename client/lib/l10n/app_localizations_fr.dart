@@ -1118,10 +1118,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesUnoPlay => 'Passe — le suivant perd son tour. Inversion à deux agit comme Passe. +2 se pose seulement sur +2 et +4 seulement sur +4 : la pénalité s’additionne (deux +2 font piocher 4). On ne peut pas poser +2 sur +4. Celui qui ne répond pas pioche toute la pile et passe. Deux cartes identiques non noires (par ex. deux 8 jaunes) sont défaussées ensemble : jouez-en une, la jumelle part automatiquement.';
 
   @override
-  String get rulesUnoWild => 'Une carte noire fixe une nouvelle couleur. Jouez +4 seulement si vous n’avez aucune carte de la couleur en cours. L’adversaire peut contester : si le +4 était légal, il pioche 6 ; sinon l’auteur du +4 pioche 4 et le contestataire joue.';
+  String get rulesUnoWild => 'Une carte noire fixe une nouvelle couleur. Après un +4, le suivant pioche 4 cartes ou joue un autre +4.';
 
   @override
-  String get rulesUnoDraw => 'Sans carte jouable, piochez-en une. Si elle convient, jouez-la tout de suite ou gardez-la et passez. On ne pioche pas tant qu’un coup est possible.';
+  String get rulesUnoDraw => 'À votre tour, vous pouvez piocher une carte même si vous en avez une jouable. Si la carte piochée convient, jouez-la tout de suite ou gardez-la et passez.';
 
   @override
   String get rulesUnoWin => 'À deux, premier à 100 ; à 3+, premier à 200. Une manche est gagnée en vidant sa main.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unoChooseColorHint => 'Choisissez une couleur pour le joker';
 
   @override
-  String get unoWd4Hint => 'Piochez 4 cartes ou contestez le Wild +4';
+  String get unoWd4Hint => 'Piochez la pénalité ou jouez une carte identique';
 
   @override
   String get unoDrawnHint => 'Jouez la carte piochée ou gardez-la';
 
   @override
-  String get unoPlayHint => 'Jouez une couleur ou une valeur correspondante';
+  String get unoPlayHint => 'Jouez une carte ou piochez';
 
   @override
-  String get unoDrawHint => 'Aucune carte compatible — piochez';
+  String get unoDrawHint => 'Vous pouvez piocher une carte';
 
   @override
   String unoPendingDraw(int count) {

@@ -1118,10 +1118,10 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoPlay => 'O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 ni faqat +2 ustiga, +4 ni faqat +4 ustiga qo‘yish mumkin: jarima qo‘shiladi (ikkita +2 — keyingisi 4 ta oladi). +2 ni +4 ustiga qo‘yib bo‘lmaydi. Javob bermagan butun to‘plamni oladi va yurishni o‘tkazadi.Bir xil ikkita yovvoyi bo‘lmagan karta (masalan, ikkita sariq 8) birga tashlanadi: bittasini tashlasangiz, jufti o‘zi ketadi.';
 
   @override
-  String get rulesUnoWild => 'Qora karta yangi rang belgilaydi. +4 ni faqat joriy rang kartasi bo‘lmasa tashlash mumkin. Raqib e’tiroz qilishi mumkin: +4 qonuniy bo‘lsa — e’tirozchi 6 oladi; aks holda +4 muallifi 4 oladi, e’tirozchi yuradi.';
+  String get rulesUnoWild => 'Qora karta yangi rang belgilaydi. +4 dan keyin keyingi o‘yinchi 4 karta oladi yoki o‘z +4 sini tashlaydi.';
 
   @override
-  String get rulesUnoDraw => 'Mos karta bo‘lmasa — kolodadan bittasini oling. Mos kelsa, darhol yurish yoki qoldirib navbatni o‘tkazish mumkin. Yurish bor ekan, olish mumkin emas.';
+  String get rulesUnoDraw => 'Navbatingizda mos karta bo‘lsa ham kolodadan bittasini olishingiz mumkin. Olingan karta mos kelsa, darhol yuring yoki qoldirib navbatni o‘tkazing.';
 
   @override
   String get rulesUnoWin => 'Ikki kishida 100, 3+ o‘yinchida 200. Raundni barcha kartasini tashlagan yutadi.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsUz extends AppLocalizations {
   String get unoChooseColorHint => 'Qora karta uchun rang tanlang';
 
   @override
-  String get unoWd4Hint => '4 karta oling yoki Wild +4 ga e’tiroz qiling';
+  String get unoWd4Hint => 'Jarima kartalarini oling yoki xuddi shundayini tashlang';
 
   @override
   String get unoDrawnHint => 'Olingan kartani o‘ynang yoki qoldiring';
 
   @override
-  String get unoPlayHint => 'Mos rang yoki qiymatni o‘ynang';
+  String get unoPlayHint => 'Karta o‘ynang yoki kolodadan oling';
 
   @override
-  String get unoDrawHint => 'Mos karta yo‘q — kolodadan oling';
+  String get unoDrawHint => 'Kolodadan karta olishingiz mumkin';
 
   @override
   String unoPendingDraw(int count) {

@@ -1118,10 +1118,10 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesUnoPlay => 'Пропуск — наступны губляе ход. Змена кірунку ўдваіх працуе як пропуск. +2 можна класці толькі на +2, +4 — толькі на +4: штраф складаецца (дзве +2 — наступны бярэ 4). +2 на +4 класці нельга. Хто не адказвае, бярэ ўсю стопку і прапускае ход. Дзве аднолькавыя недзікія карты (напрыклад, дзве жоўтыя 8) скідваюцца разам: дастаткова кінуць адну — другая сыходзіць аўтаматычна.';
 
   @override
-  String get rulesUnoWild => 'Чорная карта задае новы колер. +4 кладуць толькі калі няма карты бягучага колеру. Супернік можа аспрэчыць: калі +4 быў законным — аспрэчвальнік бярэ 6, калі не — аўтар +4 бярэ 4, а аспрэчвальнік ходзіць.';
+  String get rulesUnoWild => 'Чорная карта задае новы колер. Пасля +4 наступны бярэ 4 карты або кладзе сваю +4.';
 
   @override
-  String get rulesUnoDraw => 'Калі няма падыходнай карты — вазьміце адну з калоды. Калі яна падыходзіць, можна адразу сысці ёй або пакінуць і перадаць ход. Пакуль ёсць ход, браць нельга.';
+  String get rulesUnoDraw => 'У свой ход можна ўзяць адну карту з калоды, нават калі ёсць падыходная. Калі ўзятая карта падыходзіць, можна адразу сысці ёй або пакінуць і перадаць ход.';
 
   @override
   String get rulesUnoWin => 'Удваіх матч да 100 ачкоў, пры трох і больш гульцах — да 200. Раунд выйграе гулец, які скінуў усе карты.';
@@ -1193,16 +1193,16 @@ class AppLocalizationsBe extends AppLocalizations {
   String get unoChooseColorHint => 'Choose a color for the wild card';
 
   @override
-  String get unoWd4Hint => 'Draw 4 cards or challenge the Wild +4';
+  String get unoWd4Hint => 'Вазьміце карты штрафу або пакладзіце такую самую';
 
   @override
   String get unoDrawnHint => 'Play the drawn card or keep it';
 
   @override
-  String get unoPlayHint => 'Play a matching color or value';
+  String get unoPlayHint => 'Сыграйце карту або вазьміце з калоды';
 
   @override
-  String get unoDrawHint => 'No matching card — draw from the deck';
+  String get unoDrawHint => 'Можна ўзяць карту з калоды';
 
   @override
   String unoPendingDraw(int count) {
