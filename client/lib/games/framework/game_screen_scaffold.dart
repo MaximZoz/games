@@ -92,7 +92,9 @@ class GameChrome {
   /// Свои кнопки игры в шапке — встают левее таймера.
   final List<Widget> actions;
 
-  /// Столбик действий лежит на тёмном сукне (покер): иконки светлые.
+  /// Столбик действий лежит на тёмном сукне (покер): светлые иконки на
+  /// тёмной плашке. Плашка нужна, потому что кнопка попадает на скруглённый
+  /// угол стола — наполовину на сукно, наполовину на светлый фон.
   final bool railOnDark;
 
   bool get hasRail => onSurrender != null || draw != null;
@@ -204,6 +206,8 @@ class GameScreenScaffold extends StatelessWidget {
                       data: IconButtonThemeData(
                         style: IconButton.styleFrom(
                           foregroundColor: GamePalette.feltInk,
+                          backgroundColor:
+                              GamePalette.feltPlate.withValues(alpha: 0.8),
                         ),
                       ),
                       child: rail,

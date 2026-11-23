@@ -67,6 +67,19 @@ void main() {
       ),
     );
     expect(_flagColor(tester), GamePalette.feltInk);
+    // Тёмная плашка: флаг читается и там, где угол сукна уже кончился.
+    final plate = tester
+        .widget<IconButtonTheme>(
+          find.ancestor(
+            of: find.byKey(const ValueKey('game-chrome-rail')),
+            matching: find.byType(IconButtonTheme),
+          ),
+        )
+        .data
+        .style
+        ?.backgroundColor
+        ?.resolve(const <WidgetState>{});
+    expect(plate, GamePalette.feltPlate.withValues(alpha: 0.8));
     await _unmount(tester);
   });
 
