@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/core/sfx.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/framework/game_chrome.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem;
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 
@@ -218,4 +221,58 @@ void main() {
     final lobby = ActiveGameItem(type: 'lobby', lobbyId: 'g1');
     expect(activeStillPointsAtGame(lobby, 'g1'), isFalse);
   });
+
+  testWidgets('выход из партии забывает стол: «Игры» открывают каталог',
+      (tester) async {
+    late WidgetRef ref;
+    Future<void> pump(ActiveGameItem? active) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            activeGameProvider.overrideWith(() => _FixedActiveGame(active)),
+          ],
+          child: Consumer(
+            builder: (context, widgetRef, _) {
+              ref = widgetRef;
+              widgetRef.watch(activeGameProvider);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    await pump(ActiveGameItem(type: 'game', gameId: 'g1', gameType: 'domino'));
+    pinBlockingGame(ref, 'g1', gameType: 'domino');
+    ref.read(lastGamesSessionPathProvider.notifier).state =
+        '/games/domino/game/g1';
+    expect(hasBlockingActiveMatch(ref.read(activeGameProvider).valueOrNull),
+        isTrue);
+
+    forgetGameSession(ref, gameId: 'g1');
+    expect(ref.read(lastGamesSessionPathProvider), isNull);
+    expect(ref.read(blockingGamePinProvider), isNull);
+    expect(ref.read(activeGameProvider).valueOrNull, isNull);
+
+    // Чужую партию выход из сыгранной не трогает.
+    await pump(ActiveGameItem(type: 'game', gameId: 'g2', gameType: 'chess'));
+    pinBlockingGame(ref, 'g2', gameType: 'chess');
+    forgetGameSession(ref, gameId: 'g1');
+    expect(ref.read(blockingGamePinProvider)?.gameId, 'g2');
+    expect(ref.read(activeGameProvider).valueOrNull?.gameId, 'g2');
+  });
+}
+
+class _FixedActiveGame extends ActiveGameNotifier {
+  _FixedActiveGame(this.item);
+
+  final ActiveGameItem? item;
+
+  @override
+  Future<ActiveGameItem?> build() async => item;
+
+  @override
+  Future<ActiveGameItem?> refresh() async => state.valueOrNull;
 }
