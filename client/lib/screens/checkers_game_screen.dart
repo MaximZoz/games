@@ -37,6 +37,7 @@ import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 class CheckersGameScreen extends ConsumerStatefulWidget {
   const CheckersGameScreen({super.key, required this.gameId});
@@ -691,7 +692,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
       error: (e, _) => Center(
         child: Text(
           formatUserError(e, fallback: context.l10n.commonGenericError),
-          style: const TextStyle(color: Colors.red),
+          style: const TextStyle(color: GamePalette.danger),
         ),
       ),
     );

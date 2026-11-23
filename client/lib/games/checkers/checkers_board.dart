@@ -4,13 +4,16 @@ import 'package:multigames_client/games/checkers/checkers_board_layout.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_piece_tracker.dart';
 import 'package:multigames_client/games/checkers/checkers_repository.dart';
-import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
-const Color _kLightSquare = Color(0xFFF0D9B5);
-const Color _kDarkSquare = Color(0xFFB58863);
-const Color _kSelectTint = Color(0xFF65A30D);
-const Color _kOriginTint = Color(0xFFCA8A04);
-const Color _kCaptureDot = Color(0xFFDC2626);
+const Color _kLightSquare = GamePalette.boardLight;
+const Color _kDarkSquare = GamePalette.boardDark;
+const Color _kSelectTint = GamePalette.amber;
+
+/// Шашки, которыми можно пойти: клетка чуть светлее соседних.
+const Color _kOriginTint = GamePalette.highlightSoft;
+const Color _kTargetDot = GamePalette.boardCursor;
+const Color _kCaptureDot = GamePalette.danger;
 
 /// Доска 8×8: клетки одной сеткой, шашки едут плавно.
 class CheckersBoard extends StatefulWidget {
@@ -193,11 +196,10 @@ class _CheckersBoardPainter extends CustomPainter {
         final last = (lastFromR == sq.r && lastFromC == sq.c) ||
             (lastToR == sq.r && lastToC == sq.c);
         if (isSelected || last) {
-          fill.color = (isSelected ? _kSelectTint : AppColors.accentStart)
-              .withValues(alpha: 0.28);
+          fill.color = isSelected ? _kSelectTint : GamePalette.boardMarkDark;
           canvas.drawRect(paintRect, fill);
         } else if (origins.contains(sq)) {
-          fill.color = _kOriginTint.withValues(alpha: 0.18);
+          fill.color = _kOriginTint.withValues(alpha: 0.5);
           canvas.drawRect(paintRect, fill);
         }
         if (cursor == sq) {
@@ -206,7 +208,7 @@ class _CheckersBoardPainter extends CustomPainter {
             Paint()
               ..style = PaintingStyle.stroke
               ..strokeWidth = 3
-              ..color = AppColors.accentStart,
+              ..color = GamePalette.boardCursor,
           );
         }
         if (targets.contains(sq)) {
@@ -217,7 +219,7 @@ class _CheckersBoardPainter extends CustomPainter {
             Paint()
               ..isAntiAlias = true
               ..color =
-                  (captureTargets.contains(sq) ? _kCaptureDot : _kSelectTint)
+                  (captureTargets.contains(sq) ? _kCaptureDot : _kTargetDot)
                       .withValues(alpha: 0.78),
           );
         }
@@ -275,16 +277,28 @@ class CheckersPiecePainter extends CustomPainter {
         height: r * 0.42,
       ),
       Paint()
-        ..color = const Color(0x55000000)
+        ..color = GamePalette.boardDot
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.2),
     );
 
     final body = white
-        ? const [Color(0xFFFFF8EC), Color(0xFFE8D7B4), Color(0xFFC9B48A)]
-        : const [Color(0xFF5A3A28), Color(0xFF2A1810), Color(0xFF140C08)];
-    final rim = white ? const Color(0xFFB8956A) : const Color(0xFF8A5A2B);
-    final groove = white ? const Color(0x66A07848) : const Color(0x88E8C878);
-    final shine = white ? const Color(0xCCFFFFFF) : const Color(0x66F5E6C8);
+        ? const [
+            GamePalette.pieceFace,
+            GamePalette.sideLight,
+            GamePalette.sideLightShade,
+          ]
+        : const [
+            GamePalette.sideDarkShine,
+            GamePalette.sideDark,
+            GamePalette.sideDarkEdge,
+          ];
+    final rim = white ? GamePalette.sideLightEdge : GamePalette.sideDarkEdge;
+    final groove = white
+        ? GamePalette.sideLightEdge.withValues(alpha: 0.4)
+        : GamePalette.tableGlow.withValues(alpha: 0.53);
+    final shine = white
+        ? GamePalette.pieceFace.withValues(alpha: 0.8)
+        : GamePalette.pieceBackInk.withValues(alpha: 0.4);
 
     canvas.drawCircle(
       Offset(c.dx, c.dy + r * 0.06),
@@ -332,7 +346,7 @@ class CheckersPiecePainter extends CustomPainter {
     );
 
     if (!king) return;
-    final gold = white ? const Color(0xFFD97706) : const Color(0xFFFBBF24);
+    final gold = white ? GamePalette.amberDeep : GamePalette.amber;
     final crownR = r * 0.42;
     final path = Path()
       ..moveTo(c.dx - crownR, c.dy + crownR * 0.15)
@@ -352,7 +366,7 @@ class CheckersPiecePainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = white ? const Color(0xFF92400E) : const Color(0xFFFDE68A)
+        ..color = white ? GamePalette.amberInk : GamePalette.amberSoft
         ..style = PaintingStyle.stroke
         ..strokeWidth = s * 0.025,
     );

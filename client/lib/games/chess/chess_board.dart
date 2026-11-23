@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:multigames_client/games/chess/chess_engine.dart';
 import 'package:multigames_client/games/chess/chess_repository.dart';
-import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
-const Color _kLightSquare = Color(0xFFEBECD0);
-const Color _kDarkSquare = Color(0xFF739552);
+const Color _kLightSquare = GamePalette.boardLight;
+const Color _kDarkSquare = GamePalette.boardDark;
 
-/// Клетки последнего хода — как на lichess: сама клетка становится
-/// жёлто-зелёной, светлая и тёмная чуть разными.
-const Color _kLastLight = Color(0xFFCDD26A);
-const Color _kLastDark = Color(0xFFAAA23A);
-const Color _kSelect = Color(0xFF8BC34A);
-const Color _kCheck = Color(0xFFE53935);
+/// Клетки последнего хода: сама клетка становится янтарной, светлая и
+/// тёмная чуть разными.
+const Color _kLastLight = GamePalette.boardMarkLight;
+const Color _kLastDark = GamePalette.boardMarkDark;
+const Color _kSelect = GamePalette.amber;
+const Color _kCheck = GamePalette.danger;
 
 /// Как долго фигура едет на новую клетку. Близко к анимации lichess.
 const Duration _kMoveDuration = Duration(milliseconds: 200);
@@ -337,7 +337,7 @@ class _ChessBoardPainter extends CustomPainter {
           fill.color = _kCheck.withValues(alpha: 0.82);
           canvas.drawRect(rect, fill);
         } else if (sq == selected) {
-          fill.color = _kSelect.withValues(alpha: 0.5);
+          fill.color = _kSelect;
           canvas.drawRect(rect, fill);
         }
         if (sq == cursor) {
@@ -346,7 +346,7 @@ class _ChessBoardPainter extends CustomPainter {
             Paint()
               ..style = PaintingStyle.stroke
               ..strokeWidth = 3
-              ..color = AppColors.accentStart,
+              ..color = GamePalette.boardCursor,
           );
         }
         _paintCoordinates(canvas, rect, r, c, dark, labelStyle);
@@ -363,7 +363,7 @@ class _ChessBoardPainter extends CustomPainter {
             ..isAntiAlias = true
             ..style = PaintingStyle.stroke
             ..strokeWidth = cell * 0.09
-            ..color = const Color(0x55000000),
+            ..color = GamePalette.boardDot,
         );
       } else {
         canvas.drawCircle(
@@ -371,7 +371,7 @@ class _ChessBoardPainter extends CustomPainter {
           cell * 0.16,
           Paint()
             ..isAntiAlias = true
-            ..color = const Color(0x55000000),
+            ..color = GamePalette.boardDot,
         );
       }
     }

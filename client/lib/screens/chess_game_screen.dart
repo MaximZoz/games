@@ -37,6 +37,7 @@ import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 class ChessGameScreen extends ConsumerStatefulWidget {
   const ChessGameScreen({super.key, required this.gameId});
@@ -367,7 +368,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     );
   }
 
-  static const Color _kPromoBg = Color(0xFF739552);
+  static const Color _kPromoBg = GamePalette.boardDark;
 
   String _statusText(ChessGameView game) {
     final l10n = context.l10n;
@@ -743,7 +744,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       error: (e, _) => Center(
         child: Text(
           formatUserError(e, fallback: context.l10n.commonGenericError),
-          style: const TextStyle(color: Colors.red),
+          style: const TextStyle(color: GamePalette.danger),
         ),
       ),
     );
@@ -1169,7 +1170,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
             Text(
               '+${material.advantage}',
               style: const TextStyle(
-                color: Color(0xFF5C6770),
+                color: GamePalette.tableInkSoft,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 height: 1,

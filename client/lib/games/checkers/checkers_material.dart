@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/checkers/checkers_board.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 /// Разница шашек и дамок: мои минус соперника.
 ///
@@ -99,7 +100,7 @@ class CheckersMaterialLine extends StatelessWidget {
       child: Text(
         text,
         style: const TextStyle(
-          color: Color(0xFF5C6770),
+          color: GamePalette.tableInkSoft,
           fontSize: 14,
           fontWeight: FontWeight.w700,
           height: 1,
