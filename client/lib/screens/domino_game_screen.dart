@@ -29,6 +29,7 @@ import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 class DominoGameScreen extends ConsumerStatefulWidget {
   const DominoGameScreen({super.key, required this.gameId});
@@ -525,7 +526,7 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
           error: (error, _) => Center(
             child: Text(
               formatUserError(error),
-              style: const TextStyle(color: Colors.redAccent),
+              style: const TextStyle(color: GamePalette.danger),
             ),
           ),
         ),

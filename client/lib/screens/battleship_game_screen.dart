@@ -35,22 +35,23 @@ import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 /// Цвета клеток Морского боя.
-const Color _kWater = Color(0xFF90CAF9);
-const Color _kPendingWater = Color(0xFFBBDEFB);
-const Color _kShip = Color(0xFF607D8B);
-const Color _kConflictShip = Color(0xFFE57373);
-const Color _kPreviewOk = Color(0xFF81C784);
-const Color _kHit = Color(0xFFE53935);
-const Color _kMiss = Color(0xFFFFFFFF);
-const Color _kSelectedShip = Color(0xFF455A64);
-const Color _kSunkShip = Color(0xFF37474F);
-const Color _kSunkFrame = Color(0xFF212121);
+const Color _kWater = GamePalette.water;
+const Color _kPendingWater = GamePalette.waterSoft;
+const Color _kShip = GamePalette.highlight;
+const Color _kConflictShip = GamePalette.dangerSoft;
+const Color _kPreviewOk = GamePalette.go;
+const Color _kHit = GamePalette.danger;
+const Color _kMiss = GamePalette.pieceFace;
+const Color _kSelectedShip = GamePalette.sideDark;
+const Color _kSunkShip = GamePalette.pieceInk;
+const Color _kSunkFrame = GamePalette.sideDarkEdge;
 
 /// Мои потопленные — красным (в отличие от тёмных кораблей соперника).
-const Color _kSunkShipMine = Color(0xFFE53935);
-const Color _kSunkFrameMine = Color(0xFFB71C1C);
+const Color _kSunkShipMine = GamePalette.danger;
+const Color _kSunkFrameMine = GamePalette.dangerDeep;
 const Duration _kShotRevealDelay = Duration(milliseconds: 280);
 const Duration _kBotFieldHoldDelay = Duration(seconds: 1);
 
@@ -1500,7 +1501,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                               fallback: context.l10n.commonTryLater,
                             ),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.red),
+                            style: const TextStyle(color: GamePalette.danger),
                           ),
                           const SizedBox(height: 16),
                           TextButton(
@@ -1925,7 +1926,7 @@ class _BattleshipBoard extends StatelessWidget {
     const gap = 2.0;
     final board =
         size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
-    final glow = pulseHit ? _kHit : const Color(0xFF90A4AE);
+    final glow = pulseHit ? _kHit : GamePalette.tableInkSoft;
     return SizedBox(
       width: board,
       height: board,

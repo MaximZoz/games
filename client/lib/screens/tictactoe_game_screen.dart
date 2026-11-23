@@ -35,6 +35,7 @@ import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/router.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 class TicTacToeGameScreen extends ConsumerStatefulWidget {
   const TicTacToeGameScreen({
@@ -1698,7 +1699,7 @@ class _IconWithBadge extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
-                color: Colors.red.shade600,
+                color: GamePalette.danger,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -2663,7 +2664,7 @@ class _AnimatedGameCell extends StatelessWidget {
                 ? Border.all(color: AppColors.accentStart, width: 2.4)
                 : null,
             color: isForbidden
-                ? Colors.grey.withValues(alpha: 0.15)
+                ? GamePalette.tableInkSoft.withValues(alpha: 0.15)
                 : isClosedBoard
                     ? AppColors.textSecondary.withValues(alpha: 0.06)
                     : isActiveBoard
@@ -2739,9 +2740,9 @@ Color _symbolColor(String symbol) {
     case 'o':
       return AppColors.accentEnd;
     case 't':
-      return Colors.orange;
+      return GamePalette.amberDeep;
     case 's':
-      return Colors.teal;
+      return GamePalette.goDeep;
     default:
       return AppColors.textSecondary;
   }

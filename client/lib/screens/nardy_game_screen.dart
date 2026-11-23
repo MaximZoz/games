@@ -41,6 +41,7 @@ import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 class NardyGameScreen extends ConsumerStatefulWidget {
   const NardyGameScreen({super.key, required this.gameId});
@@ -813,7 +814,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               error: (e, _) => Center(
                 child: Text(
                   formatUserError(e, fallback: context.l10n.commonGenericError),
-                  style: const TextStyle(color: Colors.red),
+                  style: const TextStyle(color: GamePalette.danger),
                 ),
               ),
             ),

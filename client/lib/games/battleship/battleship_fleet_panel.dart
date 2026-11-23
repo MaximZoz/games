@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 /// Длинная линия силуэтов флота под статусом хода.
 ///
@@ -19,8 +20,8 @@ class BattleshipFleetLine extends StatelessWidget {
   /// Озвучка для экрана: кто и сколько кораблей ещё на плаву.
   final String semanticsLabel;
 
-  static const Color sunkColor = Color(0xFFE53935);
-  static const Color afloat = Color(0xFF607D8B);
+  static const Color sunkColor = GamePalette.danger;
+  static const Color afloat = GamePalette.highlight;
 
   @override
   Widget build(BuildContext context) {
