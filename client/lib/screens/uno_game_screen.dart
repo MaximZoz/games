@@ -14,6 +14,8 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
@@ -43,7 +45,6 @@ import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
-import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -1148,38 +1149,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       game.turnDeadline > 0 &&
       !game.iAmEliminated;
 
-  Widget _buildMyTurnTimerChip(UnoGameView game) {
-    return TurnTimerBorder(
-      key: ValueKey('uno-timer-border-${game.turnDeadline}'),
-      active: _showTimer(game),
-      turnDeadline: game.turnDeadline,
-      turnTimeSec: game.turnTimeSec,
-      borderWidth: 2.5,
-      radius: 14,
-      onExpired: _onTurnTimeExpired,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceUnified.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: SizedBox(
-          width: 82,
-          height: 28,
-          child: Center(
-            child: GameTurnCountdown(
-              key: ValueKey('uno-turn-clock-${game.turnDeadline}'),
-              turnDeadline: game.turnDeadline,
-              turnTimeSec: game.turnTimeSec,
-              isMyTurn: game.isMyTurn,
-              onExpired: _onTurnTimeExpired,
-              labelBuilder: (seconds) => context.l10n.gameSecondsLeft(seconds),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _maybeSettleGame(UnoGameView game) {
     if (_isOffline || _balanceGainPlayed) return;
     if (!game.isOver && !game.iAmEliminated) return;
@@ -1509,24 +1478,18 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       child: SwipeBackScope.gameBoard(
       onBack: _onClose,
       bottomInset: swipeBottomExclude,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(withExtra: showGroupChat),
-          leading: buildGameAppBarLeading(
-            onClose: _onClose,
-            closeTooltip: context.l10n.commonBack,
-            extra: game != null && showGroupChat
-                ? GameIconWithBadge(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    tooltip: context.l10n.chatGroupTooltip,
-                    badge: groupUnread,
-                    onPressed: () => _openGroupChat(game),
-                  )
-                : null,
-          ),
+      child: GameScreenScaffold(
+        chrome: GameChrome(
+          onClose: _onClose,
+          closeTooltip: context.l10n.commonBack,
+          leadingExtra: game != null && showGroupChat
+              ? GameIconWithBadge(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: context.l10n.chatGroupTooltip,
+                  badge: groupUnread,
+                  onPressed: () => _openGroupChat(game),
+                )
+              : null,
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1536,58 +1499,48 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             ],
           ),
           centerTitle: true,
-          actions: [
-            SizedBox(
-              width: 96,
-              height: 36,
-              child: game != null && _showTimer(game)
-                  ? Align(
-                      alignment: Alignment.centerRight,
-                      child: _buildMyTurnTimerChip(game),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            IconButton(
-              tooltip: context.l10n.gamesRulesTitle,
-              onPressed: () => _showRules(game),
-              icon: const Icon(Icons.rule_rounded),
-            ),
-          ],
-        ),
-        body: GradientBackground(
-          child: SafeArea(
-            top: false,
-            child: gameAsync.when(
-              skipLoadingOnReload: true,
-              skipLoadingOnRefresh: true,
-              data: (value) {
-                _observeView(value);
-                return _buildGame(value);
-              },
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.accentStart,
+          onShowRules: () => _showRules(game),
+          turn: game == null || game.isOver || game.isBetweenRounds
+              ? const GameTurnClock.idle()
+              : GameTurnClock(
+                  isMyTurn: game.isMyTurn,
+                  deadline: _showTimer(game) ? game.turnDeadline : 0,
+                  turnTimeSec: game.turnTimeSec,
+                  onExpired: _onTurnTimeExpired,
                 ),
+        ),
+        body: SafeArea(
+          top: false,
+          child: gameAsync.when(
+            skipLoadingOnReload: true,
+            skipLoadingOnRefresh: true,
+            data: (value) {
+              _observeView(value);
+              return _buildGame(value);
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accentStart,
               ),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        formatUserError(error),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.redAccent),
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: () =>
-                            ref.invalidate(unoGameProvider(widget.gameId)),
-                        child: Text(context.l10n.commonRetry),
-                      ),
-                    ],
-                  ),
+            ),
+            error: (error, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      formatUserError(error),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () =>
+                          ref.invalidate(unoGameProvider(widget.gameId)),
+                      child: Text(context.l10n.commonRetry),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1687,10 +1640,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
     return Stack(
       children: [
-        MyTurnAlert.stackLeaf(
-          key: ValueKey('uno-turn-${game.isMyTurn}-${game.currentIndex}'),
-          isMyTurn: game.isMyTurn && !game.isOver && !game.iAmEliminated,
-        ),
         Padding(
           padding: EdgeInsets.fromLTRB(
             narrow ? 8 : 20,
@@ -1962,27 +1911,26 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         vertical: vertical,
         onProfileTap: player.isBot
             ? null
-            : () => unawaited(_openOpponentProfile(game, player, index)),
+            : () => _openOpponentProfile(player, index),
       ),
     );
   }
 
-  Future<void> _openOpponentProfile(
-    UnoGameView game,
-    UnoPlayerView player,
-    int index,
-  ) async {
-    await showUserProfileDialog(
+  void _openOpponentProfile(UnoPlayerView player, int index) {
+    openGameOpponentProfile(
       context: context,
       ref: ref,
-      userId: player.id,
+      opponent: GameOpponent(
+        userId: player.id,
+        avatarKind: player.avatarKind,
+        avatarValue: player.avatarValue,
+        frameCode: player.frameCode,
+        frameColor: player.frameColor,
+        isBot: player.isBot,
+      ),
+      gameType: 'uno',
+      gameId: widget.gameId,
       displayName: _playerName(player, index),
-      avatarKind: player.avatarKind,
-      avatarValue: player.avatarValue,
-      frameCode: player.frameCode,
-      frameColor: player.frameColor,
-      messageFrom: 'games',
-      messageReturnPath: '/games/uno/game/${widget.gameId}',
     );
   }
 

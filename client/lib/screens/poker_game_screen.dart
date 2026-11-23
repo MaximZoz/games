@@ -15,6 +15,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
@@ -1097,70 +1098,57 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       },
       child: SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(withExtra: showGroupChat),
-          leading: buildGameAppBarLeading(
-            onClose: _onClosePressed,
-            extra: showGroupChat
-                ? GameIconWithBadge(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    tooltip: context.l10n.chatGroupTooltip,
-                    badge: groupUnread,
-                    onPressed: () => _openGroupChat(game),
-                  )
-                : null,
-          ),
+      child: GameScreenScaffold(
+        chrome: GameChrome(
+          onClose: _onClosePressed,
+          leadingExtra: showGroupChat
+              ? GameIconWithBadge(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: context.l10n.chatGroupTooltip,
+                  badge: groupUnread,
+                  onPressed: () => _openGroupChat(game),
+                )
+              : null,
           title: Text(context.l10n.gamesPoker),
           centerTitle: true,
-          actions: [
-            if (gameAsync.valueOrNull != null &&
-                !gameAsync.valueOrNull!.isOver &&
-                !gameAsync.valueOrNull!.iAmEliminated)
-              IconButton(
-                tooltip: context.l10n.gameSurrender,
-                icon: const Icon(Icons.flag_outlined),
-                onPressed: () => unawaited(_confirmSurrender()),
-              ),
-            IconButton(
-              tooltip: context.l10n.gamesRulesTitle,
-              icon: const Icon(Icons.rule_rounded),
-              onPressed: () {
-                final game = gameAsync.valueOrNull;
-                showGameRulesDialog(
-                  context: context,
-                  content: rulesTextLines(pokerRuleLines(
-                    players: game?.playerIds.length ?? 2,
-                    turnTimeSec: game?.turnTimeSec ?? 0,
-                    stakeBronze: game?.stakeBronze ?? 0,
-                    offlineBot: _isOffline,
-                    l10n: context.l10n,
-                  )),
-                  closeLabel: context.l10n.commonClose,
-                );
-              },
-            ),
-          ],
-        ),
-        body: GradientBackground(
-          child: SafeArea(
-            child: gameAsync.when(
-              skipLoadingOnReload: true,
-              skipLoadingOnRefresh: true,
-              data: (game) => _buildContent(game, narrow),
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.accentStart),
-              ),
-              error: (e, _) => Center(
-                child: Text(
-                  formatUserError(e,
-                      fallback: context.l10n.commonServerErrorShort),
-                  style: const TextStyle(color: Colors.red),
+          onShowRules: () {
+            showGameRulesDialog(
+              context: context,
+              content: rulesTextLines(pokerRuleLines(
+                players: game?.playerIds.length ?? 2,
+                turnTimeSec: game?.turnTimeSec ?? 0,
+                stakeBronze: game?.stakeBronze ?? 0,
+                offlineBot: _isOffline,
+                l10n: context.l10n,
+              )),
+              closeLabel: context.l10n.commonClose,
+            );
+          },
+          turn: game == null || game.isOver || game.isHandOver
+              ? const GameTurnClock.idle()
+              : GameTurnClock(
+                  isMyTurn: game.isMyTurn,
+                  deadline: game.turnTimeSec > 0 ? game.turnDeadline : 0,
+                  turnTimeSec: game.turnTimeSec,
                 ),
+          onSurrender: game != null && !game.isOver && !game.iAmEliminated
+              ? () => unawaited(_confirmSurrender())
+              : null,
+        ),
+        body: SafeArea(
+          child: gameAsync.when(
+            skipLoadingOnReload: true,
+            skipLoadingOnRefresh: true,
+            data: (game) => _buildContent(game, narrow),
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppColors.accentStart),
+            ),
+            error: (e, _) => Center(
+              child: Text(
+                formatUserError(e,
+                    fallback: context.l10n.commonServerErrorShort),
+                style: const TextStyle(color: Colors.red),
               ),
             ),
           ),
@@ -1256,9 +1244,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
-            MyTurnAlert.stackLeaf(
-              isMyTurn: game.isMyTurn && !isOver && !game.isHandOver,
-            ),
             Positioned.fill(
               child: _buildTable(
                 game,
@@ -1554,6 +1539,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ? (constraints.maxWidth * 0.22).clamp(28.0, 44.0)
             : (constraints.maxWidth * 0.18).clamp(40.0, 64.0);
         final sidePad = narrow ? 2.0 : 6.0;
+        const seatAreaTop = 4.0;
+        final railInset = GameChromeScope.railInsetOf(context);
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -1581,7 +1568,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             // Борд + соперники — фиксированная зона (не прыгает с кнопками).
             Positioned.fill(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(sidePad, 4, sidePad, 8),
+                padding: EdgeInsets.fromLTRB(sidePad, seatAreaTop, sidePad, 8),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -1635,8 +1622,18 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                         padding: EdgeInsets.only(
                           bottom: tight ? heroBottom : 0,
                         ),
-                        child: Align(
-                          alignment: oppAnchors[i],
+                        child: CustomSingleChildLayout(
+                          delegate: _PokerSeatAnchorLayout(
+                            anchor: oppAnchors[i],
+                            // Область мест уже отступает от края на sidePad.
+                            railWidth: railInset > 0 ? railInset - sidePad : 0,
+                            railHeight: GameChromeScope.railHeightOf(context) - seatAreaTop,
+                            mirrored: oppAnchors.any(
+                              (a) =>
+                                  a.x == -oppAnchors[i].x &&
+                                  a.y == oppAnchors[i].y,
+                            ),
+                          ),
                           child: _buildSeat(
                             game,
                             opponents[i],
@@ -2792,7 +2789,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                     borderWidth: borderW,
                     radius: 10,
                     showIdleBorder: false,
-                    myTurnClock: true,
                     child: namePlate,
                   ),
                 ),
@@ -3159,6 +3155,56 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
   }
+}
+
+/// Ставит место соперника по якорю, но не под столбик действий общего хрома.
+///
+/// Столбик занимает правый верхний угол стола. Место, попавшее в этот угол,
+/// сдвигается к центру ровно на перекрытие; [mirrored] — левое место-близнец
+/// уходит на столько же, чтобы стол остался симметричным.
+class _PokerSeatAnchorLayout extends SingleChildLayoutDelegate {
+  const _PokerSeatAnchorLayout({
+    required this.anchor,
+    required this.railWidth,
+    required this.railHeight,
+    this.mirrored = false,
+  });
+
+  final Alignment anchor;
+
+  /// Занятая полоса от правой кромки области мест; 0 — столбика нет.
+  final double railWidth;
+
+  /// Высота занятого угла от верха области мест.
+  final double railHeight;
+  final bool mirrored;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
+      constraints.loosen();
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final free = Offset(
+      size.width - childSize.width,
+      size.height - childSize.height,
+    );
+    final pos = anchor.alongOffset(free);
+    if (railWidth <= 0 || pos.dy >= railHeight) return pos;
+    final onRight = anchor.x > 0;
+    if (!onRight && !mirrored) return pos;
+    final edgeGap = onRight ? free.dx - pos.dx : pos.dx;
+    final push = railWidth - edgeGap;
+    if (push <= 0) return pos;
+    return Offset(onRight ? pos.dx - push : pos.dx + push, pos.dy);
+  }
+
+  @override
+  bool shouldRelayout(_PokerSeatAnchorLayout oldDelegate) =>
+      oldDelegate.anchor != anchor ||
+      oldDelegate.railWidth != railWidth ||
+      oldDelegate.railHeight != railHeight ||
+      oldDelegate.mirrored != mirrored;
 }
 
 /// Бейдж банка: плавный пульс при изменении суммы (акцент на прибавке банка).
