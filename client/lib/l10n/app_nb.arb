@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Spill",
   "statsSelectMode": "Modus",
-  "statsRecentEmpty": "Ingen partier ennå"
+  "statsRecentEmpty": "Ingen partier ennå",
+  "rulesPlayers": "Spillere: {players}.",
+  "rulesMode": "Modus: {mode}.",
+  "gamesModeClassic": "Klassisk",
+  "rulesDeck": "Kortstokk: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Ingen innsats."
 }

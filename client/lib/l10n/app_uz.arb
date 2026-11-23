@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "O'yin",
   "statsSelectMode": "Rejim",
-  "statsRecentEmpty": "Hali partiyalar yo'q"
+  "statsRecentEmpty": "Hali partiyalar yo'q",
+  "rulesPlayers": "Oʻyinchilar: {players}.",
+  "rulesMode": "Rejim: {mode}.",
+  "gamesModeClassic": "Klassika",
+  "rulesDeck": "Koloda: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Stavkasiz."
 }

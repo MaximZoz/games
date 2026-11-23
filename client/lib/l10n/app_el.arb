@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Παιχνίδι",
   "statsSelectMode": "Λειτουργία",
-  "statsRecentEmpty": "Δεν υπάρχουν παρτίδες ακόμα"
+  "statsRecentEmpty": "Δεν υπάρχουν παρτίδες ακόμα",
+  "rulesPlayers": "Παίκτες: {players}.",
+  "rulesMode": "Λειτουργία: {mode}.",
+  "gamesModeClassic": "Κλασικό",
+  "rulesDeck": "Τράπουλα: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Χωρίς ποντάρισμα."
 }

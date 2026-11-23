@@ -1644,5 +1644,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Game",
   "statsSelectMode": "Mode",
-  "statsRecentEmpty": "No games yet"
+  "statsRecentEmpty": "No games yet",
+  "rulesPlayers": "Players: {players}.",
+  "rulesMode": "Mode: {mode}.",
+  "gamesModeClassic": "Classic",
+  "rulesDeck": "Deck: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "No stake."
 }

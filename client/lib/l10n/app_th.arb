@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "เกม",
   "statsSelectMode": "โหมด",
-  "statsRecentEmpty": "ยังไม่มีเกม"
+  "statsRecentEmpty": "ยังไม่มีเกม",
+  "rulesPlayers": "ผู้เล่น: {players}.",
+  "rulesMode": "โหมด: {mode}.",
+  "gamesModeClassic": "คลาสสิก",
+  "rulesDeck": "สำรับ: {deck}.",
+  "gamesPokerModeHoldem": "เท็กซัสโฮลเด็ม",
+  "rulesStakeNone": "ไม่มีเดิมพัน"
 }

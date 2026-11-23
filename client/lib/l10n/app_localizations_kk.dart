@@ -3339,4 +3339,28 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Әзірге партия жоқ';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Ойыншылар: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Классика';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Колода: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Ставкасыз.';
 }

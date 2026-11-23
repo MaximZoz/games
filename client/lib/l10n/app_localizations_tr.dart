@@ -3339,4 +3339,28 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Henüz parti yok';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Oyuncular: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Mod: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klasik';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Deste: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Bahis yok.';
 }

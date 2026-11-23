@@ -3342,4 +3342,28 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Zatím žádné partie';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Hráči: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Režim: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klasika';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Balíček: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Bez sázky.';
 }

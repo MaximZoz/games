@@ -3339,4 +3339,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => '还没有对局';
+
+  @override
+  String rulesPlayers(int players) {
+    return '玩家：$players。';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return '模式：$mode。';
+  }
+
+  @override
+  String get gamesModeClassic => '经典';
+
+  @override
+  String rulesDeck(String deck) {
+    return '牌组：$deck。';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => '德州扑克';
+
+  @override
+  String get rulesStakeNone => '无赌注。';
 }

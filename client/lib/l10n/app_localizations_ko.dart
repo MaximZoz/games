@@ -3339,4 +3339,28 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => '아직 대국이 없습니다';
+
+  @override
+  String rulesPlayers(int players) {
+    return '플레이어: $players명.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return '모드: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => '클래식';
+
+  @override
+  String rulesDeck(String deck) {
+    return '덱: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => '텍사스 홀덤';
+
+  @override
+  String get rulesStakeNone => '판돈 없음.';
 }

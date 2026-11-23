@@ -1,7 +1,6 @@
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
-import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Строки правил «Уно» — соответствуют движку (7 карт, без стека +2,
@@ -15,23 +14,22 @@ List<String> unoRuleLines({
   AppLocalizations? l10n,
 }) {
   final t = l10n ?? LocaleService.l10n;
-  return [
-    t.rulesUnoPlayers(players),
-    if (offlineBot)
-      t.rulesUnoOfflineBot
-    else ...[
-      turnTimeSec == 0
-          ? t.rulesNoTimeLimit
-          : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
+  return gameRuleLines(
+    stakeBronze: offlineBot ? 0 : stakeBronze,
+    players: players,
+    mode: t.gamesModeClassic,
+    turnTimeSec: offlineBot ? 0 : turnTimeSec,
+    l10n: t,
+    rules: [
+      t.rulesUnoIntro,
+      t.rulesUnoPlay,
+      t.rulesUnoWild,
+      t.rulesUnoDraw,
+      t.rulesUnoCall,
+      t.rulesUnoScoring,
+      if (offlineBot) t.rulesNardyOfflineBot,
     ],
-    t.rulesUnoIntro,
-    t.rulesUnoPlay,
-    t.rulesUnoWild,
-    t.rulesUnoDraw,
-    t.rulesUnoCall,
-    t.rulesUnoScoring,
-    if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
-  ];
+  );
 }
 
 /// Кнопка и колода «Взять» активны только пока можно взять и нет запроса в полёте.

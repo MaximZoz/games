@@ -1,7 +1,6 @@
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/domino/domino_mode.dart';
-import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Строки правил выбранного режима — соответствуют движку.
@@ -15,16 +14,17 @@ List<String> dominoRuleLines({
 }) {
   final t = l10n ?? LocaleService.l10n;
   final normalized = dominoNormalizeMode(mode);
-  return [
-    t.rulesUnoPlayers(players),
-    t.rulesDominoMode(dominoModeLabel(normalized, t)),
-    if (offlineBot)
-      t.rulesDominoOffline
-    else
-      turnTimeSec == 0 ? t.rulesNoTimeLimit : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-    ..._modeLines(normalized, t),
-    if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
-  ];
+  return gameRuleLines(
+    stakeBronze: offlineBot ? 0 : stakeBronze,
+    players: players,
+    mode: dominoModeLabel(normalized, t),
+    turnTimeSec: offlineBot ? 0 : turnTimeSec,
+    l10n: t,
+    rules: [
+      ..._modeLines(normalized, t),
+      if (offlineBot) t.rulesDominoOffline,
+    ],
+  );
 }
 
 List<String> _modeLines(String mode, AppLocalizations t) {

@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Spil",
   "statsSelectMode": "Tilstand",
-  "statsRecentEmpty": "Ingen partier endnu"
+  "statsRecentEmpty": "Ingen partier endnu",
+  "rulesPlayers": "Spillere: {players}.",
+  "rulesMode": "Tilstand: {mode}.",
+  "gamesModeClassic": "Klassisk",
+  "rulesDeck": "Kortspil: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Ingen indsats."
 }

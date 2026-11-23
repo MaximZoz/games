@@ -3339,4 +3339,28 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Belum ada permainan';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Pemain: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klasik';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Dek: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Tanpa taruhan.';
 }

@@ -3339,4 +3339,28 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Δεν υπάρχουν παρτίδες ακόμα';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Παίκτες: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Λειτουργία: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Κλασικό';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Τράπουλα: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Χωρίς ποντάρισμα.';
 }

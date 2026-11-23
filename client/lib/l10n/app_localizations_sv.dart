@@ -3339,4 +3339,28 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Inga partier än';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Spelare: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Läge: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klassiskt';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Kortlek: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Ingen insats.';
 }

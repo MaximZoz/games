@@ -3339,4 +3339,28 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Hali partiyalar yo\'q';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Oʻyinchilar: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Rejim: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klassika';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Koloda: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Stavkasiz.';
 }

@@ -1,6 +1,7 @@
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+    show formatTurnTime;
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Время на расстановку флота (как на сервере `battleshipSetupSec`).
@@ -14,20 +15,21 @@ List<String> battleshipRuleLines({
   AppLocalizations? l10n,
 }) {
   final t = l10n ?? LocaleService.l10n;
-  return [
-    t.rulesBattleshipPlayers,
-    if (offlineBot)
-      t.rulesDurakOfflineBot
-    else ...[
-      t.rulesBattleshipSetupTime(formatTurnTime(kBattleshipSetupTimeSec)),
-      turnTimeSec == 0
-          ? t.rulesNoTimeLimit
-          : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-      if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
+  return gameRuleLines(
+    stakeBronze: offlineBot ? 0 : stakeBronze,
+    players: 2,
+    mode: t.gamesModeClassic,
+    turnTimeSec: offlineBot ? 0 : turnTimeSec,
+    l10n: t,
+    rules: [
+      if (offlineBot)
+        t.rulesNardyOfflineBot
+      else
+        t.rulesBattleshipSetupTime(formatTurnTime(kBattleshipSetupTimeSec)),
+      t.rulesBattleshipIntro,
+      if (!offlineBot) t.rulesBattleshipSetup,
+      t.rulesBattleshipPlay,
+      t.rulesBattleshipWin,
     ],
-    t.rulesBattleshipIntro,
-    if (!offlineBot) t.rulesBattleshipSetup,
-    t.rulesBattleshipPlay,
-    t.rulesBattleshipWin,
-  ];
+  );
 }

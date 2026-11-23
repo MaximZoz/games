@@ -12,7 +12,8 @@ void main() {
 
   test('unoRuleLines includes players, turn time and win line', () {
     final lines = unoRuleLines(players: 3, turnTimeSec: 60);
-    expect(lines.first, 'Игроки: 3.');
+    expect(lines.first, 'Без ставки.');
+    expect(lines[1], 'Игроки: 3.');
     expect(lines.any((l) => l.contains('1 мин')), isTrue);
     expect(lines.any((l) => l.contains('Уно')), isTrue);
     expect(lines.any((l) => l.contains('7 карт')), isTrue);
@@ -36,15 +37,16 @@ void main() {
     expect(isStaleUnoDrawError(GamesException(400, 'lobby full')), isFalse);
   });
 
-  test('unoRuleLines offline bot hides turn time', () {
+  test('unoRuleLines offline bot: без лимита, заметка про бота в правилах', () {
     final lines = unoRuleLines(
       players: 2,
       turnTimeSec: 60,
       offlineBot: true,
     );
-    expect(lines.first, 'Игроки: 2.');
-    expect(lines, contains('Игра против бота, без лимита времени на ход.'));
-    expect(lines, isNot(contains('1 мин')));
+    expect(lines[1], 'Игроки: 2.');
+    expect(lines[3], 'Без ограничения по времени на ход.');
+    expect(lines.last, 'Офлайн: партия против бота.');
+    expect(lines.any((l) => l.contains('1 мин')), isFalse);
   });
 
   testWidgets('диалог правил Уно показывает актуальные строки движка', (

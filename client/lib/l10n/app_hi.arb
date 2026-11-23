@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "खेल",
   "statsSelectMode": "मोड",
-  "statsRecentEmpty": "अभी कोई खेल नहीं"
+  "statsRecentEmpty": "अभी कोई खेल नहीं",
+  "rulesPlayers": "खिलाड़ी: {players}.",
+  "rulesMode": "मोड: {mode}.",
+  "gamesModeClassic": "क्लासिक",
+  "rulesDeck": "डेक: {deck}.",
+  "gamesPokerModeHoldem": "टेक्सास होल्ड’एम",
+  "rulesStakeNone": "कोई दाँव नहीं।"
 }

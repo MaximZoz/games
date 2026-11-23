@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "게임",
   "statsSelectMode": "모드",
-  "statsRecentEmpty": "아직 대국이 없습니다"
+  "statsRecentEmpty": "아직 대국이 없습니다",
+  "rulesPlayers": "플레이어: {players}명.",
+  "rulesMode": "모드: {mode}.",
+  "gamesModeClassic": "클래식",
+  "rulesDeck": "덱: {deck}.",
+  "gamesPokerModeHoldem": "텍사스 홀덤",
+  "rulesStakeNone": "판돈 없음."
 }

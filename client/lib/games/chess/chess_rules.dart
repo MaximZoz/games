@@ -1,6 +1,5 @@
 import 'package:multigames_client/core/locale_provider.dart';
-import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Классика — контроль партии 60+0.
@@ -145,16 +144,16 @@ List<String> chessRuleLines({
   bool offline = false,
 }) {
   final mode = chessNormalizeMode(gameMode);
-  return [
-    l10n.rulesChessPlayers,
-    l10n.rulesChessMode(chessModeLabel(mode, l10n)),
-    chessClockLine(mode, l10n),
-    if (!offline && turnTimeSec == 0)
-      l10n.rulesNoTimeLimit
-    else if (!offline)
-      l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
-    if (!offline && stakeBronze > 0) rulesStakeLine(stakeBronze, l10n),
-    chessPlayLine(mode, l10n),
-    chessDrawLine(mode, l10n),
-  ];
+  return gameRuleLines(
+    stakeBronze: offline ? 0 : stakeBronze,
+    players: 2,
+    mode: chessModeLabel(mode, l10n),
+    turnTimeSec: offline ? 0 : turnTimeSec,
+    l10n: l10n,
+    rules: [
+      chessClockLine(mode, l10n),
+      chessPlayLine(mode, l10n),
+      chessDrawLine(mode, l10n),
+    ],
+  );
 }

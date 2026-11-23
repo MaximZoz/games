@@ -60,7 +60,7 @@ void main() {
       expect(text, isNot(contains('на поле 9x9')));
     });
 
-    test('stake 0 omits stake line (offline)', () {
+    test('stake 0 пишет «Без ставки» первой строкой (offline)', () {
       final text = buildTictactoeRulesText(
         gridSize: 3,
         turnTimeSec: 10,
@@ -68,11 +68,12 @@ void main() {
         firstMoveRestriction: false,
         stakeBronze: 0,
       );
-      expect(text, isNot(contains('Ставка')));
+      expect(text, isNot(contains('Ставка:')));
+      expect(text, startsWith('Без ставки.'));
       expect(text, contains('10 с'));
     });
 
-    test('offline bot omits turn time and uses alternate starts', () {
+    test('offline bot: без ставки и без лимита, первый ход чередуется', () {
       final text = buildTictactoeRulesText(
         gridSize: 3,
         turnTimeSec: 30,
@@ -82,9 +83,10 @@ void main() {
         includeTurnTime: false,
         offlineBot: true,
       );
-      expect(text, isNot(contains('Ставка')));
+      expect(text, isNot(contains('Ставка:')));
+      expect(text, startsWith('Без ставки.'));
       expect(text, isNot(contains('30 с')));
-      expect(text, isNot(contains('Без ограничения')));
+      expect(text, contains('Без ограничения'));
       expect(text, contains('чередуется'));
       expect(text, isNot(contains('O может поменяться')));
     });

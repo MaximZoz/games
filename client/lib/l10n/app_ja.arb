@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "ゲーム",
   "statsSelectMode": "モード",
-  "statsRecentEmpty": "まだ対局がありません"
+  "statsRecentEmpty": "まだ対局がありません",
+  "rulesPlayers": "プレイヤー: {players}人。",
+  "rulesMode": "モード: {mode}。",
+  "gamesModeClassic": "クラシック",
+  "rulesDeck": "デッキ: {deck}。",
+  "gamesPokerModeHoldem": "テキサスホールデム",
+  "rulesStakeNone": "掛け金なし。"
 }

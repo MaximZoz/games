@@ -1,7 +1,6 @@
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
-import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 String checkersModeLabel(String mode, [AppLocalizations? l10n]) {
@@ -53,19 +52,20 @@ List<String> checkersRuleLines({
   bool offline = false,
 }) {
   final mode = CheckersEngine.normalizeMode(gameMode);
-  return [
-    l10n.rulesCheckersPlayers,
-    l10n.rulesCheckersMode(checkersModeLabel(mode, l10n)),
-    if (offline)
-      l10n.rulesCheckersOfflineBot
-    else
-      l10n.rulesCheckersTime(formatTurnTime(turnTimeSec)),
-    if (!offline && stakeBronze > 0) rulesStakeLine(stakeBronze, l10n),
-    checkersPlayLine(mode, l10n),
-    if (mode == CheckersEngine.modeCorners) ...[
-      l10n.rulesCheckersPlayCornersNoReturn,
-      l10n.rulesCheckersPlayCornersLeaveHome,
+  return gameRuleLines(
+    stakeBronze: offline ? 0 : stakeBronze,
+    players: 2,
+    mode: checkersModeLabel(mode, l10n),
+    turnTimeSec: offline ? 0 : turnTimeSec,
+    l10n: l10n,
+    rules: [
+      checkersPlayLine(mode, l10n),
+      if (mode == CheckersEngine.modeCorners) ...[
+        l10n.rulesCheckersPlayCornersNoReturn,
+        l10n.rulesCheckersPlayCornersLeaveHome,
+      ],
+      checkersDrawLine(mode, l10n),
+      if (offline) l10n.rulesNardyOfflineBot,
     ],
-    checkersDrawLine(mode, l10n),
-  ];
+  );
 }

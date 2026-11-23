@@ -3339,4 +3339,28 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Chưa có ván nào';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Người chơi: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Cổ điển';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Bộ bài: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Không cược.';
 }

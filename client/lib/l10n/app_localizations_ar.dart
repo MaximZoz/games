@@ -3339,4 +3339,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'لا توجد مباريات بعد';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'اللاعبون: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'الوضع: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'كلاسيكي';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'المجموعة: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'تكساس هولدم';
+
+  @override
+  String get rulesStakeNone => 'بدون رهان.';
 }

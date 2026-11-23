@@ -3339,4 +3339,28 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'ยังไม่มีเกม';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'ผู้เล่น: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'โหมด: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'คลาสสิก';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'สำรับ: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'เท็กซัสโฮลเด็ม';
+
+  @override
+  String get rulesStakeNone => 'ไม่มีเดิมพัน';
 }

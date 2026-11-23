@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Oyun",
   "statsSelectMode": "Mod",
-  "statsRecentEmpty": "Henüz parti yok"
+  "statsRecentEmpty": "Henüz parti yok",
+  "rulesPlayers": "Oyuncular: {players}.",
+  "rulesMode": "Mod: {mode}.",
+  "gamesModeClassic": "Klasik",
+  "rulesDeck": "Deste: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Bahis yok."
 }

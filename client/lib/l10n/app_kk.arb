@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Ойын",
   "statsSelectMode": "Режим",
-  "statsRecentEmpty": "Әзірге партия жоқ"
+  "statsRecentEmpty": "Әзірге партия жоқ",
+  "rulesPlayers": "Ойыншылар: {players}.",
+  "rulesMode": "Режим: {mode}.",
+  "gamesModeClassic": "Классика",
+  "rulesDeck": "Колода: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Ставкасыз."
 }

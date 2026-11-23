@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "משחק",
   "statsSelectMode": "מצב",
-  "statsRecentEmpty": "אין משחקים עדיין"
+  "statsRecentEmpty": "אין משחקים עדיין",
+  "rulesPlayers": "שחקנים: {players}.",
+  "rulesMode": "מצב: {mode}.",
+  "gamesModeClassic": "קלאסי",
+  "rulesDeck": "חפיסה: {deck}.",
+  "gamesPokerModeHoldem": "טקסס הולדם",
+  "rulesStakeNone": "ללא הימור."
 }

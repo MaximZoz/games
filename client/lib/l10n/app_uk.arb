@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Гра",
   "statsSelectMode": "Режим",
-  "statsRecentEmpty": "Поки немає партій"
+  "statsRecentEmpty": "Поки немає партій",
+  "rulesPlayers": "Гравці: {players}.",
+  "rulesMode": "Режим: {mode}.",
+  "gamesModeClassic": "Класика",
+  "rulesDeck": "Колода: {deck}.",
+  "gamesPokerModeHoldem": "Техаський холдем",
+  "rulesStakeNone": "Без ставки."
 }

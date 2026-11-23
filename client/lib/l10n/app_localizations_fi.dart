@@ -3339,4 +3339,28 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Ei pelejä vielä';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Pelaajat: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Tila: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klassinen';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Pakka: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Ei panosta.';
 }

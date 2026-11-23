@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Spel",
   "statsSelectMode": "Modus",
-  "statsRecentEmpty": "Nog geen partijen"
+  "statsRecentEmpty": "Nog geen partijen",
+  "rulesPlayers": "Spelers: {players}.",
+  "rulesMode": "Modus: {mode}.",
+  "gamesModeClassic": "Klassiek",
+  "rulesDeck": "Deck: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Zonder inzet."
 }

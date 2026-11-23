@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "游戏",
   "statsSelectMode": "模式",
-  "statsRecentEmpty": "还没有对局"
+  "statsRecentEmpty": "还没有对局",
+  "rulesPlayers": "玩家：{players}。",
+  "rulesMode": "模式：{mode}。",
+  "gamesModeClassic": "经典",
+  "rulesDeck": "牌组：{deck}。",
+  "gamesPokerModeHoldem": "德州扑克",
+  "rulesStakeNone": "无赌注。"
 }

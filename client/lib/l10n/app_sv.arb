@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Spel",
   "statsSelectMode": "Läge",
-  "statsRecentEmpty": "Inga partier än"
+  "statsRecentEmpty": "Inga partier än",
+  "rulesPlayers": "Spelare: {players}.",
+  "rulesMode": "Läge: {mode}.",
+  "gamesModeClassic": "Klassiskt",
+  "rulesDeck": "Kortlek: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Ingen insats."
 }

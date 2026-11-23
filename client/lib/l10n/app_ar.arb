@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "لعبة",
   "statsSelectMode": "الوضع",
-  "statsRecentEmpty": "لا توجد مباريات بعد"
+  "statsRecentEmpty": "لا توجد مباريات بعد",
+  "rulesPlayers": "اللاعبون: {players}.",
+  "rulesMode": "الوضع: {mode}.",
+  "gamesModeClassic": "كلاسيكي",
+  "rulesDeck": "المجموعة: {deck}.",
+  "gamesPokerModeHoldem": "تكساس هولدم",
+  "rulesStakeNone": "بدون رهان."
 }

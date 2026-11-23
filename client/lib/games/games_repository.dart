@@ -9,6 +9,7 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/domino/domino_mode.dart';
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/games/chess/chess_rules.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
@@ -552,29 +553,19 @@ String buildTictactoeRulesText({
   final l10n = LocaleService.l10n;
   final cfg = configForVariant(variant);
   final resolvedGridSize = cfg.gridSize;
-  final parts = <String>[
-    l10n.rulesDurakMode(variantLabel(cfg.variant)),
-    ..._variantRulesBody(cfg, l10n, resolvedGridSize),
-  ];
-  if (includeTurnTime) {
-    parts.add(
-      turnTimeSec == 0
-          ? l10n.rulesNoTimeLimit
-          : l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
-    );
-  }
-  // 0 — офлайн / без ставок: строку про ставку не показываем.
-  // Формат: «1￼» → «1» + иконка монеты (не «1 бр»).
-  if (stakeBronze > 0) {
-    parts.add(rulesStakeLine(stakeBronze, l10n));
-  }
-  if (swapRule) {
-    parts.add(offlineBot ? l10n.rulesAlternateStarts : l10n.rulesSwap);
-  }
-  if (firstMoveRestriction) {
-    parts.add(l10n.rulesNoCenter);
-  }
-  return parts.join('\n\n');
+  return gameRuleLines(
+    stakeBronze: stakeBronze,
+    players: cfg.maxPlayers,
+    mode: variantLabel(cfg.variant),
+    // Офлайн без лимита: строка времени остаётся, но «без ограничения».
+    turnTimeSec: includeTurnTime ? turnTimeSec : 0,
+    l10n: l10n,
+    rules: [
+      ..._variantRulesBody(cfg, l10n, resolvedGridSize),
+      if (swapRule) offlineBot ? l10n.rulesAlternateStarts : l10n.rulesSwap,
+      if (firstMoveRestriction) l10n.rulesNoCenter,
+    ],
+  ).join('\n\n');
 }
 
 /// Текст правил по режиму (после строки «Режим: …»).

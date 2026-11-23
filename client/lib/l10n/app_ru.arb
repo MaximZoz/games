@@ -1917,5 +1917,32 @@
   },
   "statsSelectGame": "Игра",
   "statsSelectMode": "Режим",
-  "statsRecentEmpty": "Пока нет партий"
+  "statsRecentEmpty": "Пока нет партий",
+  "rulesPlayers": "Игроки: {players}.",
+  "@rulesPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesMode": "Режим: {mode}.",
+  "@rulesMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "gamesModeClassic": "Классика",
+  "rulesDeck": "Колода: {deck}.",
+  "@rulesDeck": {
+    "placeholders": {
+      "deck": {
+        "type": "String"
+      }
+    }
+  },
+  "gamesPokerModeHoldem": "Техасский холдем",
+  "rulesStakeNone": "Без ставки."
 }

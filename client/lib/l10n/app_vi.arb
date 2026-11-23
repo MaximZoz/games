@@ -1617,5 +1617,11 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Trò chơi",
   "statsSelectMode": "Chế độ",
-  "statsRecentEmpty": "Chưa có ván nào"
+  "statsRecentEmpty": "Chưa có ván nào",
+  "rulesPlayers": "Người chơi: {players}.",
+  "rulesMode": "Chế độ: {mode}.",
+  "gamesModeClassic": "Cổ điển",
+  "rulesDeck": "Bộ bài: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Không cược."
 }

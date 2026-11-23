@@ -6268,6 +6268,42 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Пока нет партий'**
   String get statsRecentEmpty;
+
+  /// No description provided for @rulesPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: {players}.'**
+  String rulesPlayers(int players);
+
+  /// No description provided for @rulesMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesMode(String mode);
+
+  /// No description provided for @gamesModeClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классика'**
+  String get gamesModeClassic;
+
+  /// No description provided for @rulesDeck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колода: {deck}.'**
+  String rulesDeck(String deck);
+
+  /// No description provided for @gamesPokerModeHoldem.
+  ///
+  /// In ru, this message translates to:
+  /// **'Техасский холдем'**
+  String get gamesPokerModeHoldem;
+
+  /// No description provided for @rulesStakeNone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без ставки.'**
+  String get rulesStakeNone;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

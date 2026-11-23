@@ -3345,4 +3345,28 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Пакуль няма партый';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Гульцы: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Рэжым: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Класіка';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Калода: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Тэхаскі холдэм';
+
+  @override
+  String get rulesStakeNone => 'Без стаўкі.';
 }
