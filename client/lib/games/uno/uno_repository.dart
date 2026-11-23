@@ -394,6 +394,20 @@ List<UnoCard> unoVisibleHand(List<UnoCard> hand, Set<String> hiddenIds) {
 UnoCard? unoVisibleDiscard({UnoCard? serverTop, UnoCard? override}) =>
     override ?? serverTop;
 
+/// Пока бросок не долетел, на столе остаётся уже нарисованная карта.
+///
+/// Иначе пришедший верх подменяет её на кадр и карта под броском мигает.
+UnoCard? unoDiscardHeldDuringThrow({
+  required UnoCard? override,
+  required UnoCard? painted,
+  required String? incomingTopId,
+  required bool hold,
+}) {
+  if (!hold || override != null) return override;
+  if (painted == null || painted.id == incomingTopId) return override;
+  return painted;
+}
+
 class UnoLobbyView {
   const UnoLobbyView({
     required this.id,

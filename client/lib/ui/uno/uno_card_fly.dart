@@ -11,6 +11,13 @@ import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
 const Curve kUnoFlyCurve = Curves.easeOutQuint;
 
+/// Наклон карты в веере. Тот же угол у летящей копии, иначе карта под ней
+/// открывается раньше, чем бросок сдвинулся с места.
+double unoHandFanAngle({required int index, required int count}) {
+  if (count <= 1) return 0;
+  return (index - (count - 1) / 2) * 0.025;
+}
+
 class UnoCardFlyTicket {
   UnoCardFlyTicket._(this._entry, this._controller, this._animation);
 
@@ -47,6 +54,10 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   SfxId? launchSfx,
   SfxId? landSfx,
   bool playSfx = true,
+  bool matchRects = false,
+  Alignment beginAlignment = Alignment.center,
+  Alignment endAlignment = Alignment.center,
+  VoidCallback? onVisible,
 }) async {
   if (!context.mounted) {
     return UnoCardFlyTicket._(null, null, null);
@@ -66,37 +77,67 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
     duration: duration,
   );
   final animation = CurvedAnimation(parent: controller, curve: curve);
+  final paintSize =
+      matchRects && from.width > 0 && from.height > 0 ? from.size : cardSize;
+  var visibleNotified = false;
+  void scheduleVisible() {
+    if (visibleNotified || onVisible == null) return;
+    visibleNotified = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) => onVisible());
+  }
+
   late final OverlayEntry entry;
   entry = GameFlyOverlay.insert(overlay, (_) {
+    scheduleVisible();
     return IgnorePointer(
       child: AnimatedBuilder(
         animation: animation,
         child: _UnoFlyFace(
           card: card,
-          cardSize: cardSize,
+          cardSize: paintSize,
           faceDown: faceDown,
           flipToFace: flipToFace,
           animation: animation,
         ),
         builder: (_, child) {
           final t = animation.value;
-          final center = Offset(
-            lerpDouble(from.center.dx, to.center.dx, t)!,
-            lerpDouble(from.center.dy, to.center.dy, t)! -
-                arcLift * math.sin(math.pi * t),
-          );
+          final angle = lerpDouble(beginAngle, endAngle, t)!;
+          final lift = arcLift * math.sin(math.pi * t);
+          late final Offset topLeft;
+          late final Size box;
+          late final double scale;
+          late final Alignment align;
+          if (matchRects && from.width > 0 && from.height > 0) {
+            final endTopLeft =
+                to.center - Offset(from.width / 2, from.height / 2);
+            topLeft = Offset.lerp(from.topLeft, endTopLeft, t)!;
+            box = from.size;
+            scale = lerpDouble(1, to.width / from.width, t)!;
+            align = Alignment.lerp(beginAlignment, endAlignment, t)!;
+          } else {
+            final center = Offset(
+              lerpDouble(from.center.dx, to.center.dx, t)!,
+              lerpDouble(from.center.dy, to.center.dy, t)!,
+            );
+            box = cardSize;
+            scale = lerpDouble(beginScale, endScale, t)!;
+            align = Alignment.center;
+            topLeft = center - Offset(box.width / 2, box.height / 2);
+          }
           return Stack(
             fit: StackFit.expand,
             children: [
               Positioned(
-                left: center.dx - cardSize.width / 2,
-                top: center.dy - cardSize.height / 2,
-                width: cardSize.width,
-                height: cardSize.height,
+                left: topLeft.dx,
+                top: topLeft.dy - lift,
+                width: box.width,
+                height: box.height,
                 child: Transform.rotate(
-                  angle: lerpDouble(beginAngle, endAngle, t)!,
+                  alignment: align,
+                  angle: angle,
                   child: Transform.scale(
-                    scale: lerpDouble(beginScale, endScale, t)!,
+                    alignment: align,
+                    scale: scale,
                     filterQuality: FilterQuality.medium,
                     child: child,
                   ),
