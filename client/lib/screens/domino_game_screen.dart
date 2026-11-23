@@ -512,10 +512,9 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
                   turnTimeSec: game.turnTimeSec,
                   onExpired: _onTurnExpired,
                 ),
-          onSurrender:
-              game != null && !_isOffline && !game.isOver && !game.iForfeited
-                  ? () => unawaited(_confirmSurrender())
-                  : null,
+          onSurrender: game != null && !game.isOver && !game.iForfeited
+              ? () => unawaited(_confirmSurrender())
+              : null,
         ),
         body: asyncGame.when(
           skipLoadingOnReload: true,

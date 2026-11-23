@@ -504,7 +504,7 @@ class _DominoTableState extends State<DominoTable>
   @override
   Widget build(BuildContext context) {
     final view = widget.view;
-    _chainMaxScale = isNarrow(context) ? 1.0 : 1.3;
+    _chainMaxScale = isNarrow(context) ? 1.0 : 1.7;
     return GameFlightStage(
       controller: _flights,
       child: LayoutBuilder(

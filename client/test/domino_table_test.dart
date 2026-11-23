@@ -610,4 +610,58 @@ void main() {
     OfflineDominoRegistry.instance.disposeAll();
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('офлайн-домино: флаг под правилами сдаёт партию', (tester) async {
+    setUpTestLocaleRu();
+    tester.view.physicalSize = const Size(390, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final session = OfflineDominoSession.create(
+      humanUserId: 'local:player',
+      playerCount: 2,
+      humanDisplayName: 'Я',
+    );
+    addTearDown(OfflineDominoRegistry.instance.disposeAll);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: DominoGameScreen(gameId: session.gameId),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+
+    final rules = find.byKey(const ValueKey('game-chrome-rules'));
+    final rail = find.byKey(const ValueKey('game-chrome-rail'));
+    expect(rules, findsOneWidget);
+    expect(rail, findsOneWidget);
+    expect(
+      tester.getRect(rail).top,
+      greaterThanOrEqualTo(tester.getRect(rules).bottom - 4),
+    );
+
+    final flag = find.descendant(
+      of: rail,
+      matching: find.byIcon(Icons.flag_outlined),
+    );
+    expect(flag, findsOneWidget);
+    await tester.tap(flag);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Сдаться'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+
+    expect(session.view.isOver, isTrue);
+    expect(session.view.iWon, isFalse);
+    expect(find.byKey(const ValueKey('game-chrome-rail')), findsNothing);
+    expect(tester.takeException(), isNull);
+    OfflineDominoRegistry.instance.disposeAll();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
