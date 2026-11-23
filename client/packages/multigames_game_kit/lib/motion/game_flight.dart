@@ -16,6 +16,7 @@ class GameFlight {
     required this.from,
     required this.to,
     required this.builder,
+    this.toResolver,
     this.fromAngle = 0,
     this.toAngle = 0,
     this.lift = 18,
@@ -27,6 +28,11 @@ class GameFlight {
 
   final Rect from;
   final Rect to;
+
+  /// Уточняет [to] на каждом кадре по живой вёрстке: место назначения
+  /// появляется только после перестройки стола и может ещё сдвигаться,
+  /// пока соседние фишки раздвигаются. null из колбэка — остаётся [to].
+  final Rect? Function()? toResolver;
 
   /// Радианы, по часовой стрелке.
   final double fromAngle;
@@ -177,6 +183,8 @@ class _GameFlightStageState extends State<GameFlightStage> {
   @override
   Widget build(BuildContext context) {
     return Stack(
+      // Стол получает те же ограничения, что и сцена: она не меняет вёрстку.
+      fit: StackFit.passthrough,
       clipBehavior: Clip.none,
       children: [
         widget.child,
@@ -240,10 +248,11 @@ class _FlightFrame extends StatelessWidget {
     final flight = active.flight;
     final t = flight.curve.transform(active.progress);
     final arc = math.sin(math.pi * t);
-    final center = Offset.lerp(flight.from.center, flight.to.center, t)! -
+    final to = flight.toResolver?.call() ?? flight.to;
+    final center = Offset.lerp(flight.from.center, to.center, t)! -
         Offset(0, flight.lift * arc);
-    final width = lerpDouble(flight.from.width, flight.to.width, t)!;
-    final height = lerpDouble(flight.from.height, flight.to.height, t)!;
+    final width = lerpDouble(flight.from.width, to.width, t)!;
+    final height = lerpDouble(flight.from.height, to.height, t)!;
     final angle = lerpDouble(flight.fromAngle, flight.toAngle, t)!;
     return Positioned(
       left: center.dx - width / 2,

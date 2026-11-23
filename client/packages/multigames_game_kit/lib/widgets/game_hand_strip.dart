@@ -77,10 +77,15 @@ class GameHandStrip extends StatefulWidget {
     required this.height,
     this.spacing = 12,
     this.padding = const EdgeInsets.symmetric(horizontal: 16),
+    this.itemKeyBuilder,
   });
 
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
+
+  /// Постоянный ключ фишки (например её id). С ним соседи плавно съезжаются,
+  /// когда фишка ушла из руки, и раздвигаются, когда пришла новая.
+  final Object Function(int index)? itemKeyBuilder;
   final Size itemSize;
   final double height;
 
@@ -92,9 +97,53 @@ class GameHandStrip extends StatefulWidget {
   State<GameHandStrip> createState() => GameHandStripState();
 }
 
-class GameHandStripState extends State<GameHandStrip> {
+class GameHandStripState extends State<GameHandStrip>
+    with SingleTickerProviderStateMixin {
   final ScrollController _controller = ScrollController();
+  late final AnimationController _settle = AnimationController(
+    vsync: this,
+    duration: GameMotion.settle,
+    value: 1,
+  );
   double _viewport = 0;
+
+  /// На сколько каждая фишка стояла левее/правее до перестройки руки.
+  Map<Object, double> _shift = const <Object, double>{};
+
+  @override
+  void didUpdateWidget(covariant GameHandStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final keyOf = widget.itemKeyBuilder;
+    final oldKeyOf = oldWidget.itemKeyBuilder;
+    if (keyOf == null || oldKeyOf == null || _viewport <= 0) return;
+    if (oldWidget.itemCount == widget.itemCount) return;
+    final before = GameHandStripMetrics(
+      viewport: _viewport,
+      itemSize: oldWidget.itemSize,
+      height: oldWidget.height,
+      spacing: oldWidget.spacing,
+      padding: oldWidget.padding,
+    );
+    final after = metrics;
+    final scroll = scrollOffset;
+    final left = <Object, double>{
+      for (var i = 0; i < oldWidget.itemCount; i++)
+        oldKeyOf(i):
+            before.itemRect(i, count: oldWidget.itemCount, scroll: scroll).left,
+    };
+    final shift = <Object, double>{};
+    for (var i = 0; i < widget.itemCount; i++) {
+      final key = keyOf(i);
+      final was = left[key];
+      if (was == null) continue;
+      final now =
+          after.itemRect(i, count: widget.itemCount, scroll: scroll).left;
+      if ((was - now).abs() > 0.5) shift[key] = was - now;
+    }
+    if (shift.isEmpty) return;
+    _shift = shift;
+    _settle.forward(from: 0);
+  }
 
   /// Геометрия полосы по последней вёрстке.
   GameHandStripMetrics get metrics => GameHandStripMetrics(
@@ -128,7 +177,28 @@ class GameHandStripState extends State<GameHandStrip> {
   @override
   void dispose() {
     _controller.dispose();
+    _settle.dispose();
     super.dispose();
+  }
+
+  Widget _settled(int index, Widget child) {
+    final keyOf = widget.itemKeyBuilder;
+    if (keyOf == null) return child;
+    final key = keyOf(index);
+    return AnimatedBuilder(
+      animation: _settle,
+      child: child,
+      builder: (context, child) {
+        // Transform стоит всегда: иначе поддерево фишки пересоздавалось бы
+        // в начале и в конце каждого сдвига.
+        final shift = _shift[key] ?? 0;
+        final left = 1 - GameMotion.settleCurve.transform(_settle.value);
+        return Transform.translate(
+          offset: Offset(shift * left, 0),
+          child: child,
+        );
+      },
+    );
   }
 
   @override
@@ -147,7 +217,7 @@ class GameHandStripState extends State<GameHandStrip> {
                 if (i > 0) SizedBox(width: widget.spacing),
                 SizedBox.fromSize(
                   size: widget.itemSize,
-                  child: widget.itemBuilder(context, i),
+                  child: _settled(i, widget.itemBuilder(context, i)),
                 ),
               ],
             ],
