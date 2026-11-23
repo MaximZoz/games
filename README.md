@@ -84,7 +84,7 @@ Go (net/http, pgx, JWT)
 | Пакет | Что внутри |
 |---|---|
 | `multigames_ui` | UI-библиотека: токены темы (`AppColors`, `AppRadius`, `AppSpacing`, `AppDurations`), адаптив (`isNarrow` / `isWide`), примитивы (кнопки, рамки, фон, шиммер, баннеры) |
-| `multigames_game_kit` | Игровые компоненты: палитра столов и фишек `GamePalette`, длительности `GameMotion`, полёты фишек `GameFlightController` / `GameFlightStage`, рука `GameHandStrip`, россыпь `scatterSlots`, поверхность стола `GameTableSurface` |
+| `multigames_game_kit` | Игровые компоненты: единая палитра столов, досок, сукна и фишек `GamePalette` (на ней все девять игр), длительности `GameMotion`, полёты фишек `GameFlightController` / `GameFlightStage`, рука `GameHandStrip`, россыпь `scatterSlots`, поверхность стола `GameTableSurface` |
 
 Общий хром партии — `client/lib/games/framework/`: `GameScreenScaffold` + `GameChrome`, `GameOpponentPanel`, `forgetGameSession`. Старые пути `lib/ui/...` реэкспортируют пакеты.  
 Сервер: `server/cmd/server`, `internal/api`, `internal/store`, `migrations/`.
