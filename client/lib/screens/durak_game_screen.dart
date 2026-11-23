@@ -21,6 +21,7 @@ import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/games/durak/durak_table_layout.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
@@ -42,7 +43,6 @@ import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
-import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
@@ -6804,7 +6804,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         !view.iAmEliminated &&
         !view.iAmFinished;
     final isMulti = (view?.playerIds.length ?? 0) > 2;
-    final topPad = MediaQuery.paddingOf(context).top;
+    final canOfferDraw = view != null &&
+        !isMulti &&
+        view.playerIds.length == 2 &&
+        !view.hasBotOpponent;
     final groupChatId = (view?.chatId ?? '').trim();
     // После конца партии чат скрываем сразу (сервер тоже удаляет group chat).
     final showGroupChat =
@@ -6830,148 +6833,130 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       child: SwipeBackScope.gameBoard(
         onBack: _onClosePressed,
         bottomInset: swipeBottomExclude,
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            toolbarHeight: gameToolbarHeight(context),
-            leadingWidth: gameAppBarLeadingWidth(),
-            centerTitle: true,
-            titleSpacing: 0,
+        child: GameScreenScaffold(
+          chrome: GameChrome(
             // Крестик на одной линии с «правилами» (как в 1×1).
-            leading: buildGameAppBarLeading(
-              onClose: _busy ? null : _onClosePressed,
-            ),
+            onClose: _busy ? null : _onClosePressed,
             title: Text(context.l10n.gamesDurak),
-            actions: view == null
-                ? const []
-                : buildGameAppBarActions(
-                    context: context,
-                    onSurrender: null, // сдача — overlay под правилами
-                    onOfferDraw: null,
-                    onShowRules: () => _showRules(view),
-                    rulesTooltip: context.l10n.gamesRulesTitle,
+            centerTitle: true,
+            onShowRules: () {
+              if (view != null) _showRules(view);
+            },
+            // Таймер своего хода — в шапке перед правилами; ход соперника
+            // показывает рамка его карточки.
+            turn: view == null || view.isOver || view.iAmEliminated
+                ? const GameTurnClock.idle()
+                : GameTurnClock(
+                    isMyTurn: view.isMyTurn,
+                    deadline: view.turnTimeSec > 0 ? view.turnDeadline : 0,
+                    turnTimeSec: view.turnTimeSec,
+                    onExpired: _onTurnTimeExpired,
                   ),
-          ),
-          body: GradientBackground(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (view != null)
-                  MyTurnAlert.stackLeaf(
-                    isMyTurn:
-                        view.isMyTurn && !view.isOver && !view.iAmEliminated,
-                  ),
-                // bottom: false — веер чуть заезжает под нижнюю панель.
-                SafeArea(
-                  bottom: false,
-                  child: gameAsync.when(
-                    skipLoadingOnReload: true,
-                    skipLoadingOnRefresh: true,
-                    data: _buildTable,
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppColors.accentStart),
+            // «Сдаться» и ничья — столбиком под «правилами» (1×1 и multi).
+            onSurrender: showSurrender ? _confirmSurrender : null,
+            draw: showSurrender && canOfferDraw
+                ? GameDrawOffer(
+                    onPressed: () {
+                      if (_opponentOfferedDraw(view)) {
+                        unawaited(_acceptDraw());
+                      } else {
+                        unawaited(_offerDraw(view));
+                      }
+                    },
+                    flags: DrawOfferFlags(
+                      iOffered: _iOfferedDraw(view),
+                      opponentOffered: _opponentOfferedDraw(view),
                     ),
-                    error: (e, _) {
-                      _handleAuthError(e);
-                      if (_isGameGoneError(e)) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) _leaveGoneGame();
-                        });
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.accentStart,
-                          ),
-                        );
-                      }
-                      if (_isSessionExpired(e) || _isTransientLoadError(e)) {
-                        if (_isTransientLoadError(e)) {
-                          _scheduleTransientRetry();
-                        }
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.accentStart,
-                          ),
-                        );
-                      }
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                formatUserError(
-                                  e,
-                                  fallback: context.l10n.commonTryLater,
-                                ),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton(
-                                onPressed: () => ref.invalidate(
-                                  durakGameProvider(widget.gameId),
-                                ),
-                                child: Text(context.l10n.commonTryRefresh),
-                              ),
-                            ],
-                          ),
+                  )
+                : null,
+          ),
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              // bottom: false — веер чуть заезжает под нижнюю панель.
+              SafeArea(
+                bottom: false,
+                child: gameAsync.when(
+                  skipLoadingOnReload: true,
+                  skipLoadingOnRefresh: true,
+                  data: _buildTable,
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.accentStart),
+                  ),
+                  error: (e, _) {
+                    _handleAuthError(e);
+                    if (_isGameGoneError(e)) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _leaveGoneGame();
+                      });
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentStart,
                         ),
                       );
-                    },
+                    }
+                    if (_isSessionExpired(e) || _isTransientLoadError(e)) {
+                      if (_isTransientLoadError(e)) {
+                        _scheduleTransientRetry();
+                      }
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentStart,
+                        ),
+                      );
+                    }
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              formatUserError(
+                                e,
+                                fallback: context.l10n.commonTryLater,
+                              ),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: () => ref.invalidate(
+                                durakGameProvider(widget.gameId),
+                              ),
+                              child: Text(context.l10n.commonTryRefresh),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Салют один раз: после arm не снимаем виджет, даже если у
+              // наблюдателя на столе снова карты (иначе анимация рестартит).
+              if (_confettiArmed)
+                Positioned.fill(
+                  child: GameConfettiOverlay(
+                    key: ValueKey('durak-confetti-${widget.gameId}'),
                   ),
                 ),
-                // Салют один раз: после arm не снимаем виджет, даже если у
-                // наблюдателя на столе снова карты (иначе анимация рестартит).
-                if (_confettiArmed)
-                  Positioned.fill(
-                    child: GameConfettiOverlay(
-                      key: ValueKey('durak-confetti-${widget.gameId}'),
-                    ),
+              // Групповой чат — отдельно под крестиком.
+              if (showGroupChat && view != null)
+                Positioned(
+                  left: 4,
+                  top: 0,
+                  child: GameIconWithBadge(
+                    icon: Icons.forum_rounded,
+                    badge: groupUnread,
+                    tooltip: context.l10n.chatGroupTooltip,
+                    onPressed: () => _openGroupChat(view),
                   ),
-                // Групповой чат — отдельно под крестиком.
-                if (showGroupChat && view != null)
-                  Positioned(
-                    left: 4,
-                    top: 0,
-                    child: GameIconWithBadge(
-                      icon: Icons.forum_rounded,
-                      badge: groupUnread,
-                      tooltip: context.l10n.chatGroupTooltip,
-                      onPressed: () => _openGroupChat(view),
-                    ),
-                  ),
-                // «Сдаться» под «правилами» (1×1 и multi), как в одиночной.
-                if (showSurrender)
-                  Positioned(
-                    right: 4,
-                    top: topPad + 4,
-                    child: GameActionsOverlay(
-                      canDraw: !isMulti &&
-                          view.playerIds.length == 2 &&
-                          !view.hasBotOpponent,
-                      iOfferedDraw: _iOfferedDraw(view),
-                      opponentOfferedDraw: _opponentOfferedDraw(view),
-                      onSurrender: _confirmSurrender,
-                      onDraw: () {
-                        if (_opponentOfferedDraw(view)) {
-                          unawaited(_acceptDraw());
-                        } else {
-                          unawaited(_offerDraw(view));
-                        }
-                      },
-                      surrenderTooltip: context.l10n.gameSurrender,
-                      drawTooltip: context.l10n.gameOfferDraw,
-                      acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-                      drawOfferedTooltip: context.l10n.gameDrawOffered,
-                    ),
-                  ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
@@ -7162,14 +7147,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       fanZoneH: fanZoneH,
     );
 
-    // Таймер — только после раздачи (_busy) и когда сервер выставил deadline.
-    final showTimer = !view.isOver &&
-        !_busy &&
-        !_cardFlightActive &&
-        !_localAttackHold &&
-        view.isMyTurn &&
-        view.turnTimeSec > 0 &&
-        view.turnDeadline > 0;
     _syncOpponentTakeHold(view);
     if (_optimisticTake && view.phase != 'defend') {
       _optimisticTake = false;
@@ -7370,7 +7347,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                   view,
                   tableSize,
                   trumpCard,
-                  showTimer: showTimer,
                   bottomReserve: boardBottomReserve,
                 ),
               ),
@@ -7626,50 +7602,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMyTurnTimerChip(DurakGameView view) {
-    final chip = DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceUnified.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        child: SizedBox(
-          width: 70,
-          height: 28,
-          child: Center(
-            child: GameTurnCountdown(
-              key: ValueKey('turn-clock-${view.turnDeadline}'),
-              turnDeadline: view.turnDeadline,
-              turnTimeSec: view.turnTimeSec,
-              isMyTurn: view.isMyTurn,
-              onExpired: _onTurnTimeExpired,
-              labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-            ),
-          ),
-        ),
-      ),
-    );
-    // Как рамка соперника в 1×1 — таймер своего хода в shrinking border.
-    return TurnTimerBorder(
-      key: ValueKey('my-timer-border-${view.turnDeadline}'),
-      active: view.isMyTurn && view.turnTimeSec > 0 && view.turnDeadline > 0,
-      turnDeadline: view.turnDeadline,
-      turnTimeSec: view.turnTimeSec,
-      borderWidth: 2.5,
-      radius: 18,
-      onExpired: _onTurnTimeExpired,
-      child: chip,
     );
   }
 
@@ -8233,7 +8165,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     DurakGameView view,
     Size cardSize,
     PlayingCard trumpCard, {
-    bool showTimer = false,
     double bottomReserve = 0,
   }) {
     final focus =
@@ -8284,8 +8215,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final showTableDropSlot =
         (canShowAttackSlot && highlightAttack) || showTransferSlot;
 
-    // Слот над колодой под таймер своего хода; такой же пустой — над битой,
-    // чтобы колода и бита всегда на одной линии (появление таймера ничего не двигает).
+    // Отступ над колодой и битой: держит их на одной линии и на прежней
+    // высоте (раньше здесь стоял таймер своего хода, теперь он в шапке).
     final pileTimerSlotH = _fit.compact ? 34.0 : 48.0;
     const pileTimerGap = 6.0;
 
@@ -8539,7 +8470,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                   ),
                 ),
               ),
-            // Колода слева; таймер своего хода — в фиксированном слоте над ней.
+            // Колода слева. Над ней — прежний отступ: таймер своего хода
+            // переехал в шапку, а колода и бита остались на своих местах.
             Positioned(
               left: pileInset,
               top: pileTop,
@@ -8547,20 +8479,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: pileTimerSlotH,
-                    width: 96,
-                    child: IgnorePointer(
-                      ignoring: !showTimer,
-                      child: Opacity(
-                        opacity: showTimer ? 1 : 0,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: _buildMyTurnTimerChip(view),
-                        ),
-                      ),
-                    ),
-                  ),
+                  SizedBox(height: pileTimerSlotH, width: 96),
                   const SizedBox(height: pileTimerGap),
                   deckPeek,
                 ],
