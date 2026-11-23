@@ -32,7 +32,6 @@ import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/game_table_fit.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
 import 'package:multigames_client/ui/durak/card_fly.dart';
@@ -47,6 +46,7 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
+import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 /// Отбой: лёгкий поворот вправо (~13°), чтобы был виден угол атаки.
 const double _kDefendLandAngle = 0.22;
@@ -6920,7 +6920,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                 fallback: context.l10n.commonTryLater,
                               ),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.red),
+                              style: const TextStyle(color: GamePalette.danger),
                             ),
                             const SizedBox(height: 16),
                             TextButton(
@@ -8215,11 +8215,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final showTableDropSlot =
         (canShowAttackSlot && highlightAttack) || showTransferSlot;
 
-    // Отступ над колодой и битой: держит их на одной линии и на прежней
-    // высоте (раньше здесь стоял таймер своего хода, теперь он в шапке).
-    final pileTimerSlotH = _fit.compact ? 34.0 : 48.0;
-    const pileTimerGap = 6.0;
-
     // Колода слева — чуть в кадре, не под боковой панелью.
     // Freeze: козырь не исчезает, пока доборные карты не улетели.
     final pilesPeek = durakPilesPeekOffEdge(
@@ -8380,7 +8375,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       center: const Alignment(0, -0.08),
                       radius: 1.2,
                       colors: [
-                        const Color(0xFFC7D2FE).withValues(alpha: 0.42),
+                        GamePalette.tableGlow.withValues(alpha: 0.42),
                         AppColors.accentSoft.withValues(alpha: 0.22),
                         AppColors.surfaceUnified.withValues(alpha: 0.0),
                       ],
@@ -8470,42 +8465,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                   ),
                 ),
               ),
-            // Колода слева. Над ней — прежний отступ: таймер своего хода
-            // переехал в шапку, а колода и бита остались на своих местах.
+            // Колода слева и бита справа — от верха стола, на одной линии.
             Positioned(
               left: pileInset,
               top: pileTop,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: pileTimerSlotH, width: 96),
-                  const SizedBox(height: pileTimerGap),
-                  deckPeek,
-                ],
-              ),
+              child: deckPeek,
             ),
-            // Бита справа. Пустую не рисуем — только 1×1 якорь для полёта в отбой.
-            if (bitoCount > 0)
-              Positioned(
-                right: pileInset,
-                top: pileTop,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    SizedBox(height: pileTimerSlotH, width: 1),
-                    const SizedBox(height: pileTimerGap),
-                    RepaintBoundary(child: bitoPeek),
-                  ],
-                ),
-              )
-            else
-              Positioned(
-                right: pileInset,
-                top: pileTop + pileTimerSlotH + pileTimerGap,
-                child: bitoPeek,
-              ),
+            // Пустую биту не рисуем — только 1×1 якорь для полёта в отбой.
+            Positioned(
+              right: pileInset,
+              top: pileTop,
+              child: bitoCount > 0 ? RepaintBoundary(child: bitoPeek) : bitoPeek,
+            ),
           ],
         );
       },

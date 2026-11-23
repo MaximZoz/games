@@ -5,6 +5,7 @@ import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/framework/game_chrome.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/durak_game_screen.dart';
+import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -57,6 +58,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
     }
     expect(tester.takeException(), isNull);
+
+    // Над колодой нет пустого места от прежнего таймера: она стоит у
+    // верхнего края стола.
+    final deck = find.byType(DurakDeckPile);
+    expect(deck, findsOneWidget);
+    final board = find.ancestor(of: deck, matching: find.byType(Stack)).first;
+    expect(
+      tester.getRect(deck).top - tester.getRect(board).top,
+      lessThanOrEqualTo(8),
+    );
+
     OfflineDurakRegistry.instance.disposeAll();
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
