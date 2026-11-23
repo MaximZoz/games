@@ -320,15 +320,20 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
                   itemCount: _pageCount,
                   onPageChanged: widget.onSelectIndex,
                   itemBuilder: (context, i) {
-                    return InteractiveViewer(
-                      minScale: 1,
-                      maxScale: 5,
-                      child: Center(
-                        child: KeyedSubtree(
-                          key: i == _safeIndex
-                              ? const ValueKey('profile-viewer-main')
-                              : ValueKey('profile-viewer-page-$i'),
-                          child: _pageAt(i),
+                    // Тап по фото закрывает просмотр — как в галерее чата.
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: widget.onClose,
+                      child: InteractiveViewer(
+                        minScale: 1,
+                        maxScale: 5,
+                        child: Center(
+                          child: KeyedSubtree(
+                            key: i == _safeIndex
+                                ? const ValueKey('profile-viewer-main')
+                                : ValueKey('profile-viewer-page-$i'),
+                            child: _pageAt(i),
+                          ),
                         ),
                       ),
                     );
@@ -1037,13 +1042,17 @@ class _ProfilePhotoFullscreenViewerState
                     itemCount: widget.photos.length,
                     onPageChanged: (i) => setState(() => _index = i),
                     itemBuilder: (context, i) {
-                      return InteractiveViewer(
-                        minScale: 1,
-                        maxScale: 5,
-                        child: Center(
-                          child: ProfilePhotoImage(
-                            photoId: widget.photos[i].id,
-                            fit: BoxFit.contain,
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _close,
+                        child: InteractiveViewer(
+                          minScale: 1,
+                          maxScale: 5,
+                          child: Center(
+                            child: ProfilePhotoImage(
+                              photoId: widget.photos[i].id,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       );
