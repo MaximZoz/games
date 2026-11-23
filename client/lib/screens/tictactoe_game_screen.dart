@@ -13,6 +13,8 @@ import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
+import 'package:multigames_client/games/framework/game_opponent_panel.dart';
+import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_navigation.dart';
@@ -24,8 +26,6 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
-import 'package:multigames_client/friends/friends_provider.dart';
-import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -33,7 +33,6 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
-import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/router.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
@@ -476,56 +475,49 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         meId != null &&
         drawOfferBy.isNotEmpty &&
         drawOfferBy != meId;
-    // Крестик — в AppBar.leading (нажимается штатно).
-    // «Сдаться» и «ничья» — overlay справа сверху, под кнопкой «правила»
-    // (правый край AppBar). В углу контент игры их не перекрывает → тапы
-    // доходят; кнопки идут вертикально друг под другом.
-    final topPad = MediaQuery.paddingOf(context).top;
+    final myMarkForBar = gameForBar?.markForUser(meId);
+    final eliminatedForBar = gameForBar != null &&
+        myMarkForBar != null &&
+        gameForBar.isEliminated(myMarkForBar);
+    final chrome = GameChrome(
+      onClose: goBack,
+      onShowRules: () => _showGameRules(context),
+      title: Text(context.l10n.gamesTicTacToe),
+      turn: gameForBar == null || !gameActive
+          ? const GameTurnClock.idle()
+          : GameTurnClock(
+              isMyTurn: gameForBar.isTurnOf(meId) && !eliminatedForBar,
+              deadline: gameForBar.turnTimeSec > 0
+                  ? (gameForBar.turnDeadline ?? 0)
+                  : 0,
+              turnTimeSec: gameForBar.turnTimeSec,
+              onExpired: _onTurnTimeExpired,
+            ),
+      onSurrender: gameActive && !eliminatedForBar
+          ? () => _confirmSurrender(context)
+          : null,
+      draw: showDrawButton && !eliminatedForBar
+          ? GameDrawOffer(
+              onPressed: () => opponentOfferedDraw
+                  ? _confirmAcceptDraw(context)
+                  : _confirmOfferDraw(context),
+              flags: DrawOfferFlags(
+                iOffered: iOfferedDraw,
+                opponentOffered: opponentOfferedDraw,
+              ),
+            )
+          : null,
+    );
+    // data-ветка строится выше GameChromeScope — ширину столбика
+    // «сдаться / ничья» берём из самого хрома.
+    final railInset = chrome.hasRail ? GameScreenScaffold.railWidth : 0.0;
     // Доска у левого края: свайп вправо не должен жать крестик выхода
     // (как веер в дураке исключён из полосы свайпа).
     return SwipeBackScope.gameBoard(
       enabled: false,
       onBack: goBack,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(),
-          leading: buildGameAppBarLeading(onClose: goBack),
-          title: Text(context.l10n.gamesTicTacToe),
-          actions: [
-            // Multi: «сдаться» в AppBar, чтобы не налезала на блок чата/игроков.
-            if (gameForBar != null &&
-                gameForBar.status == 'active' &&
-                gameForBar.maxPlayers > 2 &&
-                !(meId != null &&
-                    gameForBar.markForUser(meId) != null &&
-                    gameForBar.isEliminated(gameForBar.markForUser(meId)!)))
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 40,
-                  minHeight: 40,
-                ),
-                iconSize: 22,
-                icon: const Icon(Icons.flag_outlined),
-                tooltip: context.l10n.gameSurrender,
-                onPressed: () => _confirmSurrender(context),
-              ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minWidth: 40,
-                minHeight: 40,
-              ),
-              iconSize: 22,
-              icon: const Icon(Icons.rule_rounded),
-              tooltip: context.l10n.gamesRulesTitle,
-              onPressed: () => _showGameRules(context),
-            ),
-          ],
-        ),
+      child: GameScreenScaffold(
+        chrome: chrome,
         body: effectiveGameAsync.when(
           skipLoadingOnReload: true,
           skipLoadingOnRefresh: true,
@@ -773,7 +765,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                         }
                         return 0;
                       }));
-                return _MultiOpponentsCard(
+                final seats = _MultiOpponentsCard(
                   game: game,
                   // Только чужие; без me — пусто (не мелькает «я» / «Соперник»).
                   opponents: game.opponentsOf(currentUser?.id),
@@ -785,84 +777,71 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   showGroupChat: chatId.isNotEmpty && !isOver,
                   onGroupChatTap:
                       canOpenChat ? () => _openGroupChat(context, game) : null,
-                  onPlayerTap: (player, login) {
-                    if (player.userId.startsWith('bot:')) return;
-                    _showOpponentInfo(
-                      context,
-                      opponentId: player.userId,
+                  turnDeadline: game.turnDeadline ?? 0,
+                  turnTimeSec: game.turnTimeSec,
+                  onTurnExpired: _onTurnTimeExpired,
+                  onPlayerTap: (player, login) => openGameOpponentProfile(
+                    context: context,
+                    ref: ref,
+                    opponent: GameOpponent(
+                      userId: player.userId,
                       displayName: login,
                       avatarKind: player.avatarKind,
                       avatarValue: player.avatarValue,
                       frameCode: player.frameCode,
                       frameColor: player.frameColor,
-                    );
-                  },
+                    ),
+                    gameType: 'tictactoe',
+                    gameId: widget.gameId,
+                  ),
+                );
+                // Карточка во всю ширину — под флагом «сдаться» оказался бы
+                // групповой чат. В альбоме отступ уже у всей правой колонки.
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: isDesktop || landscapeSideBySide ? 0 : railInset,
+                  ),
+                  child: seats,
                 );
               }
-              final messageUnread = opponentId.isEmpty
-                  ? 0
-                  : ref.watch(chatsListProvider.select((async) {
-                      final list = async.valueOrNull;
-                      if (list == null) return 0;
-                      var sum = 0;
-                      for (final c in list) {
-                        if (c.user.id == opponentId) sum += c.unreadCount;
-                      }
-                      return sum;
-                    }));
-              return _OpponentCard(
-                opponentId: opponentId,
-                displayName: opponentName,
-                avatarKind: opponentAvatarKind,
-                avatarValue: opponentAvatarValue,
-                frameCode: opponentFrameCode,
-                frameColor: opponentFrameColor,
-                isBot: opponentId.startsWith('bot:'),
-                friendsSnapshot: ref.watch(friendsSnapshotProvider).valueOrNull,
-                messageUnread: messageUnread,
-                onInfoTap: () => _showOpponentInfo(
-                  context,
-                  opponentId: opponentId,
+              return GameOpponentPanel(
+                opponent: GameOpponent(
+                  userId: opponentId,
                   displayName: opponentName,
                   avatarKind: opponentAvatarKind,
                   avatarValue: opponentAvatarValue,
                   frameCode: opponentFrameCode,
                   frameColor: opponentFrameColor,
+                  isBot: opponentId.startsWith('bot:'),
                 ),
-                onMessageTap: () =>
-                    _openChat(context, opponentId, opponentName),
-                onAddFriendTap: (requestId) => _addFriend(
-                    context, opponentId, opponentName,
-                    requestId: requestId),
+                gameType: 'tictactoe',
+                gameId: widget.gameId,
+                isTheirTurn: !isOver &&
+                    opponentId.isNotEmpty &&
+                    game.markForUser(opponentId) == game.turn,
+                turnDeadline: game.turnDeadline ?? 0,
+                turnTimeSec: game.turnTimeSec,
+                onTurnExpired: _onTurnTimeExpired,
+                reserveRail: !landscapeSideBySide,
               );
             }
 
             Widget statusBlock() => Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _StatusWithReward(
-                      statusText: statusText,
-                      statusMark: isOver ? null : statusMark,
-                      showReward: showRewardChip,
-                      rewardBronze: rewardBronze,
-                      rewardKey: _winRewardKey,
-                      fontSize: narrow ? 15 : null,
-                    ),
-                    if (!isOver &&
-                        game.turnTimeSec > 0 &&
-                        game.turnDeadline != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: GameTurnCountdown(
-                          key: ValueKey(
-                            '${game.turn}_${game.turnDeadline}',
-                          ),
-                          turnDeadline: game.turnDeadline!,
-                          isMyTurn: isMyTurn,
-                          onExpired: _onTurnTimeExpired,
-                          labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-                        ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: landscapeSideBySide ? 0 : railInset,
                       ),
+                      child: _StatusWithReward(
+                        statusText: statusText,
+                        statusMark: isOver ? null : statusMark,
+                        showReward: showRewardChip,
+                        rewardBronze: rewardBronze,
+                        rewardKey: _winRewardKey,
+                        fontSize: narrow ? 15 : null,
+                      ),
+                    ),
                     if (isOver) ...[
                       SizedBox(height: verticalSpacing * 0.8),
                       if (OfflineTttRegistry.instance.isOffline(widget.gameId))
@@ -927,6 +906,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                   Expanded(
                     flex: 4,
                     child: SingleChildScrollView(
+                      // Правый верхний угол занят столбиком «сдаться / ничья».
+                      padding: EdgeInsets.only(right: railInset),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -968,7 +949,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             return Stack(
               fit: StackFit.expand,
               children: [
-                MyTurnAlert.stackLeaf(isMyTurn: isMyTurn && !isOver),
                 SafeArea(
                   child: Padding(
                     padding: EdgeInsets.all(contentPadding),
@@ -978,30 +958,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 if (iWon)
                   Positioned.fill(
                     child: const GameConfettiOverlay(),
-                  ),
-                // 1v1: «сдаться»/«ничья» overlay справа сверху.
-                // Multi: флаг в AppBar — иначе на мобиле налезает на чат игроков.
-                if (gameActive &&
-                    !isMultiGame &&
-                    !(meId != null &&
-                        game.markForUser(meId) != null &&
-                        game.isEliminated(game.markForUser(meId)!)))
-                  Positioned(
-                    right: 4,
-                    top: topPad + 4,
-                    child: GameActionsOverlay(
-                      canDraw: showDrawButton,
-                      iOfferedDraw: iOfferedDraw,
-                      opponentOfferedDraw: opponentOfferedDraw,
-                      onSurrender: () => _confirmSurrender(context),
-                      onDraw: () => opponentOfferedDraw
-                          ? _confirmAcceptDraw(context)
-                          : _confirmOfferDraw(context),
-                      surrenderTooltip: context.l10n.gameSurrender,
-                      drawTooltip: context.l10n.gameOfferDraw,
-                      acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-                      drawOfferedTooltip: context.l10n.gameDrawOffered,
-                    ),
                   ),
               ],
             );
@@ -1542,69 +1498,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     ));
   }
 
-  void _showOpponentInfo(
-    BuildContext context, {
-    required String opponentId,
-    required String displayName,
-    required String avatarKind,
-    required String? avatarValue,
-    String? frameCode,
-    String? frameColor,
-  }) {
-    unawaited(
-      showUserProfileDialog(
-        context: context,
-        ref: ref,
-        userId: opponentId,
-        displayName: displayName,
-        avatarKind: avatarKind,
-        avatarValue: avatarValue,
-        frameCode: frameCode,
-        frameColor: frameColor,
-        messageReturnPath: '/games/tictactoe/game/${widget.gameId}',
-        messageFrom: 'games',
-      ),
-    );
-  }
-
-  Future<void> _addFriend(
-    BuildContext ctx,
-    String userId,
-    String displayName, {
-    String? requestId,
-    void Function()? onSuccess,
-  }) async {
-    try {
-      if (requestId != null && requestId.isNotEmpty) {
-        await ref.read(friendsRepositoryProvider).acceptRequest(requestId);
-        if (!mounted) return;
-        onSuccess?.call();
-        ref.invalidate(friendsSnapshotProvider);
-        if (mounted) {
-          showAppSnackBar(
-            context,
-            message: context.l10n.friendsRequestAccepted,
-            kind: AppSnackKind.success,
-          );
-        }
-      } else {
-        await ref.read(friendsRepositoryProvider).sendRequest(userId);
-        if (!mounted) return;
-        onSuccess?.call();
-        ref.invalidate(friendsSnapshotProvider);
-        if (mounted) {
-          showAppSnackBar(
-            context,
-            message: context.l10n.friendsRequestSent,
-            kind: AppSnackKind.success,
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) _redirectToGamesOnError();
-    }
-  }
-
   void _showGameRules(BuildContext context) {
     final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
     if (game == null) return;
@@ -1670,32 +1563,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ),
       ),
     );
-  }
-
-  Future<void> _openChat(
-    BuildContext ctx,
-    String userId,
-    String displayName, {
-    void Function()? onSuccess,
-  }) async {
-    try {
-      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
-      if (!mounted) return;
-      onSuccess?.call();
-      if (mounted && chatId.isNotEmpty) {
-        final uri = Uri(
-          path: '/chats/$chatId',
-          queryParameters: {
-            'name': displayName,
-            'from': 'games',
-            'game': '/games/tictactoe/game/${widget.gameId}',
-          },
-        );
-        context.push(uri.toString());
-      }
-    } catch (e) {
-      if (mounted) _redirectToGamesOnError();
-    }
   }
 
   void _openGroupChat(BuildContext ctx, GameStateItem game) {
@@ -1896,6 +1763,9 @@ class _MultiOpponentsCard extends StatelessWidget {
     required this.groupUnread,
     required this.showGroupChat,
     required this.onGroupChatTap,
+    this.turnDeadline = 0,
+    this.turnTimeSec = 0,
+    this.onTurnExpired,
     this.onPlayerTap,
   });
 
@@ -1906,12 +1776,16 @@ class _MultiOpponentsCard extends StatelessWidget {
   final int groupUnread;
   final bool showGroupChat;
   final VoidCallback? onGroupChatTap;
+  final int turnDeadline;
+  final int turnTimeSec;
+  final VoidCallback? onTurnExpired;
   final void Function(GamePlayerMeta player, String login)? onPlayerTap;
 
   @override
   Widget build(BuildContext context) {
     final groupBadge = groupUnread;
     final narrow = isNarrow(context);
+    final turnMark = game.turn.trim().toLowerCase();
     final chips = <Widget>[];
     for (final player in opponents) {
       final login = _resolvePlayerLogin(
@@ -1930,6 +1804,14 @@ class _MultiOpponentsCard extends StatelessWidget {
           displayName: login,
           player: player,
           eliminated: game.isEliminated(player.mark) || responded,
+          isActing: GameActorHighlight.isActingSeat(
+            isCurrentActor: player.mark == turnMark,
+            isOver: game.status != 'active',
+            eliminated: game.isEliminated(player.mark),
+          ),
+          turnDeadline: turnDeadline,
+          turnTimeSec: turnTimeSec,
+          onTurnExpired: onTurnExpired,
           compact: true,
           onTap: onPlayerTap == null ? null : () => onPlayerTap!(player, login),
         ),
@@ -1984,6 +1866,10 @@ class _MultiOpponentChip extends StatelessWidget {
     required this.displayName,
     required this.player,
     required this.eliminated,
+    this.isActing = false,
+    this.turnDeadline = 0,
+    this.turnTimeSec = 0,
+    this.onTurnExpired,
     this.compact = false,
     this.onTap,
   });
@@ -1991,6 +1877,12 @@ class _MultiOpponentChip extends StatelessWidget {
   final String displayName;
   final GamePlayerMeta player;
   final bool eliminated;
+
+  /// Сейчас ход этого игрока: вокруг аватара — рамка-таймер.
+  final bool isActing;
+  final int turnDeadline;
+  final int turnTimeSec;
+  final VoidCallback? onTurnExpired;
   final bool compact;
   final VoidCallback? onTap;
 
@@ -1999,14 +1891,21 @@ class _MultiOpponentChip extends StatelessWidget {
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GamePlayerAvatar(
-          userId: player.userId,
-          displayName: displayName,
-          avatarKind: player.avatarKind,
-          avatarValue: player.avatarValue,
-          frameCode: player.frameCode,
-          frameColor: player.frameColor,
-          compact: compact,
+        GameActorHighlight(
+          isActing: isActing,
+          turnDeadline: turnDeadline,
+          turnTimeSec: turnTimeSec,
+          radius: 999,
+          onExpired: onTurnExpired,
+          child: GamePlayerAvatar(
+            userId: player.userId,
+            displayName: displayName,
+            avatarKind: player.avatarKind,
+            avatarValue: player.avatarValue,
+            frameCode: player.frameCode,
+            frameColor: player.frameColor,
+            compact: compact,
+          ),
         ),
         SizedBox(width: compact ? 5 : 8),
         ConstrainedBox(
@@ -2041,133 +1940,6 @@ class _MultiOpponentChip extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _OpponentCard extends StatelessWidget {
-  const _OpponentCard({
-    required this.opponentId,
-    required this.displayName,
-    required this.avatarKind,
-    required this.avatarValue,
-    this.frameCode,
-    this.frameColor,
-    this.isBot = false,
-    required this.friendsSnapshot,
-    required this.messageUnread,
-    required this.onInfoTap,
-    required this.onMessageTap,
-    required this.onAddFriendTap,
-  });
-
-  final String opponentId;
-  final String displayName;
-  final String avatarKind;
-  final String? avatarValue;
-  final String? frameCode;
-  final String? frameColor;
-  final bool isBot;
-  final FriendsSnapshot? friendsSnapshot;
-  final int messageUnread;
-  final VoidCallback onInfoTap;
-  final VoidCallback onMessageTap;
-  final void Function(String? requestId) onAddFriendTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isFriend =
-        friendsSnapshot?.friends.any((f) => f.user.id == opponentId) == true;
-    final outgoing = friendsSnapshot?.outgoing
-            .where((r) => r.user.id == opponentId)
-            .toList() ??
-        [];
-    final incoming = friendsSnapshot?.incoming
-            .where((r) => r.user.id == opponentId)
-            .toList() ??
-        [];
-    final hasOutgoing = outgoing.isNotEmpty;
-    final hasIncoming = incoming.isNotEmpty;
-    final incomingRequestId = hasIncoming ? incoming.first.requestId : null;
-    final addFriendEnabled = !hasOutgoing;
-    final messageBadge = messageUnread;
-
-    final narrow = isNarrow(context);
-    final card = GradientCard(
-      padding: EdgeInsets.symmetric(
-        horizontal: narrow ? 12 : 16,
-        vertical: narrow ? 8 : 12,
-      ),
-      margin: EdgeInsets.zero,
-      animate: false,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Tooltip(
-            message: context.l10n.userInfoTitle,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: onInfoTap,
-                behavior: HitTestBehavior.opaque,
-                child: GamePlayerAvatar(
-                  userId: opponentId,
-                  displayName: displayName,
-                  avatarKind: avatarKind,
-                  avatarValue: avatarValue,
-                  frameCode: frameCode,
-                  frameColor: frameColor,
-                  compact: narrow,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: narrow ? 10 : 14),
-          Flexible(
-            child: Text(
-              displayName,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: narrow ? 14 : 16,
-                color: AppColors.textPrimary,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (!isBot) ...[
-            _IconWithBadge(
-              icon: Icons.chat_bubble_outline_rounded,
-              badge: messageBadge,
-              tooltip: context.l10n.gameWriteMessage,
-              onPressed: onMessageTap,
-            ),
-            if (!isFriend)
-              _IconWithBadge(
-                icon: Icons.person_add_alt_1_rounded,
-                badge: hasIncoming ? 1 : 0,
-                tooltip: hasIncoming
-                    ? context.l10n.friendsAcceptRequest
-                    : (addFriendEnabled
-                        ? context.l10n.friendsAdd
-                        : context.l10n.friendsRequestSent),
-                onPressed: addFriendEnabled
-                    ? () =>
-                        onAddFriendTap(hasIncoming ? incomingRequestId : null)
-                    : null,
-              ),
-          ],
-        ],
-      ),
-    );
-    if (isWide(context)) {
-      return Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: card,
-        ),
-      );
-    }
-    return card;
   }
 }
 
