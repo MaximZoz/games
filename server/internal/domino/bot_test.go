@@ -53,6 +53,63 @@ func TestBotBlocksDeadSuit(t *testing.T) {
 	}
 }
 
+func TestBotPlaysPairOfDoubles(t *testing.T) {
+	g := seaGame([][]int{{TileID(3, 3), TileID(5, 5), TileID(1, 2)}, {TileID(3, 4), TileID(5, 1), TileID(0, 2)}}, []int{TileID(0, 4), TileID(2, 6), TileID(4, 6)}, 3, 5)
+	if action := BestAction(g, 0); action.Type != ActionPlayPair {
+		t.Fatalf("bot %+v", action)
+	}
+	// Закрыть кон парой с 0-0 — выиграть партию.
+	out := seaGame([][]int{{TileID(0, 0), TileID(4, 4)}, {TileID(0, 1), TileID(2, 3)}}, nil, 0, 4)
+	if action := BestAction(out, 0); action.Type != ActionPlayPair {
+		t.Fatalf("bot out %+v", action)
+	}
+	if err := out.Apply(BestAction(out, 0)); err != nil || !out.IsOver() || out.GoatSeat != 1 {
+		t.Fatalf("bot out err=%v status=%s goat=%d", err, out.Status, out.GoatSeat)
+	}
+}
+
+// Морские партии доигрываются ботами до конца при любом числе игроков, а
+// ход двумя дублями в них действительно встречается.
+func TestSeaMatchesFinish(t *testing.T) {
+	pairs := 0
+	for players := 2; players <= 4; players++ {
+		ids := make([]string, players)
+		for i := range ids {
+			ids[i] = fmt.Sprintf("p%d", i)
+		}
+		for seed := int64(1); seed <= 12; seed++ {
+			g, err := NewMatch(ids, seed, ModeSea)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for step := 0; step < 20000 && !g.IsOver(); step++ {
+				if g.Status == StatusRoundEnd {
+					if err := g.Apply(Action{Type: ActionNextRound}); err != nil {
+						t.Fatal(err)
+					}
+					continue
+				}
+				action := BestAction(g, g.Turn)
+				if action.Type == ActionPlayPair {
+					pairs++
+				}
+				if err := g.Apply(action); err != nil {
+					t.Fatalf("players=%d seed=%d step=%d %+v: %v", players, seed, step, action, err)
+				}
+			}
+			if !g.IsOver() {
+				t.Fatalf("players=%d seed=%d: match did not finish", players, seed)
+			}
+			if g.GoatSeat < 0 {
+				t.Fatalf("players=%d seed=%d: no goat", players, seed)
+			}
+		}
+	}
+	if pairs == 0 {
+		t.Fatal("no pair of doubles was played in any sea match")
+	}
+}
+
 type botPlayer func(*Game, int) Action
 
 func playMatch(seed int64, seatBot int, smart, other botPlayer) (goat int, err error) {

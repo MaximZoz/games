@@ -32,7 +32,39 @@ func BestAction(g *Game, seat int) Action {
 			best = mv
 		}
 	}
+	if left, right, ok := g.pairTiles(seat); ok && g.pairHeuristic(seat, left, right) >= bestScore {
+		return Action{Type: ActionPlayPair}
+	}
 	return Action{Type: ActionPlay, Tile: best.Tile, End: best.End}
+}
+
+// botActions — ходы костью в порядке перебора; пара дублей, если она есть,
+// идёт первой: она сбрасывает две кости за ход.
+func (g *Game) botActions(seat int, moves []Move) []Action {
+	actions := make([]Action, 0, len(moves)+1)
+	if g.CanPair(seat) {
+		actions = append(actions, Action{Type: ActionPlayPair})
+	}
+	for _, mv := range orderMoves(g, moves) {
+		actions = append(actions, Action{Type: ActionPlay, Tile: mv.Tile, End: mv.End})
+	}
+	return actions
+}
+
+// pairHeuristic — оценка хода двумя дублями: лучший из двух одиночных ходов
+// плюс вторая сброшенная кость. Закрыть кон парой — как закрыть его костью.
+func (g *Game) pairHeuristic(seat, left, right int) int {
+	a := g.heuristic(seat, Move{Tile: left, End: "left"})
+	b := g.heuristic(seat, Move{Tile: right, End: "right"})
+	score := a
+	if b > score {
+		score = b
+	}
+	score += 200
+	if len(g.Players[seat].Hand) == 2 {
+		score += 9000
+	}
+	return score
 }
 
 func (g *Game) sampledSearch(seat int, moves []Move) (Action, bool) {
@@ -52,19 +84,20 @@ func (g *Game) sampledSearch(seat int, moves []Move) (Action, bool) {
 	if len(bones) == 0 || len(bones) > 10 {
 		return Action{}, false
 	}
-	best := moves[0]
+	actions := g.botActions(seat, moves)
+	best := actions[0]
 	bestValue := -1 << 30
 	depth := botSearchDepth
 	if len(bones) > 1 {
 		depth = 5
 	}
-	for _, mv := range orderMoves(g, moves) {
+	for _, action := range actions {
 		total := 0
 		okN := 0
 		for _, bone := range bones {
 			root := g.withHypothesis(seat, opp, unseen, bone)
 			next := root.clone()
-			if err := next.Apply(Action{Type: ActionPlay, Tile: mv.Tile, End: mv.End}); err != nil {
+			if err := next.Apply(action); err != nil {
 				continue
 			}
 			nodes := 0
@@ -74,13 +107,14 @@ func (g *Game) sampledSearch(seat int, moves []Move) (Action, bool) {
 		if okN == 0 {
 			continue
 		}
+		// Действия уже упорядочены: при равной оценке остаётся более раннее.
 		value := total / okN
-		if value > bestValue || (value == bestValue && betterMove(mv, best)) {
+		if value > bestValue {
 			bestValue = value
-			best = mv
+			best = action
 		}
 	}
-	return Action{Type: ActionPlay, Tile: best.Tile, End: best.End}, true
+	return best, true
 }
 
 func (g *Game) withHypothesis(seat, opp int, unseen, bone []int) *Game {
@@ -209,9 +243,6 @@ func (g *Game) heuristic(seat int, mv Move) int {
 	if lo == hi {
 		score += 24
 	}
-	if g.normalizedMode() == ModeSea && mv.Tile == TileID(0, 0) {
-		score += 500
-	}
 	hand := make([]int, 0, len(g.Players[seat].Hand))
 	for _, id := range g.Players[seat].Hand {
 		if id != mv.Tile {
@@ -220,6 +251,12 @@ func (g *Game) heuristic(seat int, mv Move) int {
 	}
 	if len(hand) == 0 {
 		score += 9000
+	}
+	if g.normalizedMode() == ModeSea && len(hand) == 1 {
+		// Одинокая 0-0 на руках стоит 25, одинокая 6-6 — 50.
+		if weight, forced := seaWeight(hand); forced {
+			score -= weight * 6
+		}
 	}
 	left, right := g.LeftEnd, g.RightEnd
 	if left < 0 {
@@ -296,9 +333,7 @@ func (g *Game) minimax(root, depth, alpha, beta int, nodes *int) int {
 			actions = append(actions, Action{Type: ActionPass})
 		}
 	} else {
-		for _, mv := range orderMoves(g, moves) {
-			actions = append(actions, Action{Type: ActionPlay, Tile: mv.Tile, End: mv.End})
-		}
+		actions = g.botActions(seat, moves)
 	}
 	if seat == root {
 		value := -1 << 30
