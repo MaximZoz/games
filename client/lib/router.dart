@@ -199,6 +199,36 @@ bool _isOfflineSessionId(String id) {
   return raw.startsWith('offline:');
 }
 
+/// Куда увести с экрана, который без сервера не работает. `null` — экран
+/// доступен в офлайн режиме.
+@visibleForTesting
+String? offlineRedirectFor(String path) {
+  // Чаты, друзья, лобби и ставки живут только на API.
+  if (path == '/friends' || path == '/chats' || path.startsWith('/chats/')) {
+    return '/games';
+  }
+  // Лобби и сетевые партии без сервера не живут. Офлайн-партии
+  // идут по `/games/<игра>/offline` либо с id вида `offline:...`.
+  if (isRegisteredLobbyPath(path)) return '/games';
+  final pathGameId = gameIdFromGamePath(path);
+  if (pathGameId != null && !_isOfflineSessionId(pathGameId)) {
+    return '/games';
+  }
+  if (path == '/shop/stakes' || path.endsWith('/shop/stakes')) {
+    return '/shop';
+  }
+  // Статистика и админка целиком на API.
+  if (path == '/stats') return '/';
+  if (path == '/admin') return '/games';
+  return null;
+}
+
+/// Офлайн режим глазами редиректа. Читаем сам [offlineModeProvider]:
+/// редирект запускается из его слушателя, а производный
+/// [isOfflineProvider] в этот момент ещё отдаёт прошлое значение.
+@visibleForTesting
+bool routerSeesOffline(Ref ref) => ref.read(offlineModeProvider).isOffline;
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
@@ -257,26 +287,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
       if (isAdminRoute && user != null && !user.isAdmin) return '/games';
 
-      // Офлайн: чаты/друзья/лобби/ставки недоступны.
-      if (user != null && ref.read(isOfflineProvider)) {
-        if (path == '/friends' ||
-            path == '/chats' ||
-            path.startsWith('/chats/')) {
-          return '/games';
-        }
-        // Лобби и сетевые партии без сервера не живут. Офлайн-партии
-        // идут по `/games/<игра>/offline` либо с id вида `offline:...`.
-        if (isRegisteredLobbyPath(path)) return '/games';
-        final pathGameId = gameIdFromGamePath(path);
-        if (pathGameId != null && !_isOfflineSessionId(pathGameId)) {
-          return '/games';
-        }
-        if (path == '/shop/stakes' || path.endsWith('/shop/stakes')) {
-          return '/shop';
-        }
-        // Статистика и админка целиком на API.
-        if (path == '/stats') return '/';
-        if (isAdminRoute) return '/games';
+      if (user != null && routerSeesOffline(ref)) {
+        final offlineTarget = offlineRedirectFor(path);
+        if (offlineTarget != null) return offlineTarget;
       }
 
       // Ссылка приглашения не принимает игру: вкладка «Лобби» и карточка.
