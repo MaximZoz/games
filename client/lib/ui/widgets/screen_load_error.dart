@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/go_offline_button.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 /// Сбой загрузки списка: что не открылось, почему и кнопка повтора.
+/// Без связи с сервером рядом стоит «Перейти в офлайн».
 class ScreenLoadError extends StatelessWidget {
   const ScreenLoadError({
     super.key,
@@ -71,6 +73,7 @@ class ScreenLoadError extends StatelessWidget {
                 ),
                 child: Text(context.l10n.commonRetry),
               ),
+              GoOfflineButton(error: error, compact: compact),
             ],
           ),
         ),

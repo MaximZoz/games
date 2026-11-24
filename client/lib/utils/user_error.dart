@@ -6,6 +6,7 @@ import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/server_link.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_repository.dart';
 
@@ -80,6 +81,16 @@ bool isTransientLoadError(Object? error) {
   if (code == 502 || code == 503 || code == 504) return true;
   if (code != null && code != 0) return false;
   if (_looksTemporarilyUnavailable(error.toString())) return true;
+  return _looksOffline(error);
+}
+
+/// Загрузка упала из-за связи с сервером: сервер не ответил вовсе.
+/// Тут уместно предложить офлайн режим рядом с «Повторить».
+bool isNoConnectionError(Object? error) {
+  if (error == null || error is OfflineModeException) return false;
+  if (isServerUnreachableError(error)) return true;
+  final code = _statusCode(error);
+  if (code != null && code != 0) return false;
   return _looksOffline(error);
 }
 
