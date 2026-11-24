@@ -4,6 +4,11 @@ import 'package:multigames_client/games/domino/domino_mode.dart';
 const int dominoBotSearchDepth = 8;
 const int dominoBotNodeCap = 6000;
 
+/// «Бесконечность» перебора. Записана числом, а не сдвигом: в вебе (dart2js)
+/// сдвиг даёт беззнаковые 32 бита, `-1 << 30` там равно +3221225472, и любой
+/// ход оказывается «хуже» начальной оценки.
+const int _inf = 1073741824;
+
 DominoAction dominoBestAction(DominoGame game, int seat) {
   if (game.status != dominoStatusPlaying || seat != game.turn) {
     return const DominoAction(type: '');
@@ -18,7 +23,7 @@ DominoAction dominoBestAction(DominoGame game, int seat) {
   final searched = _sampledSearch(game, seat, moves);
   if (searched != null) return searched;
   var best = moves.first;
-  var bestScore = -1 << 30;
+  var bestScore = -_inf;
   for (final move in moves) {
     final score = _heuristic(game, seat, move);
     if (score > bestScore || (score == bestScore && _betterMove(move, best))) {
@@ -26,10 +31,41 @@ DominoAction dominoBestAction(DominoGame game, int seat) {
       best = move;
     }
   }
+  final pair = game.pairTiles(seat);
+  if (pair != null &&
+      _pairHeuristic(game, seat, pair.$1, pair.$2) >= bestScore) {
+    return const DominoAction(type: dominoActionPlayPair);
+  }
   return DominoAction(type: dominoActionPlay, tile: best.tile, end: best.end);
 }
 
-DominoAction? _sampledSearch(DominoGame game, int seat, List<DominoMove> moves) {
+/// Ходы костью в порядке перебора; пара дублей, если она есть, идёт первой:
+/// она сбрасывает две кости за ход.
+List<DominoAction> _botActions(
+  DominoGame game,
+  int seat,
+  List<DominoMove> moves,
+) {
+  return [
+    if (game.canPair(seat)) const DominoAction(type: dominoActionPlayPair),
+    for (final move in _orderMoves(moves))
+      DominoAction(type: dominoActionPlay, tile: move.tile, end: move.end),
+  ];
+}
+
+/// Оценка хода двумя дублями: лучший из двух одиночных ходов плюс вторая
+/// сброшенная кость. Закрыть кон парой — как закрыть его костью.
+int _pairHeuristic(DominoGame game, int seat, int left, int right) {
+  final a = _heuristic(game, seat, DominoMove(tile: left, end: 'left'));
+  final b = _heuristic(game, seat, DominoMove(tile: right, end: 'right'));
+  var score = a > b ? a : b;
+  score += 200;
+  if (game.players[seat].hand.length == 2) score += 9000;
+  return score;
+}
+
+DominoAction? _sampledSearch(
+    DominoGame game, int seat, List<DominoMove> moves) {
   if (game.aliveCount() != 2 || moves.isEmpty) return null;
   final opp = game.otherAlive(seat);
   if (opp < 0) return null;
@@ -40,37 +76,35 @@ DominoAction? _sampledSearch(DominoGame game, int seat, List<DominoMove> moves) 
   }
   final bones = _combinations(unseen, boneN);
   if (bones.isEmpty || bones.length > 10) return null;
-  var best = moves.first;
-  var bestValue = -1 << 30;
+  final actions = _botActions(game, seat, moves);
+  var best = actions.first;
+  var bestValue = -_inf;
   var depth = dominoBotSearchDepth;
   if (bones.length > 1) depth = 5;
-  for (final move in _orderMoves(moves)) {
+  for (final action in actions) {
     var total = 0;
     var okN = 0;
     for (final bone in bones) {
       final root = _withHypothesis(game, opp, unseen, bone);
       final next = root.clone();
       try {
-        next.apply(DominoAction(
-          type: dominoActionPlay,
-          tile: move.tile,
-          end: move.end,
-        ));
+        next.apply(action);
       } catch (_) {
         continue;
       }
       final nodes = <int>[0];
-      total += _minimax(next, seat, depth - 1, -1 << 30, 1 << 30, nodes);
+      total += _minimax(next, seat, depth - 1, -_inf, _inf, nodes);
       okN++;
     }
     if (okN == 0) continue;
+    // Действия уже упорядочены: при равной оценке остаётся более раннее.
     final value = total ~/ okN;
-    if (value > bestValue || (value == bestValue && _betterMove(move, best))) {
+    if (value > bestValue) {
       bestValue = value;
-      best = move;
+      best = action;
     }
   }
-  return DominoAction(type: dominoActionPlay, tile: best.tile, end: best.end);
+  return best;
 }
 
 DominoGame _withHypothesis(
@@ -122,14 +156,16 @@ int _heuristic(DominoGame game, int seat, DominoMove move) {
   final (lo, hi) = dominoPips(move.tile);
   var score = (lo + hi) * 20;
   if (lo == hi) score += 24;
-  if (game.normalizedMode == dominoModeSea && move.tile == dominoTileId(0, 0)) {
-    score += 500;
-  }
   final hand = [
     for (final id in game.players[seat].hand)
       if (id != move.tile) id,
   ];
   if (hand.isEmpty) score += 9000;
+  if (game.normalizedMode == dominoModeSea && hand.length == 1) {
+    // Одинокая 0-0 на руках стоит 25, одинокая 6-6 — 50.
+    final (weight, forced) = dominoSeaWeight(hand);
+    if (forced) score -= weight * 6;
+  }
   var left = game.leftEnd;
   var right = game.rightEnd;
   if (left < 0) {
@@ -204,16 +240,10 @@ int _minimax(
       type: game.boneyard.isNotEmpty ? dominoActionDraw : dominoActionPass,
     ));
   } else {
-    for (final move in _orderMoves(moves)) {
-      actions.add(DominoAction(
-        type: dominoActionPlay,
-        tile: move.tile,
-        end: move.end,
-      ));
-    }
+    actions.addAll(_botActions(game, seat, moves));
   }
   if (seat == root) {
-    var value = -1 << 30;
+    var value = -_inf;
     for (final action in actions) {
       final next = game.clone();
       try {
@@ -226,10 +256,10 @@ int _minimax(
       if (value > alpha) alpha = value;
       if (beta <= alpha) break;
     }
-    if (value == -1 << 30) return _evalRound(game, root);
+    if (value == -_inf) return _evalRound(game, root);
     return value;
   }
-  var value = 1 << 30;
+  var value = _inf;
   for (final action in actions) {
     final next = game.clone();
     try {
@@ -242,7 +272,7 @@ int _minimax(
     if (value < beta) beta = value;
     if (beta <= alpha) break;
   }
-  if (value == 1 << 30) return _evalRound(game, root);
+  if (value == _inf) return _evalRound(game, root);
   return value;
 }
 

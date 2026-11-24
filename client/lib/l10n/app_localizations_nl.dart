@@ -869,13 +869,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesDominoSeaSame => 'Delen, opening en trekken als bij De Bok. De keten heeft twee uiteinden.';
 
   @override
-  String get rulesDominoSeaScore => 'Alleen de zwaarste hand schrijft punten. Onder 25 telt niet.';
+  String get rulesDominoSeaScore => 'Alleen de verliezer van de hand schrijft punten: wie de meeste ogen overhoudt. Zijn dat er twee, dan schrijft niemand. Onder 25 telt niet.';
 
   @override
   String get rulesDominoSeaWipe => 'Hebben twee spelers 25 of meer, dan schrijft niemand die hand.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 speelt de hand meteen uit: de uniek zwaarste tegenstander krijgt 75. Bij gelijkspel niemand.';
+  String get rulesDominoSeaBlank => 'Uitgaan met 0-0 beëindigt de partij meteen: de bok is wie de meeste ogen overhoudt, wat de stand ook is.';
 
   @override
   String get rulesDominoSeaSix => 'Uitgaan met 6-6 geeft de verliezer 100 en zet de partijstand van de sluiter op nul.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Nog geen partijen';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Spelers: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klassiek';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Deck: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Zonder inzet.';
+
+  @override
+  String get rulesDominoSeaPair => 'Twee dubbels in één beurt: heb je de dubbels van beide open einden, dan mag je ze samen leggen, één aan elk eind.';
+
+  @override
+  String get rulesDominoSeaLone => 'Blijft alleen de 0-0 over, dan worden er 25 geschreven; alleen de 6-6, dan 50. Blijven precies 0-0 en 6-6 samen over, dan 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Snelle hand: opent de hand met 6-6, dan krijgt de verliezer precies 50; met 0-0 is dat 75. Openen met 6-6 of 0-0 mag alleen als alle tegenstanders al punten hebben staan. Een vis in een snelle hand telt niet.';
+
+  @override
+  String get dominoPlayPair => 'Twee dubbels';
 }

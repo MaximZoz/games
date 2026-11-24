@@ -869,13 +869,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesDominoSeaSame => 'التوزيع والافتتاح والسحب كما في التيس. السلسلة بطرفين.';
 
   @override
-  String get rulesDominoSeaScore => 'يسجّل فقط صاحب أثقل يد. أقل من 25 لا يُسجَّل.';
+  String get rulesDominoSeaScore => 'يسجّل فقط خاسر اليد: من بقيت معه أكثر النقاط. إذا كانا اثنين فلا يُسجَّل أحد. أقل من 25 لا يُسجَّل.';
 
   @override
   String get rulesDominoSeaWipe => 'إذا كان لدى اثنين 25 أو أكثر فلا يُسجَّل أحد في هذه اليد.';
 
   @override
-  String get rulesDominoSeaBlank => 'لعب 0-0 ينهي اليد فوراً: أثقل خصم إذا كان وحيداً يُسجَّل له 75. عند التعادل لا أحد.';
+  String get rulesDominoSeaBlank => 'إغلاق اليد بقطعة 0-0 ينهي المباراة فوراً: التيس هو من بقيت معه أكثر النقاط، مهما كان الرصيد.';
 
   @override
   String get rulesDominoSeaSix => 'إن أُغلقت اليد بآخر قطعة 6-6 يُسجَّل للخاسر 100 ويُصفَّر رصيد من أغلق.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'لا توجد مباريات بعد';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'اللاعبون: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'الوضع: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'كلاسيكي';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'المجموعة: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'تكساس هولدم';
+
+  @override
+  String get rulesStakeNone => 'بدون رهان.';
+
+  @override
+  String get rulesDominoSeaPair => 'دبلان في نقلة واحدة: إذا كان معك دبل كلٍّ من الطرفين المفتوحين، يمكنك وضعهما معاً، واحداً على كل طرف.';
+
+  @override
+  String get rulesDominoSeaLone => 'إذا بقيت معك قطعة 0-0 وحدها يُسجَّل 25، وإذا بقيت 6-6 وحدها يُسجَّل 50. إذا بقيت 0-0 و6-6 معاً فقط يُسجَّل 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'اليد السريعة: إذا افتُتحت اليد بـ6-6 يُسجَّل لخاسرها 50 بالضبط، وإذا افتُتحت بـ0-0 يُسجَّل 75. لا يجوز الافتتاح بـ6-6 أو 0-0 إلا إذا كان لكل الخصوم رصيد مسجَّل. السمكة في اليد السريعة لا تُحتسب.';
+
+  @override
+  String get dominoPlayPair => 'دبلان';
 }

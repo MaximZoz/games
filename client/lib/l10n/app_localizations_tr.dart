@@ -869,13 +869,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesDominoSeaSame => 'Dağıtım, ilk hamle ve çekme Keçi ile aynı. Zincirin iki ucu vardır.';
 
   @override
-  String get rulesDominoSeaScore => 'Puanı yalnız elde en çok olan yazar. 25’ten az yazılmaz.';
+  String get rulesDominoSeaScore => 'Puanı yalnız eli kaybeden yazar: elinde en çok puan kalan oyuncu. Böyle iki kişi varsa kimseye yazılmaz. 25’ten az yazılmaz.';
 
   @override
   String get rulesDominoSeaWipe => 'İkisinde birden 25 ve üzeri varsa bu el kimseye yazılmaz.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 eli hemen bitirir: en ağır rakibe, tekse, 75 yazılır. Beraberlikte kimseye yazılmaz.';
+  String get rulesDominoSeaBlank => '0-0 ile bitirmek partiyi hemen sona erdirir: skor ne olursa olsun, elinde en çok puan kalan oyuncu keçi olur.';
 
   @override
   String get rulesDominoSeaSix => '6-6 ile bitirmek kaybedene 100 yazar, kapatan oyuncunun parti skoru sıfırlanır.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Henüz parti yok';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Oyuncular: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Mod: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klasik';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Deste: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Bahis yok.';
+
+  @override
+  String get rulesDominoSeaPair => 'Tek hamlede iki çift: iki açık ucun çiftleri de elinizdeyse ikisini birden koyabilirsiniz — her uca bir tane.';
+
+  @override
+  String get rulesDominoSeaLone => 'Elde yalnız 0-0 kalırsa 25, yalnız 6-6 kalırsa 50 yazılır. Elde sadece 0-0 ile 6-6 birlikte kalırsa 12 yazılır.';
+
+  @override
+  String get rulesDominoSeaFast => 'Hızlı el: el 6-6 ile açılırsa kaybedene tam 50, 0-0 ile açılırsa 75 yazılır. 6-6 veya 0-0 ile ancak bütün rakiplerin yazılı puanı varsa açılabilir. Hızlı elde balık sayılmaz.';
+
+  @override
+  String get dominoPlayPair => 'İki çift';
 }

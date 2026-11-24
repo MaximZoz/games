@@ -1,6 +1,5 @@
 import 'package:multigames_client/core/locale_provider.dart';
-import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Короткие нарды (встречные, с боем).
@@ -30,19 +29,20 @@ List<String> nardyRuleLines({
 }) {
   final t = l10n ?? LocaleService.l10n;
   final mode = nardyNormalizeMode(gameMode);
-  return [
-    t.rulesNardyPlayers,
-    t.rulesNardyMode(nardyModeLabel(mode, t)),
-    turnTimeSec == 0
-        ? t.rulesNoTimeLimit
-        : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-    if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
-    t.rulesNardyIntro,
-    mode == nardyModeLong ? t.rulesNardyPlayLong : t.rulesNardyPlayShort,
-    if (mode == nardyModeLong) t.rulesNardySixPrime,
-    t.rulesNardyWin,
-    if (offline) t.rulesNardyOfflineBot,
-  ];
+  return gameRuleLines(
+    stakeBronze: offline ? 0 : stakeBronze,
+    players: 2,
+    mode: nardyModeLabel(mode, t),
+    turnTimeSec: offline ? 0 : turnTimeSec,
+    l10n: t,
+    rules: [
+      t.rulesNardyIntro,
+      mode == nardyModeLong ? t.rulesNardyPlayLong : t.rulesNardyPlayShort,
+      if (mode == nardyModeLong) t.rulesNardySixPrime,
+      t.rulesNardyWin,
+      if (offline) t.rulesNardyOfflineBot,
+    ],
+  );
 }
 
 /// Можно подтвердить ход вручную: кубики брошены, легальных ходов больше нет.

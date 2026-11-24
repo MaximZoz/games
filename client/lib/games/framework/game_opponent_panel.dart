@@ -82,7 +82,13 @@ void openGameOpponentProfile({
 /// убывает по периметру. Тап по аватару открывает профиль, иконка — чат,
 /// «+» — заявку в друзья: игра это не подключает, достаточно передать
 /// [opponent] и id партии.
+///
+/// В партии 1×1 карточка у всех игр одна и та же, как в «Морском бое»:
+/// аватар, имя, сообщение. Своего игра в неё не добавляет — у основного
+/// конструктора нет слота под значки. Счёт, число карт, фишки и остальная
+/// игровая информация рисуются отдельно, рядом со столом.
 class GameOpponentPanel extends ConsumerWidget {
+  /// Карточка соперника 1×1.
   const GameOpponentPanel({
     super.key,
     required this.opponent,
@@ -92,13 +98,29 @@ class GameOpponentPanel extends ConsumerWidget {
     this.turnDeadline = 0,
     this.turnTimeSec = 0,
     this.onTurnExpired,
-    this.trailing = const <Widget>[],
     this.maxWidth = 320,
     this.compact,
     this.align,
     this.reserveRail = true,
-    this.layout = GameOpponentLayout.card,
-  });
+  })  : layout = GameOpponentLayout.card,
+        seatBadges = const <Widget>[];
+
+  /// Место за столом на 3+ игроков: аватар, имя и значки игры под ним.
+  const GameOpponentPanel.seat({
+    super.key,
+    required this.opponent,
+    required this.gameType,
+    required this.gameId,
+    this.isTheirTurn = false,
+    this.turnDeadline = 0,
+    this.turnTimeSec = 0,
+    this.onTurnExpired,
+    this.seatBadges = const <Widget>[],
+    this.maxWidth = 140,
+  })  : layout = GameOpponentLayout.seat,
+        compact = null,
+        align = null,
+        reserveRail = false;
 
   final GameOpponent opponent;
 
@@ -112,8 +134,9 @@ class GameOpponentPanel extends ConsumerWidget {
   final int turnTimeSec;
   final VoidCallback? onTurnExpired;
 
-  /// Свои значки игры справа от имени (счёт, фишка, число карт).
-  final List<Widget> trailing;
+  /// Значки игры под именем — только у места за столом
+  /// ([GameOpponentPanel.seat]). В карточке 1×1 их нет.
+  final List<Widget> seatBadges;
   final double maxWidth;
 
   /// null — компактно на узком экране и в альбоме телефона.
@@ -135,23 +158,27 @@ class GameOpponentPanel extends ConsumerWidget {
     final id = opponent.userId.trim();
     final bot = opponent.isBotLike;
     final rawName = opponent.displayName?.trim() ?? '';
-    final name = rawName.isNotEmpty
+    var name = rawName.isNotEmpty
         ? rawName
         : (bot ? l10n.gameBot : l10n.gameOpponent);
 
-    void openProfile() => openGameOpponentProfile(
+    if (layout == GameOpponentLayout.seat) {
+      return _seat(
+        context,
+        name: name,
+        bot: bot,
+        onTap: () => openGameOpponentProfile(
           context: context,
           ref: ref,
           opponent: opponent,
           gameType: gameType,
           gameId: gameId,
           displayName: name,
-        );
-
-    if (layout == GameOpponentLayout.seat) {
-      return _seat(context, name: name, bot: bot, onTap: openProfile);
+        ),
+      );
     }
 
+    var shown = opponent;
     var unread = 0;
     var isFriend = false;
     String? incomingRequestId;
@@ -160,7 +187,21 @@ class GameOpponentPanel extends ConsumerWidget {
       final chats = ref.watch(chatsListProvider).valueOrNull;
       if (chats != null) {
         for (final chat in chats) {
-          if (chat.user.id == id) unread += chat.unreadCount;
+          if (chat.user.id != id) continue;
+          unread += chat.unreadCount;
+          // Партия не всегда знает имя и аватар — берём их из переписки.
+          final chatName = chat.user.displayName?.trim() ?? '';
+          if (rawName.isEmpty && chatName.isNotEmpty) name = chatName;
+          final noAvatar = (shown.avatarValue ?? '').isEmpty;
+          shown = GameOpponent(
+            userId: shown.userId,
+            displayName: name,
+            avatarKind: noAvatar ? chat.user.avatarKind : shown.avatarKind,
+            avatarValue: noAvatar ? chat.user.avatarValue : shown.avatarValue,
+            frameCode: shown.frameCode ?? chat.user.frameCode,
+            frameColor: shown.frameColor ?? chat.user.frameColor,
+            isBot: shown.isBot,
+          );
         }
       }
       final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
@@ -177,13 +218,24 @@ class GameOpponentPanel extends ConsumerWidget {
         (size.width < 420 || (size.shortestSide < 700 && size.width > size.height));
     final rail = reserveRail ? GameChromeScope.railInsetOf(context) : 0.0;
 
+    final resolved = shown;
+    final resolvedName = name;
+    void openProfile() => openGameOpponentProfile(
+          context: context,
+          ref: ref,
+          opponent: resolved,
+          gameType: gameType,
+          gameId: gameId,
+          displayName: resolvedName,
+        );
+
     final card = GameOpponentCard(
       userId: id,
       displayName: name,
-      avatarKind: opponent.avatarKind,
-      avatarValue: opponent.avatarValue,
-      frameCode: opponent.frameCode,
-      frameColor: opponent.frameColor,
+      avatarKind: shown.avatarKind,
+      avatarValue: shown.avatarValue,
+      frameCode: shown.frameCode,
+      frameColor: shown.frameColor,
       isBot: bot,
       messageUnread: unread,
       theirTurn: isTheirTurn,
@@ -204,8 +256,7 @@ class GameOpponentPanel extends ConsumerWidget {
       ),
       onInfoTap: openProfile,
       onMessageTap:
-          bot ? null : () => unawaited(_openChat(context, ref, id, name)),
-      trailing: trailing,
+          bot ? null : () => unawaited(_openChat(context, ref, id, resolvedName)),
     );
 
     final framed = TurnTimerBorder(
@@ -281,8 +332,8 @@ class GameOpponentPanel extends ConsumerWidget {
                         : AppColors.textPrimary,
                   ),
                 ),
-                if (trailing.isNotEmpty)
-                  Row(mainAxisSize: MainAxisSize.min, children: trailing),
+                if (seatBadges.isNotEmpty)
+                  Row(mainAxisSize: MainAxisSize.min, children: seatBadges),
               ],
             ),
           ),

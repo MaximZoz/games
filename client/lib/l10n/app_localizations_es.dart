@@ -869,13 +869,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesDominoSeaSame => 'Reparto, apertura y robo como en El Chivo. La cadena tiene dos extremos.';
 
   @override
-  String get rulesDominoSeaScore => 'Solo anota la mano más pesada. Menos de 25 no se anota.';
+  String get rulesDominoSeaScore => 'Solo anota el perdedor de la mano: quien se queda con más puntos. Si son dos, no anota nadie. Menos de 25 no se anota.';
 
   @override
   String get rulesDominoSeaWipe => 'Si dos jugadores tienen 25 o más, nadie anota esa mano.';
 
   @override
-  String get rulesDominoSeaBlank => 'Jugar 0-0 cierra la mano: al rival más pesado, si es único, se le anotan 75. Si hay empate, a nadie.';
+  String get rulesDominoSeaBlank => 'Salir con 0-0 termina la partida al instante: el chivo es quien se queda con más puntos, sea cual sea el marcador.';
 
   @override
   String get rulesDominoSeaSix => 'Salir con 6-6 anota 100 al perdedor y pone a cero el marcador de partida de quien cierra.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Aún no hay partidas';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Jugadores: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Clásico';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Baraja: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Sin apuesta.';
+
+  @override
+  String get rulesDominoSeaPair => 'Dos dobles en una jugada: si tienes los dobles de los dos extremos, puedes colocarlos juntos, uno en cada extremo.';
+
+  @override
+  String get rulesDominoSeaLone => 'Si solo te queda el 0-0, se anotan 25; si solo el 6-6, 50. Si quedan justo el 0-0 y el 6-6, se anotan 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Mano rápida: si la mano se abre con 6-6, a su perdedor se le anotan exactamente 50; con 0-0, 75. Solo se puede abrir con 6-6 o 0-0 cuando todos los rivales ya tienen puntos anotados. Un pescado en una mano rápida no cuenta.';
+
+  @override
+  String get dominoPlayPair => 'Dos dobles';
 }

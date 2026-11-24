@@ -869,13 +869,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesDominoSeaSame => 'Distribuzione, apertura e pesca come ne La Capra. La catena ha due estremità.';
 
   @override
-  String get rulesDominoSeaScore => 'Segna solo la mano più pesante. Sotto 25 non si scrive.';
+  String get rulesDominoSeaScore => 'Segna solo chi perde la mano: chi resta con più punti. Se sono in due, non segna nessuno. Sotto 25 non si scrive.';
 
   @override
   String get rulesDominoSeaWipe => 'Se due giocatori hanno 25 o più, nessuno segna quella mano.';
 
   @override
-  String get rulesDominoSeaBlank => 'Giocare 0-0 chiude la mano: l’avversario più pesante, se unico, prende 75. In parità nessuno.';
+  String get rulesDominoSeaBlank => 'Uscire con lo 0-0 chiude subito la partita: la capra è chi resta con più punti, qualunque sia il punteggio.';
 
   @override
   String get rulesDominoSeaSix => 'Uscire con 6-6 assegna 100 al perdente e azzera il punteggio di partita di chi chiude.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Ancora nessuna partita';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Giocatori: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Modalità: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Classico';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Mazzo: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Senza puntata.';
+
+  @override
+  String get rulesDominoSeaPair => 'Due doppi in una mossa: se hai i doppi di entrambe le estremità, puoi giocarli insieme, uno per estremità.';
+
+  @override
+  String get rulesDominoSeaLone => 'Se ti resta solo lo 0-0 si segnano 25, solo il 6-6 si segnano 50. Se restano esattamente 0-0 e 6-6 insieme, si segnano 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Mano veloce: se la mano si apre con il 6-6, chi la perde prende esattamente 50; con lo 0-0, 75. Si può aprire con 6-6 o 0-0 solo quando tutti gli avversari hanno già punti segnati. Un pesce in una mano veloce non conta.';
+
+  @override
+  String get dominoPlayPair => 'Due doppi';
 }

@@ -869,13 +869,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesDominoSeaSame => 'Rozdanie, pierwsze zagranie i dobieranie jak w Koziołku. Łańcuch ma dwa końce.';
 
   @override
-  String get rulesDominoSeaScore => 'Punkty zapisuje tylko najcięższa ręka. Poniżej 25 się nie zapisuje.';
+  String get rulesDominoSeaScore => 'Punkty zapisuje tylko przegrany rozdania — ten, komu zostało najwięcej oczek. Jeśli jest ich dwóch, nikt nie zapisuje. Poniżej 25 się nie zapisuje.';
 
   @override
   String get rulesDominoSeaWipe => 'Jeśli dwóch ma 25 lub więcej, tego rozdania nikt nie zapisuje.';
 
   @override
-  String get rulesDominoSeaBlank => 'Zagranie 0-0 kończy rozdanie: najcięższy przeciwnik, jeśli jeden, dostaje 75. Przy remisie nikt.';
+  String get rulesDominoSeaBlank => 'Wyjście na 0-0 od razu kończy partię: kozłem zostaje ten, komu zostało najwięcej oczek, bez względu na wynik.';
 
   @override
   String get rulesDominoSeaSix => 'Wyjście na 6-6 zapisuje przegranemu 100, a zamykającemu zeruje wynik partii.';
@@ -3345,4 +3345,40 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Nie ma jeszcze partii';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Gracze: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Tryb: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klasyka';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Talia: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Bez stawki.';
+
+  @override
+  String get rulesDominoSeaPair => 'Dwa duble w jednym ruchu: jeśli masz duble obu otwartych końców, możesz dołożyć je razem — po jednym na każdy koniec.';
+
+  @override
+  String get rulesDominoSeaLone => 'Został na ręce sam kamień 0-0 — zapisuje się 25, sam 6-6 — 50. Zostały tylko 0-0 i 6-6 razem — zapisuje się 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Szybkie rozdanie: jeśli rozdanie zaczyna 6-6, przegrany dostaje dokładnie 50, jeśli 0-0 — 75. Zacząć od 6-6 lub 0-0 można tylko wtedy, gdy wszyscy przeciwnicy mają już zapis. Ryba w szybkim rozdaniu się nie liczy.';
+
+  @override
+  String get dominoPlayPair => 'Dwa duble';
 }

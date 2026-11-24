@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "Balıkta en az puana sahip tek oyuncu her el ile farkı yazar. Eşitlikte puan yazılmaz.",
   "rulesDominoClassicMatch": "Aynı en yüksek skoru paylaşanlar kazanır. Herkes eşitse berabere.",
   "rulesDominoSeaSame": "Dağıtım, ilk hamle ve çekme Keçi ile aynı. Zincirin iki ucu vardır.",
-  "rulesDominoSeaScore": "Puanı yalnız elde en çok olan yazar. 25’ten az yazılmaz.",
+  "rulesDominoSeaScore": "Puanı yalnız eli kaybeden yazar: elinde en çok puan kalan oyuncu. Böyle iki kişi varsa kimseye yazılmaz. 25’ten az yazılmaz.",
   "rulesDominoSeaWipe": "İkisinde birden 25 ve üzeri varsa bu el kimseye yazılmaz.",
-  "rulesDominoSeaBlank": "0-0 eli hemen bitirir: en ağır rakibe, tekse, 75 yazılır. Beraberlikte kimseye yazılmaz.",
+  "rulesDominoSeaBlank": "0-0 ile bitirmek partiyi hemen sona erdirir: skor ne olursa olsun, elinde en çok puan kalan oyuncu keçi olur.",
   "rulesDominoSeaSix": "6-6 ile bitirmek kaybedene 100 yazar, kapatan oyuncunun parti skoru sıfırlanır.",
   "rulesDominoSeaMatch": "Parti 125’e kadardır. Ulaşan kaybeder.",
   "dominoBoneyard": "Deste",
@@ -1617,5 +1617,15 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Oyun",
   "statsSelectMode": "Mod",
-  "statsRecentEmpty": "Henüz parti yok"
+  "statsRecentEmpty": "Henüz parti yok",
+  "rulesPlayers": "Oyuncular: {players}.",
+  "rulesMode": "Mod: {mode}.",
+  "gamesModeClassic": "Klasik",
+  "rulesDeck": "Deste: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Bahis yok.",
+  "rulesDominoSeaPair": "Tek hamlede iki çift: iki açık ucun çiftleri de elinizdeyse ikisini birden koyabilirsiniz — her uca bir tane.",
+  "rulesDominoSeaLone": "Elde yalnız 0-0 kalırsa 25, yalnız 6-6 kalırsa 50 yazılır. Elde sadece 0-0 ile 6-6 birlikte kalırsa 12 yazılır.",
+  "rulesDominoSeaFast": "Hızlı el: el 6-6 ile açılırsa kaybedene tam 50, 0-0 ile açılırsa 75 yazılır. 6-6 veya 0-0 ile ancak bütün rakiplerin yazılı puanı varsa açılabilir. Hızlı elde balık sayılmaz.",
+  "dominoPlayPair": "İki çift"
 }

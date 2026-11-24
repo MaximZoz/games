@@ -8,6 +8,7 @@ import 'package:multigames_client/games/domino/domino_table.dart';
 import 'package:multigames_client/games/live_game_sync.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/domino_game_screen.dart';
+import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 import 'test_locale.dart';
@@ -143,10 +144,64 @@ DominoGameView _duel({
   });
 }
 
+/// Морская партия 1×1: цепь 3-3 | 3-5 | 5-5 после хода двумя дублями
+/// ([played]) или 3-5 до него. [actor] — кто положил пару.
+DominoGameView _seaDuel({
+  required List<int> hand,
+  bool canPair = false,
+  bool played = false,
+  int actor = 0,
+  int opponent = 5,
+}) {
+  final left = dominoTileId(3, 3);
+  final right = dominoTileId(5, 5);
+  return DominoGameView.fromJson({
+    'id': 'g',
+    'mode': 'sea',
+    'players': [
+      {'user_id': 'me', 'seat': 0, 'hand': hand, 'hand_count': hand.length},
+      {
+        'user_id': 'bot:domino',
+        'seat': 1,
+        'hand': <int>[],
+        'hand_count': opponent,
+      },
+    ],
+    'chain': [
+      if (played) _chainTile(3, 3, end: 'left'),
+      _chainTile(3, 5),
+      if (played) _chainTile(5, 5, end: 'right'),
+    ],
+    'left_end': 3,
+    'right_end': 5,
+    'boneyard_count': 3,
+    'turn': played ? 1 - actor : actor,
+    'round': 1,
+    'status': 'playing',
+    'legal': [
+      if (!played && actor == 0) ...[
+        {'tile': left, 'end': 'left'},
+        {'tile': right, 'end': 'right'},
+      ],
+    ],
+    'can_pair': canPair,
+    'my_index': 0,
+    'is_my_turn': !played && actor == 0,
+    'target_score': 125,
+    'event_seq': played ? 2 : 1,
+    if (played) 'last_action': 'play_pair',
+    if (played) 'last_tile': left,
+    if (played) 'last_tile2': right,
+    if (played) 'last_end': 'left',
+    if (played) 'last_actor': actor,
+  });
+}
+
 Future<void> _pumpTable(
   WidgetTester tester,
   DominoGameView view, {
   ValueChanged<DominoMove>? onPlay,
+  VoidCallback? onPlayPair,
   VoidCallback? onDraw,
   Size size = const Size(420, 640),
 }) async {
@@ -163,6 +218,7 @@ Future<void> _pumpTable(
           body: DominoTable(
             view: view,
             onPlay: onPlay ?? (_) {},
+            onPlayPair: onPlayPair,
             onDraw: onDraw,
           ),
         ),
@@ -369,6 +425,36 @@ void main() {
     expect(find.byKey(const ValueKey('game-opponent-frame')), findsOneWidget);
   });
 
+  testWidgets('1×1: счёт соперника у его костей, а не в карточке',
+      (tester) async {
+    for (final size in const [Size(420, 640), Size(800, 380)]) {
+      await _pumpTable(
+        tester,
+        _duel(hand: [dominoTileId(1, 2)], boneyard: 9),
+        size: size,
+      );
+      expect(tester.takeException(), isNull, reason: '$size');
+      final card = find.byType(GameOpponentCard);
+      expect(card, findsOneWidget);
+      final score = find.byKey(const ValueKey('domino-opponent-score'));
+      expect(score, findsOneWidget, reason: '$size');
+      expect(
+        find.descendant(of: card, matching: score),
+        findsNothing,
+        reason: '$size',
+      );
+      expect(
+        find.descendant(of: card, matching: find.byIcon(Icons.star_rounded)),
+        findsNothing,
+      );
+      expect(
+        tester.getRect(score).overlaps(tester.getRect(card)),
+        isFalse,
+        reason: '$size',
+      );
+    }
+  });
+
   testWidgets('мой ход: кость летит из руки в цепь', (tester) async {
     final played = dominoTileId(1, 2);
     final kept = dominoTileId(4, 5);
@@ -393,6 +479,85 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(DominoTileFace), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('море: «Два дубля» кладёт оба дубля одним ходом',
+      (tester) async {
+    final left = dominoTileId(3, 3);
+    final right = dominoTileId(5, 5);
+    final kept = dominoTileId(1, 2);
+    var pairs = 0;
+    DominoMove? single;
+
+    // Пары нет — кнопки нет.
+    await _pumpTable(
+      tester,
+      _seaDuel(hand: [left, right, kept]),
+      onPlayPair: () => pairs++,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('domino-pair')), findsNothing);
+
+    await _pumpTable(
+      tester,
+      _seaDuel(hand: [left, right, kept], canPair: true),
+      onPlay: (move) => single = move,
+      onPlayPair: () => pairs++,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('domino-pair')), findsOneWidget);
+    expect(find.text('Два дубля'), findsOneWidget);
+
+    // Одним дублём по-прежнему можно сходить отдельно.
+    await tester.tap(find.byKey(ValueKey('domino-hand-$left')));
+    await tester.pump();
+    expect(single?.tile, left);
+    expect(pairs, 0);
+
+    await tester.tap(find.byKey(const ValueKey('domino-pair')));
+    await tester.pump();
+    expect(pairs, 1);
+
+    // Обе кости летят из руки в цепь: одна в руке, две в воздухе.
+    await _pumpTable(
+      tester,
+      _seaDuel(hand: [kept], played: true),
+      onPlayPair: () => pairs++,
+    );
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(find.byType(DominoTileFace), findsNWidgets(3));
+    await tester.pumpAndSettle();
+    expect(find.byType(DominoTileFace), findsOneWidget);
+    expect(find.byKey(const ValueKey('domino-pair')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('море: пара соперника вылетает из его ряда двумя костями',
+      (tester) async {
+    final mine = dominoTileId(4, 6);
+    await _pumpTable(tester, _seaDuel(hand: [mine], actor: 1, opponent: 5));
+    await tester.pumpAndSettle();
+    await _pumpTable(
+      tester,
+      _seaDuel(hand: [mine], actor: 1, opponent: 3, played: true),
+    );
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(find.byType(DominoFlipTile), findsNWidgets(2));
+    await tester.pumpAndSettle();
+    expect(find.byType(DominoFlipTile), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('море без обработчика пары: кнопки нет', (tester) async {
+    await _pumpTable(
+      tester,
+      _seaDuel(
+        hand: [dominoTileId(3, 3), dominoTileId(5, 5)],
+        canPair: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('domino-pair')), findsNothing);
   });
 
   testWidgets('соперник ходит: кость вылетает из его ряда и переворачивается',

@@ -869,13 +869,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesDominoSeaSame => 'Geben, Eröffnung und Nachziehen wie beim Ziegenbock. Die Kette hat zwei Enden.';
 
   @override
-  String get rulesDominoSeaScore => 'Nur die schwerste Hand schreibt Punkte. Unter 25 wird nichts gutgeschrieben.';
+  String get rulesDominoSeaScore => 'Punkte schreibt nur der Verlierer der Runde – wer am meisten Augen auf der Hand hat. Sind es zwei, schreibt niemand. Unter 25 wird nichts gutgeschrieben.';
 
   @override
   String get rulesDominoSeaWipe => 'Haben zwei Spieler 25 oder mehr, schreibt niemand diese Runde.';
 
   @override
-  String get rulesDominoSeaBlank => '0-0 beendet die Runde sofort: der eindeutig schwerste Gegner bekommt 75. Bei Gleichstand niemand.';
+  String get rulesDominoSeaBlank => 'Wer mit 0-0 ausgeht, beendet die Partie sofort: Ziegenbock ist, wer am meisten Augen auf der Hand hat – egal, wie es steht.';
 
   @override
   String get rulesDominoSeaSix => 'Wer mit 6-6 ausgeht, schreibt dem Verlierer 100 und setzt den eigenen Partiestand auf null.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Noch keine Partien';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Spieler: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Klassisch';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Deck: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Ohne Einsatz.';
+
+  @override
+  String get rulesDominoSeaPair => 'Zwei Doppel in einem Zug: Wer die Doppel beider offenen Enden hält, darf sie zusammen legen – eines an jedes Ende.';
+
+  @override
+  String get rulesDominoSeaLone => 'Bleibt nur der Stein 0-0 auf der Hand, werden 25 geschrieben, bleibt nur 6-6, dann 50. Bleiben genau 0-0 und 6-6 zusammen, sind es 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Schnelle Runde: Beginnt die Runde mit 6-6, bekommt ihr Verlierer genau 50, beginnt sie mit 0-0, sind es 75. Mit 6-6 oder 0-0 darf man nur eröffnen, wenn alle Gegner schon Punkte stehen haben. Ein Fisch in einer schnellen Runde zählt nicht.';
+
+  @override
+  String get dominoPlayPair => 'Zwei Doppel';
 }

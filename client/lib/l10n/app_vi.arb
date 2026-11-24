@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "Khi bí, tay nhẹ nhất duy nhất ghi hiệu với từng tay khác. Hòa mức tối thiểu thì không ghi điểm.",
   "rulesDominoClassicMatch": "Cùng điểm cao nhất thì chia thắng. Nếu mọi người bằng nhau là hòa.",
   "rulesDominoSeaSame": "Chia, mở và bốc như Dê. Chuỗi có hai đầu.",
-  "rulesDominoSeaScore": "Chỉ tay nặng nhất được ghi điểm. Dưới 25 không ghi.",
+  "rulesDominoSeaScore": "Chỉ người thua ván mới bị ghi điểm — người còn nhiều điểm nhất trên tay. Nếu có hai người như vậy thì không ai bị ghi. Dưới 25 không ghi.",
   "rulesDominoSeaWipe": "Nếu hai người cùng từ 25 trở lên, ván đó không ai được ghi.",
-  "rulesDominoSeaBlank": "Đánh 0-0 kết thúc ván ngay: đối thủ nặng nhất duy nhất bị ghi 75. Hòa thì không ai bị ghi.",
+  "rulesDominoSeaBlank": "Kết thúc ván bằng quân 0-0 thì trận đấu dừng ngay: dê là người còn nhiều điểm nhất trên tay, bất kể điểm số.",
   "rulesDominoSeaSix": "Kết thúc bằng quân 6-6 cuối thì người thua bị ghi 100, điểm trận của người đóng về 0.",
   "rulesDominoSeaMatch": "Trận đến 125. Ai đạt thì thua.",
   "dominoBoneyard": "Nọc",
@@ -1617,5 +1617,15 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Trò chơi",
   "statsSelectMode": "Chế độ",
-  "statsRecentEmpty": "Chưa có ván nào"
+  "statsRecentEmpty": "Chưa có ván nào",
+  "rulesPlayers": "Người chơi: {players}.",
+  "rulesMode": "Chế độ: {mode}.",
+  "gamesModeClassic": "Cổ điển",
+  "rulesDeck": "Bộ bài: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Không cược.",
+  "rulesDominoSeaPair": "Hai đôi trong một nước: nếu bạn có quân đôi của cả hai đầu mở, bạn có thể đặt cùng lúc, mỗi đầu một quân.",
+  "rulesDominoSeaLone": "Nếu trên tay chỉ còn quân 0-0 thì bị ghi 25, chỉ còn 6-6 thì bị ghi 50. Nếu chỉ còn đúng 0-0 và 6-6 thì bị ghi 12.",
+  "rulesDominoSeaFast": "Ván nhanh: nếu ván mở bằng 6-6, người thua bị ghi đúng 50; mở bằng 0-0 thì 75. Chỉ được mở bằng 6-6 hoặc 0-0 khi mọi đối thủ đều đã có điểm ghi. Cá trong ván nhanh không tính.",
+  "dominoPlayPair": "Hai đôi"
 }

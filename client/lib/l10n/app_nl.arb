@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "Bij vis schrijft de uniek lichtste hand het verschil met elke andere. Bij gedeeld minimum niets.",
   "rulesDominoClassicMatch": "Wie de hoogste stand deelt, wint samen. Als iedereen gelijk staat, is het remise.",
   "rulesDominoSeaSame": "Delen, opening en trekken als bij De Bok. De keten heeft twee uiteinden.",
-  "rulesDominoSeaScore": "Alleen de zwaarste hand schrijft punten. Onder 25 telt niet.",
+  "rulesDominoSeaScore": "Alleen de verliezer van de hand schrijft punten: wie de meeste ogen overhoudt. Zijn dat er twee, dan schrijft niemand. Onder 25 telt niet.",
   "rulesDominoSeaWipe": "Hebben twee spelers 25 of meer, dan schrijft niemand die hand.",
-  "rulesDominoSeaBlank": "0-0 speelt de hand meteen uit: de uniek zwaarste tegenstander krijgt 75. Bij gelijkspel niemand.",
+  "rulesDominoSeaBlank": "Uitgaan met 0-0 beëindigt de partij meteen: de bok is wie de meeste ogen overhoudt, wat de stand ook is.",
   "rulesDominoSeaSix": "Uitgaan met 6-6 geeft de verliezer 100 en zet de partijstand van de sluiter op nul.",
   "rulesDominoSeaMatch": "De partij gaat tot 125. Wie dat haalt, verliest.",
   "dominoBoneyard": "Pot",
@@ -1617,5 +1617,15 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Spel",
   "statsSelectMode": "Modus",
-  "statsRecentEmpty": "Nog geen partijen"
+  "statsRecentEmpty": "Nog geen partijen",
+  "rulesPlayers": "Spelers: {players}.",
+  "rulesMode": "Modus: {mode}.",
+  "gamesModeClassic": "Klassiek",
+  "rulesDeck": "Deck: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Zonder inzet.",
+  "rulesDominoSeaPair": "Twee dubbels in één beurt: heb je de dubbels van beide open einden, dan mag je ze samen leggen, één aan elk eind.",
+  "rulesDominoSeaLone": "Blijft alleen de 0-0 over, dan worden er 25 geschreven; alleen de 6-6, dan 50. Blijven precies 0-0 en 6-6 samen over, dan 12.",
+  "rulesDominoSeaFast": "Snelle hand: opent de hand met 6-6, dan krijgt de verliezer precies 50; met 0-0 is dat 75. Openen met 6-6 of 0-0 mag alleen als alle tegenstanders al punten hebben staan. Een vis in een snelle hand telt niet.",
+  "dominoPlayPair": "Twee dubbels"
 }

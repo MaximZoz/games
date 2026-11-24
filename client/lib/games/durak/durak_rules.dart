@@ -1,6 +1,5 @@
 import 'package:multigames_client/core/locale_provider.dart';
-import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Подпись режима игры «Дурак».
@@ -47,19 +46,18 @@ List<String> durakRuleLines({
   AppLocalizations? l10n,
 }) {
   final t = l10n ?? LocaleService.l10n;
-  return [
-    t.rulesDurakMode(durakModeLabel(mode, t)),
-    t.rulesDurakPlayersDeck(players, durakDeckLabel(deckSize, t)),
-    if (offlineBot)
-      t.rulesDurakOfflineBot
-    else ...[
-      turnTimeSec == 0
-          ? t.rulesNoTimeLimit
-          : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-      if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
+  return gameRuleLines(
+    stakeBronze: offlineBot ? 0 : stakeBronze,
+    players: players,
+    mode: durakModeLabel(mode, t),
+    turnTimeSec: offlineBot ? 0 : turnTimeSec,
+    l10n: t,
+    rules: [
+      t.rulesDeck(durakDeckLabel(deckSize, t)),
+      t.rulesDurakAttack,
+      t.rulesDurakBeat,
+      t.rulesDurakLoser,
+      if (offlineBot) t.rulesNardyOfflineBot,
     ],
-    t.rulesDurakAttack,
-    t.rulesDurakBeat,
-    t.rulesDurakLoser,
-  ];
+  );
 }

@@ -869,13 +869,13 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesDominoSeaSame => 'Μοίρασμα, άνοιγμα και τράβηγμα όπως στον Τράγο. Η αλυσίδα έχει δύο άκρα.';
 
   @override
-  String get rulesDominoSeaScore => 'Μόνο το βαρύτερο χέρι γράφει. Κάτω από 25 δεν γράφεται.';
+  String get rulesDominoSeaScore => 'Γράφει μόνο ο ηττημένος του χεριού: όποιος έμεινε με τους περισσότερους πόντους. Αν είναι δύο, δεν γράφει κανείς. Κάτω από 25 δεν γράφεται.';
 
   @override
   String get rulesDominoSeaWipe => 'Αν δύο έχουν 25 ή περισσότερα, κανείς δεν γράφει αυτό το χέρι.';
 
   @override
-  String get rulesDominoSeaBlank => 'Το 0-0 κλείνει αμέσως το χέρι: ο μοναδικός βαρύτερος αντίπαλος παίρνει 75. Σε ισοπαλία κανείς.';
+  String get rulesDominoSeaBlank => 'Κλείσιμο με το 0-0 τελειώνει αμέσως την παρτίδα: τράγος είναι όποιος έμεινε με τους περισσότερους πόντους, όποιο κι αν είναι το σκορ.';
 
   @override
   String get rulesDominoSeaSix => 'Κλείσιμο με τελευταίο 6-6 γράφει 100 στον ηττημένο και μηδενίζει το σκορ παρτίδας όποιου κλείνει.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Δεν υπάρχουν παρτίδες ακόμα';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Παίκτες: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Λειτουργία: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Κλασικό';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Τράπουλα: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Χωρίς ποντάρισμα.';
+
+  @override
+  String get rulesDominoSeaPair => 'Δύο διπλά σε μία κίνηση: αν έχετε τα διπλά και των δύο ανοιχτών άκρων, μπορείτε να τα παίξετε μαζί, ένα σε κάθε άκρη.';
+
+  @override
+  String get rulesDominoSeaLone => 'Αν σας μείνει μόνο το 0-0, γράφονται 25· μόνο το 6-6, γράφονται 50. Αν μείνουν ακριβώς το 0-0 και το 6-6 μαζί, γράφονται 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Γρήγορο χέρι: αν το χέρι ανοίξει με 6-6, ο ηττημένος του παίρνει ακριβώς 50· με 0-0, 75. Μπορείτε να ανοίξετε με 6-6 ή 0-0 μόνο όταν όλοι οι αντίπαλοι έχουν ήδη γραμμένους πόντους. Ψάρι σε γρήγορο χέρι δεν μετράει.';
+
+  @override
+  String get dominoPlayPair => 'Δύο διπλά';
 }

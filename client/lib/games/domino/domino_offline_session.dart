@@ -139,6 +139,8 @@ class OfflineDominoSession extends ChangeNotifier {
               !reveal
           ? -1
           : _engine.lastTile,
+      lastTile2: _engine.lastTile2,
+      canPair: _engine.canPair(0),
       lastEnd: _engine.lastEnd,
       lastActor: _engine.lastActor,
       eventSeq: _engine.eventSeq,

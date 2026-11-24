@@ -13,8 +13,15 @@ const (
 	ClassicScore = 100
 	SeaScore     = 125
 	SeaRecordMin = 25
-	SeaBlankHit  = 75
-	SeaSixHit    = 100
+	// Кон закрыт костью 6-6: проигравшему 100, у закрывшего счёт в ноль.
+	SeaSixHit = 100
+	// Быстрый кон — начат с 6-6 или 0-0: проигравшему пишут ровно столько.
+	SeaFastSix   = 50
+	SeaFastBlank = 75
+	// На руках осталась одна кость 0-0, одна 6-6 или ровно эти две.
+	SeaLoneBlank = 25
+	SeaLoneSix   = 50
+	SeaBlankSix  = 12
 	HandSize     = 7
 
 	ModeKozel   = "kozel"
@@ -25,7 +32,9 @@ const (
 	StatusRoundEnd = "round_end"
 	StatusOver     = "over"
 
-	ActionPlay      = "play"
+	ActionPlay = "play"
+	// Морской: два своих дубля за ход — по одному на каждый конец цепочки.
+	ActionPlayPair  = "play_pair"
 	ActionDraw      = "draw"
 	ActionPass      = "pass"
 	ActionNextRound = "next_round"
@@ -34,7 +43,6 @@ const (
 	RoundOut     = "out"
 	RoundFish    = "fish"
 	RoundForfeit = "forfeit"
-	RoundFast    = "fast"
 )
 
 // Режимы на одной цепочке из двух концов.
@@ -116,12 +124,14 @@ type Game struct {
 	WinnerUserIDs []string `json:"winner_user_ids"`
 	LastAction    string   `json:"last_action"`
 	LastTile      int      `json:"last_tile"`
-	LastEnd       string   `json:"last_end"`
-	LastActor     int      `json:"last_actor"`
-	EventSeq      int      `json:"event_seq"`
-	Rng           uint64   `json:"rng"`
-	Target        int      `json:"target"`
-	Mode          string   `json:"mode"`
+	// Вторая кость хода двумя дублями (она легла справа); иначе -1.
+	LastTile2 int    `json:"last_tile2"`
+	LastEnd   string `json:"last_end"`
+	LastActor int    `json:"last_actor"`
+	EventSeq  int    `json:"event_seq"`
+	Rng       uint64 `json:"rng"`
+	Target    int    `json:"target"`
+	Mode      string `json:"mode"`
 }
 
 type ViewPlayer struct {
@@ -156,13 +166,16 @@ type View struct {
 	GoatSeat      int          `json:"goat_seat"`
 	WinnerUserIDs []string     `json:"winner_user_ids"`
 	Legal         []Move       `json:"legal"`
-	TargetScore   int          `json:"target_score"`
-	LastAction    string       `json:"last_action"`
-	LastTile      int          `json:"last_tile"`
-	LastEnd       string       `json:"last_end"`
-	LastActor     int          `json:"last_actor"`
-	EventSeq      int          `json:"event_seq"`
-	Mode          string       `json:"mode"`
+	// Ходящий может положить два дубля сразу (только морской режим).
+	CanPair     bool   `json:"can_pair"`
+	TargetScore int    `json:"target_score"`
+	LastAction  string `json:"last_action"`
+	LastTile    int    `json:"last_tile"`
+	LastTile2   int    `json:"last_tile2"`
+	LastEnd     string `json:"last_end"`
+	LastActor   int    `json:"last_actor"`
+	EventSeq    int    `json:"event_seq"`
+	Mode        string `json:"mode"`
 }
 
 func Pips(id int) (lo, hi int) {
@@ -226,6 +239,7 @@ func NewMatch(playerIDs []string, seed int64, mode string) (*Game, error) {
 		Mode:       mode,
 		Rng:        uint64(seed),
 		LastTile:   -1,
+		LastTile2:  -1,
 		LastActor:  -1,
 	}
 	for i, id := range playerIDs {
@@ -252,7 +266,8 @@ func Decode(raw string) (*Game, error) {
 	if raw == "" {
 		return nil, fmt.Errorf("domino: empty state")
 	}
-	var g Game
+	// Состояния, сохранённые до хода двумя дублями, поля last_tile2 не имеют.
+	g := Game{LastTile2: -1}
 	if err := json.Unmarshal([]byte(raw), &g); err != nil {
 		return nil, err
 	}
@@ -355,6 +370,7 @@ func (g *Game) deal(opening bool) error {
 	g.OutSeat = -1
 	g.RoundKind = ""
 	g.LastTile = -1
+	g.LastTile2 = -1
 	g.LastEnd = ""
 	g.LastAction = ""
 	if useOpening {
@@ -438,7 +454,7 @@ func tileBeats(a, b int) bool {
 }
 
 func (g *Game) pickNextStarter() int {
-	if (g.RoundKind == RoundOut || g.RoundKind == RoundFast) && g.OutSeat >= 0 && g.OutSeat < len(g.Players) && !g.Players[g.OutSeat].Forfeited {
+	if g.RoundKind == RoundOut && g.OutSeat >= 0 && g.OutSeat < len(g.Players) && !g.Players[g.OutSeat].Forfeited {
 		return g.OutSeat
 	}
 	minPips := int(^uint(0) >> 1)
@@ -493,6 +509,7 @@ func (g *Game) Apply(action Action) error {
 		g.Status = StatusPlaying
 		g.EventSeq++
 		g.LastAction = ActionNextRound
+		g.LastTile2 = -1
 		g.LastActor = g.Turn
 		return nil
 	}
@@ -517,6 +534,7 @@ func (g *Game) Apply(action Action) error {
 		g.EventSeq++
 		g.LastAction = ActionDraw
 		g.LastTile = tile
+		g.LastTile2 = -1
 		g.LastEnd = ""
 		g.LastActor = seat
 		return nil
@@ -527,6 +545,7 @@ func (g *Game) Apply(action Action) error {
 		g.EventSeq++
 		g.LastAction = ActionPass
 		g.LastTile = -1
+		g.LastTile2 = -1
 		g.LastEnd = ""
 		g.LastActor = seat
 		g.advance()
@@ -538,6 +557,13 @@ func (g *Game) Apply(action Action) error {
 			return fmt.Errorf("illegal move")
 		}
 		g.play(seat, mv)
+		return nil
+	case ActionPlayPair:
+		left, right, ok := g.pairTiles(seat)
+		if !ok {
+			return fmt.Errorf("illegal move")
+		}
+		g.playPair(seat, left, right)
 		return nil
 	default:
 		return fmt.Errorf("unknown move")
@@ -560,6 +586,7 @@ func (g *Game) forfeit(action Action) error {
 	g.EventSeq++
 	g.LastAction = ActionForfeit
 	g.LastTile = -1
+	g.LastTile2 = -1
 	g.LastActor = seat
 	if g.aliveCount() <= 1 {
 		g.Status = StatusOver
@@ -621,7 +648,70 @@ func (g *Game) matchLegal(seat, tile int, end string) (Move, bool) {
 	return Move{}, false
 }
 
+// pairTiles — морской режим: ходящий держит дубли обоих концов цепочки и
+// может выложить их одним ходом. Концы должны различаться: один дубль два
+// конца не закрывает.
+func (g *Game) pairTiles(seat int) (left, right int, ok bool) {
+	if g == nil || g.normalizedMode() != ModeSea || g.Status != StatusPlaying {
+		return -1, -1, false
+	}
+	if seat < 0 || seat >= len(g.Players) || seat != g.Turn || g.Players[seat].Forfeited {
+		return -1, -1, false
+	}
+	if g.LeftEnd < 0 || g.RightEnd < 0 || g.LeftEnd == g.RightEnd {
+		return -1, -1, false
+	}
+	left = TileID(g.LeftEnd, g.LeftEnd)
+	right = TileID(g.RightEnd, g.RightEnd)
+	hand := g.Players[seat].Hand
+	if !contains(hand, left) || !contains(hand, right) {
+		return -1, -1, false
+	}
+	return left, right, true
+}
+
+// CanPair — может ли seat сейчас сходить двумя дублями.
+func (g *Game) CanPair(seat int) bool {
+	_, _, ok := g.pairTiles(seat)
+	return ok
+}
+
 func (g *Game) play(seat int, mv Move) {
+	placed := g.place(seat, mv)
+	g.ForcedTile = -1
+	g.EventSeq++
+	g.LastAction = ActionPlay
+	g.LastTile = mv.Tile
+	g.LastTile2 = -1
+	g.LastEnd = placed.End
+	g.LastActor = seat
+	g.afterPlay(seat)
+}
+
+func (g *Game) playPair(seat, left, right int) {
+	g.place(seat, Move{Tile: left, End: "left"})
+	g.place(seat, Move{Tile: right, End: "right"})
+	g.ForcedTile = -1
+	g.EventSeq++
+	g.LastAction = ActionPlayPair
+	g.LastTile = left
+	g.LastTile2 = right
+	g.LastEnd = "left"
+	g.LastActor = seat
+	g.afterPlay(seat)
+}
+
+func (g *Game) afterPlay(seat int) {
+	if len(g.Players[seat].Hand) == 0 {
+		g.finishRound(RoundOut, seat)
+		return
+	}
+	g.advance()
+	g.maybeFish()
+}
+
+// place кладёт кость в цепочку и убирает её из руки — без смены хода.
+func (g *Game) place(seat int, mv Move) Placed {
 	g.removeHand(seat, mv.Tile)
 	lo, hi := Pips(mv.Tile)
 	placed := Placed{ID: mv.Tile, Lo: lo, Hi: hi, Double: lo == hi}
@@ -647,22 +737,7 @@ func (g *Game) play(seat int, mv Move) {
 		g.RightEnd = out
 		g.Chain = append(g.Chain, placed)
 	}
-	g.ForcedTile = -1
-	g.EventSeq++
-	g.LastAction = ActionPlay
-	g.LastTile = mv.Tile
-	g.LastEnd = placed.End
-	g.LastActor = seat
-	if g.normalizedMode() == ModeSea && mv.Tile == TileID(0, 0) {
-		g.finishRound(RoundFast, seat)
-		return
-	}
-	if len(g.Players[seat].Hand) == 0 {
-		g.finishRound(RoundOut, seat)
-		return
-	}
-	g.advance()
-	g.maybeFish()
+	return placed
 }
 
 func orient(id, end int) (inward, outward int) {
@@ -746,9 +821,18 @@ func (g *Game) legal(seat int) []Move {
 			}
 			return nil
 		}
+		fast := g.fastOpeningAllowed(seat)
 		out := make([]Move, 0, len(hand))
 		for _, id := range hand {
+			if !fast && isFastTile(id) {
+				continue
+			}
 			out = append(out, Move{Tile: id, End: "left"})
+		}
+		if len(out) == 0 {
+			for _, id := range hand {
+				out = append(out, Move{Tile: id, End: "left"})
+			}
 		}
 		return out
 	}
@@ -762,6 +846,28 @@ func (g *Game) legal(seat int) []Move {
 		}
 	}
 	return out
+}
+
+func isFastTile(id int) bool {
+	return id == TileID(0, 0) || id == TileID(6, 6)
+}
+
+// fastOpeningAllowed — морской режим: начать кон с 6-6 или 0-0 по своему
+// выбору можно, только когда у всех остальных уже есть запись. В других
+// режимах ограничения нет.
+func (g *Game) fastOpeningAllowed(seat int) bool {
+	if g.normalizedMode() != ModeSea {
+		return true
+	}
+	for i := range g.Players {
+		if i == seat || g.Players[i].Forfeited {
+			continue
+		}
+		if g.Players[i].Score <= 0 {
+			return false
+		}
+	}
+	return true
 }
 
 func tileMatches(id, end int) bool {
@@ -876,6 +982,14 @@ func (g *Game) finishClassic(kind string, outSeat int) {
 	g.closeRound(g.someoneReached())
 }
 
+// finishSea — конец кона в морском режиме. Правила идут по старшинству:
+//
+//  1. Кон закрыт костью 0-0 (в том числе парой дублей с 0-0) — партия
+//     кончается сразу: козёл тот, у кого на руках больше очков, какой бы
+//     ни был счёт.
+//  2. Кон закрыт костью 6-6 — проигравшему 100, счёт закрывшего в ноль.
+//  3. Быстрый кон: начат с 6-6 — проигравшему 50, с 0-0 — 75.
+//  4. Обычный кон — пишет только самая тяжёлая рука (chargeHeaviest).
 func (g *Game) finishSea(kind string, outSeat int) {
 	g.RoundKind = kind
 	g.OutSeat = outSeat
@@ -885,28 +999,94 @@ func (g *Game) finishSea(kind string, outSeat int) {
 			g.Players[i].RoundDelta = 0
 		}
 	}
-	if kind == RoundOut && g.LastTile == TileID(6, 6) && outSeat >= 0 && outSeat < len(g.Players) {
-		g.Players[outSeat].Score = 0
-	}
+	blank, six := TileID(0, 0), TileID(6, 6)
+	out := kind == RoundOut && outSeat >= 0 && outSeat < len(g.Players)
+	outOnBlank := out && (g.LastTile == blank || g.LastTile2 == blank)
+	outOnSix := out && (g.LastTile == six || g.LastTile2 == six)
 	candidates := make([]int, 0, len(g.Players))
 	for i := range g.Players {
 		if g.Players[i].Forfeited {
 			continue
 		}
-		if (kind == RoundOut || kind == RoundFast) && i == outSeat {
+		if out && i == outSeat {
 			continue
 		}
 		candidates = append(candidates, i)
 	}
+	opening := g.openingTile()
 	switch {
-	case kind == RoundFast:
-		g.chargeUnique(candidates, pips, SeaBlankHit)
-	case kind == RoundOut && g.LastTile == TileID(6, 6):
+	case kind == RoundFish && isFastTile(opening):
+		// Рыба в быстром коне не считается: кон переигрывают без записи.
+	case outOnBlank:
+		g.finishSeaBlank(candidates, pips, outSeat)
+		return
+	case outOnSix:
+		g.Players[outSeat].Score = 0
 		g.chargeUnique(candidates, pips, SeaSixHit)
+	case opening == six:
+		g.chargeUnique(candidates, pips, SeaFastSix)
+	case opening == blank:
+		g.chargeUnique(candidates, pips, SeaFastBlank)
 	default:
-		g.chargeHeaviest(candidates, pips)
+		g.chargeHeaviest(candidates)
 	}
 	g.closeRound(g.someoneReached())
+}
+
+// openingTile — кость, с которой начат кон; -1, пока стол пуст.
+func (g *Game) openingTile() int {
+	for _, placed := range g.Chain {
+		if placed.End == "start" {
+			return placed.ID
+		}
+	}
+	return -1
+}
+
+// finishSeaBlank — кон закрыт костью 0-0: партия окончена. Козёл — самая
+// тяжёлая рука; при равенстве тот, у кого больше счёт, затем первый по
+// кругу от заходившего. Победил закрывший кон.
+func (g *Game) finishSeaBlank(candidates, pips []int, outSeat int) {
+	inPlay := make([]bool, len(g.Players))
+	for _, seat := range candidates {
+		inPlay[seat] = true
+	}
+	goat := -1
+	n := len(g.Players)
+	for step := 0; step < n; step++ {
+		seat := (g.Starter + step) % n
+		if !inPlay[seat] {
+			continue
+		}
+		if goat < 0 || pips[seat] > pips[goat] ||
+			(pips[seat] == pips[goat] && g.Players[seat].Score > g.Players[goat].Score) {
+			goat = seat
+		}
+	}
+	g.Status = StatusOver
+	g.GoatSeat = goat
+	g.WinnerUserIDs = []string{g.Players[outSeat].UserID}
+}
+
+// seaWeight — вес руки в конце обычного кона. Одна 0-0 стоит 25, одна 6-6 —
+// 50, ровно 0-0 и 6-6 вместе — 12, и эти 12 пишутся несмотря на порог 25
+// (forced). Любая другая рука весит сумму своих очков.
+func seaWeight(hand []int) (weight int, forced bool) {
+	blank, six := TileID(0, 0), TileID(6, 6)
+	switch len(hand) {
+	case 1:
+		if hand[0] == blank {
+			return SeaLoneBlank, true
+		}
+		if hand[0] == six {
+			return SeaLoneSix, true
+		}
+	case 2:
+		if (hand[0] == blank && hand[1] == six) || (hand[0] == six && hand[1] == blank) {
+			return SeaBlankSix, true
+		}
+	}
+	return PipSum(hand), false
 }
 
 func (g *Game) snapshotPips() (pips []int, active, minPips, minCount int) {
@@ -969,28 +1149,33 @@ func (g *Game) chargeUnique(candidates, pips []int, amount int) {
 	g.Players[best].Score += amount
 }
 
-func (g *Game) chargeHeaviest(candidates, pips []int) {
+func (g *Game) chargeHeaviest(candidates []int) {
 	heavy := 0
-	best, ties, bestPips := -1, 0, -1
+	best, ties, bestWeight, bestForced := -1, 0, -1, false
 	for _, seat := range candidates {
-		if pips[seat] >= SeaRecordMin {
+		weight, forced := seaWeight(g.Players[seat].Hand)
+		if weight >= SeaRecordMin {
 			heavy++
 		}
-		if pips[seat] > bestPips {
-			bestPips = pips[seat]
+		if weight > bestWeight {
+			bestWeight = weight
+			bestForced = forced
 			best = seat
 			ties = 1
 			continue
 		}
-		if pips[seat] == bestPips {
+		if weight == bestWeight {
 			ties++
 		}
 	}
-	if heavy >= 2 || ties != 1 || best < 0 || bestPips < SeaRecordMin {
+	if heavy >= 2 || ties != 1 || best < 0 {
 		return
 	}
-	g.Players[best].RoundDelta = bestPips
-	g.Players[best].Score += bestPips
+	if bestWeight < SeaRecordMin && !bestForced {
+		return
+	}
+	g.Players[best].RoundDelta = bestWeight
+	g.Players[best].Score += bestWeight
 }
 
 func (g *Game) closeRound(crossed bool) {
@@ -1117,8 +1302,10 @@ func (g *Game) View(viewer string) View {
 		players[i] = vp
 	}
 	legal := []Move{}
+	canPair := false
 	if viewerSeat == g.Turn && g.Status == StatusPlaying && viewerSeat >= 0 && !g.Players[viewerSeat].Forfeited {
 		legal = append(legal, g.legal(viewerSeat)...)
+		canPair = g.CanPair(viewerSeat)
 	}
 	if legal == nil {
 		legal = []Move{}
@@ -1151,9 +1338,11 @@ func (g *Game) View(viewer string) View {
 		GoatSeat:      g.GoatSeat,
 		WinnerUserIDs: winners,
 		Legal:         legal,
+		CanPair:       canPair,
 		TargetScore:   g.Target,
 		LastAction:    g.LastAction,
 		LastTile:      lastTile,
+		LastTile2:     g.LastTile2,
 		LastEnd:       g.LastEnd,
 		LastActor:     g.LastActor,
 		EventSeq:      g.EventSeq,

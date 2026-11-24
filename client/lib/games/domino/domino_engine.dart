@@ -8,8 +8,18 @@ const int dominoGoatScore = 101;
 const int dominoClassicScore = 100;
 const int dominoSeaScore = 125;
 const int dominoSeaRecordMin = 25;
-const int dominoSeaBlankHit = 75;
+
+/// Кон закрыт костью 6-6: проигравшему 100, у закрывшего счёт в ноль.
 const int dominoSeaSixHit = 100;
+
+/// Быстрый кон — начат с 6-6 или 0-0: проигравшему пишут ровно столько.
+const int dominoSeaFastSix = 50;
+const int dominoSeaFastBlank = 75;
+
+/// На руках осталась одна кость 0-0, одна 6-6 или ровно эти две.
+const int dominoSeaLoneBlank = 25;
+const int dominoSeaLoneSix = 50;
+const int dominoSeaBlankSix = 12;
 const int dominoHandSize = 7;
 
 int dominoTargetFor(String? mode) {
@@ -28,6 +38,9 @@ const String dominoStatusRoundEnd = 'round_end';
 const String dominoStatusOver = 'over';
 
 const String dominoActionPlay = 'play';
+
+/// Морской: два своих дубля за ход — по одному на каждый конец цепочки.
+const String dominoActionPlayPair = 'play_pair';
 const String dominoActionDraw = 'draw';
 const String dominoActionPass = 'pass';
 const String dominoActionNextRound = 'next_round';
@@ -36,7 +49,6 @@ const String dominoActionForfeit = 'forfeit';
 const String dominoRoundOut = 'out';
 const String dominoRoundFish = 'fish';
 const String dominoRoundForfeit = 'forfeit';
-const String dominoRoundFast = 'fast';
 
 /// splitmix64 на uint64. В JS нет точных int больше 2^53, поэтому
 /// состояние считается в BigInt и совпадает с серверным uint64.
@@ -234,10 +246,12 @@ class DominoView {
     required this.goatSeat,
     required this.winnerUserIds,
     required this.legal,
+    required this.canPair,
     required this.targetScore,
     required this.mode,
     required this.lastAction,
     required this.lastTile,
+    required this.lastTile2,
     required this.lastEnd,
     required this.lastActor,
     required this.eventSeq,
@@ -258,10 +272,16 @@ class DominoView {
   final int goatSeat;
   final List<String> winnerUserIds;
   final List<DominoMove> legal;
+
+  /// Ходящий может положить два дубля сразу (только морской режим).
+  final bool canPair;
   final int targetScore;
   final String mode;
   final String lastAction;
   final int lastTile;
+
+  /// Вторая кость хода двумя дублями (она легла справа); иначе -1.
+  final int lastTile2;
   final String lastEnd;
   final int lastActor;
   final int eventSeq;
@@ -313,6 +333,24 @@ bool dominoTileMatches(int id, int end) {
   return (hi, lo);
 }
 
+/// Вес руки в конце обычного морского кона. Одна 0-0 стоит 25, одна 6-6 —
+/// 50, ровно 0-0 и 6-6 вместе — 12, и эти 12 пишутся несмотря на порог 25
+/// (второе значение — forced). Любая другая рука весит сумму своих очков.
+(int, bool) dominoSeaWeight(List<int> hand) {
+  final blank = dominoTileId(0, 0);
+  final six = dominoTileId(6, 6);
+  if (hand.length == 1) {
+    if (hand[0] == blank) return (dominoSeaLoneBlank, true);
+    if (hand[0] == six) return (dominoSeaLoneSix, true);
+  }
+  if (hand.length == 2 &&
+      ((hand[0] == blank && hand[1] == six) ||
+          (hand[0] == six && hand[1] == blank))) {
+    return (dominoSeaBlankSix, true);
+  }
+  return (dominoPipSum(hand), false);
+}
+
 class DominoGame {
   DominoGame({
     required this.players,
@@ -331,6 +369,7 @@ class DominoGame {
     List<String>? winnerUserIds,
     this.lastAction = '',
     this.lastTile = -1,
+    this.lastTile2 = -1,
     this.lastEnd = '',
     this.lastActor = -1,
     this.eventSeq = 0,
@@ -358,6 +397,7 @@ class DominoGame {
   List<String> winnerUserIds;
   String lastAction;
   int lastTile;
+  int lastTile2;
   String lastEnd;
   int lastActor;
   int eventSeq;
@@ -420,6 +460,7 @@ class DominoGame {
       winnerUserIds: winnerUserIds,
       lastAction: lastAction,
       lastTile: lastTile,
+      lastTile2: lastTile2,
       lastEnd: lastEnd,
       lastActor: lastActor,
       eventSeq: eventSeq,
@@ -483,6 +524,7 @@ class DominoGame {
     outSeat = -1;
     roundKind = '';
     lastTile = -1;
+    lastTile2 = -1;
     lastEnd = '';
     lastAction = '';
     if (useOpening) {
@@ -533,7 +575,7 @@ class DominoGame {
   }
 
   int pickNextStarter() {
-    if ((roundKind == dominoRoundOut || roundKind == dominoRoundFast) &&
+    if (roundKind == dominoRoundOut &&
         outSeat >= 0 &&
         outSeat < players.length &&
         !players[outSeat].forfeited) {
@@ -575,6 +617,7 @@ class DominoGame {
         status = dominoStatusPlaying;
         eventSeq++;
         lastAction = dominoActionNextRound;
+        lastTile2 = -1;
         lastActor = turn;
         return;
     }
@@ -595,6 +638,7 @@ class DominoGame {
         eventSeq++;
         lastAction = dominoActionDraw;
         lastTile = tile;
+        lastTile2 = -1;
         lastEnd = '';
         lastActor = seat;
         return;
@@ -605,6 +649,7 @@ class DominoGame {
         eventSeq++;
         lastAction = dominoActionPass;
         lastTile = -1;
+        lastTile2 = -1;
         lastEnd = '';
         lastActor = seat;
         _advance();
@@ -614,6 +659,11 @@ class DominoGame {
         final move = _matchLegal(seat, action.tile, action.end);
         if (move == null) throw StateError('illegal move');
         _play(seat, move);
+        return;
+      case dominoActionPlayPair:
+        final pair = pairTiles(seat);
+        if (pair == null) throw StateError('illegal move');
+        _playPair(seat, pair.$1, pair.$2);
         return;
       default:
         throw StateError('unknown move');
@@ -632,6 +682,7 @@ class DominoGame {
     eventSeq++;
     lastAction = dominoActionForfeit;
     lastTile = -1;
+    lastTile2 = -1;
     lastActor = seat;
     if (aliveCount() <= 1) {
       status = dominoStatusOver;
@@ -675,7 +726,66 @@ class DominoGame {
     return null;
   }
 
+  /// Морской режим: ходящий держит дубли обоих концов цепочки и может
+  /// выложить их одним ходом. Концы должны различаться: один дубль два конца
+  /// не закрывает. Возвращает (дубль левого конца, дубль правого конца).
+  (int, int)? pairTiles(int seat) {
+    if (normalizedMode != dominoModeSea || status != dominoStatusPlaying) {
+      return null;
+    }
+    if (seat < 0 ||
+        seat >= players.length ||
+        seat != turn ||
+        players[seat].forfeited) {
+      return null;
+    }
+    if (leftEnd < 0 || rightEnd < 0 || leftEnd == rightEnd) return null;
+    final left = dominoTileId(leftEnd, leftEnd);
+    final right = dominoTileId(rightEnd, rightEnd);
+    final hand = players[seat].hand;
+    if (!hand.contains(left) || !hand.contains(right)) return null;
+    return (left, right);
+  }
+
+  /// Может ли seat сейчас сходить двумя дублями.
+  bool canPair(int seat) => pairTiles(seat) != null;
+
   void _play(int seat, DominoMove move) {
+    final placed = _place(seat, move);
+    forcedTile = -1;
+    eventSeq++;
+    lastAction = dominoActionPlay;
+    lastTile = move.tile;
+    lastTile2 = -1;
+    lastEnd = placed.end;
+    lastActor = seat;
+    _afterPlay(seat);
+  }
+
+  void _playPair(int seat, int left, int right) {
+    _place(seat, DominoMove(tile: left, end: 'left'));
+    _place(seat, DominoMove(tile: right, end: 'right'));
+    forcedTile = -1;
+    eventSeq++;
+    lastAction = dominoActionPlayPair;
+    lastTile = left;
+    lastTile2 = right;
+    lastEnd = 'left';
+    lastActor = seat;
+    _afterPlay(seat);
+  }
+
+  void _afterPlay(int seat) {
+    if (players[seat].hand.isEmpty) {
+      _finishRound(dominoRoundOut, seat);
+      return;
+    }
+    _advance();
+    _maybeFish();
+  }
+
+  /// Кладёт кость в цепочку и убирает её из руки — без смены хода.
+  DominoPlaced _place(int seat, DominoMove move) {
     _removeHand(seat, move.tile);
     final (lo, hi) = dominoPips(move.tile);
     late final DominoPlaced placed;
@@ -719,22 +829,7 @@ class DominoGame {
       rightEnd = outward;
       chain = [...chain, placed];
     }
-    forcedTile = -1;
-    eventSeq++;
-    lastAction = dominoActionPlay;
-    lastTile = move.tile;
-    lastEnd = placed.end;
-    lastActor = seat;
-    if (normalizedMode == dominoModeSea && move.tile == dominoTileId(0, 0)) {
-      _finishRound(dominoRoundFast, seat);
-      return;
-    }
-    if (players[seat].hand.isEmpty) {
-      _finishRound(dominoRoundOut, seat);
-      return;
-    }
-    _advance();
-    _maybeFish();
+    return placed;
   }
 
   void _removeHand(int seat, int tile) {
@@ -792,6 +887,12 @@ class DominoGame {
         }
         return const [];
       }
+      final fast = _fastOpeningAllowed(seat);
+      final opening = [
+        for (final id in hand)
+          if (fast || !_isFastTile(id)) DominoMove(tile: id, end: 'left'),
+      ];
+      if (opening.isNotEmpty) return opening;
       return [for (final id in hand) DominoMove(tile: id, end: 'left')];
     }
     final out = <DominoMove>[];
@@ -804,6 +905,21 @@ class DominoGame {
       }
     }
     return out;
+  }
+
+  static bool _isFastTile(int id) =>
+      id == dominoTileId(0, 0) || id == dominoTileId(6, 6);
+
+  /// Морской режим: начать кон с 6-6 или 0-0 по своему выбору можно, только
+  /// когда у всех остальных уже есть запись. В других режимах ограничения
+  /// нет.
+  bool _fastOpeningAllowed(int seat) {
+    if (normalizedMode != dominoModeSea) return true;
+    for (var i = 0; i < players.length; i++) {
+      if (i == seat || players[i].forfeited) continue;
+      if (players[i].score <= 0) return false;
+    }
+    return true;
   }
 
   void _finishRound(String kind, int out) {
@@ -895,6 +1011,14 @@ class DominoGame {
     _closeRound(_someoneReached());
   }
 
+  /// Конец кона в морском режиме. Правила идут по старшинству:
+  ///
+  /// 1. Кон закрыт костью 0-0 (в том числе парой дублей с 0-0) — партия
+  ///    кончается сразу: козёл тот, у кого на руках больше очков, какой бы
+  ///    ни был счёт.
+  /// 2. Кон закрыт костью 6-6 — проигравшему 100, счёт закрывшего в ноль.
+  /// 3. Быстрый кон: начат с 6-6 — проигравшему 50, с 0-0 — 75.
+  /// 4. Обычный кон — пишет только самая тяжёлая рука.
   void _finishSea(String kind, int out) {
     roundKind = kind;
     outSeat = out;
@@ -902,28 +1026,67 @@ class DominoGame {
     for (var i = 0; i < players.length; i++) {
       if (!players[i].forfeited) players[i].roundDelta = 0;
     }
-    if (kind == dominoRoundOut &&
-        lastTile == dominoTileId(6, 6) &&
-        out >= 0 &&
-        out < players.length) {
-      players[out].score = 0;
-    }
+    final blank = dominoTileId(0, 0);
+    final six = dominoTileId(6, 6);
+    final isOut = kind == dominoRoundOut && out >= 0 && out < players.length;
+    final outOnBlank = isOut && (lastTile == blank || lastTile2 == blank);
+    final outOnSix = isOut && (lastTile == six || lastTile2 == six);
     final candidates = <int>[];
     for (var i = 0; i < players.length; i++) {
       if (players[i].forfeited) continue;
-      if ((kind == dominoRoundOut || kind == dominoRoundFast) && i == out) {
-        continue;
-      }
+      if (isOut && i == out) continue;
       candidates.add(i);
     }
-    if (kind == dominoRoundFast) {
-      _chargeUnique(candidates, snap.pips, dominoSeaBlankHit);
-    } else if (kind == dominoRoundOut && lastTile == dominoTileId(6, 6)) {
+    final opening = _openingTile();
+    if (kind == dominoRoundFish && _isFastTile(opening)) {
+      // Рыба в быстром коне не считается: кон переигрывают без записи.
+    } else if (outOnBlank) {
+      _finishSeaBlank(candidates, snap.pips, out);
+      return;
+    } else if (outOnSix) {
+      players[out].score = 0;
       _chargeUnique(candidates, snap.pips, dominoSeaSixHit);
+    } else if (opening == six) {
+      _chargeUnique(candidates, snap.pips, dominoSeaFastSix);
+    } else if (opening == blank) {
+      _chargeUnique(candidates, snap.pips, dominoSeaFastBlank);
     } else {
-      _chargeHeaviest(candidates, snap.pips);
+      _chargeHeaviest(candidates);
     }
     _closeRound(_someoneReached());
+  }
+
+  /// Кость, с которой начат кон; -1, пока стол пуст.
+  int _openingTile() {
+    for (final placed in chain) {
+      if (placed.end == 'start') return placed.id;
+    }
+    return -1;
+  }
+
+  /// Кон закрыт костью 0-0: партия окончена. Козёл — самая тяжёлая рука; при
+  /// равенстве тот, у кого больше счёт, затем первый по кругу от заходившего.
+  /// Победил закрывший кон.
+  void _finishSeaBlank(List<int> candidates, List<int> pips, int out) {
+    final inPlay = List<bool>.filled(players.length, false);
+    for (final seat in candidates) {
+      inPlay[seat] = true;
+    }
+    var goat = -1;
+    final n = players.length;
+    for (var step = 0; step < n; step++) {
+      final seat = (starter + step) % n;
+      if (!inPlay[seat]) continue;
+      if (goat < 0 ||
+          pips[seat] > pips[goat] ||
+          (pips[seat] == pips[goat] &&
+              players[seat].score > players[goat].score)) {
+        goat = seat;
+      }
+    }
+    status = dominoStatusOver;
+    goatSeat = goat;
+    winnerUserIds = [players[out].userId];
   }
 
   ({List<int> pips, int minPips, int minCount}) _snapshotPips() {
@@ -973,26 +1136,28 @@ class DominoGame {
     players[best].score += amount;
   }
 
-  void _chargeHeaviest(List<int> candidates, List<int> pips) {
+  void _chargeHeaviest(List<int> candidates) {
     var heavy = 0;
     var best = -1;
     var ties = 0;
-    var bestPips = -1;
+    var bestWeight = -1;
+    var bestForced = false;
     for (final seat in candidates) {
-      if (pips[seat] >= dominoSeaRecordMin) heavy++;
-      if (pips[seat] > bestPips) {
-        bestPips = pips[seat];
+      final (weight, forced) = dominoSeaWeight(players[seat].hand);
+      if (weight >= dominoSeaRecordMin) heavy++;
+      if (weight > bestWeight) {
+        bestWeight = weight;
+        bestForced = forced;
         best = seat;
         ties = 1;
         continue;
       }
-      if (pips[seat] == bestPips) ties++;
+      if (weight == bestWeight) ties++;
     }
-    if (heavy >= 2 || ties != 1 || best < 0 || bestPips < dominoSeaRecordMin) {
-      return;
-    }
-    players[best].roundDelta = bestPips;
-    players[best].score += bestPips;
+    if (heavy >= 2 || ties != 1 || best < 0) return;
+    if (bestWeight < dominoSeaRecordMin && !bestForced) return;
+    players[best].roundDelta = bestWeight;
+    players[best].score += bestWeight;
   }
 
   void _closeRound(bool crossed) {
@@ -1131,11 +1296,13 @@ class DominoGame {
       ));
     }
     var legalMoves = const <DominoMove>[];
+    var pair = false;
     if (viewerSeat == turn &&
         status == dominoStatusPlaying &&
         viewerSeat >= 0 &&
         !players[viewerSeat].forfeited) {
       legalMoves = legal(viewerSeat);
+      pair = canPair(viewerSeat);
     }
     var shownTile = lastTile;
     if (lastAction == dominoActionDraw && viewerSeat != lastActor && !reveal) {
@@ -1157,10 +1324,12 @@ class DominoGame {
       goatSeat: goatSeat,
       winnerUserIds: List<String>.of(winnerUserIds),
       legal: legalMoves,
+      canPair: pair,
       targetScore: target,
       mode: normalizedMode,
       lastAction: lastAction,
       lastTile: shownTile,
+      lastTile2: lastTile2,
       lastEnd: lastEnd,
       lastActor: lastActor,
       eventSeq: eventSeq,
@@ -1184,6 +1353,7 @@ class DominoGame {
         'winner_user_ids': winnerUserIds,
         'last_action': lastAction,
         'last_tile': lastTile,
+        'last_tile2': lastTile2,
         'last_end': lastEnd,
         'last_actor': lastActor,
         'event_seq': eventSeq,
@@ -1229,6 +1399,7 @@ class DominoGame {
       ],
       lastAction: (map['last_action'] ?? '').toString(),
       lastTile: (map['last_tile'] as num?)?.toInt() ?? -1,
+      lastTile2: (map['last_tile2'] as num?)?.toInt() ?? -1,
       lastEnd: (map['last_end'] ?? '').toString(),
       lastActor: (map['last_actor'] as num?)?.toInt() ?? -1,
       eventSeq: (map['event_seq'] as num?)?.toInt() ?? 0,

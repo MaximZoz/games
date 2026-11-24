@@ -869,13 +869,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get rulesDominoSeaSame => 'Раздача, первый ход и добор — как в режиме «Козёл». Цепочка на два конца.';
 
   @override
-  String get rulesDominoSeaScore => 'Очки пишет только тот, у кого в конце кона больше всех на руках. Меньше 25 не записывается.';
+  String get rulesDominoSeaScore => 'Очки пишет только проигравший кон — тот, у кого на руках больше всех. Если таких двое, не пишут никому. Меньше 25 не записывается.';
 
   @override
   String get rulesDominoSeaWipe => 'Если 25 и больше сразу у двоих, этот кон никому не пишется.';
 
   @override
-  String get rulesDominoSeaBlank => 'Выложенный 0-0 сразу заканчивает кон: игроку с самой тяжёлой рукой пишут 75. Если таких двое — не пишут никому.';
+  String get rulesDominoSeaBlank => 'Если кон закрыт костью 0-0, партия сразу заканчивается: козёл — тот, у кого на руках больше очков, какой бы ни был счёт.';
 
   @override
   String get rulesDominoSeaSix => 'Если кон закрыт последней костью 6-6, проигравшему пишут 100, а у закрывшего счёт партии сбрасывается.';
@@ -3345,4 +3345,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Пока нет партий';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Игроки: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Классика';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Колода: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Техасский холдем';
+
+  @override
+  String get rulesStakeNone => 'Без ставки.';
+
+  @override
+  String get rulesDominoSeaPair => 'Два дубля за ход: если у вас есть дубли обоих концов цепочки, их можно положить сразу — по одному на каждый конец.';
+
+  @override
+  String get rulesDominoSeaLone => 'Осталась на руках одна кость 0-0 — пишут 25, одна 6-6 — 50. Остались только 0-0 и 6-6 вместе — пишут 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Быстрый кон: если кон начат с 6-6, проигравшему пишут ровно 50, если с 0-0 — 75. Зайти с 6-6 или 0-0 можно, только когда у всех соперников уже есть запись. Рыба в быстром коне не считается.';
+
+  @override
+  String get dominoPlayPair => 'Два дубля';
 }

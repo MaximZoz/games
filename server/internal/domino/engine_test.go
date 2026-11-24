@@ -2,6 +2,7 @@ package domino
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -70,6 +71,7 @@ func freshGame(hands [][]int, boneyard []int, left, right int) *Game {
 		Target:     GoatScore,
 		Rng:        99,
 		LastTile:   -1,
+		LastTile2:  -1,
 		LastActor:  -1,
 		Starter:    0,
 	}
@@ -315,28 +317,30 @@ func TestClassicOutAndFish(t *testing.T) {
 	}
 }
 
+func seaGame(hands [][]int, boneyard []int, left, right int) *Game {
+	g := freshGame(hands, boneyard, left, right)
+	g.Mode = ModeSea
+	g.Target = SeaScore
+	return g
+}
+
 func TestSeaScoring(t *testing.T) {
-	blank := freshGame([][]int{{TileID(0, 0), TileID(1, 2)}, {TileID(6, 6)}}, nil, 0, 5)
-	blank.Mode = ModeSea
-	blank.Target = SeaScore
+	// 0-0 посреди кона — обычная кость: кон идёт дальше.
+	blank := seaGame([][]int{{TileID(0, 0), TileID(1, 2)}, {TileID(6, 6), TileID(5, 1)}}, nil, 0, 5)
 	if err := blank.Apply(Action{Type: ActionPlay, Tile: TileID(0, 0), End: "left"}); err != nil {
 		t.Fatal(err)
 	}
-	if blank.RoundKind != RoundFast || blank.Players[1].Score != SeaBlankHit || blank.Players[0].Score != 0 || len(blank.Players[0].Hand) != 1 {
-		t.Fatalf("blank kind=%s scores=%d/%d hand=%d", blank.RoundKind, blank.Players[0].Score, blank.Players[1].Score, len(blank.Players[0].Hand))
+	if blank.Status != StatusPlaying || blank.Turn != 1 || blank.Players[1].Score != 0 || len(blank.Players[0].Hand) != 1 {
+		t.Fatalf("blank status=%s turn=%d score=%d hand=%d", blank.Status, blank.Turn, blank.Players[1].Score, len(blank.Players[0].Hand))
 	}
 
-	light := freshGame([][]int{{}, {TileID(5, 5), TileID(4, 4)}}, nil, 0, 1)
-	light.Mode = ModeSea
-	light.Target = SeaScore
+	light := seaGame([][]int{{}, {TileID(5, 5), TileID(4, 4)}}, nil, 0, 1)
 	light.finishRound(RoundOut, 0)
 	if light.Players[1].Score != 0 || light.Players[1].RoundPips != 18 {
 		t.Fatalf("under 25 score=%d pips=%d", light.Players[1].Score, light.Players[1].RoundPips)
 	}
 
-	rec := freshGame([][]int{{}, {TileID(6, 6), TileID(6, 5), TileID(6, 4)}}, nil, 0, 1)
-	rec.Mode = ModeSea
-	rec.Target = SeaScore
+	rec := seaGame([][]int{{}, {TileID(6, 6), TileID(6, 5), TileID(6, 4)}}, nil, 0, 1)
 	rec.finishRound(RoundOut, 0)
 	if rec.Players[1].Score != 33 {
 		t.Fatalf("record %d", rec.Players[1].Score)
@@ -371,6 +375,191 @@ func TestSeaScoring(t *testing.T) {
 	}
 	if !lose.IsOver() || lose.GoatSeat != 1 || len(lose.WinnerUserIDs) != 1 || lose.WinnerUserIDs[0] != "p0" {
 		t.Fatalf("sea lose goat=%d winners=%v scores=%d/%d", lose.GoatSeat, lose.WinnerUserIDs, lose.Players[0].Score, lose.Players[1].Score)
+	}
+}
+
+func TestSeaLoneDoubles(t *testing.T) {
+	cases := []struct {
+		name string
+		hand []int
+		want int
+	}{
+		{"одна 0-0", []int{TileID(0, 0)}, SeaLoneBlank},
+		{"одна 6-6", []int{TileID(6, 6)}, SeaLoneSix},
+		{"0-0 и 6-6", []int{TileID(6, 6), TileID(0, 0)}, SeaBlankSix},
+		{"6-6 с другой костью", []int{TileID(6, 6), TileID(0, 1)}, 0},
+		{"0-0 с другой костью", []int{TileID(0, 0), TileID(6, 5), TileID(6, 4), TileID(5, 5)}, 31},
+	}
+	for _, tc := range cases {
+		g := seaGame([][]int{{}, tc.hand}, nil, 3, 1)
+		g.finishRound(RoundOut, 0)
+		if g.Players[1].Score != tc.want || g.Players[1].RoundDelta != tc.want || g.Players[0].Score != 0 {
+			t.Fatalf("%s: score=%d delta=%d", tc.name, g.Players[1].Score, g.Players[1].RoundDelta)
+		}
+	}
+
+	// Одинокий дубль тяжелее обычной руки: пишут ему, а не руке на 20.
+	three := seaGame([][]int{{}, {TileID(0, 0)}, {TileID(6, 4), TileID(5, 5)}}, nil, 3, 1)
+	three.finishRound(RoundOut, 0)
+	if three.Players[1].Score != SeaLoneBlank || three.Players[2].Score != 0 {
+		t.Fatalf("lone blank vs 20: %d %d", three.Players[1].Score, three.Players[2].Score)
+	}
+}
+
+func TestSeaFastOpening(t *testing.T) {
+	// Пока у соперника нет записи, зайти с 0-0 или 6-6 нельзя.
+	g := seaGame([][]int{{TileID(0, 0), TileID(6, 6), TileID(2, 3)}, {TileID(3, 5)}}, nil, -1, -1)
+	moves := g.LegalMoves(0)
+	if len(moves) != 1 || moves[0].Tile != TileID(2, 3) {
+		t.Fatalf("opening without records: %+v", moves)
+	}
+	if err := g.Apply(Action{Type: ActionPlay, Tile: TileID(0, 0), End: "left"}); err == nil {
+		t.Fatal("fast opening must be rejected")
+	}
+	g.Players[1].Score = 30
+	if len(g.LegalMoves(0)) != 3 {
+		t.Fatalf("opening with records: %+v", g.LegalMoves(0))
+	}
+	// В «Козле» ограничения нет.
+	goat := freshGame([][]int{{TileID(0, 0), TileID(2, 3)}, {TileID(3, 5)}}, nil, -1, -1)
+	if len(goat.LegalMoves(0)) != 2 {
+		t.Fatalf("goat opening: %+v", goat.LegalMoves(0))
+	}
+
+	for _, tc := range []struct {
+		pip, want int
+	}{{0, SeaFastBlank}, {6, SeaFastSix}} {
+		fast := seaGame([][]int{{TileID(tc.pip, tc.pip), TileID(tc.pip, 3)}, {TileID(3, 5), TileID(1, 1)}}, nil, -1, -1)
+		fast.Players[1].Score = 30
+		if err := fast.Apply(Action{Type: ActionPlay, Tile: TileID(tc.pip, tc.pip), End: "left"}); err != nil {
+			t.Fatal(err)
+		}
+		if fast.Status != StatusPlaying {
+			t.Fatalf("fast opening must not end the round: %s", fast.Status)
+		}
+		// Соперник пасует: 3-5 и 1-1 к концу не подходят, базар пуст.
+		if err := fast.Apply(Action{Type: ActionPass}); err != nil {
+			t.Fatal(err)
+		}
+		if err := fast.Apply(Action{Type: ActionPlay, Tile: TileID(tc.pip, 3), End: "left"}); err != nil {
+			t.Fatal(err)
+		}
+		if fast.Status != StatusRoundEnd || fast.Players[1].Score != 30+tc.want || fast.Players[1].RoundDelta != tc.want {
+			t.Fatalf("fast %d: status=%s score=%d", tc.pip, fast.Status, fast.Players[1].Score)
+		}
+	}
+
+	// Рыба в быстром коне не пишется никому.
+	fish := seaGame([][]int{{TileID(1, 2), TileID(1, 3), TileID(1, 4)}, {TileID(5, 5), TileID(5, 4), TileID(5, 3)}}, nil, 6, 6)
+	fish.Players[0].Score = 40
+	fish.finishRound(RoundFish, -1)
+	if fish.Status != StatusRoundEnd || fish.Players[0].Score != 40 || fish.Players[1].Score != 0 {
+		t.Fatalf("fast fish %s %d %d", fish.Status, fish.Players[0].Score, fish.Players[1].Score)
+	}
+}
+
+func TestSeaOutOnBlankEndsMatch(t *testing.T) {
+	// Соперник ведёт по записи, но кон закрыт на 0-0: козёл — тяжёлая рука.
+	g := seaGame([][]int{{TileID(0, 0)}, {TileID(1, 2)}, {TileID(6, 5), TileID(4, 4)}}, nil, 0, 3)
+	g.Players[0].Score = 90
+	g.Players[1].Score = 110
+	g.Players[2].Score = 10
+	if err := g.Apply(Action{Type: ActionPlay, Tile: TileID(0, 0), End: "left"}); err != nil {
+		t.Fatal(err)
+	}
+	if !g.IsOver() || g.GoatSeat != 2 || len(g.WinnerUserIDs) != 1 || g.WinnerUserIDs[0] != "p0" {
+		t.Fatalf("blank out: status=%s goat=%d winners=%v", g.Status, g.GoatSeat, g.WinnerUserIDs)
+	}
+	if g.Players[0].Score != 90 || g.Players[1].Score != 110 || g.Players[2].Score != 10 {
+		t.Fatalf("blank out must not change scores: %d %d %d", g.Players[0].Score, g.Players[1].Score, g.Players[2].Score)
+	}
+}
+
+func TestSeaPairOfDoubles(t *testing.T) {
+	g := seaGame([][]int{{TileID(3, 3), TileID(5, 5), TileID(1, 2)}, {TileID(3, 4), TileID(5, 1)}}, nil, 3, 5)
+	if !g.CanPair(0) || !g.View("p0").CanPair || g.View("p1").CanPair {
+		t.Fatal("pair must be offered to the mover only")
+	}
+	if err := g.Apply(Action{Type: ActionPlayPair}); err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Players[0].Hand) != 1 || g.LeftEnd != 3 || g.RightEnd != 5 || g.Turn != 1 {
+		t.Fatalf("pair hand=%v ends=%d/%d turn=%d", g.Players[0].Hand, g.LeftEnd, g.RightEnd, g.Turn)
+	}
+	if g.LastAction != ActionPlayPair || g.LastTile != TileID(3, 3) || g.LastTile2 != TileID(5, 5) || len(g.Chain) != 3 {
+		t.Fatalf("pair last=%s %d %d chain=%d", g.LastAction, g.LastTile, g.LastTile2, len(g.Chain))
+	}
+	if g.Chain[0].ID != TileID(3, 3) || g.Chain[2].ID != TileID(5, 5) {
+		t.Fatalf("pair chain %+v", g.Chain)
+	}
+	view := g.View("p1")
+	if view.LastTile != TileID(3, 3) || view.LastTile2 != TileID(5, 5) {
+		t.Fatalf("pair view %d %d", view.LastTile, view.LastTile2)
+	}
+	if err := g.Apply(Action{Type: ActionPlay, Tile: TileID(3, 4), End: "left"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.LastTile2 != -1 {
+		t.Fatalf("single play must clear the second tile, got %d", g.LastTile2)
+	}
+
+	// Одного дубля мало, как и одинаковых концов.
+	one := seaGame([][]int{{TileID(3, 3), TileID(1, 2)}, {TileID(3, 4)}}, nil, 3, 5)
+	if one.CanPair(0) || one.Apply(Action{Type: ActionPlayPair}) == nil {
+		t.Fatal("pair needs both doubles")
+	}
+	same := seaGame([][]int{{TileID(3, 3), TileID(1, 2)}, {TileID(3, 4)}}, nil, 3, 3)
+	if same.CanPair(0) {
+		t.Fatal("equal ends take one double")
+	}
+	// Только морской режим.
+	goat := freshGame([][]int{{TileID(3, 3), TileID(5, 5), TileID(1, 2)}, {TileID(3, 4)}}, nil, 3, 5)
+	if goat.CanPair(0) || goat.Apply(Action{Type: ActionPlayPair}) == nil {
+		t.Fatal("pair is a sea-only move")
+	}
+
+	// Пара закрывает кон: 6-6 в паре — 100 и сброс счёта закрывшего.
+	six := seaGame([][]int{{TileID(6, 6), TileID(2, 2)}, {TileID(1, 3)}}, nil, 6, 2)
+	six.Players[0].Score = 60
+	if err := six.Apply(Action{Type: ActionPlayPair}); err != nil {
+		t.Fatal(err)
+	}
+	if six.Status != StatusRoundEnd || six.RoundKind != RoundOut || six.Players[0].Score != 0 || six.Players[1].Score != SeaSixHit {
+		t.Fatalf("pair six status=%s scores=%d/%d", six.Status, six.Players[0].Score, six.Players[1].Score)
+	}
+	// 0-0 в паре — конец партии, даже вместе с 6-6.
+	admiral := seaGame([][]int{{TileID(6, 6), TileID(0, 0)}, {TileID(1, 3)}}, nil, 6, 0)
+	admiral.Players[0].Score = 60
+	if err := admiral.Apply(Action{Type: ActionPlayPair}); err != nil {
+		t.Fatal(err)
+	}
+	if !admiral.IsOver() || admiral.GoatSeat != 1 || admiral.WinnerUserIDs[0] != "p0" || admiral.Players[0].Score != 60 {
+		t.Fatalf("admiral status=%s goat=%d score=%d", admiral.Status, admiral.GoatSeat, admiral.Players[0].Score)
+	}
+}
+
+func TestDecodeLegacyStateHasNoSecondTile(t *testing.T) {
+	g, err := NewMatch([]string{"a", "b"}, 7, ModeSea)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.LastTile2 != -1 {
+		t.Fatalf("new match last_tile2=%d", g.LastTile2)
+	}
+	raw, err := Encode(g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy := strings.Replace(raw, `"last_tile2":-1,`, "", 1)
+	if legacy == raw {
+		t.Fatal("last_tile2 not found in the encoded state")
+	}
+	back, err := Decode(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if back.LastTile2 != -1 {
+		t.Fatalf("legacy last_tile2=%d", back.LastTile2)
 	}
 }
 

@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "詰みでは、ただ一人いちばん軽い手が相手との差を得る。同点なら得点なし。",
   "rulesDominoClassicMatch": "最高点が同じ人は分け合う。全員同点なら引き分け。",
   "rulesDominoSeaSame": "配り、最初の一手、山からの補充はゴートと同じ。列は両端だけ。",
-  "rulesDominoSeaScore": "点数を書くのは手札が一番重い人だけ。25未満は記録しない。",
+  "rulesDominoSeaScore": "点数を書くのはその手の敗者、つまり手札の目が一番多い人だけ。同数が二人なら誰も書かない。25未満は記録しない。",
   "rulesDominoSeaWipe": "25以上が二人いるとその手は誰にも入らない。",
-  "rulesDominoSeaBlank": "0-0を出すとその手は即終了。一番重い相手が一人なら75。同点なら誰も書かない。",
+  "rulesDominoSeaBlank": "0-0で上がると対戦はその場で終了。点数に関係なく、手札の目が一番多い人がゴートになる。",
   "rulesDominoSeaSix": "最後の牌が6-6なら敗者に100、閉じた人の対戦点は0に戻る。",
   "rulesDominoSeaMatch": "対戦は125まで。到達した人が負け。",
   "dominoBoneyard": "山札",
@@ -1617,5 +1617,15 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "ゲーム",
   "statsSelectMode": "モード",
-  "statsRecentEmpty": "まだ対局がありません"
+  "statsRecentEmpty": "まだ対局がありません",
+  "rulesPlayers": "プレイヤー: {players}人。",
+  "rulesMode": "モード: {mode}。",
+  "gamesModeClassic": "クラシック",
+  "rulesDeck": "デッキ: {deck}。",
+  "gamesPokerModeHoldem": "テキサスホールデム",
+  "rulesStakeNone": "掛け金なし。",
+  "rulesDominoSeaPair": "1手でダブル2枚：両端それぞれのダブルを持っていれば、両端に1枚ずつ同時に出せます。",
+  "rulesDominoSeaLone": "手札に0-0だけが残ると25、6-6だけが残ると50を記録。0-0と6-6の2枚だけが残ると12を記録。",
+  "rulesDominoSeaFast": "速い手：6-6で始まった手は敗者にちょうど50、0-0で始まった手は75を記録。6-6や0-0で始められるのは、相手全員にすでに記録があるときだけ。速い手のフィッシュは数えない。",
+  "dominoPlayPair": "ダブル2枚"
 }

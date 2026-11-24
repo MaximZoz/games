@@ -323,9 +323,9 @@
   "rulesDominoClassicFish": "Ved fisk skriver den unikt letteste hånden differansen mot hver annen. Delt minimum gir ingenting.",
   "rulesDominoClassicMatch": "Delt høyeste poeng deler seieren. Er alle like, er det uavgjort.",
   "rulesDominoSeaSame": "Deling, åpning og trekk som i Geita. Kjeden har to ender.",
-  "rulesDominoSeaScore": "Bare den tyngste hånden skriver poeng. Under 25 skrives ingenting.",
+  "rulesDominoSeaScore": "Bare rundens taper skriver poeng – den som har flest øyne igjen. Er de to, skriver ingen. Under 25 skrives ingenting.",
   "rulesDominoSeaWipe": "Har to spillere 25 eller mer, skriver ingen den runden.",
-  "rulesDominoSeaBlank": "0-0 avslutter runden med en gang: den unikt tyngste motstanderen får 75. Ved likt får ingen.",
+  "rulesDominoSeaBlank": "Å gå ut med 0-0 avslutter kampen med en gang: geita er den som har flest øyne igjen, uansett stilling.",
   "rulesDominoSeaSix": "Å gå ut med 6-6 gir taperen 100 og nullstiller lukkerens kamppoeng.",
   "rulesDominoSeaMatch": "Kampen går til 125. Den som når dit taper.",
   "dominoBoneyard": "Bunk",
@@ -1617,5 +1617,15 @@
   "statsDurakChip": "{players} · {deck}",
   "statsSelectGame": "Spill",
   "statsSelectMode": "Modus",
-  "statsRecentEmpty": "Ingen partier ennå"
+  "statsRecentEmpty": "Ingen partier ennå",
+  "rulesPlayers": "Spillere: {players}.",
+  "rulesMode": "Modus: {mode}.",
+  "gamesModeClassic": "Klassisk",
+  "rulesDeck": "Kortstokk: {deck}.",
+  "gamesPokerModeHoldem": "Texas Hold’em",
+  "rulesStakeNone": "Ingen innsats.",
+  "rulesDominoSeaPair": "To dobler i ett trekk: har du doblene til begge åpne ender, kan du legge dem samtidig, én i hver ende.",
+  "rulesDominoSeaLone": "Sitter du igjen med bare 0-0, skrives 25; bare 6-6 gir 50. Har du akkurat 0-0 og 6-6 igjen, skrives 12.",
+  "rulesDominoSeaFast": "Rask runde: åpner runden med 6-6, får taperen nøyaktig 50; med 0-0 er det 75. Du kan bare åpne med 6-6 eller 0-0 når alle motstandere allerede har poeng skrevet. En fisk i en rask runde teller ikke.",
+  "dominoPlayPair": "To dobler"
 }

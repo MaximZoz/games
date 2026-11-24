@@ -10,6 +10,7 @@ import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/app_button.dart';
 import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 export 'package:multigames_client/games/domino/domino_chain_layout.dart';
@@ -30,6 +31,7 @@ class DominoTable extends StatefulWidget {
     super.key,
     required this.view,
     required this.onPlay,
+    this.onPlayPair,
     this.onDraw,
     this.onPass,
     this.onTurnExpired,
@@ -38,6 +40,10 @@ class DominoTable extends StatefulWidget {
 
   final DominoGameView view;
   final ValueChanged<DominoMove> onPlay;
+
+  /// Морской режим: положить два дубля одним ходом. Кнопка появляется,
+  /// только когда такой ход есть ([DominoGameView.canPair]).
+  final VoidCallback? onPlayPair;
 
   /// Взять кость из базара; null — брать нельзя (зритель).
   final VoidCallback? onDraw;
@@ -280,8 +286,7 @@ class _DominoTableState extends State<DominoTable>
 
   /// Кто из соперников положил кость [tile].
   int? _playedSeat(DominoGameView before, DominoGameView after, int tile) {
-    if (after.lastAction == dominoActionPlay &&
-        after.lastTile == tile &&
+    if (_lastPlayed(after).contains(tile) &&
         after.lastActor >= 0 &&
         after.lastActor != after.myIndex) {
       return after.lastActor;
@@ -293,6 +298,13 @@ class _DominoTableState extends State<DominoTable>
     }
     return null;
   }
+
+  /// Кости последнего хода: одна, а после хода двумя дублями — обе.
+  Set<int> _lastPlayed(DominoGameView view) => switch (view.lastAction) {
+        dominoActionPlay => {view.lastTile},
+        dominoActionPlayPair => {view.lastTile, view.lastTile2},
+        _ => const <int>{},
+      };
 
   ({Rect rect, double angle})? _boneSlot(int index) {
     final field = _flights.rectOf(_boneFieldKey);
@@ -485,6 +497,12 @@ class _DominoTableState extends State<DominoTable>
     }
   }
 
+  void _tapPair() {
+    if (widget.busy || !widget.view.isMyTurn || !widget.view.canPair) return;
+    setState(() => _choosing = null);
+    widget.onPlayPair?.call();
+  }
+
   // ---- Вёрстка ----------------------------------------------------------
 
   List<DominoPlayerView> _others(DominoGameView view) {
@@ -604,15 +622,22 @@ class _DominoTableState extends State<DominoTable>
           onTurnExpired: widget.onTurnExpired,
           reserveRail: rail > 0,
           compact: compact,
-          trailing: [
-            const SizedBox(width: 6),
-            _ScoreChip(score: player.score),
-          ],
         ),
         const SizedBox(height: 6),
+        // Счёт соперника — у его костей, не в карточке: она у всех игр одна.
         Padding(
           padding: EdgeInsets.symmetric(horizontal: rail),
-          child: _opponentTiles(view, player, maxWidth: 300),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(child: _opponentTiles(view, player, maxWidth: 260)),
+              const SizedBox(width: 8),
+              _ScoreChip(
+                key: const ValueKey('domino-opponent-score'),
+                score: player.score,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -632,17 +657,16 @@ class _DominoTableState extends State<DominoTable>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          GameOpponentPanel(
+          GameOpponentPanel.seat(
             opponent: _opponentOf(player),
             gameType: 'domino',
             gameId: view.id,
-            layout: GameOpponentLayout.seat,
             isTheirTurn: _isTurnOf(view, player),
             turnDeadline: view.turnTimeSec > 0 ? view.turnDeadline : 0,
             turnTimeSec: view.turnTimeSec,
             onTurnExpired: widget.onTurnExpired,
             maxWidth: 140,
-            trailing: [_ScoreChip(score: player.score, dense: true)],
+            seatBadges: [_ScoreChip(score: player.score, dense: true)],
           ),
           const SizedBox(width: 6, height: 4),
           if (short)
@@ -815,9 +839,7 @@ class _DominoTableState extends State<DominoTable>
           for (final slot in fit.slots) slot.id: slot.leadingOnRight,
         };
         _placed = placed;
-        final last = view.lastAction == dominoActionPlay && view.isPlaying
-            ? view.lastTile
-            : -1;
+        final last = view.isPlaying ? _lastPlayed(view) : const <int>{};
         final me = view.me;
         return Stack(
           key: _chainKey,
@@ -846,7 +868,7 @@ class _DominoTableState extends State<DominoTable>
                         rects: now,
                         leadingOnRight: leading,
                         hidden: Set<int>.of(_landing),
-                        lastTile: last,
+                        lastTiles: last,
                       ),
                     );
                   },
@@ -872,11 +894,19 @@ class _DominoTableState extends State<DominoTable>
     );
   }
 
-  /// «Взять» / «Пас» поверх стола: появляются, только когда ходить нечем.
+  /// Кнопка хода поверх стола. «Взять» / «Пас» появляются, только когда
+  /// ходить нечем; «Два дубля» — когда оба дубля можно положить сразу.
   Widget _turnAction(DominoGameView view) {
     final l10n = context.l10n;
     Widget action = const SizedBox.shrink(key: ValueKey('domino-no-action'));
-    if (view.canDraw && widget.onDraw != null) {
+    if (view.canPair && view.isMyTurn && widget.onPlayPair != null) {
+      action = AppButton(
+        key: const ValueKey('domino-pair'),
+        onPressed: widget.busy ? null : _tapPair,
+        label: l10n.dominoPlayPair,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      );
+    } else if (view.canDraw && widget.onDraw != null) {
       action = FilledButton.icon(
         key: const ValueKey('domino-draw'),
         onPressed: widget.busy ? null : widget.onDraw,
@@ -1082,7 +1112,7 @@ class _OpponentTiles extends StatelessWidget {
 }
 
 class _ScoreChip extends StatelessWidget {
-  const _ScoreChip({required this.score, this.dense = false});
+  const _ScoreChip({super.key, required this.score, this.dense = false});
 
   final int score;
   final bool dense;
@@ -1130,7 +1160,7 @@ class _ChainPainter extends CustomPainter {
     required this.rects,
     required this.leadingOnRight,
     required this.hidden,
-    required this.lastTile,
+    required this.lastTiles,
   });
 
   final List<DominoPlaced> chain;
@@ -1140,8 +1170,8 @@ class _ChainPainter extends CustomPainter {
   /// Кости, которые ещё летят: место под них оставлено пустым.
   final Set<int> hidden;
 
-  /// Последняя положенная кость — её мягко подсвечиваем.
-  final int lastTile;
+  /// Кости последнего хода — их мягко подсвечиваем.
+  final Set<int> lastTiles;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1161,7 +1191,7 @@ class _ChainPainter extends CustomPainter {
         vertical: tile.isDouble,
       ).paint(canvas, rect.size);
       canvas.restore();
-      if (tile.id == lastTile) {
+      if (lastTiles.contains(tile.id)) {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             rect.inflate(1.5),

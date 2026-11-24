@@ -869,13 +869,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesDominoSeaSame => 'Chia, mở và bốc như Dê. Chuỗi có hai đầu.';
 
   @override
-  String get rulesDominoSeaScore => 'Chỉ tay nặng nhất được ghi điểm. Dưới 25 không ghi.';
+  String get rulesDominoSeaScore => 'Chỉ người thua ván mới bị ghi điểm — người còn nhiều điểm nhất trên tay. Nếu có hai người như vậy thì không ai bị ghi. Dưới 25 không ghi.';
 
   @override
   String get rulesDominoSeaWipe => 'Nếu hai người cùng từ 25 trở lên, ván đó không ai được ghi.';
 
   @override
-  String get rulesDominoSeaBlank => 'Đánh 0-0 kết thúc ván ngay: đối thủ nặng nhất duy nhất bị ghi 75. Hòa thì không ai bị ghi.';
+  String get rulesDominoSeaBlank => 'Kết thúc ván bằng quân 0-0 thì trận đấu dừng ngay: dê là người còn nhiều điểm nhất trên tay, bất kể điểm số.';
 
   @override
   String get rulesDominoSeaSix => 'Kết thúc bằng quân 6-6 cuối thì người thua bị ghi 100, điểm trận của người đóng về 0.';
@@ -3339,4 +3339,40 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get statsRecentEmpty => 'Chưa có ván nào';
+
+  @override
+  String rulesPlayers(int players) {
+    return 'Người chơi: $players.';
+  }
+
+  @override
+  String rulesMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String get gamesModeClassic => 'Cổ điển';
+
+  @override
+  String rulesDeck(String deck) {
+    return 'Bộ bài: $deck.';
+  }
+
+  @override
+  String get gamesPokerModeHoldem => 'Texas Hold’em';
+
+  @override
+  String get rulesStakeNone => 'Không cược.';
+
+  @override
+  String get rulesDominoSeaPair => 'Hai đôi trong một nước: nếu bạn có quân đôi của cả hai đầu mở, bạn có thể đặt cùng lúc, mỗi đầu một quân.';
+
+  @override
+  String get rulesDominoSeaLone => 'Nếu trên tay chỉ còn quân 0-0 thì bị ghi 25, chỉ còn 6-6 thì bị ghi 50. Nếu chỉ còn đúng 0-0 và 6-6 thì bị ghi 12.';
+
+  @override
+  String get rulesDominoSeaFast => 'Ván nhanh: nếu ván mở bằng 6-6, người thua bị ghi đúng 50; mở bằng 0-0 thì 75. Chỉ được mở bằng 6-6 hoặc 0-0 khi mọi đối thủ đều đã có điểm ghi. Cá trong ván nhanh không tính.';
+
+  @override
+  String get dominoPlayPair => 'Hai đôi';
 }

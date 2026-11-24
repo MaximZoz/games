@@ -104,10 +104,12 @@ class DominoGameView {
     this.mode = dominoModeKozel,
     required this.lastAction,
     required this.lastTile,
+    this.lastTile2 = -1,
     required this.lastEnd,
     required this.lastActor,
     required this.eventSeq,
     required this.myIndex,
+    this.canPair = false,
     this.chatId,
     this.turnTimeSec = 0,
     this.turnDeadline = 0,
@@ -139,10 +141,16 @@ class DominoGameView {
   final String mode;
   final String lastAction;
   final int lastTile;
+
+  /// Вторая кость хода двумя дублями (она легла справа); иначе -1.
+  final int lastTile2;
   final String lastEnd;
   final int lastActor;
   final int eventSeq;
   final int myIndex;
+
+  /// Морской режим: сейчас можно положить два дубля одним ходом.
+  final bool canPair;
   final int turnTimeSec;
   final int turnDeadline;
   final int stakeBronze;
@@ -209,6 +217,8 @@ class DominoGameView {
       mode: dominoNormalizeMode(json['mode']?.toString()),
       lastAction: (json['last_action'] ?? '').toString(),
       lastTile: _asInt(json['last_tile'], -1),
+      lastTile2: _asInt(json['last_tile2'], -1),
+      canPair: json['can_pair'] == true,
       lastEnd: (json['last_end'] ?? '').toString(),
       lastActor: _asInt(json['last_actor'], -1),
       eventSeq: _asInt(json['event_seq']),

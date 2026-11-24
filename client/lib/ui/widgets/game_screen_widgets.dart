@@ -424,7 +424,10 @@ class GameIconWithBadge extends StatelessWidget {
 }
 
 /// Рамка с соперником: аватар (тап — профиль), имя, чат и «в друзья».
-/// Общая для всех игр 1×1 (крестики-нолики, дурак, …).
+///
+/// Одна на все игры 1×1 и намеренно без слота под значки игры: счёт, число
+/// карт, фишки и прочее рисует сама игра рядом со столом, не в карточке.
+/// Игры не создают её напрямую — только через `GameOpponentPanel`.
 class GameOpponentCard extends StatelessWidget {
   const GameOpponentCard({
     super.key,
@@ -446,7 +449,6 @@ class GameOpponentCard extends StatelessWidget {
     this.addFriendBadge = 0,
     this.addFriendTooltip = '',
     this.onAddFriendTap,
-    this.trailing = const <Widget>[],
     this.compact = false,
     this.maxWidth = 400,
     this.align,
@@ -475,9 +477,6 @@ class GameOpponentCard extends StatelessWidget {
   final int addFriendBadge;
   final String addFriendTooltip;
   final VoidCallback? onAddFriendTap;
-
-  /// Доп. кнопки справа.
-  final List<Widget> trailing;
   final bool compact;
   final double maxWidth;
 
@@ -555,7 +554,6 @@ class GameOpponentCard extends StatelessWidget {
               tooltip: addFriendTooltip,
               onPressed: addFriendEnabled ? onAddFriendTap : null,
             ),
-          ...trailing,
         ],
       ),
     );

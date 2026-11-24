@@ -79,7 +79,9 @@ void main() {
       l10n: t,
     );
     expect(lines, contains(chessClockLine(chessModeBullet, t)));
-    expect(lines, isNot(contains(t.rulesNoTimeLimit)));
+    // Шапка шаблона есть и офлайн: без ставки, без лимита на ход.
+    expect(lines.first, t.rulesStakeNone);
+    expect(lines[3], t.rulesNoTimeLimit);
     expect(chessClockBudgetMs(chessModeClassic), (60 * 60 * 1000, 0));
     expect(chessClockBudgetMs(chessModeRapid), (10 * 60 * 1000, 0));
     expect(chessClockBudgetMs(chessModeBlitz), (5 * 60 * 1000, 0));

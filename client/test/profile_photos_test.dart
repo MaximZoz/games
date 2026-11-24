@@ -204,6 +204,48 @@ void main() {
     expect(find.text('Сделать основным'), findsNothing);
   });
 
+  testWidgets('тап по открытому фото закрывает просмотр, как крестик',
+      (tester) async {
+    var closed = 0;
+    const photo = ProfilePhotoMeta(
+      id: 'p1',
+      userId: 'u1',
+      slot: 0,
+      imageMime: 'image/jpeg',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ProfilePhotoViewerBody(
+          photos: const [photo],
+          selectedIndex: 0,
+          avatarPhoto: const ColoredBox(
+            key: ValueKey('hero'),
+            color: Colors.purple,
+          ),
+          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+              const SizedBox.expand(child: ColoredBox(color: Colors.blue)),
+          onSelectIndex: _noop,
+          onClose: () => closed++,
+        ),
+      ),
+    );
+    await tester.tap(find.byType(InteractiveViewer));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(closed, 1);
+
+    // Тап по миниатюре в ленте листает, а не закрывает.
+    await tester.tap(find.byKey(const ValueKey('profile-photo-thumb-p1')));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(closed, 1);
+
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(closed, 2);
+  });
+
   testWidgets('просмотр: аватар-фото первым в ленте, без кнопки кропа', (tester) async {
     const photo = ProfilePhotoMeta(
       id: 'p1',

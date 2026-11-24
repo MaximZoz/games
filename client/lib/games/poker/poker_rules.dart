@@ -1,6 +1,5 @@
 import 'package:multigames_client/core/locale_provider.dart';
-import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime, rulesStakeLine;
+import 'package:multigames_client/games/game_rules_template.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Строки правил покера — единый источник для карточки игры, приглашения
@@ -13,17 +12,17 @@ List<String> pokerRuleLines({
   AppLocalizations? l10n,
 }) {
   final t = l10n ?? LocaleService.l10n;
-  return [
-    t.rulesPokerPlayers(players),
-    if (!offlineBot) ...[
-      turnTimeSec == 0
-          ? t.rulesNoTimeLimit
-          : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-      if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
+  return gameRuleLines(
+    stakeBronze: offlineBot ? 0 : stakeBronze,
+    players: players,
+    mode: t.gamesPokerModeHoldem,
+    turnTimeSec: offlineBot ? 0 : turnTimeSec,
+    l10n: t,
+    rules: [
+      t.rulesPokerIntro,
+      t.rulesPokerPlay,
+      t.rulesPokerWin,
+      t.rulesPokerTable,
     ],
-    t.rulesPokerIntro,
-    t.rulesPokerPlay,
-    t.rulesPokerWin,
-    t.rulesPokerTable,
-  ];
+  );
 }
