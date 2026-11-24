@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Mise : {stake}. La partie se joue pour autant de pièces.",
+  "rulesStake": "Mise : {stake}.",
+  "lossReasonTimeout": "Temps écoulé",
+  "lossReasonSurrender": "Vous avez abandonné",
+  "lossReasonCheckmate": "Échec et mat",
+  "lossReasonNoMoves": "Aucun coup",
+  "lossReasonGiveaway": "Pions restants",
+  "lossReasonCorners": "Coins manqués",
+  "lossReasonOpponentOut": "L’adversaire est sorti",
+  "lossReasonFool": "Vous êtes le durak",
+  "lossReasonShips": "Navires coulés",
+  "lossReasonLine": "Trois d’affilée",
+  "lossReasonNardy": "L’adversaire a sorti ses pions",
+  "lossReasonChips": "Plus de jetons",
   "@rulesStake": {
     "placeholders": {
       "stake": {

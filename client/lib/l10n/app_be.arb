@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Стаўка: {stake}. На столькі манет ідзе гульня.",
+  "rulesStake": "Стаўка: {stake}.",
+  "lossReasonTimeout": "Час выйшаў",
+  "lossReasonSurrender": "Вы здаліся",
+  "lossReasonCheckmate": "Мат",
+  "lossReasonNoMoves": "Няма хадоў",
+  "lossReasonGiveaway": "Не аддалі шашкі",
+  "lossReasonCorners": "Не занялі вуглы",
+  "lossReasonOpponentOut": "Супернік выйшаў",
+  "lossReasonFool": "Вы дурань",
+  "lossReasonShips": "Караблі патоплены",
+  "lossReasonLine": "Тры ў рад",
+  "lossReasonNardy": "Супернік вывеў фішкі",
+  "lossReasonChips": "Фішкі скончыліся",
   "@rulesStake": {
     "placeholders": {
       "stake": {

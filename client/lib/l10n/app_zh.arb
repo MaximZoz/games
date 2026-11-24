@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "赌注：{stake}。本局押这么多硬币。",
+  "rulesStake": "赌注：{stake}。",
+  "lossReasonTimeout": "时间到了",
+  "lossReasonSurrender": "你认输了",
+  "lossReasonCheckmate": "将死",
+  "lossReasonNoMoves": "无棋可走",
+  "lossReasonGiveaway": "棋子没送完",
+  "lossReasonCorners": "没占住角",
+  "lossReasonOpponentOut": "对手出完了",
+  "lossReasonFool": "你是傻瓜",
+  "lossReasonShips": "军舰被击沉",
+  "lossReasonLine": "三子一线",
+  "lossReasonNardy": "对手走完了棋子",
+  "lossReasonChips": "筹码用完了",
   "@rulesStake": {
     "placeholders": {
       "stake": {

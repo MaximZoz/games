@@ -593,13 +593,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   }
 
   Future<void> _createGame(BuildContext context, String mode) async {
-    // Async: после конца партии пин/кэш могли ещё держать старый gameId.
-    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
-      return;
-    }
-    if (!context.mounted) return;
-    if (!await _ensureStakeAffordable(_selectedStakeBronze)) return;
-    if (!context.mounted) return;
+    if (_isCreating || _isFinding) return;
+    // Кнопка гаснет сразу, ещё до проверки активной партии и ставки.
     setState(() {
       if (mode == 'invite') {
         _isCreating = true;
@@ -608,6 +603,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
     });
     try {
+      // Async: после конца партии пин/кэш могли ещё держать старый gameId.
+      if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+        return;
+      }
+      if (!context.mounted) return;
+      if (!await _ensureStakeAffordable(_selectedStakeBronze)) return;
+      if (!context.mounted) return;
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.createLobby(
         mode: mode,

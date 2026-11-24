@@ -17,7 +17,8 @@ void main() {
       );
       expect(text, contains('3x3'));
       expect(text, contains('3 в ряд'));
-      expect(text, contains('Без ограничения'));
+      expect(text, isNot(contains('Без ограничения')));
+      expect(text, isNot(contains('Время на ход')));
       expect(text, contains('10$kTictactoeRulesStakeIconMarker'));
       expect(text, isNot(contains('бр')));
       expect(text, isNot(contains('Смена сторон')));
@@ -36,7 +37,7 @@ void main() {
       expect(text, contains('Гомоку'));
       expect(text, contains('15x15'));
       expect(text, contains('5 в ряд'));
-      expect(text, contains('1 мин'));
+      expect(text, isNot(contains('1 мин')));
       expect(text, contains('Смена сторон'));
       expect(text, contains('Запрет центра'));
       // 100 бронзы = 1 серебро → «1» + маркер иконки (не «1 с»).
@@ -70,7 +71,7 @@ void main() {
       );
       expect(text, isNot(contains('Ставка:')));
       expect(text, startsWith('Без ставки.'));
-      expect(text, contains('10 с'));
+      expect(text, isNot(contains('10 с')));
     });
 
     test('offline bot: без ставки и без лимита, первый ход чередуется', () {
@@ -86,7 +87,7 @@ void main() {
       expect(text, isNot(contains('Ставка:')));
       expect(text, startsWith('Без ставки.'));
       expect(text, isNot(contains('30 с')));
-      expect(text, contains('Без ограничения'));
+      expect(text, isNot(contains('Без ограничения')));
       expect(text, contains('чередуется'));
       expect(text, isNot(contains('O может поменяться')));
     });

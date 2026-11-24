@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'api_action_surface.dart';
 
 /// Текстовая кнопка: заливка цветом фона приложения, лавандовая рамка, чёрный текст.
-class AppButton extends StatefulWidget {
+class AppButton extends StatelessWidget {
   const AppButton({
     super.key,
     required this.onPressed,
@@ -20,28 +21,58 @@ class AppButton extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
   final AppButtonStyle style;
   final bool isLoading;
+
   /// true — кнопка тянется на всю ширину (форма входа/регистрации).
   final bool expanded;
+
   /// Сохранено для совместимости: анимация рамки отключена.
   final bool animateBorder;
 
   @override
-  State<AppButton> createState() => _AppButtonState();
+  Widget build(BuildContext context) {
+    final resolvedPadding =
+        padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 14);
+    return ApiActionSurface(
+      onPressed: onPressed,
+      loading: isLoading,
+      builder: (context, showLoading, onTap) => _AppButtonBody(
+        label: label,
+        padding: resolvedPadding,
+        style: style,
+        expanded: expanded,
+        showLoading: showLoading,
+        onTap: onTap,
+      ),
+    );
+  }
 }
 
 enum AppButtonStyle { normal, danger }
 
-class _AppButtonState extends State<AppButton> {
+class _AppButtonBody extends StatelessWidget {
+  const _AppButtonBody({
+    required this.label,
+    required this.padding,
+    required this.style,
+    required this.expanded,
+    required this.showLoading,
+    required this.onTap,
+  });
+
+  final String label;
+  final EdgeInsetsGeometry padding;
+  final AppButtonStyle style;
+  final bool expanded;
+  final bool showLoading;
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    final padding = widget.padding ??
-        const EdgeInsets.symmetric(horizontal: 20, vertical: 14);
-    final isDanger = widget.style == AppButtonStyle.danger;
-    final enabled = widget.onPressed != null && !widget.isLoading;
+    final isDanger = style == AppButtonStyle.danger;
+    final enabled = onTap != null;
     final fg = isDanger ? Colors.red.shade800 : AppColors.textPrimary;
     final border = isDanger ? Colors.red.shade400 : AppColors.buttonBorder;
-
-    final label = widget.isLoading
+    final child = showLoading
         ? SizedBox(
             width: 22,
             height: 22,
@@ -51,7 +82,7 @@ class _AppButtonState extends State<AppButton> {
             ),
           )
         : Text(
-            widget.label,
+            label,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: fg,
@@ -69,11 +100,13 @@ class _AppButtonState extends State<AppButton> {
           side: BorderSide(color: border),
         ),
         child: InkWell(
-          onTap: enabled ? widget.onPressed : null,
+          onTap: onTap,
+          splashColor: apiActionSplash,
+          highlightColor: apiActionSplash,
           borderRadius: BorderRadius.circular(AppRadius.button),
           child: Padding(
             padding: padding,
-            child: widget.expanded ? Center(child: label) : label,
+            child: expanded ? Center(child: child) : child,
           ),
         ),
       ),

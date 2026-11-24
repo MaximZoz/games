@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'api_action_surface.dart';
 
 /// Кнопка-иконка с мягкой лавандовой рамкой (как у свайп-действий в чатах).
 class FramedIconButton extends StatelessWidget {
@@ -35,7 +36,16 @@ class FramedIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = onPressed != null && !loading;
+    return ApiActionSurface(
+      onPressed: onPressed,
+      loading: loading,
+      builder: (context, showLoading, onTap) =>
+          _body(showLoading: showLoading, onTap: onTap),
+    );
+  }
+
+  Widget _body({required bool showLoading, required VoidCallback? onTap}) {
+    final enabled = onTap != null;
     final color = iconColor ?? AppColors.textPrimary;
     final innerRadius = (borderRadius - borderWidth).clamp(0.0, borderRadius);
     return Tooltip(
@@ -46,7 +56,9 @@ class FramedIconButton extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             canRequestFocus: false,
-            onTap: enabled ? onPressed : null,
+            onTap: onTap,
+            splashColor: apiActionSplash,
+            highlightColor: apiActionSplash,
             borderRadius: BorderRadius.circular(borderRadius),
             child: Container(
               width: size,
@@ -62,7 +74,7 @@ class FramedIconButton extends StatelessWidget {
                   borderRadius: BorderRadius.circular(innerRadius),
                 ),
                 child: Center(
-                  child: loading
+                  child: showLoading
                       ? SizedBox(
                           width: iconSize,
                           height: iconSize,

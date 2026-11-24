@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Inzet: {stake}. Het spel gaat om zoveel munten.",
+  "rulesStake": "Inzet: {stake}.",
+  "lossReasonTimeout": "Tijd om",
+  "lossReasonSurrender": "Je hebt opgegeven",
+  "lossReasonCheckmate": "Schaakmat",
+  "lossReasonNoMoves": "Geen zetten",
+  "lossReasonGiveaway": "Stenen over",
+  "lossReasonCorners": "Hoeken leeg",
+  "lossReasonOpponentOut": "Tegenstander is uit",
+  "lossReasonFool": "Jij bent de dwaas",
+  "lossReasonShips": "Schepen gezonken",
+  "lossReasonLine": "Drie op een rij",
+  "lossReasonNardy": "Tegenstander is uitgespeeld",
+  "lossReasonChips": "Geen fiches meer",
   "@rulesStake": {
     "placeholders": {
       "stake": {

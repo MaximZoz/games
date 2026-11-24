@@ -2623,8 +2623,44 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Inzet: $stake. Het spel gaat om zoveel munten.';
+    return 'Inzet: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Tijd om';
+
+  @override
+  String get lossReasonSurrender => 'Je hebt opgegeven';
+
+  @override
+  String get lossReasonCheckmate => 'Schaakmat';
+
+  @override
+  String get lossReasonNoMoves => 'Geen zetten';
+
+  @override
+  String get lossReasonGiveaway => 'Stenen over';
+
+  @override
+  String get lossReasonCorners => 'Hoeken leeg';
+
+  @override
+  String get lossReasonOpponentOut => 'Tegenstander is uit';
+
+  @override
+  String get lossReasonFool => 'Jij bent de dwaas';
+
+  @override
+  String get lossReasonShips => 'Schepen gezonken';
+
+  @override
+  String get lossReasonLine => 'Drie op een rij';
+
+  @override
+  String get lossReasonNardy => 'Tegenstander is uitgespeeld';
+
+  @override
+  String get lossReasonChips => 'Geen fiches meer';
 
   @override
   String get rulesSwap => 'Kant wisselen: O mag met X wisselen na de eerste zet van X.';

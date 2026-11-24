@@ -2623,8 +2623,44 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Cược: $stake. Ván chơi với số xu này.';
+    return 'Cược: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Hết giờ';
+
+  @override
+  String get lossReasonSurrender => 'Bạn đầu hàng';
+
+  @override
+  String get lossReasonCheckmate => 'Chiếu hết';
+
+  @override
+  String get lossReasonNoMoves => 'Hết nước đi';
+
+  @override
+  String get lossReasonGiveaway => 'Còn quân';
+
+  @override
+  String get lossReasonCorners => 'Chưa chiếm góc';
+
+  @override
+  String get lossReasonOpponentOut => 'Đối thủ hết bài';
+
+  @override
+  String get lossReasonFool => 'Bạn là quân thua';
+
+  @override
+  String get lossReasonShips => 'Tàu bị đánh chìm';
+
+  @override
+  String get lossReasonLine => 'Ba ô một hàng';
+
+  @override
+  String get lossReasonNardy => 'Đối thủ đưa hết quân';
+
+  @override
+  String get lossReasonChips => 'Hết chip';
 
   @override
   String get rulesSwap => 'Đổi bên: O có thể đổi chỗ với X sau nước đầu của X.';

@@ -1484,7 +1484,19 @@
       }
     }
   },
-  "rulesStake": "Ставка: {stake}. На столько монет идёт игра.",
+  "rulesStake": "Ставка: {stake}.",
+  "lossReasonTimeout": "Время вышло",
+  "lossReasonSurrender": "Вы сдались",
+  "lossReasonCheckmate": "Мат",
+  "lossReasonNoMoves": "Нет ходов",
+  "lossReasonGiveaway": "Не отдали шашки",
+  "lossReasonCorners": "Не заняли углы",
+  "lossReasonOpponentOut": "Соперник вышел",
+  "lossReasonFool": "Вы дурак",
+  "lossReasonShips": "Корабли потоплены",
+  "lossReasonLine": "Три в ряд",
+  "lossReasonNardy": "Соперник вывел фишки",
+  "lossReasonChips": "Фишки кончились",
   "@rulesStake": {
     "placeholders": {
       "stake": {

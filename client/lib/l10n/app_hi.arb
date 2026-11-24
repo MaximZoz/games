@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "दाँव: {stake}. इतने सिक्कों पर खेल है।",
+  "rulesStake": "दाँव: {stake}.",
+  "lossReasonTimeout": "समय समाप्त",
+  "lossReasonSurrender": "आपने हार मान ली",
+  "lossReasonCheckmate": "शह और मात",
+  "lossReasonNoMoves": "कोई चाल नहीं",
+  "lossReasonGiveaway": "मोहरे बचे",
+  "lossReasonCorners": "कोने खाली",
+  "lossReasonOpponentOut": "प्रतिद्वंद्वी निकल गया",
+  "lossReasonFool": "आप मूर्ख हैं",
+  "lossReasonShips": "जहाज डूब गए",
+  "lossReasonLine": "तीन एक पंक्ति में",
+  "lossReasonNardy": "प्रतिद्वंद्वी ने गोटी निकाल दीं",
+  "lossReasonChips": "चिप्स खत्म",
   "@rulesStake": {
     "placeholders": {
       "stake": {

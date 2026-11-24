@@ -2623,8 +2623,44 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Ставка: $stake. На стільки монет іде гра.';
+    return 'Ставка: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Час вийшов';
+
+  @override
+  String get lossReasonSurrender => 'Ви здалися';
+
+  @override
+  String get lossReasonCheckmate => 'Мат';
+
+  @override
+  String get lossReasonNoMoves => 'Немає ходів';
+
+  @override
+  String get lossReasonGiveaway => 'Не віддали шашки';
+
+  @override
+  String get lossReasonCorners => 'Не зайняли кути';
+
+  @override
+  String get lossReasonOpponentOut => 'Суперник вийшов';
+
+  @override
+  String get lossReasonFool => 'Ви дурень';
+
+  @override
+  String get lossReasonShips => 'Кораблі потоплені';
+
+  @override
+  String get lossReasonLine => 'Три в ряд';
+
+  @override
+  String get lossReasonNardy => 'Суперник вивів фішки';
+
+  @override
+  String get lossReasonChips => 'Фішки скінчилися';
 
   @override
   String get rulesSwap => 'Зміна сторін: O може помінятися місцями з X після першого ходу X.';

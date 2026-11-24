@@ -2623,8 +2623,44 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Ставка: $stake. Ойын осы монеталарға жүреді.';
+    return 'Ставка: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Уақыт бітті';
+
+  @override
+  String get lossReasonSurrender => 'Сіз берілдіңіз';
+
+  @override
+  String get lossReasonCheckmate => 'Мат';
+
+  @override
+  String get lossReasonNoMoves => 'Жүріс жоқ';
+
+  @override
+  String get lossReasonGiveaway => 'Шашкалар қалды';
+
+  @override
+  String get lossReasonCorners => 'Бұрыштар бос';
+
+  @override
+  String get lossReasonOpponentOut => 'Қарсылас шықты';
+
+  @override
+  String get lossReasonFool => 'Сіз дураксыз';
+
+  @override
+  String get lossReasonShips => 'Кемелер батырылды';
+
+  @override
+  String get lossReasonLine => 'Үш қатар';
+
+  @override
+  String get lossReasonNardy => 'Қарсылас фишкаларын шығарды';
+
+  @override
+  String get lossReasonChips => 'Фишкалар бітті';
 
   @override
   String get rulesSwap => 'Жақтарды ауыстыру: X-тің бірінші жүрісінен кейін O X-пен орын алмасуы мүмкін.';

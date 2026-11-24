@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Cược: {stake}. Ván chơi với số xu này.",
+  "rulesStake": "Cược: {stake}.",
+  "lossReasonTimeout": "Hết giờ",
+  "lossReasonSurrender": "Bạn đầu hàng",
+  "lossReasonCheckmate": "Chiếu hết",
+  "lossReasonNoMoves": "Hết nước đi",
+  "lossReasonGiveaway": "Còn quân",
+  "lossReasonCorners": "Chưa chiếm góc",
+  "lossReasonOpponentOut": "Đối thủ hết bài",
+  "lossReasonFool": "Bạn là quân thua",
+  "lossReasonShips": "Tàu bị đánh chìm",
+  "lossReasonLine": "Ba ô một hàng",
+  "lossReasonNardy": "Đối thủ đưa hết quân",
+  "lossReasonChips": "Hết chip",
   "@rulesStake": {
     "placeholders": {
       "stake": {

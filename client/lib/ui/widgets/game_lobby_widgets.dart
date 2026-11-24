@@ -10,6 +10,7 @@ import 'package:multigames_client/games/games_repository.dart'
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_ui/widgets/api_action_surface.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -245,55 +246,68 @@ class LobbySearchAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = context.l10n.lobbySearchPlayers;
-    final active = !searching && !busy && onStart != null;
-    final Widget leading = searching || busy
-        ? const SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accentStart,
-            ),
-          )
-        : const Icon(Icons.search_rounded, size: 16, color: AppColors.accentStart);
-    return Tooltip(
-      message: searching ? context.l10n.lobbySearchingOpponent : label,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Material(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-              color: AppColors.accentStart.withValues(
-                alpha: active || searching ? 0.7 : 0.35,
-              ),
-            ),
-          ),
-          child: InkWell(
-            onTap: active ? onStart : null,
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  leading,
-                  const SizedBox(width: 4),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: AppColors.accentStart,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
+    return ApiActionSurface(
+      onPressed: onStart,
+      loading: searching || busy,
+      builder: (context, showLoading, onTap) {
+        final active = onTap != null;
+        final Widget leading = showLoading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              )
+            : const Icon(
+                Icons.search_rounded,
+                size: 16,
+                color: AppColors.accentStart,
+              );
+        return Tooltip(
+          message: searching ? context.l10n.lobbySearchingOpponent : label,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Material(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(
+                  color: AppColors.accentStart.withValues(
+                    alpha: active || showLoading ? 0.7 : 0.35,
                   ),
-                ],
+                ),
+              ),
+              child: InkWell(
+                onTap: onTap,
+                splashColor: apiActionSplash,
+                highlightColor: apiActionSplash,
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      leading,
+                      const SizedBox(width: 4),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: AppColors.accentStart,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -813,21 +827,25 @@ class LobbyInviteAcceptView extends StatelessWidget {
                   ] else
                     const Spacer(),
                   const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: joining ? null : onJoin,
-                    style: AppButtonStyles.of(
-                      minimumSize: const Size.fromHeight(48),
+                  ApiActionSurface(
+                    onPressed: onJoin,
+                    loading: joining,
+                    builder: (context, showLoading, onTap) => FilledButton(
+                      onPressed: onTap,
+                      style: AppButtonStyles.of(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      child: showLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.textPrimary,
+                              ),
+                            )
+                          : Text(l10n.lobbyEnterGame),
                     ),
-                    child: joining
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.textPrimary,
-                            ),
-                          )
-                        : Text(l10n.lobbyEnterGame),
                   ),
                 ],
               ),
@@ -1215,41 +1233,50 @@ class LobbyInviteActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active = enabled && onPressed != null && !busy;
-    return Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: AppColors.accentStart.withValues(alpha: active ? 0.7 : 0.35),
-        ),
-      ),
-      child: InkWell(
-        onTap: active ? onPressed : null,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          child: busy
-              ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.accentStart,
-                  ),
-                )
-              : Text(
-                  label,
-                  style: TextStyle(
-                    color: AppColors.accentStart.withValues(
-                      alpha: enabled ? 1 : 0.45,
+    return ApiActionSurface(
+      onPressed: enabled ? onPressed : null,
+      loading: busy,
+      builder: (context, showLoading, onTap) {
+        final active = onTap != null;
+        return Material(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: AppColors.accentStart
+                  .withValues(alpha: active || showLoading ? 0.7 : 0.35),
+            ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            splashColor: apiActionSplash,
+            highlightColor: apiActionSplash,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              child: showLoading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.accentStart,
+                      ),
+                    )
+                  : Text(
+                      label,
+                      style: TextStyle(
+                        color: AppColors.accentStart.withValues(
+                          alpha: enabled ? 1 : 0.45,
+                        ),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

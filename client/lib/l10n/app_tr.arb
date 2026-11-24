@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Bahis: {stake}. Oyun bu kadar jeton içindir.",
+  "rulesStake": "Bahis: {stake}.",
+  "lossReasonTimeout": "Süre doldu",
+  "lossReasonSurrender": "Teslim oldunuz",
+  "lossReasonCheckmate": "Mat",
+  "lossReasonNoMoves": "Hamle yok",
+  "lossReasonGiveaway": "Taşlar kaldı",
+  "lossReasonCorners": "Köşeler boş",
+  "lossReasonOpponentOut": "Rakip çıktı",
+  "lossReasonFool": "Siz aptalsınız",
+  "lossReasonShips": "Gemiler battı",
+  "lossReasonLine": "Üçlü sıra",
+  "lossReasonNardy": "Rakip pullarını çıkardı",
+  "lossReasonChips": "Fişler bitti",
   "@rulesStake": {
     "placeholders": {
       "stake": {

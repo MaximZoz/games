@@ -285,7 +285,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
               LobbySearchAction(
                 searching: isMatchmake,
                 busy: _startingSearch,
-                onStart: () => unawaited(_startSearch()),
+                onStart: _startSearch,
               ),
             if (lobby != null)
               IconButton(
@@ -346,7 +346,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
           players: lobby.players,
         ),
         joining: _joining,
-        onJoin: () => unawaited(_join()),
+        onJoin: _join,
         stakeBronze: lobby.maxPlayers > 2 ? 0 : lobby.stakeBronze,
         top: lobby.maxPlayers > 2 ? _buildMultiPlayersCard(lobby) : null,
         rules: rulesTextLines(durakRuleLines(
@@ -392,8 +392,8 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
         declinedIds: _declined,
         listStorageKey: 'durak-lobby-friends',
         expand: expand,
-        onInvite: (id) => unawaited(_invite(id)),
-        onCancel: (id) => unawaited(_cancelInvite(id)),
+        onInvite: _invite,
+        onCancel: _cancelInvite,
         profileReturnPath: '/games/durak/lobby/${widget.lobbyId}?mode=invite',
       ),
     );

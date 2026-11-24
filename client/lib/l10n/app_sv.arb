@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Insats: {stake}. Spelet gäller så många mynt.",
+  "rulesStake": "Insats: {stake}.",
+  "lossReasonTimeout": "Tiden ute",
+  "lossReasonSurrender": "Du gav upp",
+  "lossReasonCheckmate": "Schackmatt",
+  "lossReasonNoMoves": "Inga drag",
+  "lossReasonGiveaway": "Brickor kvar",
+  "lossReasonCorners": "Hörnen tomma",
+  "lossReasonOpponentOut": "Motståndaren gick ut",
+  "lossReasonFool": "Du är dumbom",
+  "lossReasonShips": "Skepp sänkta",
+  "lossReasonLine": "Tre i rad",
+  "lossReasonNardy": "Motståndaren bar av",
+  "lossReasonChips": "Inga marker kvar",
   "@rulesStake": {
     "placeholders": {
       "stake": {

@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "เดิมพัน: {stake} เกมนี้เล่นด้วยเหรียญจำนวนนี้",
+  "rulesStake": "เดิมพัน: {stake}.",
+  "lossReasonTimeout": "หมดเวลา",
+  "lossReasonSurrender": "คุณยอมแพ้",
+  "lossReasonCheckmate": "รุกจน",
+  "lossReasonNoMoves": "ไม่มีตาเดิน",
+  "lossReasonGiveaway": "หมากเหลือ",
+  "lossReasonCorners": "มุมยังว่าง",
+  "lossReasonOpponentOut": "คู่แข่งออกหมด",
+  "lossReasonFool": "คุณเป็นคนแพ้",
+  "lossReasonShips": "เรือจม",
+  "lossReasonLine": "สามช่องติดกัน",
+  "lossReasonNardy": "คู่แข่งเอาหมากออกหมด",
+  "lossReasonChips": "ชิปหมด",
   "@rulesStake": {
     "placeholders": {
       "stake": {

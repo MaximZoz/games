@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "הימור: {stake}. המשחק על מספר מטבעות זה.",
+  "rulesStake": "הימור: {stake}.",
+  "lossReasonTimeout": "נגמר הזמן",
+  "lossReasonSurrender": "נכנעת",
+  "lossReasonCheckmate": "מט",
+  "lossReasonNoMoves": "אין מהלכים",
+  "lossReasonGiveaway": "נשארו כלים",
+  "lossReasonCorners": "פינות ריקות",
+  "lossReasonOpponentOut": "היריב יצא",
+  "lossReasonFool": "אתה הפראייר",
+  "lossReasonShips": "הספינות טבעו",
+  "lossReasonLine": "שלוש בשורה",
+  "lossReasonNardy": "היריב הוציא את הכלים",
+  "lossReasonChips": "נגמרו האסימונים",
   "@rulesStake": {
     "placeholders": {
       "stake": {

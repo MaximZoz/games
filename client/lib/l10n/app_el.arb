@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Ποντάρισμα: {stake}. Τόσα νομίσματα παίζονται.",
+  "rulesStake": "Ποντάρισμα: {stake}.",
+  "lossReasonTimeout": "Τέλος χρόνου",
+  "lossReasonSurrender": "Παραιτηθήκατε",
+  "lossReasonCheckmate": "Ματ",
+  "lossReasonNoMoves": "Δεν υπάρχουν κινήσεις",
+  "lossReasonGiveaway": "Έμειναν πούλια",
+  "lossReasonCorners": "Άδειες γωνίες",
+  "lossReasonOpponentOut": "Ο αντίπαλος τελείωσε",
+  "lossReasonFool": "Είστε ο χαζός",
+  "lossReasonShips": "Τα πλοία βυθίστηκαν",
+  "lossReasonLine": "Τρία στη σειρά",
+  "lossReasonNardy": "Ο αντίπαλος έβγαλε τα πούλια",
+  "lossReasonChips": "Τελείωσαν οι μάρκες",
   "@rulesStake": {
     "placeholders": {
       "stake": {

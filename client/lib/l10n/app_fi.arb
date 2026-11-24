@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Panos: {stake}. Peli käydään näillä kolikoilla.",
+  "rulesStake": "Panos: {stake}.",
+  "lossReasonTimeout": "Aika loppui",
+  "lossReasonSurrender": "Luovutit",
+  "lossReasonCheckmate": "Matti",
+  "lossReasonNoMoves": "Ei siirtoja",
+  "lossReasonGiveaway": "Nappuloita jäljellä",
+  "lossReasonCorners": "Kulmat tyhjät",
+  "lossReasonOpponentOut": "Vastustaja pääsi ulos",
+  "lossReasonFool": "Olet tyhmä",
+  "lossReasonShips": "Laivat upotettu",
+  "lossReasonLine": "Kolme rivissä",
+  "lossReasonNardy": "Vastustaja vei nappulat",
+  "lossReasonChips": "Pelimerkit loppuivat",
   "@rulesStake": {
     "placeholders": {
       "stake": {

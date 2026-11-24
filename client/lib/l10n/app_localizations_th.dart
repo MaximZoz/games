@@ -2623,8 +2623,44 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'เดิมพัน: $stake เกมนี้เล่นด้วยเหรียญจำนวนนี้';
+    return 'เดิมพัน: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'หมดเวลา';
+
+  @override
+  String get lossReasonSurrender => 'คุณยอมแพ้';
+
+  @override
+  String get lossReasonCheckmate => 'รุกจน';
+
+  @override
+  String get lossReasonNoMoves => 'ไม่มีตาเดิน';
+
+  @override
+  String get lossReasonGiveaway => 'หมากเหลือ';
+
+  @override
+  String get lossReasonCorners => 'มุมยังว่าง';
+
+  @override
+  String get lossReasonOpponentOut => 'คู่แข่งออกหมด';
+
+  @override
+  String get lossReasonFool => 'คุณเป็นคนแพ้';
+
+  @override
+  String get lossReasonShips => 'เรือจม';
+
+  @override
+  String get lossReasonLine => 'สามช่องติดกัน';
+
+  @override
+  String get lossReasonNardy => 'คู่แข่งเอาหมากออกหมด';
+
+  @override
+  String get lossReasonChips => 'ชิปหมด';
 
   @override
   String get rulesSwap => 'สลับฝ่าย: O สลับกับ X ได้หลังตาแรกของ X';

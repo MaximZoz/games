@@ -2623,8 +2623,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Bahis: $stake. Oyun bu kadar jeton içindir.';
+    return 'Bahis: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Süre doldu';
+
+  @override
+  String get lossReasonSurrender => 'Teslim oldunuz';
+
+  @override
+  String get lossReasonCheckmate => 'Mat';
+
+  @override
+  String get lossReasonNoMoves => 'Hamle yok';
+
+  @override
+  String get lossReasonGiveaway => 'Taşlar kaldı';
+
+  @override
+  String get lossReasonCorners => 'Köşeler boş';
+
+  @override
+  String get lossReasonOpponentOut => 'Rakip çıktı';
+
+  @override
+  String get lossReasonFool => 'Siz aptalsınız';
+
+  @override
+  String get lossReasonShips => 'Gemiler battı';
+
+  @override
+  String get lossReasonLine => 'Üçlü sıra';
+
+  @override
+  String get lossReasonNardy => 'Rakip pullarını çıkardı';
+
+  @override
+  String get lossReasonChips => 'Fişler bitti';
 
   @override
   String get rulesSwap => 'Taraf değişimi: X’in ilk hamlesinden sonra O, X ile yer değiştirebilir.';

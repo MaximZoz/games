@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Puntata: {stake}. La partita vale così tante monete.",
+  "rulesStake": "Puntata: {stake}.",
+  "lossReasonTimeout": "Tempo scaduto",
+  "lossReasonSurrender": "Ti sei arreso",
+  "lossReasonCheckmate": "Scacco matto",
+  "lossReasonNoMoves": "Nessuna mossa",
+  "lossReasonGiveaway": "Pedine rimaste",
+  "lossReasonCorners": "Angoli vuoti",
+  "lossReasonOpponentOut": "L’avversario è uscito",
+  "lossReasonFool": "Sei il durak",
+  "lossReasonShips": "Navi affondate",
+  "lossReasonLine": "Tre in fila",
+  "lossReasonNardy": "L’avversario ha portato fuori",
+  "lossReasonChips": "Fiches finite",
   "@rulesStake": {
     "placeholders": {
       "stake": {

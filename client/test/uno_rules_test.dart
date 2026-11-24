@@ -10,11 +10,12 @@ import 'test_locale.dart';
 void main() {
   setUp(setUpTestLocaleRu);
 
-  test('unoRuleLines includes players, turn time and win line', () {
+  test('unoRuleLines includes players and win line without turn time', () {
     final lines = unoRuleLines(players: 3, turnTimeSec: 60);
     expect(lines.first, 'Без ставки.');
     expect(lines[1], 'Игроки: 3.');
-    expect(lines.any((l) => l.contains('1 мин')), isTrue);
+    expect(lines.any((l) => l.contains('1 мин')), isFalse);
+    expect(lines.any((l) => l.contains('Время на ход')), isFalse);
     expect(lines.any((l) => l.contains('Уно')), isTrue);
     expect(lines.any((l) => l.contains('7 карт')), isTrue);
     expect(lines.any((l) => l.contains('+4')), isTrue);
@@ -44,7 +45,10 @@ void main() {
       offlineBot: true,
     );
     expect(lines[1], 'Игроки: 2.');
-    expect(lines[3], 'Без ограничения по времени на ход.');
+    expect(
+      lines.any((line) => line.contains('Без ограничения по времени')),
+      isFalse,
+    );
     expect(lines.last, 'Офлайн: партия против бота.');
     expect(lines.any((l) => l.contains('1 мин')), isFalse);
   });

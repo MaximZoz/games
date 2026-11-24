@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Indsats: {stake}. Spillet gælder så mange mønter.",
+  "rulesStake": "Indsats: {stake}.",
+  "lossReasonTimeout": "Tiden er gået",
+  "lossReasonSurrender": "Du gav op",
+  "lossReasonCheckmate": "Skakmat",
+  "lossReasonNoMoves": "Ingen træk",
+  "lossReasonGiveaway": "Brikker tilbage",
+  "lossReasonCorners": "Hjørner tomme",
+  "lossReasonOpponentOut": "Modstanderen gik ud",
+  "lossReasonFool": "Du er tosset",
+  "lossReasonShips": "Skibe sænket",
+  "lossReasonLine": "Tre på stribe",
+  "lossReasonNardy": "Modstanderen bar ud",
+  "lossReasonChips": "Ingen jetoner tilbage",
   "@rulesStake": {
     "placeholders": {
       "stake": {

@@ -2623,8 +2623,44 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Taruhan: $stake. Game ini seharga koin sebanyak itu.';
+    return 'Taruhan: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Waktu habis';
+
+  @override
+  String get lossReasonSurrender => 'Kamu menyerah';
+
+  @override
+  String get lossReasonCheckmate => 'Skakmat';
+
+  @override
+  String get lossReasonNoMoves => 'Tidak ada langkah';
+
+  @override
+  String get lossReasonGiveaway => 'Bidak tersisa';
+
+  @override
+  String get lossReasonCorners => 'Sudut kosong';
+
+  @override
+  String get lossReasonOpponentOut => 'Lawan habis';
+
+  @override
+  String get lossReasonFool => 'Kamu yang kalah';
+
+  @override
+  String get lossReasonShips => 'Kapal tenggelam';
+
+  @override
+  String get lossReasonLine => 'Tiga berjajar';
+
+  @override
+  String get lossReasonNardy => 'Lawan mengeluarkan bidak';
+
+  @override
+  String get lossReasonChips => 'Chip habis';
 
   @override
   String get rulesSwap => 'Tukar sisi: O boleh bertukar dengan X setelah langkah pertama X.';

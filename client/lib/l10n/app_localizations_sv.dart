@@ -2623,8 +2623,44 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Insats: $stake. Spelet gäller så många mynt.';
+    return 'Insats: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Tiden ute';
+
+  @override
+  String get lossReasonSurrender => 'Du gav upp';
+
+  @override
+  String get lossReasonCheckmate => 'Schackmatt';
+
+  @override
+  String get lossReasonNoMoves => 'Inga drag';
+
+  @override
+  String get lossReasonGiveaway => 'Brickor kvar';
+
+  @override
+  String get lossReasonCorners => 'Hörnen tomma';
+
+  @override
+  String get lossReasonOpponentOut => 'Motståndaren gick ut';
+
+  @override
+  String get lossReasonFool => 'Du är dumbom';
+
+  @override
+  String get lossReasonShips => 'Skepp sänkta';
+
+  @override
+  String get lossReasonLine => 'Tre i rad';
+
+  @override
+  String get lossReasonNardy => 'Motståndaren bar av';
+
+  @override
+  String get lossReasonChips => 'Inga marker kvar';
 
   @override
   String get rulesSwap => 'Sidbyte: O kan byta med X efter X:s första drag.';

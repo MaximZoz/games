@@ -2623,8 +2623,44 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return '赌注：$stake。本局押这么多硬币。';
+    return '赌注：$stake。';
   }
+
+  @override
+  String get lossReasonTimeout => '时间到了';
+
+  @override
+  String get lossReasonSurrender => '你认输了';
+
+  @override
+  String get lossReasonCheckmate => '将死';
+
+  @override
+  String get lossReasonNoMoves => '无棋可走';
+
+  @override
+  String get lossReasonGiveaway => '棋子没送完';
+
+  @override
+  String get lossReasonCorners => '没占住角';
+
+  @override
+  String get lossReasonOpponentOut => '对手出完了';
+
+  @override
+  String get lossReasonFool => '你是傻瓜';
+
+  @override
+  String get lossReasonShips => '军舰被击沉';
+
+  @override
+  String get lossReasonLine => '三子一线';
+
+  @override
+  String get lossReasonNardy => '对手走完了棋子';
+
+  @override
+  String get lossReasonChips => '筹码用完了';
 
   @override
   String get rulesSwap => '换边：X 首步之后，O 可与 X 互换。';

@@ -2623,8 +2623,44 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'הימור: $stake. המשחק על מספר מטבעות זה.';
+    return 'הימור: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'נגמר הזמן';
+
+  @override
+  String get lossReasonSurrender => 'נכנעת';
+
+  @override
+  String get lossReasonCheckmate => 'מט';
+
+  @override
+  String get lossReasonNoMoves => 'אין מהלכים';
+
+  @override
+  String get lossReasonGiveaway => 'נשארו כלים';
+
+  @override
+  String get lossReasonCorners => 'פינות ריקות';
+
+  @override
+  String get lossReasonOpponentOut => 'היריב יצא';
+
+  @override
+  String get lossReasonFool => 'אתה הפראייר';
+
+  @override
+  String get lossReasonShips => 'הספינות טבעו';
+
+  @override
+  String get lossReasonLine => 'שלוש בשורה';
+
+  @override
+  String get lossReasonNardy => 'היריב הוציא את הכלים';
+
+  @override
+  String get lossReasonChips => 'נגמרו האסימונים';
 
   @override
   String get rulesSwap => 'החלפת צדדים: O יכול להחליף עם X אחרי המהלך הראשון של X.';

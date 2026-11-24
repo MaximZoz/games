@@ -2623,8 +2623,44 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Stavka: $stake. O‘yin shu qancha tangaga.';
+    return 'Stavka: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Vaqt tugadi';
+
+  @override
+  String get lossReasonSurrender => 'Siz taslim bo‘ldingiz';
+
+  @override
+  String get lossReasonCheckmate => 'Mot';
+
+  @override
+  String get lossReasonNoMoves => 'Yurish yo‘q';
+
+  @override
+  String get lossReasonGiveaway => 'Shashkalarni bermadingiz';
+
+  @override
+  String get lossReasonCorners => 'Burchaklar bo‘sh';
+
+  @override
+  String get lossReasonOpponentOut => 'Raqib chiqdi';
+
+  @override
+  String get lossReasonFool => 'Siz ahmoqsiz';
+
+  @override
+  String get lossReasonShips => 'Kemalar cho‘kdi';
+
+  @override
+  String get lossReasonLine => 'Uchta qator';
+
+  @override
+  String get lossReasonNardy => 'Raqib toshlarni chiqardi';
+
+  @override
+  String get lossReasonChips => 'Fishkalar tugadi';
 
   @override
   String get rulesSwap => 'Tomonlar almashuvi: X ning birinchi yurishidan so‘ng O X bilan joy almashishi mumkin.';

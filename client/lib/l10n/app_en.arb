@@ -1297,7 +1297,19 @@
       }
     }
   },
-  "rulesStake": "Stake: {stake}. That’s how many coins the game is for.",
+  "rulesStake": "Stake: {stake}.",
+  "lossReasonTimeout": "Time's up",
+  "lossReasonSurrender": "You resigned",
+  "lossReasonCheckmate": "Checkmate",
+  "lossReasonNoMoves": "No moves",
+  "lossReasonGiveaway": "Pieces left",
+  "lossReasonCorners": "Corners missed",
+  "lossReasonOpponentOut": "Opponent went out",
+  "lossReasonFool": "You're the fool",
+  "lossReasonShips": "Ships sunk",
+  "lossReasonLine": "Three in a row",
+  "lossReasonNardy": "Opponent bore off",
+  "lossReasonChips": "Out of chips",
   "@rulesStake": {
     "placeholders": {
       "stake": {

@@ -2623,8 +2623,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'الرهان: $stake. اللعبة بهذا العدد من العملات.';
+    return 'الرهان: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'انتهى الوقت';
+
+  @override
+  String get lossReasonSurrender => 'استسلمت';
+
+  @override
+  String get lossReasonCheckmate => 'كش ملك';
+
+  @override
+  String get lossReasonNoMoves => 'لا حركات';
+
+  @override
+  String get lossReasonGiveaway => 'بقيت أحجار';
+
+  @override
+  String get lossReasonCorners => 'الزوايا فارغة';
+
+  @override
+  String get lossReasonOpponentOut => 'خرج الخصم';
+
+  @override
+  String get lossReasonFool => 'أنت الأحمق';
+
+  @override
+  String get lossReasonShips => 'غرقت السفن';
+
+  @override
+  String get lossReasonLine => 'ثلاثة في صف';
+
+  @override
+  String get lossReasonNardy => 'أخرج الخصم أحجاره';
+
+  @override
+  String get lossReasonChips => 'نفدت الرقائق';
 
   @override
   String get rulesSwap => 'تبديل الجوانب: يمكن لـ O التبادل مع X بعد أول نقلة لـ X.';

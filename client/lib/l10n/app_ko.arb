@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "판돈: {stake}. 이만큼의 코인으로 진행됩니다.",
+  "rulesStake": "판돈: {stake}.",
+  "lossReasonTimeout": "시간 초과",
+  "lossReasonSurrender": "기권",
+  "lossReasonCheckmate": "체크메이트",
+  "lossReasonNoMoves": "둘 수 없음",
+  "lossReasonGiveaway": "말을 남김",
+  "lossReasonCorners": "코너 미점령",
+  "lossReasonOpponentOut": "상대가 나감",
+  "lossReasonFool": "당신이 바보",
+  "lossReasonShips": "함선 침몰",
+  "lossReasonLine": "삼목",
+  "lossReasonNardy": "상대가 말을 모두 뺌",
+  "lossReasonChips": "칩 소진",
   "@rulesStake": {
     "placeholders": {
       "stake": {

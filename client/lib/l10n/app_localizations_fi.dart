@@ -2623,8 +2623,44 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Panos: $stake. Peli käydään näillä kolikoilla.';
+    return 'Panos: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Aika loppui';
+
+  @override
+  String get lossReasonSurrender => 'Luovutit';
+
+  @override
+  String get lossReasonCheckmate => 'Matti';
+
+  @override
+  String get lossReasonNoMoves => 'Ei siirtoja';
+
+  @override
+  String get lossReasonGiveaway => 'Nappuloita jäljellä';
+
+  @override
+  String get lossReasonCorners => 'Kulmat tyhjät';
+
+  @override
+  String get lossReasonOpponentOut => 'Vastustaja pääsi ulos';
+
+  @override
+  String get lossReasonFool => 'Olet tyhmä';
+
+  @override
+  String get lossReasonShips => 'Laivat upotettu';
+
+  @override
+  String get lossReasonLine => 'Kolme rivissä';
+
+  @override
+  String get lossReasonNardy => 'Vastustaja vei nappulat';
+
+  @override
+  String get lossReasonChips => 'Pelimerkit loppuivat';
 
   @override
   String get rulesSwap => 'Puolenvaihto: O voi vaihtaa X:n kanssa X:n ensimmäisen siirron jälkeen.';

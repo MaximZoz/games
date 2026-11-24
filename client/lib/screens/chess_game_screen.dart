@@ -389,7 +389,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       }
       if (game.myIndex < 0) return l10n.gameOverNeutral;
       if (game.iWon) return l10n.gameYouWonShort;
-      return l10n.gameYouLost;
+      if (game.isTimeout) return l10n.lossReasonTimeout;
+      if (game.isForfeit) return l10n.lossReasonSurrender;
+      return l10n.lossReasonCheckmate;
     }
     return game.isMyTurn ? l10n.gamesMyTurn : l10n.gamesOpponentTurn;
   }
@@ -449,8 +451,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       canLeaveFreely: _isOffline,
       onLeaveFinished: () async {
         if (!mounted) return;
-        final settled = ref.read(chessGameProvider(widget.gameId)).valueOrNull ??
-            game;
+        final settled =
+            ref.read(chessGameProvider(widget.gameId)).valueOrNull ?? game;
         if (!_isOffline && settled != null && settled.isOver) {
           await _runHeadToHeadSettle(settled);
         }
@@ -1010,9 +1012,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
         final maxH =
             constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
-        final avail = maxH.isFinite
-            ? (maxH - chrome).clamp(0.0, maxH).toDouble()
-            : maxW;
+        final avail =
+            maxH.isFinite ? (maxH - chrome).clamp(0.0, maxH).toDouble() : maxW;
         final side = avail < maxW ? avail : maxW;
         final oppSeat = live.myIndex == 0 ? 1 : 0;
         final board = SizedBox(
@@ -1281,7 +1282,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     if (_isOffline) {
       return Center(
         child: FilledButton.icon(
-          onPressed: _isRematching ? null : () => unawaited(_rematch()),
+          onPressed: _isRematching ? null : _rematch,
           icon: const Icon(Icons.replay_rounded, size: 18),
           label: Text(context.l10n.offlinePlayAgain),
           style: FilledButton.styleFrom(
@@ -1300,11 +1301,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       isFindingGame: _isFindingGame,
       peerIds: _peerIds(game, me),
       invites: ref.watch(gameInvitesProvider),
-      onRematch: () => unawaited(_rematch()),
-      onAccept: (id) => unawaited(_acceptRematch(id)),
-      onDecline: (id) => unawaited(_declineRematch(id)),
-      onCancelWait: () => unawaited(_cancelRematchWait()),
-      onFindGame: () => unawaited(_findGame()),
+      onRematch: _rematch,
+      onAccept: _acceptRematch,
+      onDecline: _declineRematch,
+      onCancelWait: _cancelRematchWait,
+      onFindGame: _findGame,
       compact: true,
       table: RematchTable(
         gameType: 'chess',

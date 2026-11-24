@@ -2623,8 +2623,44 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Innsats: $stake. Spillet gjelder så mange mynter.';
+    return 'Innsats: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Tiden er ute';
+
+  @override
+  String get lossReasonSurrender => 'Du ga opp';
+
+  @override
+  String get lossReasonCheckmate => 'Sjakkmatt';
+
+  @override
+  String get lossReasonNoMoves => 'Ingen trekk';
+
+  @override
+  String get lossReasonGiveaway => 'Brikker igjen';
+
+  @override
+  String get lossReasonCorners => 'Hjørner tomme';
+
+  @override
+  String get lossReasonOpponentOut => 'Motstanderen gikk ut';
+
+  @override
+  String get lossReasonFool => 'Du er dummen';
+
+  @override
+  String get lossReasonShips => 'Skip senket';
+
+  @override
+  String get lossReasonLine => 'Tre på rad';
+
+  @override
+  String get lossReasonNardy => 'Motstanderen bar ut';
+
+  @override
+  String get lossReasonChips => 'Ingen sjetonger igjen';
 
   @override
   String get rulesSwap => 'Sidebytte: O kan bytte med X etter X sitt første trekk.';

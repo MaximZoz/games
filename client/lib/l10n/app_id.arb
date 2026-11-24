@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Taruhan: {stake}. Game ini seharga koin sebanyak itu.",
+  "rulesStake": "Taruhan: {stake}.",
+  "lossReasonTimeout": "Waktu habis",
+  "lossReasonSurrender": "Kamu menyerah",
+  "lossReasonCheckmate": "Skakmat",
+  "lossReasonNoMoves": "Tidak ada langkah",
+  "lossReasonGiveaway": "Bidak tersisa",
+  "lossReasonCorners": "Sudut kosong",
+  "lossReasonOpponentOut": "Lawan habis",
+  "lossReasonFool": "Kamu yang kalah",
+  "lossReasonShips": "Kapal tenggelam",
+  "lossReasonLine": "Tiga berjajar",
+  "lossReasonNardy": "Lawan mengeluarkan bidak",
+  "lossReasonChips": "Chip habis",
   "@rulesStake": {
     "placeholders": {
       "stake": {

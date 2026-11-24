@@ -325,9 +325,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final l10n = context.l10n;
     if (game.isOver) {
       if (game.isDraw) return l10n.gameDraw;
-      return _isWinner(game, me)
-          ? l10n.gamesBattleshipYouWon
-          : l10n.gameYouLost;
+      if (_isWinner(game, me)) return l10n.gamesBattleshipYouWon;
+      if (game.forfeit) return l10n.lossReasonSurrender;
+      return l10n.lossReasonShips;
     }
     if (game.isSetup) {
       if (_iAmReady(game, me)) {
@@ -1383,7 +1383,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                             child: FilledButton.icon(
                               onPressed: _isRematching
                                   ? null
-                                  : () => unawaited(_rematch()),
+                                  : _rematch,
                               icon: const Icon(Icons.replay_rounded, size: 18),
                               label: Text(context.l10n.offlinePlayAgain),
                               style: AppButtonStyles.of(),
@@ -1399,11 +1399,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                             isFindingGame: _isFindingGame,
                             peerIds: _peerIds(game, me),
                             invites: ref.watch(gameInvitesProvider),
-                            onRematch: () => unawaited(_rematch()),
-                            onAccept: (id) => unawaited(_acceptRematch(id)),
-                            onDecline: (id) => unawaited(_declineRematch(id)),
-                            onCancelWait: () => unawaited(_cancelRematchWait()),
-                            onFindGame: () => unawaited(_findGame()),
+                            onRematch: _rematch,
+                            onAccept: _acceptRematch,
+                            onDecline: _declineRematch,
+                            onCancelWait: _cancelRematchWait,
+                            onFindGame: _findGame,
                             table: RematchTable(
                               gameType: 'battleship',
                               stakeBronze: game.stakeBronze,

@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Aposta: {stake}. O jogo vale tantas moedas.",
+  "rulesStake": "Aposta: {stake}.",
+  "lossReasonTimeout": "Tempo esgotado",
+  "lossReasonSurrender": "Você desistiu",
+  "lossReasonCheckmate": "Xeque-mate",
+  "lossReasonNoMoves": "Sem jogadas",
+  "lossReasonGiveaway": "Peças restantes",
+  "lossReasonCorners": "Cantos vazios",
+  "lossReasonOpponentOut": "O adversário saiu",
+  "lossReasonFool": "Você é o tolo",
+  "lossReasonShips": "Navios afundados",
+  "lossReasonLine": "Três em linha",
+  "lossReasonNardy": "O adversário tirou as peças",
+  "lossReasonChips": "Fichas acabaram",
   "@rulesStake": {
     "placeholders": {
       "stake": {

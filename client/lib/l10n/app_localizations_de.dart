@@ -2623,8 +2623,44 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Einsatz: $stake. Um so viele Münzen geht das Spiel.';
+    return 'Einsatz: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Zeit abgelaufen';
+
+  @override
+  String get lossReasonSurrender => 'Sie haben aufgegeben';
+
+  @override
+  String get lossReasonCheckmate => 'Matt';
+
+  @override
+  String get lossReasonNoMoves => 'Keine Züge';
+
+  @override
+  String get lossReasonGiveaway => 'Steine übrig';
+
+  @override
+  String get lossReasonCorners => 'Ecken verpasst';
+
+  @override
+  String get lossReasonOpponentOut => 'Gegner ist raus';
+
+  @override
+  String get lossReasonFool => 'Sie sind der Dumme';
+
+  @override
+  String get lossReasonShips => 'Schiffe versenkt';
+
+  @override
+  String get lossReasonLine => 'Drei in einer Reihe';
+
+  @override
+  String get lossReasonNardy => 'Gegner hat abgetragen';
+
+  @override
+  String get lossReasonChips => 'Keine Chips mehr';
 
   @override
   String get rulesSwap => 'Seitenwechsel: O kann nach dem ersten Zug von X mit X tauschen.';

@@ -97,7 +97,7 @@ void main() {
     };
   }
 
-  test('шаблон: ставка → игроки → режим → время на ход → правила', () {
+  test('шаблон: ставка → игроки → режим → правила', () {
     final lines = gameRuleLines(
       stakeBronze: 200,
       players: 3,
@@ -110,10 +110,12 @@ void main() {
       rulesStakeLine(200, t),
       'Игроки: 3.',
       'Режим: Свой.',
-      t.rulesTurnTime(formatTurnTime(20)),
       'А',
       'Б',
     ]);
+    expect(lines.join('\n'), isNot(contains('Время на ход')));
+    expect(rulesStakeLine(200, t), endsWith('.'));
+    expect(rulesStakeLine(200, t), isNot(contains('монет идёт')));
   });
 
   test('онлайн: у всех игр одна шапка в одном порядке', () {
@@ -122,25 +124,34 @@ void main() {
     rules.forEach((game, lines) {
       expect(lines.length, greaterThan(kGameRulesHeaderLines), reason: game);
       expect(lines[0], startsWith('Ставка: '), reason: game);
+      expect(lines[0], endsWith('.'), reason: game);
+      expect(lines[0], isNot(contains('монет идёт')), reason: game);
       expect(lines[1], startsWith('Игроки: '), reason: game);
       expect(lines[2], startsWith('Режим: '), reason: game);
-      expect(lines[3], startsWith('Время на ход: '), reason: game);
+      expect(
+        lines.any((line) => line.startsWith('Время на ход: ')),
+        isFalse,
+        reason: game,
+      );
       // Шапка не повторяется в правилах.
       for (final line in lines.skip(kGameRulesHeaderLines)) {
         expect(line, isNot(startsWith('Ставка: ')), reason: game);
         expect(line, isNot(startsWith('Игроки: ')), reason: game);
         expect(line, isNot(startsWith('Режим: ')), reason: game);
-        expect(line, isNot(startsWith('Время на ход: ')), reason: game);
       }
     });
   });
 
-  test('офлайн: шапка та же — без ставки и без лимита', () {
+  test('офлайн: шапка та же — без ставки и без времени хода', () {
     allRules(offline: true).forEach((game, lines) {
       expect(lines[0], 'Без ставки.', reason: game);
       expect(lines[1], startsWith('Игроки: '), reason: game);
       expect(lines[2], startsWith('Режим: '), reason: game);
-      expect(lines[3], 'Без ограничения по времени на ход.', reason: game);
+      expect(
+        lines.any((line) => line.contains('Без ограничения по времени')),
+        isFalse,
+        reason: game,
+      );
     });
   });
 
@@ -156,9 +167,9 @@ void main() {
 
   test('всё сверх шапки уходит в правила', () {
     final rules = allRules(offline: false);
-    expect(rules['durak']![4], 'Колода: 36 карт.');
-    expect(rules['chess']![4], t.rulesChessClockBlitz);
-    expect(rules['battleship']![4], startsWith('Время на расстановку: '));
+    expect(rules['durak']![3], 'Колода: 36 карт.');
+    expect(rules['chess']![3], t.rulesChessClockBlitz);
+    expect(rules['battleship']![3], startsWith('Время на расстановку: '));
   });
 
   test('морское домино: правила описывают то, что делает движок', () {

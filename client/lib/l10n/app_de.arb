@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Einsatz: {stake}. Um so viele Münzen geht das Spiel.",
+  "rulesStake": "Einsatz: {stake}.",
+  "lossReasonTimeout": "Zeit abgelaufen",
+  "lossReasonSurrender": "Sie haben aufgegeben",
+  "lossReasonCheckmate": "Matt",
+  "lossReasonNoMoves": "Keine Züge",
+  "lossReasonGiveaway": "Steine übrig",
+  "lossReasonCorners": "Ecken verpasst",
+  "lossReasonOpponentOut": "Gegner ist raus",
+  "lossReasonFool": "Sie sind der Dumme",
+  "lossReasonShips": "Schiffe versenkt",
+  "lossReasonLine": "Drei in einer Reihe",
+  "lossReasonNardy": "Gegner hat abgetragen",
+  "lossReasonChips": "Keine Chips mehr",
   "@rulesStake": {
     "placeholders": {
       "stake": {

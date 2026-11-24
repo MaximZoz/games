@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Apuesta: {stake}. La partida es por tantas monedas.",
+  "rulesStake": "Apuesta: {stake}.",
+  "lossReasonTimeout": "Se acabó el tiempo",
+  "lossReasonSurrender": "Te rendiste",
+  "lossReasonCheckmate": "Jaque mate",
+  "lossReasonNoMoves": "Sin movimientos",
+  "lossReasonGiveaway": "Quedan fichas",
+  "lossReasonCorners": "Esquinas libres",
+  "lossReasonOpponentOut": "El rival se quedó sin cartas",
+  "lossReasonFool": "Eres el tonto",
+  "lossReasonShips": "Barcos hundidos",
+  "lossReasonLine": "Tres en raya",
+  "lossReasonNardy": "El rival sacó las fichas",
+  "lossReasonChips": "Sin fichas",
   "@rulesStake": {
     "placeholders": {
       "stake": {

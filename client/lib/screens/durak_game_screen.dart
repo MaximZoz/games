@@ -3325,7 +3325,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   /// Известные карты добора — лицом из колоды в веер, без рубашки в ожидании.
-  Future<void> _flyMyDealtFaces(DurakGameView before, DurakGameView fresh) async {
+  Future<void> _flyMyDealtFaces(
+      DurakGameView before, DurakGameView fresh) async {
     final incoming = [
       for (final card in _incomingAgainstBaseline(before, fresh))
         // Со стола уже сели — из колоды их не гоняем второй раз.
@@ -4125,9 +4126,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           !_flyingFromHand.contains(entry.value);
       if (durakDropOptimisticDefense(
         retired: retired,
-        attackMatches: remembered != null &&
-            attackNow != null &&
-            remembered == attackNow,
+        attackMatches:
+            remembered != null && attackNow != null && remembered == attackNow,
         cardStillInHand: stillInHand,
       )) {
         drop.add(entry.key);
@@ -7832,8 +7832,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       turnDeadline: view.turnTimeSec > 0 ? view.turnDeadline : 0,
       turnTimeSec: view.turnTimeSec,
       onTurnExpired: _onTurnTimeExpired,
-      compact: MediaQuery.sizeOf(context).width < 420 ||
-          isPhoneLandscape(context),
+      compact:
+          MediaQuery.sizeOf(context).width < 420 || isPhoneLandscape(context),
       maxWidth: 300,
       align: Alignment.center,
       reserveRail: false,
@@ -8337,7 +8337,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             Positioned(
               right: pileInset,
               top: pileTop,
-              child: bitoCount > 0 ? RepaintBoundary(child: bitoPeek) : bitoPeek,
+              child:
+                  bitoCount > 0 ? RepaintBoundary(child: bitoPeek) : bitoPeek,
             ),
           ],
         );
@@ -8735,16 +8736,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (place > 1) {
         return l10n.gameYouPlaced(place);
       }
-      // Нет места: выбыл по времени / сдался / классический дурак.
+      // Нет места: время, сдача или дурак. Флаги партии учитываем только
+      // если выбыл именно я — чужой таймаут сюда не относим.
       if (view.iAmEliminated && view.isTimeout) {
-        return l10n.gameOpponentWonTimeout(winnerName);
+        return l10n.lossReasonTimeout;
       }
       if (view.iAmEliminated && view.isForfeit) {
-        return l10n.gameYouForfeitOpponentWon(winnerName);
+        return l10n.lossReasonSurrender;
       }
-      // Со ставкой — «Вы проиграли» + чип −N (как «Вы победили» + +N).
-      if (view.stakeBronze > 0) return l10n.gameYouLost;
-      if (view.iAmEliminated) return l10n.gameYouEliminated;
+      if (view.stakeBronze > 0 || view.iAmEliminated) {
+        return l10n.lossReasonFool;
+      }
       return l10n.gameOpponentWon(winnerName);
     }
     if (_showFirstLeadBanner(view)) {

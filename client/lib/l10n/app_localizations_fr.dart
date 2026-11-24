@@ -2623,8 +2623,44 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Mise : $stake. La partie se joue pour autant de pièces.';
+    return 'Mise : $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Temps écoulé';
+
+  @override
+  String get lossReasonSurrender => 'Vous avez abandonné';
+
+  @override
+  String get lossReasonCheckmate => 'Échec et mat';
+
+  @override
+  String get lossReasonNoMoves => 'Aucun coup';
+
+  @override
+  String get lossReasonGiveaway => 'Pions restants';
+
+  @override
+  String get lossReasonCorners => 'Coins manqués';
+
+  @override
+  String get lossReasonOpponentOut => 'L’adversaire est sorti';
+
+  @override
+  String get lossReasonFool => 'Vous êtes le durak';
+
+  @override
+  String get lossReasonShips => 'Navires coulés';
+
+  @override
+  String get lossReasonLine => 'Trois d’affilée';
+
+  @override
+  String get lossReasonNardy => 'L’adversaire a sorti ses pions';
+
+  @override
+  String get lossReasonChips => 'Plus de jetons';
 
   @override
   String get rulesSwap => 'Échange de côtés : O peut échanger avec X après le premier coup de X.';

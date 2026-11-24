@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Ставка: {stake}. На стільки монет іде гра.",
+  "rulesStake": "Ставка: {stake}.",
+  "lossReasonTimeout": "Час вийшов",
+  "lossReasonSurrender": "Ви здалися",
+  "lossReasonCheckmate": "Мат",
+  "lossReasonNoMoves": "Немає ходів",
+  "lossReasonGiveaway": "Не віддали шашки",
+  "lossReasonCorners": "Не зайняли кути",
+  "lossReasonOpponentOut": "Суперник вийшов",
+  "lossReasonFool": "Ви дурень",
+  "lossReasonShips": "Кораблі потоплені",
+  "lossReasonLine": "Три в ряд",
+  "lossReasonNardy": "Суперник вивів фішки",
+  "lossReasonChips": "Фішки скінчилися",
   "@rulesStake": {
     "placeholders": {
       "stake": {

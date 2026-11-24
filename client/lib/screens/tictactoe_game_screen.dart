@@ -651,14 +651,13 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               if (game.status.endsWith('_won')) {
                 final iWon = iWonEarly;
                 if (isMultiGame) {
-                  final winnerName =
-                      game.playerMeta(game.winner ?? '')?.displayName?.trim() ??
-                          opponentName;
                   statusText = iWon
                       ? context.l10n.gameYouWon
-                      : game.stakeBronze > 0
-                          ? context.l10n.gameYouLost
-                          : context.l10n.gameOpponentWon(winnerName);
+                      : game.forfeit
+                          ? context.l10n.lossReasonSurrender
+                          : game.timeout
+                              ? context.l10n.lossReasonTimeout
+                              : context.l10n.lossReasonLine;
                 } else {
                   statusText = iWon
                       ? (game.forfeit
@@ -667,13 +666,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                               ? context.l10n.gameYouWonOpponentTimeout
                               : context.l10n.gameYouWon)
                       : (game.forfeit
-                          ? context.l10n.gameYouForfeitOpponentWon(opponentName)
+                          ? context.l10n.lossReasonSurrender
                           : game.timeout
-                              ? context.l10n
-                                  .gameOpponentWonTimeout(opponentName)
-                              : game.stakeBronze > 0
-                                  ? context.l10n.gameYouLost
-                                  : context.l10n.gameOpponentWon(opponentName));
+                              ? context.l10n.lossReasonTimeout
+                              : context.l10n.lossReasonLine);
                 }
               } else if (game.status == 'draw') {
                 // В multi значка/режима ничьей нет — нейтральный итог.

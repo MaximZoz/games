@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Stawka: {stake}. Tyle monet stoi na grze.",
+  "rulesStake": "Stawka: {stake}.",
+  "lossReasonTimeout": "Czas minął",
+  "lossReasonSurrender": "Poddałeś się",
+  "lossReasonCheckmate": "Mat",
+  "lossReasonNoMoves": "Brak ruchów",
+  "lossReasonGiveaway": "Zostały warcaby",
+  "lossReasonCorners": "Puste rogi",
+  "lossReasonOpponentOut": "Przeciwnik wyszedł",
+  "lossReasonFool": "Jesteś głupcem",
+  "lossReasonShips": "Statki zatopione",
+  "lossReasonLine": "Trzy w rzędzie",
+  "lossReasonNardy": "Przeciwnik wyprowadził pionki",
+  "lossReasonChips": "Żetony się skończyły",
   "@rulesStake": {
     "placeholders": {
       "stake": {

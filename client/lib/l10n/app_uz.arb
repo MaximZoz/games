@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Stavka: {stake}. O‘yin shu qancha tangaga.",
+  "rulesStake": "Stavka: {stake}.",
+  "lossReasonTimeout": "Vaqt tugadi",
+  "lossReasonSurrender": "Siz taslim bo‘ldingiz",
+  "lossReasonCheckmate": "Mot",
+  "lossReasonNoMoves": "Yurish yo‘q",
+  "lossReasonGiveaway": "Shashkalarni bermadingiz",
+  "lossReasonCorners": "Burchaklar bo‘sh",
+  "lossReasonOpponentOut": "Raqib chiqdi",
+  "lossReasonFool": "Siz ahmoqsiz",
+  "lossReasonShips": "Kemalar cho‘kdi",
+  "lossReasonLine": "Uchta qator",
+  "lossReasonNardy": "Raqib toshlarni chiqardi",
+  "lossReasonChips": "Fishkalar tugadi",
   "@rulesStake": {
     "placeholders": {
       "stake": {

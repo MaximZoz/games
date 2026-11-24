@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Innsats: {stake}. Spillet gjelder så mange mynter.",
+  "rulesStake": "Innsats: {stake}.",
+  "lossReasonTimeout": "Tiden er ute",
+  "lossReasonSurrender": "Du ga opp",
+  "lossReasonCheckmate": "Sjakkmatt",
+  "lossReasonNoMoves": "Ingen trekk",
+  "lossReasonGiveaway": "Brikker igjen",
+  "lossReasonCorners": "Hjørner tomme",
+  "lossReasonOpponentOut": "Motstanderen gikk ut",
+  "lossReasonFool": "Du er dummen",
+  "lossReasonShips": "Skip senket",
+  "lossReasonLine": "Tre på rad",
+  "lossReasonNardy": "Motstanderen bar ut",
+  "lossReasonChips": "Ingen sjetonger igjen",
   "@rulesStake": {
     "placeholders": {
       "stake": {

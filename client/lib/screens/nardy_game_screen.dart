@@ -407,8 +407,10 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
         if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
         return game.isMars ? l10n.nardyYouWonMars : l10n.gameYouWon;
       }
-      if (game.isTimeout) return l10n.gameYouLost;
-      return game.isMars ? l10n.nardyYouLostMars : l10n.gameYouLost;
+      if (game.isTimeout) return l10n.lossReasonTimeout;
+      if (game.isForfeit) return l10n.lossReasonSurrender;
+      if (game.isMars) return l10n.nardyYouLostMars;
+      return l10n.lossReasonNardy;
     }
     if (game.isMyTurn) {
       if (game.needsRoll) return l10n.nardyYourRoll;
@@ -1237,7 +1239,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     if (_isOffline) {
       return Center(
         child: FramedButton(
-          onPressed: _isRematching ? null : () => unawaited(_rematch()),
+          onPressed: _isRematching ? null : _rematch,
           icon: Icons.replay_rounded,
           label: context.l10n.offlinePlayAgain,
         ),
@@ -1252,11 +1254,11 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       isFindingGame: _isFindingGame,
       peerIds: _peerIds(game, me),
       invites: ref.watch(gameInvitesProvider),
-      onRematch: () => unawaited(_rematch()),
-      onAccept: (id) => unawaited(_acceptRematch(id)),
-      onDecline: (id) => unawaited(_declineRematch(id)),
-      onCancelWait: () => unawaited(_cancelRematchWait()),
-      onFindGame: () => unawaited(_findGame()),
+      onRematch: _rematch,
+      onAccept: _acceptRematch,
+      onDecline: _declineRematch,
+      onCancelWait: _cancelRematchWait,
+      onFindGame: _findGame,
       compact: true,
       table: RematchTable(
         gameType: 'nardy',
