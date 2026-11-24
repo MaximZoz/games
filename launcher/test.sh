@@ -15,6 +15,10 @@ echo "Go tests..."
 (cd "$PROJECT_ROOT/server" && go test ./...) || FAILED=1
 
 echo ""
+echo "UI library guard..."
+(cd "$PROJECT_ROOT/client" && dart run tool/ui_library_guard.dart) || FAILED=1
+
+echo ""
 echo "Flutter tests..."
 if [ -d "$PROJECT_ROOT/client/test" ]; then
     (cd "$PROJECT_ROOT/client" && flutter test --no-pub) || FAILED=1

@@ -9,7 +9,7 @@ alwaysApply: true
 
 1. **Запустить линтер/анализ** для затронутой части проекта:
    - **Go** (если менялся `server/`): `cd server && go vet ./...`
-   - **Flutter** (если менялся `client/`): `cd client && flutter analyze --no-fatal-infos`
+   - **Flutter** (если менялся `client/`): `cd client && flutter analyze --no-fatal-infos` и `cd client && dart run tool/ui_library_guard.dart`
 
 2. **Исправлять** все найденные ошибки и предупреждения.
 
@@ -23,5 +23,6 @@ alwaysApply: true
 |---------|---------|
 | Go      | `cd server && go vet ./...` |
 | Flutter | `cd client && flutter analyze --no-fatal-infos` |
+| Цвета UI | `cd client && dart run tool/ui_library_guard.dart` |
 
 При изменении и клиента, и сервера — запускать обе проверки.

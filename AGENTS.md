@@ -39,7 +39,7 @@ See `README.md` "Быстрый старт" section. Summary:
 
 See `README.md` "Тесты и проверки" section. Summary:
 - **Go:** `cd server && go test ./...` and `go vet ./...`
-- **Flutter:** `cd client && flutter analyze --no-fatal-infos` and `flutter test`
+- **Flutter:** `cd client && flutter analyze --no-fatal-infos`, `dart run tool/ui_library_guard.dart`, and `flutter test`
 - Combined: `./launcher/test.sh`
 
 ### Known issues

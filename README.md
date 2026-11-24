@@ -127,9 +127,11 @@ cd client && flutter run -d chrome
 
 ```bash
 cd server && go test ./... && go vet ./...
-cd client && flutter analyze --no-fatal-infos && flutter test
+cd client && flutter analyze --no-fatal-infos && dart run tool/ui_library_guard.dart && flutter test
 ./launcher/test.sh
 ```
+
+`ui_library_guard` роняет сборку, если в `client/lib` появился `Colors.*` или `Color(0x…)`. Такой цвет кладут в `AppColors` или `GamePalette`. Уже существующие литералы перечислены в `client/tool/ui_library_baseline.txt`.
 
 ---
 

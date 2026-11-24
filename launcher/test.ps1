@@ -23,6 +23,16 @@ try {
 }
 
 Write-Host ""
+Write-Host 'UI library guard...' -ForegroundColor Yellow
+Push-Location (Join-Path $ProjectRoot "client")
+try {
+    dart run tool/ui_library_guard.dart
+    if ($LASTEXITCODE -ne 0) { $failed = $true }
+} finally {
+    Pop-Location
+}
+
+Write-Host ""
 Write-Host 'Flutter tests...' -ForegroundColor Yellow
 Push-Location (Join-Path $ProjectRoot "client")
 try {

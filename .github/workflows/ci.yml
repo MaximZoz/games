@@ -31,6 +31,9 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
+      - name: UI library guard
+        run: dart run tool/ui_library_guard.dart
+
       - name: Test
         run: |
           if [ -d test ]; then
