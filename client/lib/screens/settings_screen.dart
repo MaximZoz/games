@@ -466,23 +466,28 @@ class SettingsScreen extends ConsumerWidget {
                           onChanged: toggleOffline,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      _PadSettingsCard(
-                        group: 'settings-friends-only',
-                        debugKey: const ValueKey('settings-friends-only-card'),
-                        onActivate: () =>
-                            toggleFriendsOnly(!messagesFriendsOnly),
-                        child: _SwitchRow(
-                          title: l10n.settingsFriendsOnlyTitle,
-                          subtitle: l10n.settingsFriendsOnlySubtitle,
-                          value: messagesFriendsOnly,
-                          controlKey: const ValueKey(
-                            'settings-friends-only-switch',
+                      // Офлайн: настройки, которые хранит сервер, скрыты.
+                      if (!offlineMode.isOffline) ...[
+                        const SizedBox(height: 12),
+                        _PadSettingsCard(
+                          group: 'settings-friends-only',
+                          debugKey:
+                              const ValueKey('settings-friends-only-card'),
+                          onActivate: () =>
+                              toggleFriendsOnly(!messagesFriendsOnly),
+                          child: _SwitchRow(
+                            title: l10n.settingsFriendsOnlyTitle,
+                            subtitle: l10n.settingsFriendsOnlySubtitle,
+                            value: messagesFriendsOnly,
+                            controlKey: const ValueKey(
+                              'settings-friends-only-switch',
+                            ),
+                            onChanged: toggleFriendsOnly,
                           ),
-                          onChanged: toggleFriendsOnly,
                         ),
-                      ),
-                      if (isPushSettingsAvailable) ...[
+                      ],
+                      if (isPushSettingsAvailable &&
+                          !offlineMode.isOffline) ...[
                         const SizedBox(height: 12),
                         _PadSettingsCard(
                           group: 'settings-push',

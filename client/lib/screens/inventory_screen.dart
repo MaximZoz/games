@@ -27,6 +27,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/online_only_hint.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
@@ -358,7 +359,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   ) {
     final l10n = context.l10n;
     final actions = <CollectionElixirButton>[];
-    for (final effect in elixirEffectOrder) {
+    // Офлайн: эликсир применяет сервер, кнопки под карточкой не нужны.
+    final offline = ref.read(isOfflineProvider);
+    for (final effect in offline ? const <String>[] : elixirEffectOrder) {
       InventoryItem? elixir;
       for (final candidate in elixirs) {
         if (candidate.elixirEffect == effect &&
@@ -453,7 +456,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   ) async {
     final l10n = context.l10n;
     final set = elixir.collectionSet ?? '';
-    final targets = collections.where((c) => _elixirFits(elixir, c)).toList();
+    // Офлайн: флакон можно рассмотреть, применить — после выхода в онлайн.
+    final targets = ref.read(isOfflineProvider)
+        ? <InventoryItem>[]
+        : collections.where((c) => _elixirFits(elixir, c)).toList();
     String subtitleFor(int count) =>
         '${elixirEffectHelp(l10n, elixir.elixirEffect)}\n'
         '${l10n.elixirSetOnly(collectionSetTitle(set))}\n'
@@ -701,6 +707,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 income: income,
                                 claimIncomeKey: _claimIncomeKey,
                                 claimBusy: _claimBusy,
+                                offline: isOffline,
                                 onClaimIncome: _claimIncome,
                                 collectionsEmpty: collections.isEmpty,
                                 collectionSetKeys: collectionSetKeys,
@@ -787,6 +794,7 @@ class _CollectionsBlock extends StatelessWidget {
     required this.income,
     required this.claimIncomeKey,
     required this.claimBusy,
+    required this.offline,
     required this.onClaimIncome,
     required this.collectionsEmpty,
     required this.collectionSetKeys,
@@ -802,6 +810,9 @@ class _CollectionsBlock extends StatelessWidget {
   final CollectionIncomeInfo? income;
   final GlobalKey claimIncomeKey;
   final bool claimBusy;
+
+  /// Офлайн: доход, подарок и продажа идут через сервер — кнопки скрыты.
+  final bool offline;
   final VoidCallback onClaimIncome;
   final bool collectionsEmpty;
   final List<String> collectionSetKeys;
@@ -850,8 +861,8 @@ class _CollectionsBlock extends StatelessWidget {
                     sellSourceKey: sellKeyFor(it.code),
                     highlightGift: highlightGifts.contains(it.code),
                     onOpen: () => onOpen(it),
-                    onGift: () => onGift(it),
-                    onSell: () => onSell(it),
+                    onGift: offline ? null : () => onGift(it),
+                    onSell: offline ? null : () => onSell(it),
                   ),
               ],
             );
@@ -916,7 +927,9 @@ class _CollectionsBlock extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (income!.available)
+                if (income!.available && offline)
+                  const OnlineOnlyHint(dense: true)
+                else if (income!.available)
                   GamepadFocusBlock(
                     radius: AppRadius.button,
                     onActivate: claimBusy ? null : onClaimIncome,
@@ -1121,8 +1134,10 @@ class _CollectionInvTile extends StatelessWidget {
 
   final InventoryItem item;
   final VoidCallback onOpen;
-  final VoidCallback onGift;
-  final VoidCallback onSell;
+
+  /// null — кнопки нет (офлайн режим).
+  final VoidCallback? onGift;
+  final VoidCallback? onSell;
   final GlobalKey sellSourceKey;
   final bool highlightGift;
 
@@ -1246,6 +1261,7 @@ class _CollectionInvTile extends StatelessWidget {
                   ),
                 ),
               ),
+              if (onGift != null)
               GamepadFocusBlock(
                 radius: 20,
                 shape: GamepadHighlightShape.circle,
@@ -1256,6 +1272,7 @@ class _CollectionInvTile extends StatelessWidget {
                   icon: const Icon(Icons.card_giftcard_outlined),
                 ),
               ),
+              if (onSell != null)
               GamepadFocusBlock(
                 radius: 20,
                 shape: GamepadHighlightShape.circle,

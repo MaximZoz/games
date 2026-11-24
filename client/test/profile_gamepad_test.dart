@@ -12,6 +12,7 @@ import 'package:multigames_client/core/gamepad/gamepad_host.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/profile_screen.dart';
@@ -36,7 +37,20 @@ class _FixedAuth extends AuthStateNotifier {
   }
 }
 
-Future<void> _pumpProfile(WidgetTester tester) async {
+class _Offline extends OfflineModeNotifier {
+  _Offline({required bool offline}) : super(autostart: false) {
+    setOffline(offline);
+  }
+
+  void setOffline(bool offline) {
+    state = state.copyWith(
+      preference:
+          offline ? OfflinePreference.offline : OfflinePreference.online,
+    );
+  }
+}
+
+Future<void> _pumpProfile(WidgetTester tester, {_Offline? offline}) async {
   SharedPreferences.setMockInitialValues({
     'user': jsonEncode(_user().toJson()),
   });
@@ -48,6 +62,7 @@ Future<void> _pumpProfile(WidgetTester tester) async {
     ProviderScope(
       overrides: [
         currentRoutePathProvider.overrideWith((ref) => '/profile'),
+        if (offline != null) offlineModeProvider.overrideWith((ref) => offline),
         authStateProvider.overrideWith((ref) => _FixedAuth(ref, _user())),
         inventoryListProvider.overrideWith((ref) async => const <InventoryItem>[]),
         inventoryCapabilitiesProvider.overrideWith(
@@ -86,6 +101,31 @@ void main() {
     GamepadKeyboardController.instance.reset();
     GamepadDispatcher.reset();
     GamepadFocusRegistry.reset();
+  });
+
+  testWidgets('офлайн: профиль виден, кнопки «Редактировать» нет',
+      (tester) async {
+    await _pumpProfile(tester, offline: _Offline(offline: true));
+    expect(find.text('Zozzulyaa'), findsWidgets);
+    expect(find.text('Яделаюэтоэто'), findsOneWidget);
+    expect(find.text('Редактировать'), findsNothing);
+    expect(find.byType(GamepadFocusBlock), findsNothing);
+  });
+
+  testWidgets('уход в офлайн закрывает открытый редактор', (tester) async {
+    final offline = _Offline(offline: false);
+    await _pumpProfile(tester, offline: offline);
+    await tester.tap(find.text('Редактировать'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Сохранить'), findsOneWidget);
+
+    offline.setOffline(true);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Сохранить'), findsNothing);
+    expect(find.text('Редактировать'), findsNothing);
+    expect(find.text('Яделаюэтоэто'), findsOneWidget);
   });
 
   testWidgets('тап по «о себе» не открывает редактирование', (tester) async {

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/achievements/achievements_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -15,6 +16,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/ui/widgets/online_only_hint.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -54,6 +56,8 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   }
 
   Future<void> _reloadSilent() async {
+    // Офлайн: на экране кэш с диска, сервер не трогаем.
+    if (ref.read(isOfflineProvider)) return;
     try {
       final repo = ref.read(achievementsRepositoryProvider);
       final items =
@@ -73,6 +77,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   }
 
   Future<void> _claim(AchievementItem item) async {
+    if (ref.read(isOfflineProvider)) return;
     if (_claimInFlight.contains(item.code) || !item.isUnlocked) return;
     _claimInFlight.add(item.code);
 
@@ -162,6 +167,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
         : (cached != null ? sortAchievements(cached) : const <AchievementItem>[]);
 
     final l10n = context.l10n;
+    final offline = ref.watch(isOfflineProvider);
     return SwipeBackScope(
       onBack: goBack,
       child: Scaffold(
@@ -200,9 +206,10 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
                         return _AchievementCard(
                           item: item,
                           rewardKey: _rewardKeyFor(item.code),
-                          onClaim: item.isUnlocked
+                          onClaim: item.isUnlocked && !offline
                               ? () => unawaited(_claim(item))
                               : null,
+                          offline: offline,
                         );
                       },
                     ),
@@ -219,11 +226,15 @@ class _AchievementCard extends StatelessWidget {
     required this.item,
     required this.rewardKey,
     required this.onClaim,
+    this.offline = false,
   });
 
   final AchievementItem item;
   final GlobalKey rewardKey;
   final VoidCallback? onClaim;
+
+  /// Офлайн: награду выдаёт сервер, вместо кнопки — подпись.
+  final bool offline;
 
   IconData get _icon {
     switch (item.code) {
@@ -350,6 +361,8 @@ class _AchievementCard extends StatelessWidget {
                   ? l10n.achievementsFrameClaimed
                   : l10n.achievementsClaimed,
             )
+          else if (offline)
+            const Center(child: OnlineOnlyHint())
           else
             _actionButton(
               label: item.hasFrameReward

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -17,6 +18,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final isOffline = ref.watch(isOfflineProvider);
     final rewardAvailable =
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
     final unclaimedAchievements =
@@ -74,13 +76,15 @@ class HomeScreen extends ConsumerWidget {
         onTap: () => context.push('/inventory'),
         dense: dense,
       ),
-      HomeActionCard(
-        icon: Icons.bar_chart_rounded,
-        title: l10n.statsTitle,
-        subtitle: l10n.statsAllGames,
-        onTap: () => context.push('/stats'),
-        dense: dense,
-      ),
+      // Статистика целиком на сервере: в офлайне карточку не показываем.
+      if (!isOffline)
+        HomeActionCard(
+          icon: Icons.bar_chart_rounded,
+          title: l10n.statsTitle,
+          subtitle: l10n.statsAllGames,
+          onTap: () => context.push('/stats'),
+          dense: dense,
+        ),
       HomeActionCard(
         icon: Icons.storefront_rounded,
         title: l10n.homeShop,
