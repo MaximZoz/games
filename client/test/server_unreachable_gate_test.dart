@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/server_link.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -35,6 +37,8 @@ class _Auth extends AuthStateNotifier {
   _Auth(super.ref, AuthUser? user) {
     state = AsyncValue.data(user);
   }
+
+  void dropSession() => state = const AsyncValue.data(null);
 
   @override
   Future<void> ensureSessionFresh() async {}
@@ -185,20 +189,108 @@ void main() {
     expect(find.byType(ServerUnreachableDialog), findsNothing);
   });
 
-  testWidgets('закрыли без выбора — повторный сбой сразу не беспокоит',
-      (tester) async {
+  testWidgets('тап мимо окна и «назад» диалог не закрывают', (tester) async {
     final offline = await _pump(tester);
     ServerLink.instance.reportFailure();
     await tester.pumpAndSettle();
 
     await tester.tapAt(const Offset(5, 5));
     await tester.pumpAndSettle();
+    expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+    expect(offline.state.isOffline, isFalse);
+  });
+
+  testWidgets('геймпад: B окно не закрывает, X уводит в офлайн',
+      (tester) async {
+    final offline = await _pump(tester);
+    ServerLink.instance.reportFailure();
+    await tester.pumpAndSettle();
+
+    expect(GamepadDispatcher.dispatch(GamepadAction.cancel), isTrue);
+    expect(GamepadDispatcher.dispatch(GamepadAction.menu), isTrue);
+    await tester.pumpAndSettle();
+    expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+
+    expect(GamepadDispatcher.dispatch(GamepadAction.actionX), isTrue);
+    await tester.pumpAndSettle();
+    expect(find.byType(ServerUnreachableDialog), findsNothing);
+    expect(offline.state.isOffline, isTrue);
+  });
+
+  testWidgets('окно сняли без выбора — диалог возвращается', (tester) async {
+    final offline = await _pump(tester);
+    ServerLink.instance.reportFailure();
+    await tester.pumpAndSettle();
+
+    // Чужой код снял верхний маршрут: выбор пользователь не сделал.
+    final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
+    nav.pop();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+    expect(offline.state.isOffline, isFalse);
+  });
+
+  testWidgets('окно снимают раз за разом — следующий сбой API поднимает снова',
+      (tester) async {
+    await _pump(tester);
+    ServerLink.instance.reportFailure();
+    await tester.pumpAndSettle();
+
+    final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
+    for (var i = 0; i <= ServerUnreachableGate.maxReopens; i++) {
+      expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+      nav.pop();
+      await tester.pumpAndSettle();
+    }
+    // Лимит возвратов исчерпан: окно не мигает бесконечно.
     expect(find.byType(ServerUnreachableDialog), findsNothing);
 
     ServerLink.instance.reportFailure();
     await tester.pumpAndSettle();
+    expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+  });
+
+  testWidgets('каждый новый сбой API без связи снова открывает диалог',
+      (tester) async {
+    final offline = await _pump(tester);
+    ServerLink.instance.reportFailure();
+    await tester.pumpAndSettle();
+
+    // Сервер ответил на «Повторить» и тут же снова пропал.
+    offline.serverUp = true;
+    await tester.tap(find.byKey(serverUnreachableRetryKey));
+    await tester.pumpAndSettle();
     expect(find.byType(ServerUnreachableDialog), findsNothing);
-    expect(offline.checks, 1);
+
+    offline.serverUp = false;
+    ServerLink.instance.reportFailure();
+    await tester.pumpAndSettle();
+    expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+
+    await tester.tap(find.byKey(serverUnreachableOfflineKey));
+    await tester.pump(const Duration(seconds: 10));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('сессию сняли при открытом диалоге — окно уходит без возврата',
+      (tester) async {
+    await _pump(tester);
+    ServerLink.instance.reportFailure();
+    await tester.pumpAndSettle();
+    expect(find.byType(ServerUnreachableDialog), findsOneWidget);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ServerUnreachableGate)),
+    );
+    (container.read(authStateProvider.notifier) as _Auth).dropSession();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ServerUnreachableDialog), findsNothing);
   });
 
   testWidgets('гостю диалог не показываем', (tester) async {
