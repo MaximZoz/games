@@ -40,7 +40,7 @@
 .\launcher\test.ps1
 ```
 
-Выполняются `go test ./...` в server, проверка цветов UI (`dart run tool/ui_library_guard.dart`) и `flutter test` в client (если есть папка `test`). При ошибке в любом из шагов скрипт завершится с кодом 1.
+Выполняются `go test ./...` в server, проверка UI-библиотеки (`dart run tool/ui_library_guard.dart`: warning и код 1, если в `client/lib` новый цвет или Material-кнопка) и `flutter test` в client (если есть папка `test`). При ошибке в любом из шагов скрипт завершится с кодом 1.
 
 **Деплой на Fly из конфига:**
 

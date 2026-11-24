@@ -127,11 +127,11 @@ cd client && flutter run -d chrome
 
 ```bash
 cd server && go test ./... && go vet ./...
-cd client && flutter analyze --no-fatal-infos && dart run tool/ui_library_guard.dart && flutter test
+cd client && flutter analyze --no-fatal-infos && dart run tool/ui_library_guard.dart && dart run custom_lint && flutter test
 ./launcher/test.sh
 ```
 
-`ui_library_guard` роняет сборку, если в `client/lib` появился `Colors.*` или `Color(0x…)`. Такой цвет кладут в `AppColors` или `GamePalette`. Уже существующие литералы перечислены в `client/tool/ui_library_baseline.txt`.
+`ui_library_guard` и `dart run custom_lint` печатают warning и роняют сборку, если в `client/lib` появился `Colors.*`, `Color(0x…)` или кнопка `ElevatedButton` / `FilledButton` / `OutlinedButton` / `TextButton`. Цвет кладут в `AppColors` или `GamePalette`, кнопку — в `AppButton`. Уже существующий код перечислен в `client/tool/ui_library_baseline.txt`.
 
 ---
 

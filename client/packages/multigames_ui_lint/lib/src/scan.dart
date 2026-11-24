@@ -1,0 +1,382 @@
+import 'dart:io';
+
+/// Имя правила в анализаторе и в выводе `dart run tool/ui_library_guard.dart`.
+const uiLibraryLintName = 'use_ui_library';
+
+const baselineName = 'tool/ui_library_baseline.txt';
+
+final _colors = RegExp(r'\bColors\.([A-Za-z_][A-Za-z0-9_]*)');
+final _hex = RegExp(r'\bColor\(\s*(0x[0-9A-Fa-f]+)');
+final _from = RegExp(r'\bColor\.from[A-Za-z0-9]*');
+final _buttons = RegExp(
+  r'\b(ElevatedButton|FilledButton|OutlinedButton|TextButton)(\.[A-Za-z0-9]+)?\s*\(',
+);
+
+class UiLibraryHit {
+  const UiLibraryHit({
+    required this.path,
+    required this.line,
+    required this.column,
+    required this.offset,
+    required this.length,
+    required this.token,
+  });
+
+  final String path;
+  final int line;
+  final int column;
+  final int offset;
+  final int length;
+  final String token;
+
+  String get key => '$path\t$token';
+
+  String get problem {
+    if (token.startsWith('Colors.') || token.startsWith('Color')) {
+      return 'Цвет $token вне UI-библиотеки. Возьми AppColors или GamePalette.';
+    }
+    return 'Кнопка $token вне UI-библиотеки. Возьми AppButton.';
+  }
+
+  /// Строка в том виде, в каком её печатает `flutter analyze`.
+  String get warningLine =>
+      'warning • $problem • $path:$line:$column • $uiLibraryLintName';
+}
+
+class UiLibraryReport {
+  const UiLibraryReport({required this.added, required this.removed});
+
+  final List<UiLibraryHit> added;
+  final List<String> removed;
+
+  bool get isClean => added.isEmpty && removed.isEmpty;
+
+  String format() {
+    final lines = <String>[];
+    if (added.isNotEmpty) {
+      lines.add(
+        'UI вне библиотеки. Цвет — AppColors или GamePalette, кнопка — AppButton '
+        '(package:multigames_ui / package:multigames_game_kit).',
+      );
+      lines.add(
+        'Colors.transparent можно оставить. Исключение в той же строке: '
+        '// ui-library-allow',
+      );
+      lines.addAll(added.map((hit) => hit.warningLine));
+    }
+    if (removed.isNotEmpty) {
+      if (lines.isNotEmpty) lines.add('');
+      lines.add(
+        'В базе больше вхождений, чем в коде. После удаления литерала обнови '
+        'базу: dart run tool/ui_library_guard.dart --write-baseline',
+      );
+      lines.addAll(removed);
+    }
+    return lines.join('\n');
+  }
+}
+
+bool isUiLibrarySkipped(String relative) {
+  if (relative.endsWith('.g.dart')) return true;
+  if (relative.startsWith('lib/l10n/app_localizations')) return true;
+  return false;
+}
+
+bool isClientLibSource(String relative) =>
+    relative.startsWith('lib/') && !isUiLibrarySkipped(relative);
+
+List<UiLibraryHit> scanClientLib(Directory root) {
+  final lib = Directory('${root.path}/lib');
+  final hits = <UiLibraryHit>[];
+  if (!lib.existsSync()) return hits;
+  for (final entity in lib.listSync(recursive: true, followLinks: false)) {
+    if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    final relative = relativeToRoot(root.path, entity.path);
+    if (!isClientLibSource(relative)) continue;
+    hits.addAll(findUiLibraryHits(entity.readAsStringSync(), path: relative));
+  }
+  return hits;
+}
+
+String relativeToRoot(String rootPath, String filePath) {
+  final root = rootPath.replaceAll('\\', '/');
+  var path = filePath.replaceAll('\\', '/');
+  final normalizedRoot =
+      root.endsWith('/') ? root.substring(0, root.length - 1) : root;
+  if (path.startsWith(normalizedRoot)) {
+    path = path.substring(normalizedRoot.length);
+  }
+  if (path.startsWith('/')) path = path.substring(1);
+  return path;
+}
+
+/// Путь `lib/...` для файла пакета `multigames_client`.
+String? clientLibRelative(String filePath) {
+  final normalized = filePath.replaceAll('\\', '/');
+  const marker = '/client/lib/';
+  final index = normalized.lastIndexOf(marker);
+  if (index >= 0) return normalized.substring(index + '/client/'.length);
+  if (normalized.startsWith('lib/')) return normalized;
+  return null;
+}
+
+List<UiLibraryHit> findUiLibraryHits(String source, {String path = ''}) {
+  final masked = maskNonCode(source);
+  if (masked.length != source.length) {
+    throw StateError('Маска комментариев разъехалась с исходником: $path');
+  }
+  final lineStarts = <int>[0];
+  for (var i = 0; i < source.length; i++) {
+    if (source.codeUnitAt(i) == 10) lineStarts.add(i + 1);
+  }
+  int lineOfIndex(int index) {
+    var low = 0;
+    var high = lineStarts.length - 1;
+    while (low < high) {
+      final mid = (low + high + 1) >> 1;
+      if (lineStarts[mid] <= index) {
+        low = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return low + 1;
+  }
+
+  bool allowed(int index) {
+    final line = lineOfIndex(index);
+    final start = lineStarts[line - 1];
+    final end = line < lineStarts.length ? lineStarts[line] - 1 : source.length;
+    final text = source.substring(start, end);
+    return text.contains('ui-library-allow') ||
+        text.contains('ignore: $uiLibraryLintName');
+  }
+
+  final found = <(int, int, String)>[];
+  void add(RegExpMatch match, String token) {
+    if (allowed(match.start)) return;
+    found.add((match.start, match.end - match.start, token));
+  }
+
+  for (final match in _colors.allMatches(masked)) {
+    final name = match.group(1)!;
+    if (name == 'transparent') continue;
+    add(match, 'Colors.$name');
+  }
+  for (final match in _hex.allMatches(masked)) {
+    final hex = match.group(1)!;
+    add(match, 'Color(0x${hex.substring(2).toUpperCase()})');
+  }
+  for (final match in _from.allMatches(masked)) {
+    add(match, match.group(0)!);
+  }
+  for (final match in _buttons.allMatches(masked)) {
+    final suffix = match.group(2) ?? '';
+    // styleFrom — это стиль, не виджет. Сам конструктор кнопки ловится отдельно.
+    if (suffix == '.styleFrom') continue;
+    add(match, '${match.group(1)}$suffix');
+  }
+  found.sort((a, b) => a.$1.compareTo(b.$1));
+  return [
+    for (final hit in found)
+      UiLibraryHit(
+        path: path,
+        line: lineOfIndex(hit.$1),
+        column: hit.$1 - lineStarts[lineOfIndex(hit.$1) - 1] + 1,
+        offset: hit.$1,
+        length: hit.$2,
+        token: hit.$3,
+      ),
+  ];
+}
+
+String maskNonCode(String source) {
+  final out = StringBuffer();
+  var i = 0;
+  while (i < source.length) {
+    if (source.startsWith('//', i)) {
+      while (i < source.length && source[i] != '\n') {
+        out.write(' ');
+        i++;
+      }
+      continue;
+    }
+    if (source.startsWith('/*', i)) {
+      out.write('  ');
+      i += 2;
+      while (i < source.length && !source.startsWith('*/', i)) {
+        out.write(source[i] == '\n' ? '\n' : ' ');
+        i++;
+      }
+      if (i < source.length) {
+        out.write('  ');
+        i += 2;
+      }
+      continue;
+    }
+    if (_stringOpensAt(source, i)) {
+      i = _consumeString(source, i, out);
+      continue;
+    }
+    out.write(source[i]);
+    i++;
+  }
+  return out.toString();
+}
+
+bool _stringOpensAt(String source, int i) {
+  final raw = source[i] == 'r' &&
+      i + 1 < source.length &&
+      (source[i + 1] == "'" || source[i + 1] == '"') &&
+      (i == 0 || !_isIdent(source[i - 1]));
+  if (raw) return true;
+  return source[i] == "'" || source[i] == '"';
+}
+
+bool _isIdent(String char) {
+  final code = char.codeUnitAt(0);
+  return (code >= 48 && code <= 57) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 97 && code <= 122) ||
+      char == '_';
+}
+
+int _consumeString(String source, int i, StringBuffer out) {
+  var raw = false;
+  if (source[i] == 'r') {
+    raw = true;
+    out.write(' ');
+    i++;
+  }
+  final quote = source[i];
+  final triple =
+      i + 2 < source.length && source[i + 1] == quote && source[i + 2] == quote;
+  final delim = triple ? 3 : 1;
+  for (var k = 0; k < delim; k++) {
+    out.write(' ');
+    i++;
+  }
+  while (i < source.length) {
+    if (!raw && source[i] == r'\') {
+      out.write(' ');
+      i++;
+      if (i < source.length) {
+        out.write(source[i] == '\n' ? '\n' : ' ');
+        i++;
+      }
+      continue;
+    }
+    if (delim == 3 &&
+        i + 2 < source.length &&
+        source[i] == quote &&
+        source[i + 1] == quote &&
+        source[i + 2] == quote) {
+      out.write('   ');
+      return i + 3;
+    }
+    if (delim == 1 && source[i] == quote) {
+      out.write(' ');
+      return i + 1;
+    }
+    out.write(source[i] == '\n' ? '\n' : ' ');
+    i++;
+  }
+  return i;
+}
+
+Map<String, int> countHits(Iterable<UiLibraryHit> hits) {
+  final counts = <String, int>{};
+  for (final hit in hits) {
+    counts.update(hit.key, (value) => value + 1, ifAbsent: () => 1);
+  }
+  return counts;
+}
+
+String formatBaseline(Iterable<UiLibraryHit> hits) {
+  final counts = countHits(hits);
+  final keys = counts.keys.toList()..sort();
+  final lines = <String>[
+    '# UI в client/lib, которое уже было до проверки.',
+    '# Новый Colors.*, Color(0x…) или Material-кнопка даёт warning и роняет сборку.',
+    '# Цвет клади в AppColors или GamePalette, кнопку — в AppButton.',
+    '# Строка: путь, токен, число вхождений.',
+  ];
+  for (final key in keys) {
+    lines.add('$key\t${counts[key]}');
+  }
+  return lines.join('\n');
+}
+
+Map<String, int> loadBaseline(File file) {
+  if (!file.existsSync()) {
+    throw StateError(
+      'Нет базы ${file.path}. Сначала: dart run tool/ui_library_guard.dart --write-baseline',
+    );
+  }
+  final counts = <String, int>{};
+  for (final raw in file.readAsLinesSync()) {
+    final line = raw.trim();
+    if (line.isEmpty || line.startsWith('#')) continue;
+    final parts = line.split('\t');
+    if (parts.length != 3) {
+      throw FormatException('Строка базы должна быть из трёх полей: $line');
+    }
+    final count = int.tryParse(parts[2]);
+    if (count == null || count < 1) {
+      throw FormatException('Число вхождений в базе битое: $line');
+    }
+    counts['${parts[0]}\t${parts[1]}'] = count;
+  }
+  return counts;
+}
+
+File? baselineFileNear(String fromPath) {
+  var dir = File(fromPath).absolute.parent;
+  while (true) {
+    final candidate = File('${dir.path}/$baselineName');
+    if (candidate.existsSync()) return candidate;
+    final parent = dir.parent;
+    if (parent.path == dir.path) return null;
+    dir = parent;
+  }
+}
+
+List<UiLibraryHit> hitsBeyondBaseline(
+  List<UiLibraryHit> hits,
+  Map<String, int> baseline,
+) {
+  final groups = <String, List<UiLibraryHit>>{};
+  for (final hit in hits) {
+    groups.putIfAbsent(hit.key, () => []).add(hit);
+  }
+  final extra = <UiLibraryHit>[];
+  for (final entry in groups.entries) {
+    final list = entry.value.toList()
+      ..sort((a, b) => a.offset.compareTo(b.offset));
+    final was = baseline[entry.key] ?? 0;
+    if (list.length > was) extra.addAll(list.skip(was));
+  }
+  extra.sort((a, b) {
+    final path = a.path.compareTo(b.path);
+    if (path != 0) return path;
+    return a.offset.compareTo(b.offset);
+  });
+  return extra;
+}
+
+UiLibraryReport diffHits(List<UiLibraryHit> hits, Map<String, int> baseline) {
+  final actual = countHits(hits);
+  final removed = <String>[];
+  final keys = {...actual.keys, ...baseline.keys}.toList()..sort();
+  for (final key in keys) {
+    final now = actual[key] ?? 0;
+    final was = baseline[key] ?? 0;
+    if (now >= was) continue;
+    final split = key.split('\t');
+    removed.add('- ${split[0]} ${split[1]} (в коде $now, в базе $was)');
+  }
+  return UiLibraryReport(
+    added: hitsBeyondBaseline(hits, baseline),
+    removed: removed,
+  );
+}

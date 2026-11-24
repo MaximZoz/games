@@ -34,6 +34,9 @@ jobs:
       - name: UI library guard
         run: dart run tool/ui_library_guard.dart
 
+      - name: UI library warnings
+        run: dart run custom_lint
+
       - name: Test
         run: |
           if [ -d test ]; then

@@ -26,19 +26,42 @@ void main() {
         'Colors.red',
         'Color(0xFFAABBCC)',
         'Color.fromRGBO',
-        'Color(0xFF010203)'
+        'Color(0xFF010203)',
       ],
     );
+    final button = findUiLibraryHits('''
+      ElevatedButton(onPressed: () {}, child: const Text('x'));
+      TextButton.icon(onPressed: () {}, icon: const Icon(Icons.add), label: const Text('y'));
+      const AppButton(onPressed: null, label: 'z');
+      TextButton(onPressed: () {}, child: const Text('ok')); // ui-library-allow
+    ''');
+    expect(button.map((hit) => hit.token).toList(), [
+      'ElevatedButton',
+      'TextButton.icon',
+    ]);
   });
 
-  test('новое вхождение не сходится с базой', () {
+  test('новое вхождение печатается как warning сборки', () {
     final report = diffHits(
-      [const UiLibraryHit(path: 'lib/a.dart', line: 4, token: 'Colors.red')],
+      [
+        const UiLibraryHit(
+          path: 'lib/a.dart',
+          line: 4,
+          column: 3,
+          offset: 10,
+          length: 10,
+          token: 'Colors.red',
+        ),
+      ],
       const {},
     );
     expect(report.isClean, isFalse);
-    expect(report.format(), contains('lib/a.dart:4 Colors.red'));
-    expect(report.format(), contains('AppColors'));
+    expect(
+      report.format(),
+      contains(
+        'warning • Цвет Colors.red вне UI-библиотеки. Возьми AppColors или GamePalette. • lib/a.dart:4:3 • use_ui_library',
+      ),
+    );
   });
 
   test('client/lib совпадает с базой цветов', () {
