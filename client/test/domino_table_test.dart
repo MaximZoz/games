@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/domino/domino_engine.dart';
+import 'package:multigames_client/games/domino/domino_mode.dart';
 import 'package:multigames_client/games/domino/domino_offline_session.dart';
 import 'package:multigames_client/games/domino/domino_repository.dart';
 import 'package:multigames_client/games/domino/domino_table.dart';
@@ -825,6 +826,134 @@ void main() {
     expect(session.view.isOver, isTrue);
     expect(session.view.iWon, isFalse);
     expect(find.byKey(const ValueKey('game-chrome-rail')), findsNothing);
+    expect(tester.takeException(), isNull);
+    OfflineDominoRegistry.instance.disposeAll();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('море: обычная кость, затем «Два дубля» — уходит одна кость',
+      (tester) async {
+    setUpTestLocaleRu();
+    tester.view.physicalSize = const Size(900, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final session = OfflineDominoSession.create(
+      humanUserId: 'local:player',
+      playerCount: 2,
+      gameMode: 'sea',
+      humanDisplayName: 'Я',
+    );
+    addTearDown(OfflineDominoRegistry.instance.disposeAll);
+
+    // Концы 3 и 5, в руке 5-4 и дубли 3-3, 5-5, 4-4.
+    // Кнопка «Два дубля» видна. После 5-4 концы станут 3 и 4, и дубли
+    // 3-3 с 4-4 всё ещё на руках: если ход не закроется, кнопка положит их.
+    final plain = dominoTileId(5, 4);
+    final doubleThree = dominoTileId(3, 3);
+    final doubleFive = dominoTileId(5, 5);
+    final doubleFour = dominoTileId(4, 4);
+    final game = session.engine;
+    game
+      ..mode = dominoModeSea
+      ..target = dominoSeaScore
+      ..leftEnd = 3
+      ..rightEnd = 5
+      ..turn = 0
+      ..forcedTile = -1
+      ..status = dominoStatusPlaying
+      ..eventSeq = 1
+      ..chain.clear()
+      ..chain.add(_oriented(3, 5, end: 'start'));
+    game.players[0].hand
+      ..clear()
+      ..addAll([plain, doubleThree, doubleFive, doubleFour]);
+    game.players[1].hand
+      ..clear()
+      ..addAll([dominoTileId(0, 0), dominoTileId(1, 1)]);
+    game.boneyard
+      ..clear()
+      ..add(dominoTileId(6, 6));
+
+    Future<void> pumpScreen() async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            locale: const Locale('ru'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: DominoGameScreen(gameId: session.gameId),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    await pumpScreen();
+    expect(session.view.canPair, isTrue);
+    expect(find.text('Два дубля'), findsOneWidget);
+    expect(find.byKey(ValueKey('domino-hand-$plain')), findsOneWidget);
+
+    await tester.tap(find.byKey(ValueKey('domino-hand-$plain')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(session.engine.turn, 1);
+    expect(session.engine.chain.map((tile) => tile.id).toList(), [
+      dominoTileId(3, 5),
+      plain,
+    ]);
+    expect(session.engine.players[0].hand, [
+      doubleThree,
+      doubleFive,
+      doubleFour,
+    ]);
+    expect(find.text('Два дубля'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    // Тап по кости и по кнопке в одном кадре, до перерисовки.
+    game
+      ..leftEnd = 3
+      ..rightEnd = 5
+      ..turn = 0
+      ..status = dominoStatusPlaying
+      ..chain.clear()
+      ..chain.add(_oriented(3, 5, end: 'start'));
+    game.players[0].hand
+      ..clear()
+      ..addAll([plain, doubleThree, doubleFive, doubleFour]);
+    session.notifyListeners();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Два дубля'), findsOneWidget);
+
+    void tapNow(Offset at, int pointer) {
+      tester.binding.handlePointerEvent(PointerDownEvent(
+        pointer: pointer,
+        position: at,
+      ));
+      tester.binding.handlePointerEvent(PointerUpEvent(
+        pointer: pointer,
+        position: at,
+      ));
+    }
+
+    tapNow(tester.getCenter(find.byKey(ValueKey('domino-hand-$plain'))), 1);
+    tapNow(tester.getCenter(find.text('Два дубля')), 2);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(session.engine.chain.map((tile) => tile.id).toList(), [
+      dominoTileId(3, 5),
+      plain,
+    ]);
+    expect(session.engine.players[0].hand, [
+      doubleThree,
+      doubleFive,
+      doubleFour,
+    ]);
     expect(tester.takeException(), isNull);
     OfflineDominoRegistry.instance.disposeAll();
     await tester.pumpWidget(const SizedBox.shrink());
