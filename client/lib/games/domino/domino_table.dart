@@ -10,6 +10,7 @@ import 'package:multigames_client/games/framework/game_screen_scaffold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/app_button.dart';
 import 'package:multigames_game_kit/multigames_game_kit.dart';
 
 export 'package:multigames_client/games/domino/domino_chain_layout.dart';
@@ -899,11 +900,11 @@ class _DominoTableState extends State<DominoTable>
     final l10n = context.l10n;
     Widget action = const SizedBox.shrink(key: ValueKey('domino-no-action'));
     if (view.canPair && view.isMyTurn && widget.onPlayPair != null) {
-      action = FilledButton.icon(
+      action = AppButton(
         key: const ValueKey('domino-pair'),
         onPressed: widget.busy ? null : _tapPair,
-        icon: const Icon(Icons.call_split_rounded),
-        label: Text(l10n.dominoPlayPair),
+        label: l10n.dominoPlayPair,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       );
     } else if (view.canDraw && widget.onDraw != null) {
       action = FilledButton.icon(
