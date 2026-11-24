@@ -1,0 +1,12 @@
+name: multigames_ui_lint
+description: Предупреждение, если client/lib рисует UI мимо библиотеки MultiGames.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  analyzer: '>=6.4.1 <9.0.0'
+  analyzer_plugin: ^0.13.0
+  custom_lint_builder: 0.7.5

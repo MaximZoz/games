@@ -6953,6 +6953,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                     icon: Icons.forum_rounded,
                     badge: groupUnread,
                     tooltip: context.l10n.chatGroupTooltip,
+                    opponentTurn: !view.isMyTurn && !view.isOver,
                     onPressed: () => _openGroupChat(view),
                   ),
                 ),
@@ -7827,8 +7828,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       ),
       gameType: 'durak',
       gameId: widget.gameId,
-      isTheirTurn: oppTurn && view.turnTimeSec > 0 && view.turnDeadline > 0,
-      turnDeadline: view.turnDeadline,
+      isTheirTurn: oppTurn,
+      turnDeadline: view.turnTimeSec > 0 ? view.turnDeadline : 0,
       turnTimeSec: view.turnTimeSec,
       onTurnExpired: _onTurnTimeExpired,
       compact: MediaQuery.sizeOf(context).width < 420 ||

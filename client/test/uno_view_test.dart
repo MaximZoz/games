@@ -168,6 +168,57 @@ void main() {
     expect(unoVisibleDiscard(serverTop: oldTop)?.id, 'old');
   });
 
+  test('discard stays on the painted card until the throw lands', () {
+    const painted = UnoCard(
+      id: 'painted',
+      color: UnoColor.yellow,
+      kind: UnoCardKind.number,
+      number: 2,
+    );
+    const incoming = UnoCard(
+      id: 'incoming',
+      color: UnoColor.blue,
+      kind: UnoCardKind.number,
+      number: 9,
+    );
+    expect(
+      unoDiscardHeldDuringThrow(
+        override: null,
+        painted: painted,
+        incomingTopId: incoming.id,
+        hold: true,
+      )?.id,
+      'painted',
+    );
+    expect(
+      unoDiscardHeldDuringThrow(
+        override: incoming,
+        painted: painted,
+        incomingTopId: incoming.id,
+        hold: true,
+      )?.id,
+      'incoming',
+    );
+    expect(
+      unoDiscardHeldDuringThrow(
+        override: null,
+        painted: painted,
+        incomingTopId: painted.id,
+        hold: true,
+      ),
+      isNull,
+    );
+    expect(
+      unoDiscardHeldDuringThrow(
+        override: null,
+        painted: painted,
+        incomingTopId: incoming.id,
+        hold: false,
+      ),
+      isNull,
+    );
+  });
+
   test('opponent seats go clockwise from the hero', () {
     expect(
       unoOpponentSeatOrder(myIndex: 0, playerCount: 4, direction: 1),

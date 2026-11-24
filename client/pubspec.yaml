@@ -49,6 +49,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  custom_lint: 0.7.5
+  multigames_ui_lint:
+    path: packages/multigames_ui_lint
 
 flutter:
   generate: true
