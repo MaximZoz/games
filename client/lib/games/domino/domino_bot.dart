@@ -4,6 +4,11 @@ import 'package:multigames_client/games/domino/domino_mode.dart';
 const int dominoBotSearchDepth = 8;
 const int dominoBotNodeCap = 6000;
 
+/// «Бесконечность» перебора. Записана числом, а не сдвигом: в вебе (dart2js)
+/// сдвиг даёт беззнаковые 32 бита, `-1 << 30` там равно +3221225472, и любой
+/// ход оказывается «хуже» начальной оценки.
+const int _inf = 1073741824;
+
 DominoAction dominoBestAction(DominoGame game, int seat) {
   if (game.status != dominoStatusPlaying || seat != game.turn) {
     return const DominoAction(type: '');
@@ -18,7 +23,7 @@ DominoAction dominoBestAction(DominoGame game, int seat) {
   final searched = _sampledSearch(game, seat, moves);
   if (searched != null) return searched;
   var best = moves.first;
-  var bestScore = -1 << 30;
+  var bestScore = -_inf;
   for (final move in moves) {
     final score = _heuristic(game, seat, move);
     if (score > bestScore || (score == bestScore && _betterMove(move, best))) {
@@ -73,7 +78,7 @@ DominoAction? _sampledSearch(
   if (bones.isEmpty || bones.length > 10) return null;
   final actions = _botActions(game, seat, moves);
   var best = actions.first;
-  var bestValue = -1 << 30;
+  var bestValue = -_inf;
   var depth = dominoBotSearchDepth;
   if (bones.length > 1) depth = 5;
   for (final action in actions) {
@@ -88,7 +93,7 @@ DominoAction? _sampledSearch(
         continue;
       }
       final nodes = <int>[0];
-      total += _minimax(next, seat, depth - 1, -1 << 30, 1 << 30, nodes);
+      total += _minimax(next, seat, depth - 1, -_inf, _inf, nodes);
       okN++;
     }
     if (okN == 0) continue;
@@ -238,7 +243,7 @@ int _minimax(
     actions.addAll(_botActions(game, seat, moves));
   }
   if (seat == root) {
-    var value = -1 << 30;
+    var value = -_inf;
     for (final action in actions) {
       final next = game.clone();
       try {
@@ -251,10 +256,10 @@ int _minimax(
       if (value > alpha) alpha = value;
       if (beta <= alpha) break;
     }
-    if (value == -1 << 30) return _evalRound(game, root);
+    if (value == -_inf) return _evalRound(game, root);
     return value;
   }
-  var value = 1 << 30;
+  var value = _inf;
   for (final action in actions) {
     final next = game.clone();
     try {
@@ -267,7 +272,7 @@ int _minimax(
     if (value < beta) beta = value;
     if (beta <= alpha) break;
   }
-  if (value == 1 << 30) return _evalRound(game, root);
+  if (value == _inf) return _evalRound(game, root);
   return value;
 }
 
