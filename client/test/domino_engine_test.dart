@@ -562,6 +562,39 @@ void main() {
         type: dominoActionPlay, tile: dominoTileId(3, 4), end: 'left'));
     expect(game.lastTile2, -1);
 
+    // Обычная кость, потом «Два дубля»: после 5-4 концы 3 и 4, и дубли
+    // 3-3 с 4-4 всё ещё в руке. Если ход не уйдёт, кнопка положит ещё две.
+    final after = seaGame([
+      [
+        dominoTileId(5, 4),
+        dominoTileId(3, 3),
+        dominoTileId(5, 5),
+        dominoTileId(4, 4),
+      ],
+      [dominoTileId(0, 1)],
+    ], [dominoTileId(6, 6)], 3, 5);
+    expect(after.canPair(0), isTrue);
+    after.apply(DominoAction(
+      type: dominoActionPlay,
+      tile: dominoTileId(5, 4),
+      end: 'right',
+    ));
+    expect(after.turn, 1);
+    expect((after.leftEnd, after.rightEnd), (3, 4));
+    expect(after.chain, hasLength(2));
+    expect(after.players[0].hand, [
+      dominoTileId(3, 3),
+      dominoTileId(5, 5),
+      dominoTileId(4, 4),
+    ]);
+    expect(after.canPair(0), isFalse);
+    expect(
+      () => after.apply(const DominoAction(type: dominoActionPlayPair)),
+      throwsStateError,
+    );
+    after.turn = 0;
+    expect(after.canPair(0), isTrue);
+
     // Одного дубля мало, как и одинаковых концов.
     final one = seaGame([
       [dominoTileId(3, 3), dominoTileId(1, 2)],

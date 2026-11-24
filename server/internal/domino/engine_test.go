@@ -503,6 +503,26 @@ func TestSeaPairOfDoubles(t *testing.T) {
 		t.Fatalf("single play must clear the second tile, got %d", g.LastTile2)
 	}
 
+	// Обычная кость, потом пара: после 5-4 концы 3 и 4, дубли 3-3 и 4-4
+	// остаются в руке. Ход уже ушёл, поэтому «Два дубля» не кладёт ещё две.
+	after := seaGame([][]int{{TileID(5, 4), TileID(3, 3), TileID(5, 5), TileID(4, 4)}, {TileID(0, 1)}}, []int{TileID(6, 6)}, 3, 5)
+	if !after.CanPair(0) {
+		t.Fatal("pair button is available before the plain tile")
+	}
+	if err := after.Apply(Action{Type: ActionPlay, Tile: TileID(5, 4), End: "right"}); err != nil {
+		t.Fatal(err)
+	}
+	if after.Turn != 1 || after.LeftEnd != 3 || after.RightEnd != 4 || len(after.Chain) != 2 || len(after.Players[0].Hand) != 3 {
+		t.Fatalf("plain tile must end the turn: turn=%d ends=%d/%d chain=%d hand=%v", after.Turn, after.LeftEnd, after.RightEnd, len(after.Chain), after.Players[0].Hand)
+	}
+	if after.CanPair(0) || after.Apply(Action{Type: ActionPlayPair}) == nil {
+		t.Fatal("pair after a plain tile must be rejected")
+	}
+	after.Turn = 0
+	if !after.CanPair(0) {
+		t.Fatal("the same hand could pair if the turn had not passed")
+	}
+
 	// Одного дубля мало, как и одинаковых концов.
 	one := seaGame([][]int{{TileID(3, 3), TileID(1, 2)}, {TileID(3, 4)}}, nil, 3, 5)
 	if one.CanPair(0) || one.Apply(Action{Type: ActionPlayPair}) == nil {
