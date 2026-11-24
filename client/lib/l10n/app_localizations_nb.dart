@@ -175,6 +175,24 @@ class AppLocalizationsNb extends AppLocalizations {
   String get offlineModeOfferAction => 'Slå på offline';
 
   @override
+  String get serverUnreachableTitle => 'Ingen forbindelse til serveren';
+
+  @override
+  String get serverUnreachableBody => 'Får ikke kontakt med serveren. Sjekk internett og prøv igjen, eller bytt til offline-modus.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Gå offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Fortsatt ingen forbindelse.';
+
+  @override
+  String get serverReachableAgain => 'Forbindelsen til serveren er gjenopprettet.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Tilgjengelig i online-modus';
+
+  @override
   String get gamesPlay => 'Spill';
 
   @override

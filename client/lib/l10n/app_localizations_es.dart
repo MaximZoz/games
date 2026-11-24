@@ -175,6 +175,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get offlineModeOfferAction => 'Activar sin conexión';
 
   @override
+  String get serverUnreachableTitle => 'Sin conexión con el servidor';
+
+  @override
+  String get serverUnreachableBody => 'No se puede contactar con el servidor. Comprueba internet y vuelve a intentarlo, o pasa al modo sin conexión.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Pasar a sin conexión';
+
+  @override
+  String get serverUnreachableStillDown => 'Sigue sin haber conexión.';
+
+  @override
+  String get serverReachableAgain => 'Conexión con el servidor restablecida.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Disponible en modo en línea';
+
+  @override
   String get gamesPlay => 'Jugar';
 
   @override

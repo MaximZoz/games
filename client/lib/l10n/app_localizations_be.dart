@@ -175,6 +175,24 @@ class AppLocalizationsBe extends AppLocalizations {
   String get offlineModeOfferAction => 'Уключыць афлайн';
 
   @override
+  String get serverUnreachableTitle => 'Няма сувязі з серверам';
+
+  @override
+  String get serverUnreachableBody => 'Не атрымліваецца звязацца з серверам. Праверце інтэрнэт і паўтарыце спробу або перайдзіце ў афлайн рэжым.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Перайсці ў афлайн';
+
+  @override
+  String get serverUnreachableStillDown => 'Сувязі ўсё яшчэ няма.';
+
+  @override
+  String get serverReachableAgain => 'Сувязь з серверам адноўлена.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Даступна ў рэжыме анлайн';
+
+  @override
   String get gamesPlay => 'Гуляць';
 
   @override

@@ -175,6 +175,24 @@ class AppLocalizationsDa extends AppLocalizations {
   String get offlineModeOfferAction => 'Gå offline';
 
   @override
+  String get serverUnreachableTitle => 'Ingen forbindelse til serveren';
+
+  @override
+  String get serverUnreachableBody => 'Kan ikke få forbindelse til serveren. Tjek internettet og prøv igen, eller skift til offline-tilstand.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Gå offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Der er stadig ingen forbindelse.';
+
+  @override
+  String get serverReachableAgain => 'Forbindelsen til serveren er genoprettet.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Tilgængelig i online-tilstand';
+
+  @override
   String get gamesPlay => 'Spil';
 
   @override

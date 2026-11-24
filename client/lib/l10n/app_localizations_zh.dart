@@ -175,6 +175,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get offlineModeOfferAction => '开启离线';
 
   @override
+  String get serverUnreachableTitle => '无法连接服务器';
+
+  @override
+  String get serverUnreachableBody => '无法连接到服务器。请检查网络后重试，或切换到离线模式。';
+
+  @override
+  String get serverUnreachableGoOffline => '切换到离线';
+
+  @override
+  String get serverUnreachableStillDown => '仍然没有连接。';
+
+  @override
+  String get serverReachableAgain => '已恢复与服务器的连接。';
+
+  @override
+  String get offlineOnlineOnlyHint => '在线模式下可用';
+
+  @override
   String get gamesPlay => '开始';
 
   @override

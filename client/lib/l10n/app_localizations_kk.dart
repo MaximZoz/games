@@ -175,6 +175,24 @@ class AppLocalizationsKk extends AppLocalizations {
   String get offlineModeOfferAction => 'Офлайнды қосу';
 
   @override
+  String get serverUnreachableTitle => 'Сервермен байланыс жоқ';
+
+  @override
+  String get serverUnreachableBody => 'Сервермен байланысу мүмкін болмай тұр. Интернетті тексеріп, қайталап көріңіз немесе офлайн режимге өтіңіз.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Офлайнға өту';
+
+  @override
+  String get serverUnreachableStillDown => 'Байланыс әлі жоқ.';
+
+  @override
+  String get serverReachableAgain => 'Сервермен байланыс қалпына келді.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Онлайн режимде қолжетімді';
+
+  @override
   String get gamesPlay => 'Ойнау';
 
   @override

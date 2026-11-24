@@ -175,6 +175,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offlineModeOfferAction => 'Activer hors ligne';
 
   @override
+  String get serverUnreachableTitle => 'Pas de connexion au serveur';
+
+  @override
+  String get serverUnreachableBody => 'Impossible de joindre le serveur. Vérifiez Internet et réessayez, ou passez en mode hors ligne.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Passer hors ligne';
+
+  @override
+  String get serverUnreachableStillDown => 'Toujours pas de connexion.';
+
+  @override
+  String get serverReachableAgain => 'Connexion au serveur rétablie.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Disponible en mode en ligne';
+
+  @override
   String get gamesPlay => 'Jouer';
 
   @override

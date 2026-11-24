@@ -175,6 +175,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineModeOfferAction => 'Go offline';
 
   @override
+  String get serverUnreachableTitle => 'No connection to the server';
+
+  @override
+  String get serverUnreachableBody => 'Can\'t reach the server. Check your internet and try again, or switch to offline mode.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Go offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Still no connection.';
+
+  @override
+  String get serverReachableAgain => 'Connection to the server restored.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Available in online mode';
+
+  @override
   String get gamesPlay => 'Play';
 
   @override

@@ -175,6 +175,24 @@ class AppLocalizationsTh extends AppLocalizations {
   String get offlineModeOfferAction => 'เปิดออฟไลน์';
 
   @override
+  String get serverUnreachableTitle => 'ไม่มีการเชื่อมต่อกับเซิร์ฟเวอร์';
+
+  @override
+  String get serverUnreachableBody => 'ติดต่อเซิร์ฟเวอร์ไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง หรือเปลี่ยนเป็นโหมดออฟไลน์';
+
+  @override
+  String get serverUnreachableGoOffline => 'เปลี่ยนเป็นออฟไลน์';
+
+  @override
+  String get serverUnreachableStillDown => 'ยังเชื่อมต่อไม่ได้';
+
+  @override
+  String get serverReachableAgain => 'เชื่อมต่อกับเซิร์ฟเวอร์ได้อีกครั้งแล้ว';
+
+  @override
+  String get offlineOnlineOnlyHint => 'ใช้ได้ในโหมดออนไลน์';
+
+  @override
   String get gamesPlay => 'เล่น';
 
   @override

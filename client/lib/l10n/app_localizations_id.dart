@@ -175,6 +175,24 @@ class AppLocalizationsId extends AppLocalizations {
   String get offlineModeOfferAction => 'Aktifkan offline';
 
   @override
+  String get serverUnreachableTitle => 'Tidak ada koneksi ke server';
+
+  @override
+  String get serverUnreachableBody => 'Server tidak dapat dihubungi. Periksa internet lalu coba lagi, atau beralih ke mode offline.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Beralih ke offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Koneksi masih belum ada.';
+
+  @override
+  String get serverReachableAgain => 'Koneksi ke server pulih.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Tersedia dalam mode online';
+
+  @override
   String get gamesPlay => 'Main';
 
   @override

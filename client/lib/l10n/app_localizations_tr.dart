@@ -175,6 +175,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get offlineModeOfferAction => 'Çevrimdışına geç';
 
   @override
+  String get serverUnreachableTitle => 'Sunucuyla bağlantı yok';
+
+  @override
+  String get serverUnreachableBody => 'Sunucuya ulaşılamıyor. İnterneti kontrol edip yeniden deneyin veya çevrimdışı moda geçin.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Çevrimdışına geç';
+
+  @override
+  String get serverUnreachableStillDown => 'Bağlantı hâlâ yok.';
+
+  @override
+  String get serverReachableAgain => 'Sunucu bağlantısı yeniden kuruldu.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Çevrimiçi modda kullanılabilir';
+
+  @override
   String get gamesPlay => 'Oyna';
 
   @override

@@ -473,6 +473,42 @@ abstract class AppLocalizations {
   /// **'Включить офлайн'**
   String get offlineModeOfferAction;
 
+  /// No description provided for @serverUnreachableTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет связи с сервером'**
+  String get serverUnreachableTitle;
+
+  /// No description provided for @serverUnreachableBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получается связаться с сервером. Проверьте интернет и повторите попытку или перейдите в офлайн режим.'**
+  String get serverUnreachableBody;
+
+  /// No description provided for @serverUnreachableGoOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перейти в офлайн'**
+  String get serverUnreachableGoOffline;
+
+  /// No description provided for @serverUnreachableStillDown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Связи всё ещё нет.'**
+  String get serverUnreachableStillDown;
+
+  /// No description provided for @serverReachableAgain.
+  ///
+  /// In ru, this message translates to:
+  /// **'Связь с сервером восстановлена.'**
+  String get serverReachableAgain;
+
+  /// No description provided for @offlineOnlineOnlyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступно в режиме онлайн'**
+  String get offlineOnlineOnlyHint;
+
   /// No description provided for @gamesPlay.
   ///
   /// In ru, this message translates to:

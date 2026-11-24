@@ -175,6 +175,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get offlineModeOfferAction => 'ऑफ़लाइन चालू करें';
 
   @override
+  String get serverUnreachableTitle => 'सर्वर से कनेक्शन नहीं है';
+
+  @override
+  String get serverUnreachableBody => 'सर्वर से संपर्क नहीं हो पा रहा है। इंटरनेट जाँचें और फिर से कोशिश करें या ऑफ़लाइन मोड पर जाएँ।';
+
+  @override
+  String get serverUnreachableGoOffline => 'ऑफ़लाइन पर जाएँ';
+
+  @override
+  String get serverUnreachableStillDown => 'अभी भी कनेक्शन नहीं है।';
+
+  @override
+  String get serverReachableAgain => 'सर्वर से कनेक्शन बहाल हो गया।';
+
+  @override
+  String get offlineOnlineOnlyHint => 'ऑनलाइन मोड में उपलब्ध';
+
+  @override
   String get gamesPlay => 'खेलें';
 
   @override

@@ -175,6 +175,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offlineModeOfferAction => 'تفعيل عدم الاتصال';
 
   @override
+  String get serverUnreachableTitle => 'لا يوجد اتصال بالخادم';
+
+  @override
+  String get serverUnreachableBody => 'تعذّر الوصول إلى الخادم. تحقّق من الإنترنت وأعد المحاولة أو انتقل إلى وضع عدم الاتصال.';
+
+  @override
+  String get serverUnreachableGoOffline => 'الانتقال إلى وضع عدم الاتصال';
+
+  @override
+  String get serverUnreachableStillDown => 'ما زال الاتصال مفقودًا.';
+
+  @override
+  String get serverReachableAgain => 'تمت استعادة الاتصال بالخادم.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'متاح في وضع الاتصال';
+
+  @override
   String get gamesPlay => 'العب';
 
   @override

@@ -175,6 +175,24 @@ class AppLocalizationsCs extends AppLocalizations {
   String get offlineModeOfferAction => 'Zapnout offline';
 
   @override
+  String get serverUnreachableTitle => 'Žádné spojení se serverem';
+
+  @override
+  String get serverUnreachableBody => 'Se serverem se nedaří spojit. Zkontrolujte internet a zkuste to znovu, nebo přejděte do režimu offline.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Přejít do offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Spojení stále není.';
+
+  @override
+  String get serverReachableAgain => 'Spojení se serverem je obnoveno.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Dostupné v režimu online';
+
+  @override
   String get gamesPlay => 'Hrát';
 
   @override

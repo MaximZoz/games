@@ -175,6 +175,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get offlineModeOfferAction => 'Ativar offline';
 
   @override
+  String get serverUnreachableTitle => 'Sem ligação ao servidor';
+
+  @override
+  String get serverUnreachableBody => 'Não é possível contactar o servidor. Verifique a internet e tente de novo, ou mude para o modo offline.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Mudar para offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Ainda sem ligação.';
+
+  @override
+  String get serverReachableAgain => 'Ligação ao servidor restabelecida.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Disponível no modo online';
+
+  @override
   String get gamesPlay => 'Jogar';
 
   @override

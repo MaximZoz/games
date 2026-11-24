@@ -175,6 +175,24 @@ class AppLocalizationsFi extends AppLocalizations {
   String get offlineModeOfferAction => 'Siirry offlineen';
 
   @override
+  String get serverUnreachableTitle => 'Ei yhteyttä palvelimeen';
+
+  @override
+  String get serverUnreachableBody => 'Palvelimeen ei saada yhteyttä. Tarkista internetyhteys ja yritä uudelleen tai siirry offline-tilaan.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Siirry offlineen';
+
+  @override
+  String get serverUnreachableStillDown => 'Yhteyttä ei vieläkään ole.';
+
+  @override
+  String get serverReachableAgain => 'Yhteys palvelimeen on palautettu.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Käytettävissä online-tilassa';
+
+  @override
   String get gamesPlay => 'Pelaa';
 
   @override

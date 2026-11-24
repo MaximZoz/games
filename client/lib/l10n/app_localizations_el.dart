@@ -175,6 +175,24 @@ class AppLocalizationsEl extends AppLocalizations {
   String get offlineModeOfferAction => 'Ενεργοποίηση εκτός σύνδεσης';
 
   @override
+  String get serverUnreachableTitle => 'Δεν υπάρχει σύνδεση με τον διακομιστή';
+
+  @override
+  String get serverUnreachableBody => 'Δεν είναι δυνατή η επικοινωνία με τον διακομιστή. Ελέγξτε το διαδίκτυο και δοκιμάστε ξανά ή μεταβείτε στη λειτουργία εκτός σύνδεσης.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Μετάβαση εκτός σύνδεσης';
+
+  @override
+  String get serverUnreachableStillDown => 'Ακόμα δεν υπάρχει σύνδεση.';
+
+  @override
+  String get serverReachableAgain => 'Η σύνδεση με τον διακομιστή αποκαταστάθηκε.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Διαθέσιμο σε λειτουργία σύνδεσης';
+
+  @override
   String get gamesPlay => 'Παίξτε';
 
   @override

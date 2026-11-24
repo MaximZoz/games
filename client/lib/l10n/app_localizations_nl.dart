@@ -175,6 +175,24 @@ class AppLocalizationsNl extends AppLocalizations {
   String get offlineModeOfferAction => 'Offline aanzetten';
 
   @override
+  String get serverUnreachableTitle => 'Geen verbinding met de server';
+
+  @override
+  String get serverUnreachableBody => 'De server is niet bereikbaar. Controleer internet en probeer het opnieuw, of schakel over naar de offlinemodus.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Offline gaan';
+
+  @override
+  String get serverUnreachableStillDown => 'Nog steeds geen verbinding.';
+
+  @override
+  String get serverReachableAgain => 'Verbinding met de server hersteld.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Beschikbaar in de onlinemodus';
+
+  @override
   String get gamesPlay => 'Spelen';
 
   @override

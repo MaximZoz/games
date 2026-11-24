@@ -175,6 +175,24 @@ class AppLocalizationsHe extends AppLocalizations {
   String get offlineModeOfferAction => 'הפעל אופליין';
 
   @override
+  String get serverUnreachableTitle => 'אין חיבור לשרת';
+
+  @override
+  String get serverUnreachableBody => 'לא ניתן ליצור קשר עם השרת. בדקו את האינטרנט ונסו שוב, או עברו למצב אופליין.';
+
+  @override
+  String get serverUnreachableGoOffline => 'מעבר לאופליין';
+
+  @override
+  String get serverUnreachableStillDown => 'עדיין אין חיבור.';
+
+  @override
+  String get serverReachableAgain => 'החיבור לשרת שוחזר.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'זמין במצב אונליין';
+
+  @override
   String get gamesPlay => 'שחק';
 
   @override

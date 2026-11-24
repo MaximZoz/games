@@ -175,6 +175,24 @@ class AppLocalizationsSv extends AppLocalizations {
   String get offlineModeOfferAction => 'Aktivera offline';
 
   @override
+  String get serverUnreachableTitle => 'Ingen anslutning till servern';
+
+  @override
+  String get serverUnreachableBody => 'Det går inte att nå servern. Kontrollera internet och försök igen, eller byt till offline-läge.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Gå offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Fortfarande ingen anslutning.';
+
+  @override
+  String get serverReachableAgain => 'Anslutningen till servern är återställd.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Tillgängligt i online-läge';
+
+  @override
   String get gamesPlay => 'Spela';
 
   @override

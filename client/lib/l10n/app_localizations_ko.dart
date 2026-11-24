@@ -175,6 +175,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlineModeOfferAction => '오프라인 켜기';
 
   @override
+  String get serverUnreachableTitle => '서버에 연결할 수 없음';
+
+  @override
+  String get serverUnreachableBody => '서버에 연결할 수 없습니다. 인터넷 연결을 확인한 후 다시 시도하거나 오프라인 모드로 전환하세요.';
+
+  @override
+  String get serverUnreachableGoOffline => '오프라인으로 전환';
+
+  @override
+  String get serverUnreachableStillDown => '아직 연결되지 않았습니다.';
+
+  @override
+  String get serverReachableAgain => '서버 연결이 복구되었습니다.';
+
+  @override
+  String get offlineOnlineOnlyHint => '온라인 모드에서 사용 가능';
+
+  @override
   String get gamesPlay => '플레이';
 
   @override

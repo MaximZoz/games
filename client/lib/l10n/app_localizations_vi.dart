@@ -175,6 +175,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlineModeOfferAction => 'Bật ngoại tuyến';
 
   @override
+  String get serverUnreachableTitle => 'Không có kết nối tới máy chủ';
+
+  @override
+  String get serverUnreachableBody => 'Không thể liên lạc với máy chủ. Hãy kiểm tra internet rồi thử lại, hoặc chuyển sang chế độ ngoại tuyến.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Chuyển sang ngoại tuyến';
+
+  @override
+  String get serverUnreachableStillDown => 'Vẫn chưa có kết nối.';
+
+  @override
+  String get serverReachableAgain => 'Đã khôi phục kết nối tới máy chủ.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Dùng được ở chế độ trực tuyến';
+
+  @override
   String get gamesPlay => 'Chơi';
 
   @override

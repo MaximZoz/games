@@ -175,6 +175,24 @@ class AppLocalizationsUk extends AppLocalizations {
   String get offlineModeOfferAction => 'Увімкнути офлайн';
 
   @override
+  String get serverUnreachableTitle => 'Немає зв’язку з сервером';
+
+  @override
+  String get serverUnreachableBody => 'Не вдається зв’язатися з сервером. Перевірте інтернет і повторіть спробу або перейдіть в офлайн режим.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Перейти в офлайн';
+
+  @override
+  String get serverUnreachableStillDown => 'Зв’язку все ще немає.';
+
+  @override
+  String get serverReachableAgain => 'Зв’язок із сервером відновлено.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Доступно в режимі онлайн';
+
+  @override
   String get gamesPlay => 'Грати';
 
   @override

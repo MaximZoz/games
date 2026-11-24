@@ -175,6 +175,24 @@ class AppLocalizationsUz extends AppLocalizations {
   String get offlineModeOfferAction => 'Oflaynni yoqish';
 
   @override
+  String get serverUnreachableTitle => 'Server bilan aloqa yo‘q';
+
+  @override
+  String get serverUnreachableBody => 'Server bilan bog‘lanib bo‘lmayapti. Internetni tekshirib, qayta urinib ko‘ring yoki oflayn rejimga o‘ting.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Oflaynga o‘tish';
+
+  @override
+  String get serverUnreachableStillDown => 'Aloqa hali ham yo‘q.';
+
+  @override
+  String get serverReachableAgain => 'Server bilan aloqa tiklandi.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Onlayn rejimda mavjud';
+
+  @override
   String get gamesPlay => 'O‘ynash';
 
   @override
