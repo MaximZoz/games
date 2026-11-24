@@ -133,6 +133,20 @@ func PresentedRefreshAccepted(
 	return now.Before(previousUntil)
 }
 
+// PreviousRefreshAfterRotation — какой refresh останется «предыдущим» после
+// выдачи нового. Это всегда токен, с которым пришёл клиент: он точно у него
+// есть. Пришёл с текущим — обычная ротация. Пришёл с предыдущим — ответ с
+// текущим до клиента не дошёл (таймаут, обрыв связи), и текущий никому не
+// известен. Сдвинуть его в «предыдущие» значило бы забыть токен клиента:
+// второй потерянный ответ подряд снимал сессию, и после возврата связи
+// пользователь попадал на экран входа.
+func PreviousRefreshAfterRotation(current, presented string) string {
+	if refreshHashEqual(presented, current) {
+		return current
+	}
+	return presented
+}
+
 // FindSessionIDByPresentedRefresh ищет сессию по текущему или ещё действующему
 // предыдущему refresh. sid в JWT обычно известен, это запасной путь.
 func FindSessionIDByPresentedRefresh(
@@ -205,12 +219,13 @@ func AcceptRefreshAndRotate(
 
 	tag, err := tx.Exec(ctx, `
 		UPDATE sessions
-		SET previous_refresh_token_hash = refresh_token_hash,
+		SET previous_refresh_token_hash = $5,
 		    previous_refresh_valid_until = $2,
 		    refresh_token_hash = $3,
 		    expires_at = $4
 		WHERE id = $1`,
 		id, previousValidUntil, nextHash, expiresAt,
+		PreviousRefreshAfterRotation(current, presentedHash),
 	)
 	if err != nil {
 		return nil, err
