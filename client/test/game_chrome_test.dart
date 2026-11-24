@@ -9,6 +9,7 @@ import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem;
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
+import 'package:multigames_client/ui/widgets/framed_icon_button.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_game_kit/multigames_game_kit.dart';
 
@@ -244,6 +245,64 @@ void main() {
     );
     expect(idle.active, isFalse);
     await _unmount(tester);
+  });
+
+  testWidgets('в карточке соперника чат и «в друзья» без своей рамки',
+      (tester) async {
+    var chats = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              GameOpponentCard(
+                displayName: 'player4',
+                avatarKind: 'letter',
+                avatarValue: null,
+                userId: 'u4',
+                messageUnread: 3,
+                theirTurn: true,
+                infoTooltip: 'info',
+                messageTooltip: 'chat',
+                showAddFriend: true,
+                addFriendTooltip: 'add',
+                onAddFriendTap: () {},
+                onInfoTap: () {},
+                onMessageTap: () => chats++,
+              ),
+              // Общий чат партии в столбике — по-прежнему в рамке.
+              GameIconWithBadge(
+                icon: Icons.forum_rounded,
+                tooltip: 'group',
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final card = find.byType(GameOpponentCard);
+    final chat = find.descendant(
+      of: card,
+      matching: find.byIcon(Icons.chat_bubble_outline_rounded),
+    );
+    expect(chat, findsOneWidget);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.byIcon(Icons.person_add_alt_1_rounded),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.byType(FramedIconButton)),
+      findsNothing,
+    );
+    expect(find.descendant(of: card, matching: find.text('3')), findsOneWidget);
+    expect(find.byType(FramedIconButton), findsOneWidget);
+
+    await tester.tap(chat);
+    expect(chats, 1);
   });
 
   test('после выхода active не должен указывать на сыгранную партию', () {

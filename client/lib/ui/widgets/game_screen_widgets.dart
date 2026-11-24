@@ -368,6 +368,7 @@ class GameIconWithBadge extends StatelessWidget {
     required this.onPressed,
     this.badge = 0,
     this.opponentTurn = false,
+    this.framed = true,
   });
 
   final IconData icon;
@@ -375,20 +376,39 @@ class GameIconWithBadge extends StatelessWidget {
   final VoidCallback? onPressed;
   final int badge;
 
-  /// Ход соперника: иконка внутри фиолетовой рамки становится акцентной.
+  /// Ход соперника: иконка становится акцентной.
   final bool opponentTurn;
+
+  /// false — без своей рамки: иконка стоит внутри карточки соперника, у
+  /// которой рамка уже есть.
+  final bool framed;
 
   @override
   Widget build(BuildContext context) {
     const size = 40.0;
-    final btn = FramedIconButton(
-      icon: icon,
-      tooltip: tooltip,
-      onPressed: onPressed,
-      size: size,
-      iconSize: 20,
-      iconColor: opponentTurn ? AppColors.accentEnd : AppColors.textPrimary,
-    );
+    final color = opponentTurn ? AppColors.accentEnd : AppColors.textPrimary;
+    final Widget btn = framed
+        ? FramedIconButton(
+            icon: icon,
+            tooltip: tooltip,
+            onPressed: onPressed,
+            size: size,
+            iconSize: 20,
+            iconColor: color,
+          )
+        : IconButton(
+            onPressed: onPressed,
+            icon: Icon(icon, size: 22),
+            tooltip: tooltip,
+            style: IconButton.styleFrom(
+              foregroundColor: color,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.all(8),
+              minimumSize: const Size(size, size),
+              fixedSize: const Size(size, size),
+            ),
+          );
+    final badgeInset = framed ? -2.0 : 2.0;
     if (badge <= 0) return SizedBox(width: size, height: size, child: btn);
     return SizedBox(
       width: size,
@@ -399,8 +419,8 @@ class GameIconWithBadge extends StatelessWidget {
         children: [
           btn,
           Positioned(
-            right: -2,
-            top: -2,
+            right: badgeInset,
+            top: badgeInset,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
@@ -464,7 +484,7 @@ class GameOpponentCard extends StatelessWidget {
   final bool isBot;
   final int messageUnread;
 
-  /// Ход этого соперника: иконка чата внутри рамки становится фиолетовой.
+  /// Ход этого соперника: иконка чата становится фиолетовой.
   final bool theirTurn;
   final VoidCallback onInfoTap;
   final VoidCallback? onMessageTap;
@@ -546,6 +566,7 @@ class GameOpponentCard extends StatelessWidget {
               tooltip: messageTooltip,
               onPressed: onMessageTap,
               opponentTurn: theirTurn,
+              framed: false,
             ),
           if (!isBot && showAddFriend)
             GameIconWithBadge(
@@ -553,6 +574,7 @@ class GameOpponentCard extends StatelessWidget {
               badge: addFriendBadge,
               tooltip: addFriendTooltip,
               onPressed: addFriendEnabled ? onAddFriendTap : null,
+              framed: false,
             ),
         ],
       ),
