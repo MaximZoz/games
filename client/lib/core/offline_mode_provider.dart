@@ -8,6 +8,7 @@ import 'package:multigames_client/core/connectivity_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/connectivity_web.dart'
     if (dart.library.js_interop) 'package:multigames_client/core/connectivity_web.dart';
 import 'package:multigames_client/core/offline_reachability.dart';
+import 'package:multigames_client/core/server_link.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyOfflinePreference = 'offline_mode_preference';
@@ -90,6 +91,18 @@ final offlineModeProvider =
     StateNotifierProvider<OfflineModeNotifier, OfflineModeState>((ref) {
   return OfflineModeNotifier();
 });
+
+/// Офлайн-флаг для [ServerLink] ещё до первого кадра. Провайдер читает
+/// настройку позже, и без этого первые запросы холодного старта уходили
+/// в сеть, хотя пользователь оставил приложение в офлайне.
+Future<void> primeOfflinePreference() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString(_keyOfflinePreference) == 'offline') {
+      ServerLink.instance.offline = true;
+    }
+  } catch (_) {}
+}
 
 /// Удобный флаг: сейчас офлайн.
 final isOfflineProvider = Provider<bool>((ref) {
@@ -205,6 +218,7 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
     if (deviceOnline) {
       _reachability.onDeviceOnline();
     }
+    ServerLink.instance.offline = preference == OfflinePreference.offline;
     state = state.copyWith(
       preference: preference,
       deviceOnline: _reachability.deviceOnline,
@@ -218,6 +232,8 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
       preference == OfflinePreference.offline ? 'offline' : 'online',
     );
     if (_disposed) return;
+    // До смены state: слушатели сразу идут в API и уже видят новый режим.
+    ServerLink.instance.offline = preference == OfflinePreference.offline;
     state = state.copyWith(preference: preference);
     if (preference == OfflinePreference.online) {
       unawaited(_probeReachable());
@@ -280,9 +296,43 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
   /// Принудительно перепроверить сеть (после всплывашки / возврата в приложение).
   Future<void> refreshConnectivity() => _probeReachable();
 
+  /// Сразу проверить сервер. Один провал уже считается потерей связи:
+  /// так запрос к API подтверждает сбой перед диалогом «нет связи».
+  ///
+  /// Результат берём из своего запроса, а не из [state]: фоновая проверка
+  /// может стартовать параллельно и оставить в state старое значение.
+  Future<bool> checkServerNow() async {
+    final gen = ++_probeGen;
+    _probeTimer?.cancel();
+    var ok = false;
+    var elapsed = Duration.zero;
+    if (readDeviceOnline()) {
+      try {
+        final started = DateTime.now();
+        final res = await http
+            .get(Uri.parse('$apiBaseUrl/api/start'))
+            .timeout(OfflineReachability.probeTimeout);
+        elapsed = DateTime.now().difference(started);
+        ok = res.statusCode >= 200 && res.statusCode < 500;
+      } catch (_) {
+        ok = false;
+      }
+    }
+    if (_disposed) return false;
+    if (ok) {
+      _reachability.onProbeSuccess(elapsed: elapsed);
+    } else {
+      _reachability.onProbeFailure(immediate: true);
+    }
+    _publishReachability();
+    if (gen == _probeGen) _scheduleNextProbe();
+    return ok;
+  }
+
   @override
   void dispose() {
     _disposed = true;
+    ServerLink.instance.offline = false;
     WidgetsBinding.instance.removeObserver(_resumeObserver);
     _deviceSub?.cancel();
     _probeTimer?.cancel();
