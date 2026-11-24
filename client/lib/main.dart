@@ -14,6 +14,7 @@ import 'core/ios_viewport_sync.dart';
 import 'core/android_notify_bridge.dart';
 import 'core/gamepad/gamepad_host.dart';
 import 'core/local_notify.dart';
+import 'core/offline_mode_provider.dart';
 import 'core/haptics.dart';
 import 'core/settings_provider.dart';
 import 'core/sfx.dart';
@@ -43,6 +44,7 @@ void main() {
     installIosViewportSync();
   }
   console_log.logToBrowser('main() started');
+  unawaited(primeOfflinePreference());
   if (localNotificationsSupported()) {
     unawaited(initLocalNotifications());
   }

@@ -81,7 +81,7 @@ void main() {
     expect(lines, contains(chessClockLine(chessModeBullet, t)));
     // Шапка шаблона есть и офлайн: без ставки, без лимита на ход.
     expect(lines.first, t.rulesStakeNone);
-    expect(lines[3], t.rulesNoTimeLimit);
+    expect(lines, isNot(contains(t.rulesNoTimeLimit)));
     expect(chessClockBudgetMs(chessModeClassic), (60 * 60 * 1000, 0));
     expect(chessClockBudgetMs(chessModeRapid), (10 * 60 * 1000, 0));
     expect(chessClockBudgetMs(chessModeBlitz), (5 * 60 * 1000, 0));
@@ -115,7 +115,7 @@ void main() {
       expect(lines, contains(chessClockLine(mode, t)));
       expect(lines, contains(chessPlayLine(mode, t)));
       expect(lines, contains(chessDrawLine(mode, t)));
-      expect(lines, contains(t.rulesTurnTime('1 мин')));
+      expect(lines, isNot(contains(t.rulesTurnTime('1 мин'))));
       expect(lines.join('\n'), contains(chessClockNotation(mode)));
       for (final other in chessAllModes.where((m) => m != mode)) {
         expect(lines, isNot(contains(chessClockLine(other, t))),
@@ -160,12 +160,14 @@ void main() {
     expect(find.text('Правила игры'), findsOneWidget);
     expect(find.textContaining('Режим: Блиц.'), findsOneWidget);
     expect(find.textContaining('5+0'), findsOneWidget);
-    expect(find.textContaining('20 с'), findsOneWidget);
+    expect(find.textContaining('20 с'), findsNothing);
     expect(find.textContaining('Шахматы-960:'), findsNothing);
     expect(find.textContaining('Антишахматы:'), findsNothing);
   });
 
-  testWidgets('диалог пули показывает 3+2 и без лимита хода', (tester) async {
+  testWidgets('диалог пули показывает 3+2 и без строки лимита хода', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ru'),
@@ -199,7 +201,7 @@ void main() {
     expect(find.textContaining('Режим: Пуля.'), findsOneWidget);
     expect(find.textContaining('3+2'), findsOneWidget);
     expect(find.textContaining('Без ограничения по времени на ход.'),
-        findsOneWidget);
+        findsNothing);
   });
 
   testWidgets('карточка шахмат показывает плашку «В разработке»',

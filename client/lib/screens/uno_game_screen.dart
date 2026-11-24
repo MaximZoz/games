@@ -1794,8 +1794,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                     ? context.l10n.gameYouWonOpponentTimeout
                     : context.l10n.unoYouWon)
                 : (game.iLostOnTimeout
-                    ? context.l10n.unoYouLostTimeout
-                    : context.l10n.unoYouLost))
+                    ? context.l10n.lossReasonTimeout
+                    : game.isForfeit
+                        ? context.l10n.lossReasonSurrender
+                        : context.l10n.lossReasonOpponentOut))
         : _statusHint(game);
     // Статус по центру, столбик действий справа: отступ с обеих сторон.
     return Padding(
@@ -2254,11 +2256,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 isFindingGame: _isFindingGame,
                 peerIds: _peerIds(game),
                 invites: ref.watch(gameInvitesProvider),
-                onRematch: () => unawaited(_rematch()),
-                onAccept: (lobbyId) => unawaited(_acceptRematch(lobbyId)),
-                onDecline: (lobbyId) => unawaited(_declineRematch(lobbyId)),
-                onCancelWait: () => unawaited(_cancelRematchWait()),
-                onFindGame: () => unawaited(_findGame()),
+                onRematch: _rematch,
+                onAccept: _acceptRematch,
+                onDecline: _declineRematch,
+                onCancelWait: _cancelRematchWait,
+                onFindGame: _findGame,
                 table: RematchTable(
                   gameType: 'uno',
                   stakeBronze: game.stakeBronze,

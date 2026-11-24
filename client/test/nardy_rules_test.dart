@@ -40,7 +40,7 @@ void main() {
       l10n: t,
     );
     expect(long, contains(t.rulesNardyPlayLong));
-    expect(long, contains(t.rulesNoTimeLimit));
+    expect(long, isNot(contains(t.rulesNoTimeLimit)));
   });
 
   testWidgets('диалог правил нард использует общий заголовок', (tester) async {

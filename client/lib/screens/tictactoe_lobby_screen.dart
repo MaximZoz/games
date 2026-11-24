@@ -280,7 +280,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                         lobby.mode == 'matchmake';
                   }(),
                   busy: _startingSearch,
-                  onStart: () => unawaited(_startSearch()),
+                  onStart: _startSearch,
                 ),
               if (() {
                 final lobby = lobbyAsync.valueOrNull;

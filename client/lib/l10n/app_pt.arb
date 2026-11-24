@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Aposta: {stake}. O jogo vale tantas moedas.",
+  "rulesStake": "Aposta: {stake}.",
+  "lossReasonTimeout": "Tempo esgotado",
+  "lossReasonSurrender": "Você desistiu",
+  "lossReasonCheckmate": "Xeque-mate",
+  "lossReasonNoMoves": "Sem jogadas",
+  "lossReasonGiveaway": "Peças restantes",
+  "lossReasonCorners": "Cantos vazios",
+  "lossReasonOpponentOut": "O adversário saiu",
+  "lossReasonFool": "Você é o tolo",
+  "lossReasonShips": "Navios afundados",
+  "lossReasonLine": "Três em linha",
+  "lossReasonNardy": "O adversário tirou as peças",
+  "lossReasonChips": "Fichas acabaram",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Configurações",
   "offlineModeOfferBody": "Sem internet ou a ligação está muito lenta. Pode ativar o modo offline e jogar contra um bot.",
   "offlineModeOfferAction": "Ativar offline",
+  "serverUnreachableTitle": "Sem ligação ao servidor",
+  "serverUnreachableBody": "Não é possível contactar o servidor. Verifique a internet e tente de novo, ou mude para o modo offline.",
+  "serverUnreachableGoOffline": "Mudar para offline",
+  "serverUnreachableStillDown": "Ainda sem ligação.",
+  "serverReachableAgain": "Ligação ao servidor restabelecida.",
+  "offlineOnlineOnlyHint": "Disponível no modo online",
   "offlineModePopupTitle": "Modo offline",
   "offlinePlayAgain": "De novo",
   "rulesAlternateStarts": "Quem joga primeiro alterna de partida para partida.",

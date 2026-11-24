@@ -175,6 +175,24 @@ class AppLocalizationsUz extends AppLocalizations {
   String get offlineModeOfferAction => 'Oflaynni yoqish';
 
   @override
+  String get serverUnreachableTitle => 'Server bilan aloqa yo‘q';
+
+  @override
+  String get serverUnreachableBody => 'Server bilan bog‘lanib bo‘lmayapti. Internetni tekshirib, qayta urinib ko‘ring yoki oflayn rejimga o‘ting.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Oflaynga o‘tish';
+
+  @override
+  String get serverUnreachableStillDown => 'Aloqa hali ham yo‘q.';
+
+  @override
+  String get serverReachableAgain => 'Server bilan aloqa tiklandi.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Onlayn rejimda mavjud';
+
+  @override
   String get gamesPlay => 'O‘ynash';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Stavka: $stake. O‘yin shu qancha tangaga.';
+    return 'Stavka: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Vaqt tugadi';
+
+  @override
+  String get lossReasonSurrender => 'Siz taslim bo‘ldingiz';
+
+  @override
+  String get lossReasonCheckmate => 'Mot';
+
+  @override
+  String get lossReasonNoMoves => 'Yurish yo‘q';
+
+  @override
+  String get lossReasonGiveaway => 'Shashkalarni bermadingiz';
+
+  @override
+  String get lossReasonCorners => 'Burchaklar bo‘sh';
+
+  @override
+  String get lossReasonOpponentOut => 'Raqib chiqdi';
+
+  @override
+  String get lossReasonFool => 'Siz ahmoqsiz';
+
+  @override
+  String get lossReasonShips => 'Kemalar cho‘kdi';
+
+  @override
+  String get lossReasonLine => 'Uchta qator';
+
+  @override
+  String get lossReasonNardy => 'Raqib toshlarni chiqardi';
+
+  @override
+  String get lossReasonChips => 'Fishkalar tugadi';
 
   @override
   String get rulesSwap => 'Tomonlar almashuvi: X ning birinchi yurishidan so‘ng O X bilan joy almashishi mumkin.';

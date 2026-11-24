@@ -51,6 +51,7 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+import 'package:multigames_client/widgets/server_unreachable_gate.dart';
 
 bool _activeGameUsable(ActiveGameItem? active) {
   if (active == null) return false;
@@ -249,6 +250,10 @@ class AppShell extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
     final isOffline = ref.watch(isOfflineProvider);
+    // Выход идёт через сервер: без связи кнопку не показываем, а сессия
+    // остаётся на устройстве до возврата в онлайн.
+    final canLogout = !isOffline &&
+        ref.watch(offlineModeProvider.select((s) => s.hasNetwork));
     // Бейджи заданий/достижений — сразу после выполнения, без захода в раздел.
     ref.watch(rewardBadgesRealtimeSyncProvider);
     // Очередь покупок: при выходе в онлайн — flush + тосты результата.
@@ -281,10 +286,12 @@ class AppShell extends ConsumerWidget {
         ref.read(pendingPurchaseFlushNoticeProvider.notifier).state = null;
       },
     );
+    // Тост — только про медленную сеть. Полную потерю связи ведёт
+    // ServerUnreachableGate: диалог «Повторить / Перейти в офлайн».
     ref.listen<OfflineModeState>(offlineModeProvider, (prev, next) {
       if (next.isOffline) return;
-      if (!next.shouldOfferOffline) return;
-      if (prev != null && prev.shouldOfferOffline) return;
+      if (!next.shouldOfferOffline || !next.hasNetwork) return;
+      if (prev != null && prev.shouldOfferOffline && prev.hasNetwork) return;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!context.mounted) return;
         final ok = await ref
@@ -1004,7 +1011,7 @@ class AppShell extends ConsumerWidget {
                             return Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (user.isAdmin)
+                                if (user.isAdmin && !isOffline)
                                   _AdminIconWithBadge(
                                     onTap: () => context.go('/admin'),
                                     tooltip: context.l10n.adminTitle,
@@ -1073,7 +1080,9 @@ class AppShell extends ConsumerWidget {
                                       );
                                     },
                                   ),
+                                if (canLogout)
                                 ListenableBuilder(
+                                  key: const ValueKey('shell-logout'),
                                   listenable: GamepadService.instance.devices,
                                   builder: (context, _) {
                                     final button = SizedBox(
@@ -1350,7 +1359,7 @@ class AppShell extends ConsumerWidget {
                 padding: EdgeInsets.only(
                   bottom: shellOwnsKeyboardInset ? shellKeyboardInset : 0,
                 ),
-                child: shellBody,
+                child: ServerUnreachableGate(child: shellBody),
               ),
             ),
             bottomNavigationBar: bottomNav,

@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Ставка: {stake}. Ойын осы монеталарға жүреді.",
+  "rulesStake": "Ставка: {stake}.",
+  "lossReasonTimeout": "Уақыт бітті",
+  "lossReasonSurrender": "Сіз берілдіңіз",
+  "lossReasonCheckmate": "Мат",
+  "lossReasonNoMoves": "Жүріс жоқ",
+  "lossReasonGiveaway": "Шашкалар қалды",
+  "lossReasonCorners": "Бұрыштар бос",
+  "lossReasonOpponentOut": "Қарсылас шықты",
+  "lossReasonFool": "Сіз дураксыз",
+  "lossReasonShips": "Кемелер батырылды",
+  "lossReasonLine": "Үш қатар",
+  "lossReasonNardy": "Қарсылас фишкаларын шығарды",
+  "lossReasonChips": "Фишкалар бітті",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Баптаулар",
   "offlineModeOfferBody": "Интернет жоқ немесе байланыс өте баяу. Офлайн режимді қосып, ботпен ойнауға болады.",
   "offlineModeOfferAction": "Офлайнды қосу",
+  "serverUnreachableTitle": "Сервермен байланыс жоқ",
+  "serverUnreachableBody": "Сервермен байланысу мүмкін болмай тұр. Интернетті тексеріп, қайталап көріңіз немесе офлайн режимге өтіңіз.",
+  "serverUnreachableGoOffline": "Офлайнға өту",
+  "serverUnreachableStillDown": "Байланыс әлі жоқ.",
+  "serverReachableAgain": "Сервермен байланыс қалпына келді.",
+  "offlineOnlineOnlyHint": "Онлайн режимде қолжетімді",
   "offlineModePopupTitle": "Офлайн режим",
   "offlinePlayAgain": "Тағы",
   "rulesAlternateStarts": "Кім бірінші жүретіні партиядан партияға ауысады.",

@@ -156,11 +156,9 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
   /// Время хода вышло (моё или соперника) — забрать с сервера автоход.
   void _onTurnExpired() {
     if (_isOffline) return;
-    final deadline = ref
-            .read(dominoGameProvider(widget.gameId))
-            .valueOrNull
-            ?.turnDeadline ??
-        0;
+    final deadline =
+        ref.read(dominoGameProvider(widget.gameId)).valueOrNull?.turnDeadline ??
+            0;
     if (deadline == _expiredDeadline) return;
     _expiredDeadline = deadline;
     unawaited(ref.read(dominoGameProvider(widget.gameId).notifier).reconcile());
@@ -220,7 +218,8 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
   int _netProfit(DominoGameView game) {
     if (!game.iWon || game.stakeBronze <= 0) return 0;
     final winners = math.max(1, game.winnerUserIds.length);
-    return (game.stakeBronze * game.players.length) ~/ winners - game.stakeBronze;
+    return (game.stakeBronze * game.players.length) ~/ winners -
+        game.stakeBronze;
   }
 
   String _playerName(DominoPlayerView player) {
@@ -234,14 +233,16 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
     final l10n = context.l10n;
     if (game.isOver) {
       if (game.isDraw) return l10n.gameDraw;
-      if (game.isPenalty && game.iAmGoat) return l10n.dominoYouGoat;
       if (game.iWon) return l10n.gameYouWonShort;
+      if (game.iForfeited) return l10n.lossReasonSurrender;
+      if (game.isTimeout) return l10n.lossReasonTimeout;
+      if (game.isPenalty && game.iAmGoat) return l10n.dominoYouGoat;
       if (game.isPenalty &&
           game.goatSeat >= 0 &&
           game.goatSeat < game.players.length) {
         return l10n.dominoGoatNamed(_playerName(game.players[game.goatSeat]));
       }
-      return l10n.gameYouLost;
+      return l10n.lossReasonOpponentOut;
     }
     if (game.isRoundEnd && game.roundKind == dominoRoundFish) {
       return l10n.dominoFish;
@@ -354,7 +355,8 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
           await ref.read(dominoRepositoryProvider).leaveLobby(own);
         } catch (_) {}
       }
-      final result = await ref.read(dominoRepositoryProvider).joinLobby(lobbyId);
+      final result =
+          await ref.read(dominoRepositoryProvider).joinLobby(lobbyId);
       if (!mounted) return;
       clearBlockingGamePin(ref);
       final gameId = result.gameId?.trim() ?? '';
@@ -538,7 +540,8 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
     return Stack(
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(isNarrow(context) ? 8 : 16, 0, isNarrow(context) ? 8 : 16, 8),
+          padding: EdgeInsets.fromLTRB(
+              isNarrow(context) ? 8 : 16, 0, isNarrow(context) ? 8 : 16, 8),
           child: Column(
             children: [
               Expanded(
@@ -588,11 +591,11 @@ class _DominoGameScreenState extends ConsumerState<DominoGameScreen> {
           isFindingGame: _isFindingGame,
           peerIds: _peerIds(game),
           invites: ref.watch(gameInvitesProvider),
-          onRematch: () => unawaited(_rematch()),
-          onAccept: (lobbyId) => unawaited(_acceptRematch(lobbyId)),
-          onDecline: (lobbyId) => unawaited(_declineRematch(lobbyId)),
-          onCancelWait: () => unawaited(_cancelRematchWait()),
-          onFindGame: () => unawaited(_findGame()),
+          onRematch: _rematch,
+          onAccept: _acceptRematch,
+          onDecline: _declineRematch,
+          onCancelWait: _cancelRematchWait,
+          onFindGame: _findGame,
           compact: true,
           table: RematchTable(
             gameType: 'domino',

@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Ставка: {stake}. На стільки монет іде гра.",
+  "rulesStake": "Ставка: {stake}.",
+  "lossReasonTimeout": "Час вийшов",
+  "lossReasonSurrender": "Ви здалися",
+  "lossReasonCheckmate": "Мат",
+  "lossReasonNoMoves": "Немає ходів",
+  "lossReasonGiveaway": "Не віддали шашки",
+  "lossReasonCorners": "Не зайняли кути",
+  "lossReasonOpponentOut": "Суперник вийшов",
+  "lossReasonFool": "Ви дурень",
+  "lossReasonShips": "Кораблі потоплені",
+  "lossReasonLine": "Три в ряд",
+  "lossReasonNardy": "Суперник вивів фішки",
+  "lossReasonChips": "Фішки скінчилися",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Налаштування",
   "offlineModeOfferBody": "Немає інтернету або зв’язок дуже слабкий. Можна увімкнути офлайн режим і грати з ботом.",
   "offlineModeOfferAction": "Увімкнути офлайн",
+  "serverUnreachableTitle": "Немає зв’язку з сервером",
+  "serverUnreachableBody": "Не вдається зв’язатися з сервером. Перевірте інтернет і повторіть спробу або перейдіть в офлайн режим.",
+  "serverUnreachableGoOffline": "Перейти в офлайн",
+  "serverUnreachableStillDown": "Зв’язку все ще немає.",
+  "serverReachableAgain": "Зв’язок із сервером відновлено.",
+  "offlineOnlineOnlyHint": "Доступно в режимі онлайн",
   "offlineModePopupTitle": "Офлайн режим",
   "offlinePlayAgain": "Ще раз",
   "rulesAlternateStarts": "Хто ходить першим чергується від партії до партії.",

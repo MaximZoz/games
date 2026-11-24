@@ -175,6 +175,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get offlineModeOfferAction => 'Çevrimdışına geç';
 
   @override
+  String get serverUnreachableTitle => 'Sunucuyla bağlantı yok';
+
+  @override
+  String get serverUnreachableBody => 'Sunucuya ulaşılamıyor. İnterneti kontrol edip yeniden deneyin veya çevrimdışı moda geçin.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Çevrimdışına geç';
+
+  @override
+  String get serverUnreachableStillDown => 'Bağlantı hâlâ yok.';
+
+  @override
+  String get serverReachableAgain => 'Sunucu bağlantısı yeniden kuruldu.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Çevrimiçi modda kullanılabilir';
+
+  @override
   String get gamesPlay => 'Oyna';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Bahis: $stake. Oyun bu kadar jeton içindir.';
+    return 'Bahis: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Süre doldu';
+
+  @override
+  String get lossReasonSurrender => 'Teslim oldunuz';
+
+  @override
+  String get lossReasonCheckmate => 'Mat';
+
+  @override
+  String get lossReasonNoMoves => 'Hamle yok';
+
+  @override
+  String get lossReasonGiveaway => 'Taşlar kaldı';
+
+  @override
+  String get lossReasonCorners => 'Köşeler boş';
+
+  @override
+  String get lossReasonOpponentOut => 'Rakip çıktı';
+
+  @override
+  String get lossReasonFool => 'Siz aptalsınız';
+
+  @override
+  String get lossReasonShips => 'Gemiler battı';
+
+  @override
+  String get lossReasonLine => 'Üçlü sıra';
+
+  @override
+  String get lossReasonNardy => 'Rakip pullarını çıkardı';
+
+  @override
+  String get lossReasonChips => 'Fişler bitti';
 
   @override
   String get rulesSwap => 'Taraf değişimi: X’in ilk hamlesinden sonra O, X ile yer değiştirebilir.';

@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "掛け金：{stake}。このコイン数で対戦します。",
+  "rulesStake": "掛け金：{stake}。",
+  "lossReasonTimeout": "時間切れ",
+  "lossReasonSurrender": "投了",
+  "lossReasonCheckmate": "チェックメイト",
+  "lossReasonNoMoves": "手がない",
+  "lossReasonGiveaway": "駒が残った",
+  "lossReasonCorners": "コーナー未完",
+  "lossReasonOpponentOut": "相手が上がった",
+  "lossReasonFool": "あなたが負け",
+  "lossReasonShips": "艦が沈んだ",
+  "lossReasonLine": "三目並べ",
+  "lossReasonNardy": "相手がすべて出した",
+  "lossReasonChips": "チップ切れ",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "設定",
   "offlineModeOfferBody": "インターネットがないか、回線が非常に遅いです。オフラインモードをオンにしてボットと対戦できます。",
   "offlineModeOfferAction": "オフラインにする",
+  "serverUnreachableTitle": "サーバーに接続できません",
+  "serverUnreachableBody": "サーバーに接続できません。インターネット接続を確認して再試行するか、オフラインモードに切り替えてください。",
+  "serverUnreachableGoOffline": "オフラインに切り替える",
+  "serverUnreachableStillDown": "まだ接続できません。",
+  "serverReachableAgain": "サーバーとの接続が回復しました。",
+  "offlineOnlineOnlyHint": "オンラインモードで利用できます",
   "offlineModePopupTitle": "オフラインモード",
   "offlinePlayAgain": "もう一度",
   "rulesAlternateStarts": "先手は対局ごとに交代します。",

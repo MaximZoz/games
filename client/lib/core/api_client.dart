@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/server_link.dart';
 
 class ApiClient {
   static const Duration requestTimeout = Duration(seconds: 12);
@@ -70,6 +71,10 @@ class ApiClient {
     required Map<String, String>? headers,
     String? operation,
   }) async {
+    // Офлайн режим: не ждём сеть и таймаут, экран сразу берёт кэш.
+    if (ServerLink.instance.blocks(uri)) {
+      throw OfflineModeException(uri);
+    }
     final startedAt = DateTime.now().toUtc();
     final stopwatch = Stopwatch()..start();
     http.Response? response;
@@ -80,6 +85,7 @@ class ApiClient {
       return response;
     } catch (e) {
       error = e;
+      if (isServerUnreachableError(e)) ServerLink.instance.reportFailure();
       rethrow;
     } finally {
       stopwatch.stop();

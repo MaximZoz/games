@@ -284,7 +284,7 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
               LobbySearchAction(
                 searching: isMatchmake,
                 busy: _startingSearch,
-                onStart: () => unawaited(_startSearch()),
+                onStart: _startSearch,
               ),
             if (lobby != null)
               IconButton(
@@ -357,7 +357,7 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
           players: lobby.players,
         ),
         joining: _joining,
-        onJoin: () => unawaited(_join()),
+        onJoin: _join,
         stakeBronze: lobby.stakeBronze,
         padding: EdgeInsets.all(isNarrow(context) ? 16 : 24),
         rules: rulesTextLines(checkersRuleLines(
@@ -402,8 +402,8 @@ class _CheckersLobbyScreenState extends ConsumerState<CheckersLobbyScreen> {
         declinedIds: _declined,
         listStorageKey: 'checkers-lobby-friends',
         expand: expand,
-        onInvite: (id) => unawaited(_invite(id)),
-        onCancel: (id) => unawaited(_cancelInvite(id)),
+        onInvite: _invite,
+        onCancel: _cancelInvite,
         profileReturnPath: '/games/checkers/lobby/${widget.lobbyId}?mode=invite',
       ),
     );

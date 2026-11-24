@@ -175,6 +175,24 @@ class AppLocalizationsNl extends AppLocalizations {
   String get offlineModeOfferAction => 'Offline aanzetten';
 
   @override
+  String get serverUnreachableTitle => 'Geen verbinding met de server';
+
+  @override
+  String get serverUnreachableBody => 'De server is niet bereikbaar. Controleer internet en probeer het opnieuw, of schakel over naar de offlinemodus.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Offline gaan';
+
+  @override
+  String get serverUnreachableStillDown => 'Nog steeds geen verbinding.';
+
+  @override
+  String get serverReachableAgain => 'Verbinding met de server hersteld.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Beschikbaar in de onlinemodus';
+
+  @override
   String get gamesPlay => 'Spelen';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Inzet: $stake. Het spel gaat om zoveel munten.';
+    return 'Inzet: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Tijd om';
+
+  @override
+  String get lossReasonSurrender => 'Je hebt opgegeven';
+
+  @override
+  String get lossReasonCheckmate => 'Schaakmat';
+
+  @override
+  String get lossReasonNoMoves => 'Geen zetten';
+
+  @override
+  String get lossReasonGiveaway => 'Stenen over';
+
+  @override
+  String get lossReasonCorners => 'Hoeken leeg';
+
+  @override
+  String get lossReasonOpponentOut => 'Tegenstander is uit';
+
+  @override
+  String get lossReasonFool => 'Jij bent de dwaas';
+
+  @override
+  String get lossReasonShips => 'Schepen gezonken';
+
+  @override
+  String get lossReasonLine => 'Drie op een rij';
+
+  @override
+  String get lossReasonNardy => 'Tegenstander is uitgespeeld';
+
+  @override
+  String get lossReasonChips => 'Geen fiches meer';
 
   @override
   String get rulesSwap => 'Kant wisselen: O mag met X wisselen na de eerste zet van X.';

@@ -175,6 +175,24 @@ class AppLocalizationsEl extends AppLocalizations {
   String get offlineModeOfferAction => 'Ενεργοποίηση εκτός σύνδεσης';
 
   @override
+  String get serverUnreachableTitle => 'Δεν υπάρχει σύνδεση με τον διακομιστή';
+
+  @override
+  String get serverUnreachableBody => 'Δεν είναι δυνατή η επικοινωνία με τον διακομιστή. Ελέγξτε το διαδίκτυο και δοκιμάστε ξανά ή μεταβείτε στη λειτουργία εκτός σύνδεσης.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Μετάβαση εκτός σύνδεσης';
+
+  @override
+  String get serverUnreachableStillDown => 'Ακόμα δεν υπάρχει σύνδεση.';
+
+  @override
+  String get serverReachableAgain => 'Η σύνδεση με τον διακομιστή αποκαταστάθηκε.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Διαθέσιμο σε λειτουργία σύνδεσης';
+
+  @override
   String get gamesPlay => 'Παίξτε';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Ποντάρισμα: $stake. Τόσα νομίσματα παίζονται.';
+    return 'Ποντάρισμα: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Τέλος χρόνου';
+
+  @override
+  String get lossReasonSurrender => 'Παραιτηθήκατε';
+
+  @override
+  String get lossReasonCheckmate => 'Ματ';
+
+  @override
+  String get lossReasonNoMoves => 'Δεν υπάρχουν κινήσεις';
+
+  @override
+  String get lossReasonGiveaway => 'Έμειναν πούλια';
+
+  @override
+  String get lossReasonCorners => 'Άδειες γωνίες';
+
+  @override
+  String get lossReasonOpponentOut => 'Ο αντίπαλος τελείωσε';
+
+  @override
+  String get lossReasonFool => 'Είστε ο χαζός';
+
+  @override
+  String get lossReasonShips => 'Τα πλοία βυθίστηκαν';
+
+  @override
+  String get lossReasonLine => 'Τρία στη σειρά';
+
+  @override
+  String get lossReasonNardy => 'Ο αντίπαλος έβγαλε τα πούλια';
+
+  @override
+  String get lossReasonChips => 'Τελείωσαν οι μάρκες';
 
   @override
   String get rulesSwap => 'Αλλαγή πλευρών: ο O μπορεί να αλλάξει με τον X μετά την πρώτη κίνηση του X.';

@@ -473,6 +473,42 @@ abstract class AppLocalizations {
   /// **'Включить офлайн'**
   String get offlineModeOfferAction;
 
+  /// No description provided for @serverUnreachableTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет связи с сервером'**
+  String get serverUnreachableTitle;
+
+  /// No description provided for @serverUnreachableBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получается связаться с сервером. Проверьте интернет и повторите попытку или перейдите в офлайн режим.'**
+  String get serverUnreachableBody;
+
+  /// No description provided for @serverUnreachableGoOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перейти в офлайн'**
+  String get serverUnreachableGoOffline;
+
+  /// No description provided for @serverUnreachableStillDown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Связи всё ещё нет.'**
+  String get serverUnreachableStillDown;
+
+  /// No description provided for @serverReachableAgain.
+  ///
+  /// In ru, this message translates to:
+  /// **'Связь с сервером восстановлена.'**
+  String get serverReachableAgain;
+
+  /// No description provided for @offlineOnlineOnlyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступно в режиме онлайн'**
+  String get offlineOnlineOnlyHint;
+
   /// No description provided for @gamesPlay.
   ///
   /// In ru, this message translates to:
@@ -5018,8 +5054,80 @@ abstract class AppLocalizations {
   /// No description provided for @rulesStake.
   ///
   /// In ru, this message translates to:
-  /// **'Ставка: {stake}. На столько монет идёт игра.'**
+  /// **'Ставка: {stake}.'**
   String rulesStake(String stake);
+
+  /// No description provided for @lossReasonTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время вышло'**
+  String get lossReasonTimeout;
+
+  /// No description provided for @lossReasonSurrender.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы сдались'**
+  String get lossReasonSurrender;
+
+  /// No description provided for @lossReasonCheckmate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мат'**
+  String get lossReasonCheckmate;
+
+  /// No description provided for @lossReasonNoMoves.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет ходов'**
+  String get lossReasonNoMoves;
+
+  /// No description provided for @lossReasonGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не отдали шашки'**
+  String get lossReasonGiveaway;
+
+  /// No description provided for @lossReasonCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не заняли углы'**
+  String get lossReasonCorners;
+
+  /// No description provided for @lossReasonOpponentOut.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник вышел'**
+  String get lossReasonOpponentOut;
+
+  /// No description provided for @lossReasonFool.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы дурак'**
+  String get lossReasonFool;
+
+  /// No description provided for @lossReasonShips.
+  ///
+  /// In ru, this message translates to:
+  /// **'Корабли потоплены'**
+  String get lossReasonShips;
+
+  /// No description provided for @lossReasonLine.
+  ///
+  /// In ru, this message translates to:
+  /// **'Три в ряд'**
+  String get lossReasonLine;
+
+  /// No description provided for @lossReasonNardy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник вывел фишки'**
+  String get lossReasonNardy;
+
+  /// No description provided for @lossReasonChips.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фишки кончились'**
+  String get lossReasonChips;
 
   /// No description provided for @rulesSwap.
   ///

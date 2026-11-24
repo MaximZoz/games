@@ -175,6 +175,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlineModeOfferAction => 'Bật ngoại tuyến';
 
   @override
+  String get serverUnreachableTitle => 'Không có kết nối tới máy chủ';
+
+  @override
+  String get serverUnreachableBody => 'Không thể liên lạc với máy chủ. Hãy kiểm tra internet rồi thử lại, hoặc chuyển sang chế độ ngoại tuyến.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Chuyển sang ngoại tuyến';
+
+  @override
+  String get serverUnreachableStillDown => 'Vẫn chưa có kết nối.';
+
+  @override
+  String get serverReachableAgain => 'Đã khôi phục kết nối tới máy chủ.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Dùng được ở chế độ trực tuyến';
+
+  @override
   String get gamesPlay => 'Chơi';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Cược: $stake. Ván chơi với số xu này.';
+    return 'Cược: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Hết giờ';
+
+  @override
+  String get lossReasonSurrender => 'Bạn đầu hàng';
+
+  @override
+  String get lossReasonCheckmate => 'Chiếu hết';
+
+  @override
+  String get lossReasonNoMoves => 'Hết nước đi';
+
+  @override
+  String get lossReasonGiveaway => 'Còn quân';
+
+  @override
+  String get lossReasonCorners => 'Chưa chiếm góc';
+
+  @override
+  String get lossReasonOpponentOut => 'Đối thủ hết bài';
+
+  @override
+  String get lossReasonFool => 'Bạn là quân thua';
+
+  @override
+  String get lossReasonShips => 'Tàu bị đánh chìm';
+
+  @override
+  String get lossReasonLine => 'Ba ô một hàng';
+
+  @override
+  String get lossReasonNardy => 'Đối thủ đưa hết quân';
+
+  @override
+  String get lossReasonChips => 'Hết chip';
 
   @override
   String get rulesSwap => 'Đổi bên: O có thể đổi chỗ với X sau nước đầu của X.';

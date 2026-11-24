@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Stavka: {stake}. O‘yin shu qancha tangaga.",
+  "rulesStake": "Stavka: {stake}.",
+  "lossReasonTimeout": "Vaqt tugadi",
+  "lossReasonSurrender": "Siz taslim bo‘ldingiz",
+  "lossReasonCheckmate": "Mot",
+  "lossReasonNoMoves": "Yurish yo‘q",
+  "lossReasonGiveaway": "Shashkalarni bermadingiz",
+  "lossReasonCorners": "Burchaklar bo‘sh",
+  "lossReasonOpponentOut": "Raqib chiqdi",
+  "lossReasonFool": "Siz ahmoqsiz",
+  "lossReasonShips": "Kemalar cho‘kdi",
+  "lossReasonLine": "Uchta qator",
+  "lossReasonNardy": "Raqib toshlarni chiqardi",
+  "lossReasonChips": "Fishkalar tugadi",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Sozlamalar",
   "offlineModeOfferBody": "Internet yo‘q yoki aloqa juda sekin. Oflayn rejimni yoqib, bot bilan o‘ynashingiz mumkin.",
   "offlineModeOfferAction": "Oflaynni yoqish",
+  "serverUnreachableTitle": "Server bilan aloqa yo‘q",
+  "serverUnreachableBody": "Server bilan bog‘lanib bo‘lmayapti. Internetni tekshirib, qayta urinib ko‘ring yoki oflayn rejimga o‘ting.",
+  "serverUnreachableGoOffline": "Oflaynga o‘tish",
+  "serverUnreachableStillDown": "Aloqa hali ham yo‘q.",
+  "serverReachableAgain": "Server bilan aloqa tiklandi.",
+  "offlineOnlineOnlyHint": "Onlayn rejimda mavjud",
   "offlineModePopupTitle": "Oflayn rejim",
   "offlinePlayAgain": "Yana",
   "rulesAlternateStarts": "Kim birinchi yurishi partiyadan partiyaga almashadi.",

@@ -175,6 +175,24 @@ class AppLocalizationsHe extends AppLocalizations {
   String get offlineModeOfferAction => 'הפעל אופליין';
 
   @override
+  String get serverUnreachableTitle => 'אין חיבור לשרת';
+
+  @override
+  String get serverUnreachableBody => 'לא ניתן ליצור קשר עם השרת. בדקו את האינטרנט ונסו שוב, או עברו למצב אופליין.';
+
+  @override
+  String get serverUnreachableGoOffline => 'מעבר לאופליין';
+
+  @override
+  String get serverUnreachableStillDown => 'עדיין אין חיבור.';
+
+  @override
+  String get serverReachableAgain => 'החיבור לשרת שוחזר.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'זמין במצב אונליין';
+
+  @override
   String get gamesPlay => 'שחק';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'הימור: $stake. המשחק על מספר מטבעות זה.';
+    return 'הימור: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'נגמר הזמן';
+
+  @override
+  String get lossReasonSurrender => 'נכנעת';
+
+  @override
+  String get lossReasonCheckmate => 'מט';
+
+  @override
+  String get lossReasonNoMoves => 'אין מהלכים';
+
+  @override
+  String get lossReasonGiveaway => 'נשארו כלים';
+
+  @override
+  String get lossReasonCorners => 'פינות ריקות';
+
+  @override
+  String get lossReasonOpponentOut => 'היריב יצא';
+
+  @override
+  String get lossReasonFool => 'אתה הפראייר';
+
+  @override
+  String get lossReasonShips => 'הספינות טבעו';
+
+  @override
+  String get lossReasonLine => 'שלוש בשורה';
+
+  @override
+  String get lossReasonNardy => 'היריב הוציא את הכלים';
+
+  @override
+  String get lossReasonChips => 'נגמרו האסימונים';
 
   @override
   String get rulesSwap => 'החלפת צדדים: O יכול להחליף עם X אחרי המהלך הראשון של X.';

@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "판돈: {stake}. 이만큼의 코인으로 진행됩니다.",
+  "rulesStake": "판돈: {stake}.",
+  "lossReasonTimeout": "시간 초과",
+  "lossReasonSurrender": "기권",
+  "lossReasonCheckmate": "체크메이트",
+  "lossReasonNoMoves": "둘 수 없음",
+  "lossReasonGiveaway": "말을 남김",
+  "lossReasonCorners": "코너 미점령",
+  "lossReasonOpponentOut": "상대가 나감",
+  "lossReasonFool": "당신이 바보",
+  "lossReasonShips": "함선 침몰",
+  "lossReasonLine": "삼목",
+  "lossReasonNardy": "상대가 말을 모두 뺌",
+  "lossReasonChips": "칩 소진",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "설정",
   "offlineModeOfferBody": "인터넷이 없거나 연결이 매우 느립니다. 오프라인 모드를 켜고 봇과 플레이할 수 있습니다.",
   "offlineModeOfferAction": "오프라인 켜기",
+  "serverUnreachableTitle": "서버에 연결할 수 없음",
+  "serverUnreachableBody": "서버에 연결할 수 없습니다. 인터넷 연결을 확인한 후 다시 시도하거나 오프라인 모드로 전환하세요.",
+  "serverUnreachableGoOffline": "오프라인으로 전환",
+  "serverUnreachableStillDown": "아직 연결되지 않았습니다.",
+  "serverReachableAgain": "서버 연결이 복구되었습니다.",
+  "offlineOnlineOnlyHint": "온라인 모드에서 사용 가능",
   "offlineModePopupTitle": "오프라인 모드",
   "offlinePlayAgain": "다시",
   "rulesAlternateStarts": "선공은 대국마다 번갈아 바뀝니다.",

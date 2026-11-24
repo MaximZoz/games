@@ -175,6 +175,24 @@ class AppLocalizationsTh extends AppLocalizations {
   String get offlineModeOfferAction => 'เปิดออฟไลน์';
 
   @override
+  String get serverUnreachableTitle => 'ไม่มีการเชื่อมต่อกับเซิร์ฟเวอร์';
+
+  @override
+  String get serverUnreachableBody => 'ติดต่อเซิร์ฟเวอร์ไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง หรือเปลี่ยนเป็นโหมดออฟไลน์';
+
+  @override
+  String get serverUnreachableGoOffline => 'เปลี่ยนเป็นออฟไลน์';
+
+  @override
+  String get serverUnreachableStillDown => 'ยังเชื่อมต่อไม่ได้';
+
+  @override
+  String get serverReachableAgain => 'เชื่อมต่อกับเซิร์ฟเวอร์ได้อีกครั้งแล้ว';
+
+  @override
+  String get offlineOnlineOnlyHint => 'ใช้ได้ในโหมดออนไลน์';
+
+  @override
   String get gamesPlay => 'เล่น';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'เดิมพัน: $stake เกมนี้เล่นด้วยเหรียญจำนวนนี้';
+    return 'เดิมพัน: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'หมดเวลา';
+
+  @override
+  String get lossReasonSurrender => 'คุณยอมแพ้';
+
+  @override
+  String get lossReasonCheckmate => 'รุกจน';
+
+  @override
+  String get lossReasonNoMoves => 'ไม่มีตาเดิน';
+
+  @override
+  String get lossReasonGiveaway => 'หมากเหลือ';
+
+  @override
+  String get lossReasonCorners => 'มุมยังว่าง';
+
+  @override
+  String get lossReasonOpponentOut => 'คู่แข่งออกหมด';
+
+  @override
+  String get lossReasonFool => 'คุณเป็นคนแพ้';
+
+  @override
+  String get lossReasonShips => 'เรือจม';
+
+  @override
+  String get lossReasonLine => 'สามช่องติดกัน';
+
+  @override
+  String get lossReasonNardy => 'คู่แข่งเอาหมากออกหมด';
+
+  @override
+  String get lossReasonChips => 'ชิปหมด';
 
   @override
   String get rulesSwap => 'สลับฝ่าย: O สลับกับ X ได้หลังตาแรกของ X';

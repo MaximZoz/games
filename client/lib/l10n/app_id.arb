@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Taruhan: {stake}. Game ini seharga koin sebanyak itu.",
+  "rulesStake": "Taruhan: {stake}.",
+  "lossReasonTimeout": "Waktu habis",
+  "lossReasonSurrender": "Kamu menyerah",
+  "lossReasonCheckmate": "Skakmat",
+  "lossReasonNoMoves": "Tidak ada langkah",
+  "lossReasonGiveaway": "Bidak tersisa",
+  "lossReasonCorners": "Sudut kosong",
+  "lossReasonOpponentOut": "Lawan habis",
+  "lossReasonFool": "Kamu yang kalah",
+  "lossReasonShips": "Kapal tenggelam",
+  "lossReasonLine": "Tiga berjajar",
+  "lossReasonNardy": "Lawan mengeluarkan bidak",
+  "lossReasonChips": "Chip habis",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Pengaturan",
   "offlineModeOfferBody": "Tidak ada internet atau koneksi sangat lambat. Anda bisa mengaktifkan mode offline dan bermain lawan bot.",
   "offlineModeOfferAction": "Aktifkan offline",
+  "serverUnreachableTitle": "Tidak ada koneksi ke server",
+  "serverUnreachableBody": "Server tidak dapat dihubungi. Periksa internet lalu coba lagi, atau beralih ke mode offline.",
+  "serverUnreachableGoOffline": "Beralih ke offline",
+  "serverUnreachableStillDown": "Koneksi masih belum ada.",
+  "serverReachableAgain": "Koneksi ke server pulih.",
+  "offlineOnlineOnlyHint": "Tersedia dalam mode online",
   "offlineModePopupTitle": "Mode offline",
   "offlinePlayAgain": "Main lagi",
   "rulesAlternateStarts": "Siapa yang jalan duluan bergantian tiap partai.",

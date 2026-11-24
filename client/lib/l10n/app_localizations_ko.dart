@@ -175,6 +175,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlineModeOfferAction => '오프라인 켜기';
 
   @override
+  String get serverUnreachableTitle => '서버에 연결할 수 없음';
+
+  @override
+  String get serverUnreachableBody => '서버에 연결할 수 없습니다. 인터넷 연결을 확인한 후 다시 시도하거나 오프라인 모드로 전환하세요.';
+
+  @override
+  String get serverUnreachableGoOffline => '오프라인으로 전환';
+
+  @override
+  String get serverUnreachableStillDown => '아직 연결되지 않았습니다.';
+
+  @override
+  String get serverReachableAgain => '서버 연결이 복구되었습니다.';
+
+  @override
+  String get offlineOnlineOnlyHint => '온라인 모드에서 사용 가능';
+
+  @override
   String get gamesPlay => '플레이';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return '판돈: $stake. 이만큼의 코인으로 진행됩니다.';
+    return '판돈: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => '시간 초과';
+
+  @override
+  String get lossReasonSurrender => '기권';
+
+  @override
+  String get lossReasonCheckmate => '체크메이트';
+
+  @override
+  String get lossReasonNoMoves => '둘 수 없음';
+
+  @override
+  String get lossReasonGiveaway => '말을 남김';
+
+  @override
+  String get lossReasonCorners => '코너 미점령';
+
+  @override
+  String get lossReasonOpponentOut => '상대가 나감';
+
+  @override
+  String get lossReasonFool => '당신이 바보';
+
+  @override
+  String get lossReasonShips => '함선 침몰';
+
+  @override
+  String get lossReasonLine => '삼목';
+
+  @override
+  String get lossReasonNardy => '상대가 말을 모두 뺌';
+
+  @override
+  String get lossReasonChips => '칩 소진';
 
   @override
   String get rulesSwap => '진영 교체: X의 첫 수 이후 O가 X와 자리를 바꿀 수 있습니다.';

@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Ποντάρισμα: {stake}. Τόσα νομίσματα παίζονται.",
+  "rulesStake": "Ποντάρισμα: {stake}.",
+  "lossReasonTimeout": "Τέλος χρόνου",
+  "lossReasonSurrender": "Παραιτηθήκατε",
+  "lossReasonCheckmate": "Ματ",
+  "lossReasonNoMoves": "Δεν υπάρχουν κινήσεις",
+  "lossReasonGiveaway": "Έμειναν πούλια",
+  "lossReasonCorners": "Άδειες γωνίες",
+  "lossReasonOpponentOut": "Ο αντίπαλος τελείωσε",
+  "lossReasonFool": "Είστε ο χαζός",
+  "lossReasonShips": "Τα πλοία βυθίστηκαν",
+  "lossReasonLine": "Τρία στη σειρά",
+  "lossReasonNardy": "Ο αντίπαλος έβγαλε τα πούλια",
+  "lossReasonChips": "Τελείωσαν οι μάρκες",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Ρυθμίσεις",
   "offlineModeOfferBody": "Δεν υπάρχει διαδίκτυο ή η σύνδεση είναι πολύ αργή. Μπορείτε να ενεργοποιήσετε τη λειτουργία εκτός σύνδεσης και να παίξετε με bot.",
   "offlineModeOfferAction": "Ενεργοποίηση εκτός σύνδεσης",
+  "serverUnreachableTitle": "Δεν υπάρχει σύνδεση με τον διακομιστή",
+  "serverUnreachableBody": "Δεν είναι δυνατή η επικοινωνία με τον διακομιστή. Ελέγξτε το διαδίκτυο και δοκιμάστε ξανά ή μεταβείτε στη λειτουργία εκτός σύνδεσης.",
+  "serverUnreachableGoOffline": "Μετάβαση εκτός σύνδεσης",
+  "serverUnreachableStillDown": "Ακόμα δεν υπάρχει σύνδεση.",
+  "serverReachableAgain": "Η σύνδεση με τον διακομιστή αποκαταστάθηκε.",
+  "offlineOnlineOnlyHint": "Διαθέσιμο σε λειτουργία σύνδεσης",
   "offlineModePopupTitle": "Λειτουργία εκτός σύνδεσης",
   "offlinePlayAgain": "Ξανά",
   "rulesAlternateStarts": "Ποιος παίζει πρώτος εναλλάσσεται από παρτίδα σε παρτίδα.",

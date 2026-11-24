@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "الرهان: {stake}. اللعبة بهذا العدد من العملات.",
+  "rulesStake": "الرهان: {stake}.",
+  "lossReasonTimeout": "انتهى الوقت",
+  "lossReasonSurrender": "استسلمت",
+  "lossReasonCheckmate": "كش ملك",
+  "lossReasonNoMoves": "لا حركات",
+  "lossReasonGiveaway": "بقيت أحجار",
+  "lossReasonCorners": "الزوايا فارغة",
+  "lossReasonOpponentOut": "خرج الخصم",
+  "lossReasonFool": "أنت الأحمق",
+  "lossReasonShips": "غرقت السفن",
+  "lossReasonLine": "ثلاثة في صف",
+  "lossReasonNardy": "أخرج الخصم أحجاره",
+  "lossReasonChips": "نفدت الرقائق",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "الإعدادات",
   "offlineModeOfferBody": "لا يوجد إنترنت أو الاتصال ضعيف جداً. يمكنك تفعيل وضع عدم الاتصال واللعب ضد بوت.",
   "offlineModeOfferAction": "تفعيل عدم الاتصال",
+  "serverUnreachableTitle": "لا يوجد اتصال بالخادم",
+  "serverUnreachableBody": "تعذّر الوصول إلى الخادم. تحقّق من الإنترنت وأعد المحاولة أو انتقل إلى وضع عدم الاتصال.",
+  "serverUnreachableGoOffline": "الانتقال إلى وضع عدم الاتصال",
+  "serverUnreachableStillDown": "ما زال الاتصال مفقودًا.",
+  "serverReachableAgain": "تمت استعادة الاتصال بالخادم.",
+  "offlineOnlineOnlyHint": "متاح في وضع الاتصال",
   "offlineModePopupTitle": "وضع عدم الاتصال",
   "offlinePlayAgain": "مرة أخرى",
   "rulesAlternateStarts": "من يبدأ بالتناوب من جولة إلى أخرى.",

@@ -9,6 +9,7 @@ import 'package:multigames_client/auth/session_storage_stub.dart'
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/server_link.dart';
 import 'package:multigames_client/core/shared_prefs_guard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,7 +21,7 @@ const _keyUser = 'user';
 bool authRefreshIsDeadSession(int statusCode) =>
     statusCode == 401 || statusCode == 403;
 
-enum _RefreshOnceResult { success, frozen, dead, retry }
+enum _RefreshOnceResult { success, frozen, dead, retry, unreachable }
 
 class AuthUser {
   final String id;
@@ -671,6 +672,11 @@ class AuthRepository {
       }
     }
 
+    // Офлайн режим: сеть не трогаем, сохранённая сессия остаётся как есть.
+    if (ServerLink.instance.offline) {
+      return (token == null || token.isEmpty) ? null : token;
+    }
+
     if (token == null || token.isEmpty) {
       return _refreshAccessToken();
     }
@@ -874,6 +880,12 @@ class AuthRepository {
   ) async {
     var token = await getAccessToken();
     if (token == null || token.isEmpty) {
+      // Refresh ещё на месте — значит, сессия жива, а токен не обновился
+      // из-за сети. 401 здесь разлогинил бы пользователя без интернета.
+      final refresh = await _getRefreshToken();
+      if (refresh != null && refresh.isNotEmpty) {
+        throw AuthException(503, LocaleService.l10n.commonTryLater);
+      }
       throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
 
@@ -1142,6 +1154,7 @@ class AuthRepository {
   }
 
   Future<String?> _refreshAccessTokenImpl() async {
+    if (ServerLink.instance.offline) return null;
     var refreshToken = (await _getRefreshToken()) ?? '';
     if (refreshToken.isEmpty) {
       return null;
@@ -1161,6 +1174,8 @@ class AuthRepository {
         onSessionInvalidated?.call();
         return null;
       }
+      // Сервер не ответил вовсе: повторы только держат экран в ожидании.
+      if (outcome == _RefreshOnceResult.unreachable) break;
       if (outcome == _RefreshOnceResult.dead) {
         sawDead = true;
       }
@@ -1190,8 +1205,10 @@ class AuthRepository {
         body: jsonEncode({'refresh_token': refreshToken}),
         operation: 'AuthRepository.refresh',
       );
-    } catch (_) {
-      return _RefreshOnceResult.retry;
+    } catch (e) {
+      return isServerUnreachableError(e) || e is OfflineModeException
+          ? _RefreshOnceResult.unreachable
+          : _RefreshOnceResult.retry;
     }
     if (response.statusCode == 403) return _RefreshOnceResult.frozen;
     if (response.statusCode == 401) return _RefreshOnceResult.dead;

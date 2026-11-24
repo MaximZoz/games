@@ -8,6 +8,7 @@ library;
 export 'layout/responsive.dart';
 export 'theme/app_theme.dart';
 export 'widgets/animated_border_box.dart';
+export 'widgets/api_action_surface.dart';
 export 'widgets/app_button.dart';
 export 'widgets/framed_icon_button.dart';
 export 'widgets/gradient_background.dart';

@@ -17,6 +17,7 @@ import 'package:multigames_client/screens/coins_screen.dart';
 import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/core/native_app_link.dart';
@@ -189,6 +190,15 @@ List<GoRoute> _gameRoutesFromRegistry() {
   return routes;
 }
 
+/// Id офлайн-партии: все локальные сессии начинаются с `offline:`.
+bool _isOfflineSessionId(String id) {
+  var raw = id;
+  try {
+    raw = Uri.decodeComponent(id);
+  } catch (_) {}
+  return raw.startsWith('offline:');
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateProvider.notifier);
   final refreshListenable = _AuthRefreshListenable(authNotifier.stream);
@@ -222,22 +232,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       var user = authState.valueOrNull;
       if (needsAuth) {
         final repo = ref.read(authRepositoryProvider);
-        final token = await repo.getAccessToken();
-        if (token == null || token.isEmpty) {
-          final persisted = await repo.peekStoredUser();
-          if (persisted != null) {
-            user = persisted;
-          } else {
-            if (authState.valueOrNull != null) {
-              await ref.read(authStateProvider.notifier).logout();
-            }
-            final afterLogin = (_preserveStartupPath(path) || path == '/games')
-                ? locationFromUri(state.uri)
-                : '/games';
-            return appendRedirectQuery('/login', afterLogin);
+        // Пускает на экран локальная сессия. Сеть здесь не ждём: обновление
+        // токена без связи с сервером держало переход между вкладками.
+        // Токен обновляют сами запросы экрана, мёртвую сессию снимает
+        // refresh с ответом 401.
+        user ??= await repo.peekStoredUser();
+        if (user == null) {
+          final token = await repo.getAccessToken();
+          if (token != null && token.isNotEmpty) {
+            user = await repo.peekStoredUser();
           }
-        } else {
-          user ??= await repo.peekStoredUser();
         }
       }
 
@@ -260,12 +264,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path.startsWith('/chats/')) {
           return '/games';
         }
-        if (path.startsWith('/games/tictactoe/lobby/')) {
+        // Лобби и сетевые партии без сервера не живут. Офлайн-партии
+        // идут по `/games/<игра>/offline` либо с id вида `offline:...`.
+        if (isRegisteredLobbyPath(path)) return '/games';
+        final pathGameId = gameIdFromGamePath(path);
+        if (pathGameId != null && !_isOfflineSessionId(pathGameId)) {
           return '/games';
         }
         if (path == '/shop/stakes' || path.endsWith('/shop/stakes')) {
           return '/shop';
         }
+        // Статистика и админка целиком на API.
+        if (path == '/stats') return '/';
+        if (isAdminRoute) return '/games';
       }
 
       // Ссылка приглашения не принимает игру: вкладка «Лобби» и карточка.

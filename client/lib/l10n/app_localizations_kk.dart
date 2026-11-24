@@ -175,6 +175,24 @@ class AppLocalizationsKk extends AppLocalizations {
   String get offlineModeOfferAction => 'Офлайнды қосу';
 
   @override
+  String get serverUnreachableTitle => 'Сервермен байланыс жоқ';
+
+  @override
+  String get serverUnreachableBody => 'Сервермен байланысу мүмкін болмай тұр. Интернетті тексеріп, қайталап көріңіз немесе офлайн режимге өтіңіз.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Офлайнға өту';
+
+  @override
+  String get serverUnreachableStillDown => 'Байланыс әлі жоқ.';
+
+  @override
+  String get serverReachableAgain => 'Сервермен байланыс қалпына келді.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Онлайн режимде қолжетімді';
+
+  @override
   String get gamesPlay => 'Ойнау';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Ставка: $stake. Ойын осы монеталарға жүреді.';
+    return 'Ставка: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Уақыт бітті';
+
+  @override
+  String get lossReasonSurrender => 'Сіз берілдіңіз';
+
+  @override
+  String get lossReasonCheckmate => 'Мат';
+
+  @override
+  String get lossReasonNoMoves => 'Жүріс жоқ';
+
+  @override
+  String get lossReasonGiveaway => 'Шашкалар қалды';
+
+  @override
+  String get lossReasonCorners => 'Бұрыштар бос';
+
+  @override
+  String get lossReasonOpponentOut => 'Қарсылас шықты';
+
+  @override
+  String get lossReasonFool => 'Сіз дураксыз';
+
+  @override
+  String get lossReasonShips => 'Кемелер батырылды';
+
+  @override
+  String get lossReasonLine => 'Үш қатар';
+
+  @override
+  String get lossReasonNardy => 'Қарсылас фишкаларын шығарды';
+
+  @override
+  String get lossReasonChips => 'Фишкалар бітті';
 
   @override
   String get rulesSwap => 'Жақтарды ауыстыру: X-тің бірінші жүрісінен кейін O X-пен орын алмасуы мүмкін.';

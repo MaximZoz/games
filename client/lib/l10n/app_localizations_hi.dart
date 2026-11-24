@@ -175,6 +175,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get offlineModeOfferAction => 'ऑफ़लाइन चालू करें';
 
   @override
+  String get serverUnreachableTitle => 'सर्वर से कनेक्शन नहीं है';
+
+  @override
+  String get serverUnreachableBody => 'सर्वर से संपर्क नहीं हो पा रहा है। इंटरनेट जाँचें और फिर से कोशिश करें या ऑफ़लाइन मोड पर जाएँ।';
+
+  @override
+  String get serverUnreachableGoOffline => 'ऑफ़लाइन पर जाएँ';
+
+  @override
+  String get serverUnreachableStillDown => 'अभी भी कनेक्शन नहीं है।';
+
+  @override
+  String get serverReachableAgain => 'सर्वर से कनेक्शन बहाल हो गया।';
+
+  @override
+  String get offlineOnlineOnlyHint => 'ऑनलाइन मोड में उपलब्ध';
+
+  @override
   String get gamesPlay => 'खेलें';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'दाँव: $stake. इतने सिक्कों पर खेल है।';
+    return 'दाँव: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'समय समाप्त';
+
+  @override
+  String get lossReasonSurrender => 'आपने हार मान ली';
+
+  @override
+  String get lossReasonCheckmate => 'शह और मात';
+
+  @override
+  String get lossReasonNoMoves => 'कोई चाल नहीं';
+
+  @override
+  String get lossReasonGiveaway => 'मोहरे बचे';
+
+  @override
+  String get lossReasonCorners => 'कोने खाली';
+
+  @override
+  String get lossReasonOpponentOut => 'प्रतिद्वंद्वी निकल गया';
+
+  @override
+  String get lossReasonFool => 'आप मूर्ख हैं';
+
+  @override
+  String get lossReasonShips => 'जहाज डूब गए';
+
+  @override
+  String get lossReasonLine => 'तीन एक पंक्ति में';
+
+  @override
+  String get lossReasonNardy => 'प्रतिद्वंद्वी ने गोटी निकाल दीं';
+
+  @override
+  String get lossReasonChips => 'चिप्स खत्म';
 
   @override
   String get rulesSwap => 'पक्ष बदल: X की पहली चाल के बाद O, X से स्थान बदल सकता है।';

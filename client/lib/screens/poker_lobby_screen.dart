@@ -274,7 +274,7 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
               LobbySearchAction(
                 searching: isMatchmake,
                 busy: _startingSearch,
-                onStart: () => unawaited(_startSearch()),
+                onStart: _startSearch,
               ),
             if (lobby != null)
               IconButton(
@@ -333,7 +333,7 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
           players: lobby.players,
         ),
         joining: _joining,
-        onJoin: () => unawaited(_join()),
+        onJoin: _join,
         stakeBronze: lobby.maxPlayers > 2 ? 0 : lobby.stakeBronze,
         top: lobby.maxPlayers > 2 ? _buildMultiPlayersCard(lobby) : null,
         rules: rulesTextLines(pokerRuleLines(
@@ -375,8 +375,8 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
         declinedIds: _declined,
         listStorageKey: 'poker-lobby-friends',
         expand: expand,
-        onInvite: (id) => unawaited(_invite(id)),
-        onCancel: (id) => unawaited(_cancelInvite(id)),
+        onInvite: _invite,
+        onCancel: _cancelInvite,
         profileReturnPath: '/games/poker/lobby/${widget.lobbyId}?mode=invite',
       ),
     );

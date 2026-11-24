@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "เดิมพัน: {stake} เกมนี้เล่นด้วยเหรียญจำนวนนี้",
+  "rulesStake": "เดิมพัน: {stake}.",
+  "lossReasonTimeout": "หมดเวลา",
+  "lossReasonSurrender": "คุณยอมแพ้",
+  "lossReasonCheckmate": "รุกจน",
+  "lossReasonNoMoves": "ไม่มีตาเดิน",
+  "lossReasonGiveaway": "หมากเหลือ",
+  "lossReasonCorners": "มุมยังว่าง",
+  "lossReasonOpponentOut": "คู่แข่งออกหมด",
+  "lossReasonFool": "คุณเป็นคนแพ้",
+  "lossReasonShips": "เรือจม",
+  "lossReasonLine": "สามช่องติดกัน",
+  "lossReasonNardy": "คู่แข่งเอาหมากออกหมด",
+  "lossReasonChips": "ชิปหมด",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "การตั้งค่า",
   "offlineModeOfferBody": "ไม่มีอินเทอร์เน็ตหรือการเชื่อมต่อช้ามาก คุณสามารถเปิดโหมดออฟไลน์แล้วเล่นกับบอทได้",
   "offlineModeOfferAction": "เปิดออฟไลน์",
+  "serverUnreachableTitle": "ไม่มีการเชื่อมต่อกับเซิร์ฟเวอร์",
+  "serverUnreachableBody": "ติดต่อเซิร์ฟเวอร์ไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง หรือเปลี่ยนเป็นโหมดออฟไลน์",
+  "serverUnreachableGoOffline": "เปลี่ยนเป็นออฟไลน์",
+  "serverUnreachableStillDown": "ยังเชื่อมต่อไม่ได้",
+  "serverReachableAgain": "เชื่อมต่อกับเซิร์ฟเวอร์ได้อีกครั้งแล้ว",
+  "offlineOnlineOnlyHint": "ใช้ได้ในโหมดออนไลน์",
   "offlineModePopupTitle": "โหมดออฟไลน์",
   "offlinePlayAgain": "อีกครั้ง",
   "rulesAlternateStarts": "ผู้เริ่มก่อนจะสลับกันในแต่ละเกม",

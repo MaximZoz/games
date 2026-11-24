@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_ui/widgets/api_action_surface.dart';
 
 /// Текстовая кнопка: заливка цветом фона приложения, лавандовая рамка, чёрный текст.
 class FramedButton extends StatelessWidget {
@@ -34,7 +35,20 @@ class FramedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = onPressed != null && !loading;
+    final button = ApiActionSurface(
+      onPressed: onPressed,
+      loading: loading,
+      builder: (context, showLoading, onTap) =>
+          _body(showLoading: showLoading, onTap: onTap),
+    );
+    final hinted = gamepadAction == null
+        ? button
+        : GamepadHinted(action: gamepadAction!, child: button);
+    return expanded ? SizedBox(width: double.infinity, child: hinted) : hinted;
+  }
+
+  Widget _body({required bool showLoading, required VoidCallback? onTap}) {
+    final enabled = onTap != null;
     final radius = BorderRadius.circular(AppRadius.button);
     final fg = danger ? Colors.red.shade800 : AppColors.textPrimary;
     final border = danger ? Colors.red.shade400 : AppColors.buttonBorder;
@@ -45,7 +59,7 @@ class FramedButton extends StatelessWidget {
             padding ?? const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
         child: Center(
           widthFactor: expanded ? null : 1,
-          child: loading
+          child: showLoading
               ? SizedBox(
                   width: 20,
                   height: 20,
@@ -93,16 +107,14 @@ class FramedButton extends StatelessWidget {
           side: BorderSide(color: border),
         ),
         child: InkWell(
-          onTap: enabled ? onPressed : null,
+          onTap: onTap,
+          splashColor: apiActionSplash,
+          highlightColor: apiActionSplash,
           borderRadius: radius,
           child: child,
         ),
       ),
     );
-
-    final hinted = gamepadAction == null
-        ? button
-        : GamepadHinted(action: gamepadAction!, child: button);
-    return expanded ? SizedBox(width: double.infinity, child: hinted) : hinted;
+    return button;
   }
 }

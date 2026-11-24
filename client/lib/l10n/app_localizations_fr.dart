@@ -175,6 +175,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offlineModeOfferAction => 'Activer hors ligne';
 
   @override
+  String get serverUnreachableTitle => 'Pas de connexion au serveur';
+
+  @override
+  String get serverUnreachableBody => 'Impossible de joindre le serveur. Vérifiez Internet et réessayez, ou passez en mode hors ligne.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Passer hors ligne';
+
+  @override
+  String get serverUnreachableStillDown => 'Toujours pas de connexion.';
+
+  @override
+  String get serverReachableAgain => 'Connexion au serveur rétablie.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Disponible en mode en ligne';
+
+  @override
   String get gamesPlay => 'Jouer';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Mise : $stake. La partie se joue pour autant de pièces.';
+    return 'Mise : $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Temps écoulé';
+
+  @override
+  String get lossReasonSurrender => 'Vous avez abandonné';
+
+  @override
+  String get lossReasonCheckmate => 'Échec et mat';
+
+  @override
+  String get lossReasonNoMoves => 'Aucun coup';
+
+  @override
+  String get lossReasonGiveaway => 'Pions restants';
+
+  @override
+  String get lossReasonCorners => 'Coins manqués';
+
+  @override
+  String get lossReasonOpponentOut => 'L’adversaire est sorti';
+
+  @override
+  String get lossReasonFool => 'Vous êtes le durak';
+
+  @override
+  String get lossReasonShips => 'Navires coulés';
+
+  @override
+  String get lossReasonLine => 'Trois d’affilée';
+
+  @override
+  String get lossReasonNardy => 'L’adversaire a sorti ses pions';
+
+  @override
+  String get lossReasonChips => 'Plus de jetons';
 
   @override
   String get rulesSwap => 'Échange de côtés : O peut échanger avec X après le premier coup de X.';

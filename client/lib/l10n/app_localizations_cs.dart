@@ -175,6 +175,24 @@ class AppLocalizationsCs extends AppLocalizations {
   String get offlineModeOfferAction => 'Zapnout offline';
 
   @override
+  String get serverUnreachableTitle => 'Žádné spojení se serverem';
+
+  @override
+  String get serverUnreachableBody => 'Se serverem se nedaří spojit. Zkontrolujte internet a zkuste to znovu, nebo přejděte do režimu offline.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Přejít do offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Spojení stále není.';
+
+  @override
+  String get serverReachableAgain => 'Spojení se serverem je obnoveno.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Dostupné v režimu online';
+
+  @override
   String get gamesPlay => 'Hrát';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Sázka: $stake. O tolik mincí se hraje.';
+    return 'Sázka: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Čas vypršel';
+
+  @override
+  String get lossReasonSurrender => 'Vzdali jste se';
+
+  @override
+  String get lossReasonCheckmate => 'Mat';
+
+  @override
+  String get lossReasonNoMoves => 'Žádné tahy';
+
+  @override
+  String get lossReasonGiveaway => 'Zůstaly kameny';
+
+  @override
+  String get lossReasonCorners => 'Rohy prázdné';
+
+  @override
+  String get lossReasonOpponentOut => 'Soupeř dohrál';
+
+  @override
+  String get lossReasonFool => 'Jste hlupák';
+
+  @override
+  String get lossReasonShips => 'Lodě potopeny';
+
+  @override
+  String get lossReasonLine => 'Tři v řadě';
+
+  @override
+  String get lossReasonNardy => 'Soupeř vyvedl kameny';
+
+  @override
+  String get lossReasonChips => 'Došly žetony';
 
   @override
   String get rulesSwap => 'Výměna stran: O se může prohodit s X po prvním tahu X.';

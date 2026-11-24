@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Apuesta: {stake}. La partida es por tantas monedas.",
+  "rulesStake": "Apuesta: {stake}.",
+  "lossReasonTimeout": "Se acabó el tiempo",
+  "lossReasonSurrender": "Te rendiste",
+  "lossReasonCheckmate": "Jaque mate",
+  "lossReasonNoMoves": "Sin movimientos",
+  "lossReasonGiveaway": "Quedan fichas",
+  "lossReasonCorners": "Esquinas libres",
+  "lossReasonOpponentOut": "El rival se quedó sin cartas",
+  "lossReasonFool": "Eres el tonto",
+  "lossReasonShips": "Barcos hundidos",
+  "lossReasonLine": "Tres en raya",
+  "lossReasonNardy": "El rival sacó las fichas",
+  "lossReasonChips": "Sin fichas",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Ajustes",
   "offlineModeOfferBody": "No hay internet o la conexión es muy lenta. Puedes activar el modo sin conexión y jugar contra un bot.",
   "offlineModeOfferAction": "Activar sin conexión",
+  "serverUnreachableTitle": "Sin conexión con el servidor",
+  "serverUnreachableBody": "No se puede contactar con el servidor. Comprueba internet y vuelve a intentarlo, o pasa al modo sin conexión.",
+  "serverUnreachableGoOffline": "Pasar a sin conexión",
+  "serverUnreachableStillDown": "Sigue sin haber conexión.",
+  "serverReachableAgain": "Conexión con el servidor restablecida.",
+  "offlineOnlineOnlyHint": "Disponible en modo en línea",
   "offlineModePopupTitle": "Modo sin conexión",
   "offlinePlayAgain": "Otra vez",
   "rulesAlternateStarts": "Quién mueve primero alterna de partida a partida.",

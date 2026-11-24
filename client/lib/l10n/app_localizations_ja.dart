@@ -175,6 +175,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get offlineModeOfferAction => 'オフラインにする';
 
   @override
+  String get serverUnreachableTitle => 'サーバーに接続できません';
+
+  @override
+  String get serverUnreachableBody => 'サーバーに接続できません。インターネット接続を確認して再試行するか、オフラインモードに切り替えてください。';
+
+  @override
+  String get serverUnreachableGoOffline => 'オフラインに切り替える';
+
+  @override
+  String get serverUnreachableStillDown => 'まだ接続できません。';
+
+  @override
+  String get serverReachableAgain => 'サーバーとの接続が回復しました。';
+
+  @override
+  String get offlineOnlineOnlyHint => 'オンラインモードで利用できます';
+
+  @override
   String get gamesPlay => 'プレイ';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return '掛け金：$stake。このコイン数で対戦します。';
+    return '掛け金：$stake。';
   }
+
+  @override
+  String get lossReasonTimeout => '時間切れ';
+
+  @override
+  String get lossReasonSurrender => '投了';
+
+  @override
+  String get lossReasonCheckmate => 'チェックメイト';
+
+  @override
+  String get lossReasonNoMoves => '手がない';
+
+  @override
+  String get lossReasonGiveaway => '駒が残った';
+
+  @override
+  String get lossReasonCorners => 'コーナー未完';
+
+  @override
+  String get lossReasonOpponentOut => '相手が上がった';
+
+  @override
+  String get lossReasonFool => 'あなたが負け';
+
+  @override
+  String get lossReasonShips => '艦が沈んだ';
+
+  @override
+  String get lossReasonLine => '三目並べ';
+
+  @override
+  String get lossReasonNardy => '相手がすべて出した';
+
+  @override
+  String get lossReasonChips => 'チップ切れ';
 
   @override
   String get rulesSwap => 'サイド交代：X の初手の後、O は X と交代できます。';

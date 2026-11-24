@@ -88,17 +88,18 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   }
 
   Future<void> _create(String mode) async {
-    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
-      return;
-    }
-    if (!context.mounted) return;
-    if (!await _ensureStakeAffordable()) return;
-    if (!context.mounted) return;
+    if (_creating || _finding) return;
     setState(() {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
     try {
+      if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+        return;
+      }
+      if (!mounted) return;
+      if (!await _ensureStakeAffordable()) return;
+      if (!mounted) return;
       final repo = ref.read(durakRepositoryProvider);
       final result = await repo.createLobby(
         mode: mode,
@@ -435,17 +436,18 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
   }
 
   Future<void> _create(String mode) async {
-    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
-      return;
-    }
-    if (!context.mounted) return;
-    if (!await _ensureStakeAffordable()) return;
-    if (!context.mounted) return;
+    if (_creating || _finding) return;
     setState(() {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
     try {
+      if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+        return;
+      }
+      if (!mounted) return;
+      if (!await _ensureStakeAffordable()) return;
+      if (!mounted) return;
       final repo = ref.read(battleshipRepositoryProvider);
       final result = await repo.createLobby(
         mode: mode,
@@ -722,17 +724,18 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
   }
 
   Future<void> _create(String mode) async {
-    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
-      return;
-    }
-    if (!context.mounted) return;
-    if (!await _ensureStakeAffordable()) return;
-    if (!context.mounted) return;
+    if (_creating || _finding) return;
     setState(() {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
     try {
+      if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+        return;
+      }
+      if (!mounted) return;
+      if (!await _ensureStakeAffordable()) return;
+      if (!mounted) return;
       final repo = ref.read(pokerRepositoryProvider);
       final result = await repo.createLobby(
         mode: mode,
@@ -1041,15 +1044,16 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
   }
 
   Future<void> _create(String mode) async {
-    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
-      return;
-    }
-    if (!mounted || !await _ensureStakeAffordable() || !mounted) return;
+    if (_creating || _finding) return;
     setState(() {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
     try {
+      if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+        return;
+      }
+      if (!mounted || !await _ensureStakeAffordable() || !mounted) return;
       final result = await ref.read(unoRepositoryProvider).createLobby(
             mode: mode,
             maxPlayers: _players,
@@ -1472,9 +1476,8 @@ class _TabSegment extends StatelessWidget {
             Icon(
               icon,
               size: isDesktop ? 22 : 20,
-              color: isSelected
-                  ? AppColors.accentStart
-                  : AppColors.textSecondary,
+              color:
+                  isSelected ? AppColors.accentStart : AppColors.textSecondary,
             ),
             SizedBox(width: isDesktop ? 10 : 8),
             Stack(
@@ -2617,15 +2620,16 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
   }
 
   Future<void> _create(String mode) async {
-    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
-      return;
-    }
-    if (!mounted || !await _ensureStakeAffordable() || !mounted) return;
+    if (_creating || _finding) return;
     setState(() {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
     try {
+      if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+        return;
+      }
+      if (!mounted || !await _ensureStakeAffordable() || !mounted) return;
       final result = await ref.read(dominoRepositoryProvider).createLobby(
             mode: mode,
             maxPlayers: _players,

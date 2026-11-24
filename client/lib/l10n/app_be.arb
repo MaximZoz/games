@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Стаўка: {stake}. На столькі манет ідзе гульня.",
+  "rulesStake": "Стаўка: {stake}.",
+  "lossReasonTimeout": "Час выйшаў",
+  "lossReasonSurrender": "Вы здаліся",
+  "lossReasonCheckmate": "Мат",
+  "lossReasonNoMoves": "Няма хадоў",
+  "lossReasonGiveaway": "Не аддалі шашкі",
+  "lossReasonCorners": "Не занялі вуглы",
+  "lossReasonOpponentOut": "Супернік выйшаў",
+  "lossReasonFool": "Вы дурань",
+  "lossReasonShips": "Караблі патоплены",
+  "lossReasonLine": "Тры ў рад",
+  "lossReasonNardy": "Супернік вывеў фішкі",
+  "lossReasonChips": "Фішкі скончыліся",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Налады",
   "offlineModeOfferBody": "Няма інтэрнэту або сувязь вельмі слабая. Можна ўключыць афлайн рэжым і гуляць з ботам.",
   "offlineModeOfferAction": "Уключыць афлайн",
+  "serverUnreachableTitle": "Няма сувязі з серверам",
+  "serverUnreachableBody": "Не атрымліваецца звязацца з серверам. Праверце інтэрнэт і паўтарыце спробу або перайдзіце ў афлайн рэжым.",
+  "serverUnreachableGoOffline": "Перайсці ў афлайн",
+  "serverUnreachableStillDown": "Сувязі ўсё яшчэ няма.",
+  "serverReachableAgain": "Сувязь з серверам адноўлена.",
+  "offlineOnlineOnlyHint": "Даступна ў рэжыме анлайн",
   "offlineModePopupTitle": "Афлайн рэжым",
   "offlinePlayAgain": "Яшчэ раз",
   "rulesAlternateStarts": "Хто ходзіць першым чаргуецца ад партыі да партыі.",

@@ -254,7 +254,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
               LobbySearchAction(
                 searching: matchmaking,
                 busy: _startingSearch,
-                onStart: () => unawaited(_startSearch()),
+                onStart: _startSearch,
               ),
             if (lobby != null)
               IconButton(
@@ -302,7 +302,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
           players: lobby.players,
         ),
         joining: _joining,
-        onJoin: () => unawaited(_join()),
+        onJoin: _join,
         stakeBronze: lobby.maxPlayers > 2 ? 0 : lobby.stakeBronze,
         padding: EdgeInsets.all(isNarrow(context) ? 16 : 24),
         top: lobby.maxPlayers > 2 ? _buildMultiPlayersCard(lobby) : null,

@@ -175,6 +175,24 @@ class AppLocalizationsNb extends AppLocalizations {
   String get offlineModeOfferAction => 'Slå på offline';
 
   @override
+  String get serverUnreachableTitle => 'Ingen forbindelse til serveren';
+
+  @override
+  String get serverUnreachableBody => 'Får ikke kontakt med serveren. Sjekk internett og prøv igjen, eller bytt til offline-modus.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Gå offline';
+
+  @override
+  String get serverUnreachableStillDown => 'Fortsatt ingen forbindelse.';
+
+  @override
+  String get serverReachableAgain => 'Forbindelsen til serveren er gjenopprettet.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Tilgjengelig i online-modus';
+
+  @override
   String get gamesPlay => 'Spill';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Innsats: $stake. Spillet gjelder så mange mynter.';
+    return 'Innsats: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Tiden er ute';
+
+  @override
+  String get lossReasonSurrender => 'Du ga opp';
+
+  @override
+  String get lossReasonCheckmate => 'Sjakkmatt';
+
+  @override
+  String get lossReasonNoMoves => 'Ingen trekk';
+
+  @override
+  String get lossReasonGiveaway => 'Brikker igjen';
+
+  @override
+  String get lossReasonCorners => 'Hjørner tomme';
+
+  @override
+  String get lossReasonOpponentOut => 'Motstanderen gikk ut';
+
+  @override
+  String get lossReasonFool => 'Du er dummen';
+
+  @override
+  String get lossReasonShips => 'Skip senket';
+
+  @override
+  String get lossReasonLine => 'Tre på rad';
+
+  @override
+  String get lossReasonNardy => 'Motstanderen bar ut';
+
+  @override
+  String get lossReasonChips => 'Ingen sjetonger igjen';
 
   @override
   String get rulesSwap => 'Sidebytte: O kan bytte med X etter X sitt første trekk.';

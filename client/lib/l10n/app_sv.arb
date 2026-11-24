@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Insats: {stake}. Spelet gäller så många mynt.",
+  "rulesStake": "Insats: {stake}.",
+  "lossReasonTimeout": "Tiden ute",
+  "lossReasonSurrender": "Du gav upp",
+  "lossReasonCheckmate": "Schackmatt",
+  "lossReasonNoMoves": "Inga drag",
+  "lossReasonGiveaway": "Brickor kvar",
+  "lossReasonCorners": "Hörnen tomma",
+  "lossReasonOpponentOut": "Motståndaren gick ut",
+  "lossReasonFool": "Du är dumbom",
+  "lossReasonShips": "Skepp sänkta",
+  "lossReasonLine": "Tre i rad",
+  "lossReasonNardy": "Motståndaren bar av",
+  "lossReasonChips": "Inga marker kvar",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Inställningar",
   "offlineModeOfferBody": "Inget internet eller mycket långsam uppkoppling. Du kan slå på offline-läge och spela mot en bot.",
   "offlineModeOfferAction": "Aktivera offline",
+  "serverUnreachableTitle": "Ingen anslutning till servern",
+  "serverUnreachableBody": "Det går inte att nå servern. Kontrollera internet och försök igen, eller byt till offline-läge.",
+  "serverUnreachableGoOffline": "Gå offline",
+  "serverUnreachableStillDown": "Fortfarande ingen anslutning.",
+  "serverReachableAgain": "Anslutningen till servern är återställd.",
+  "offlineOnlineOnlyHint": "Tillgängligt i online-läge",
   "offlineModePopupTitle": "Offline-läge",
   "offlinePlayAgain": "Igen",
   "rulesAlternateStarts": "Vem som börjar växlar från parti till parti.",

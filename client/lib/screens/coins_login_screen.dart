@@ -8,11 +8,13 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/online_only_hint.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 class CoinsLoginScreen extends ConsumerStatefulWidget {
@@ -150,6 +152,7 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
                       claimSourceKey: _claimSourceKey,
                       claimButtonKey: _claimButtonKey,
                       onClaim: () => unawaited(_claim(status)),
+                      offline: ref.watch(isOfflineProvider),
                     )
                   : dailyRewardAsync.hasError
                       ? Padding(
@@ -176,12 +179,14 @@ class _LoginRewardsBody extends StatelessWidget {
     required this.claimSourceKey,
     required this.claimButtonKey,
     required this.onClaim,
+    this.offline = false,
   });
 
   final DailyRewardStatus status;
   final GlobalKey claimSourceKey;
   final GlobalKey claimButtonKey;
   final VoidCallback onClaim;
+  final bool offline;
 
   static const _milestones = [1, 3, 7, 30];
 
@@ -221,14 +226,17 @@ class _LoginRewardsBody extends StatelessWidget {
           dense: phoneLandscape,
         );
 
-    final claimButton = _ClaimRewardButton(
-      buttonKey: claimButtonKey,
-      canClaim: canClaim,
-      onClaim: onClaim,
-      label: canClaim ? l10n.coinsClaimReward : l10n.coinsAlreadyClaimed,
-      dense: phoneLandscape,
-      expand: !phoneLandscape,
-    );
+    // Офлайн: награду выдаёт сервер, кнопку «Забрать» не показываем.
+    final Widget claimButton = offline && canClaim
+        ? OnlineOnlyHint(dense: phoneLandscape)
+        : _ClaimRewardButton(
+            buttonKey: claimButtonKey,
+            canClaim: canClaim,
+            onClaim: onClaim,
+            label: canClaim ? l10n.coinsClaimReward : l10n.coinsAlreadyClaimed,
+            dense: phoneLandscape,
+            expand: !phoneLandscape,
+          );
 
     final hero = _StreakHeroCard(
       status: status,

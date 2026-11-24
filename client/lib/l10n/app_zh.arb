@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "赌注：{stake}。本局押这么多硬币。",
+  "rulesStake": "赌注：{stake}。",
+  "lossReasonTimeout": "时间到了",
+  "lossReasonSurrender": "你认输了",
+  "lossReasonCheckmate": "将死",
+  "lossReasonNoMoves": "无棋可走",
+  "lossReasonGiveaway": "棋子没送完",
+  "lossReasonCorners": "没占住角",
+  "lossReasonOpponentOut": "对手出完了",
+  "lossReasonFool": "你是傻瓜",
+  "lossReasonShips": "军舰被击沉",
+  "lossReasonLine": "三子一线",
+  "lossReasonNardy": "对手走完了棋子",
+  "lossReasonChips": "筹码用完了",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "设置",
   "offlineModeOfferBody": "没有网络或连接非常慢。可以开启离线模式与机器人对战。",
   "offlineModeOfferAction": "开启离线",
+  "serverUnreachableTitle": "无法连接服务器",
+  "serverUnreachableBody": "无法连接到服务器。请检查网络后重试，或切换到离线模式。",
+  "serverUnreachableGoOffline": "切换到离线",
+  "serverUnreachableStillDown": "仍然没有连接。",
+  "serverReachableAgain": "已恢复与服务器的连接。",
+  "offlineOnlineOnlyHint": "在线模式下可用",
   "offlineModePopupTitle": "离线模式",
   "offlinePlayAgain": "再来一局",
   "rulesAlternateStarts": "谁先手每局轮换。",

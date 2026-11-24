@@ -339,7 +339,15 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
         if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
         return l10n.gameYouWon;
       }
-      return l10n.gameYouLost;
+      if (game.isTimeout) return l10n.lossReasonTimeout;
+      if (game.isForfeit) return l10n.lossReasonSurrender;
+      if (game.gameMode == CheckersEngine.modeGiveaway) {
+        return l10n.lossReasonGiveaway;
+      }
+      if (game.gameMode == CheckersEngine.modeCorners) {
+        return l10n.lossReasonCorners;
+      }
+      return l10n.lossReasonNoMoves;
     }
     return game.isMyTurn ? l10n.gamesMyTurn : l10n.gamesOpponentTurn;
   }
@@ -632,8 +640,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   }
 
   /// Время хода вышло (моё или соперника) — забрать с сервера итог.
-  void _onTurnExpired() =>
-      ref.invalidate(checkersGameProvider(widget.gameId));
+  void _onTurnExpired() => ref.invalidate(checkersGameProvider(widget.gameId));
 
   /// [reserveRail] — карточка стоит по центру под шапкой и сама отступает
   /// от столбика «сдаться / ничья»; в боковой колонке место даёт колонка.
@@ -814,8 +821,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     final landscape = isPhoneLandscape(context) ||
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
     return BoardChangeSfx(
-      signature:
-          '${shown.id}:${shown.seq}:${shown.lastFromR}:${shown.lastToR}',
+      signature: '${shown.id}:${shown.seq}:${shown.lastFromR}:${shown.lastToR}',
       child: Stack(
         children: [
           Padding(
@@ -1071,7 +1077,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     if (_isOffline) {
       return Center(
         child: FilledButton.icon(
-          onPressed: _isRematching ? null : () => unawaited(_rematch()),
+          onPressed: _isRematching ? null : _rematch,
           icon: const Icon(Icons.replay_rounded, size: 18),
           label: Text(context.l10n.offlinePlayAgain),
           style: FilledButton.styleFrom(
@@ -1090,11 +1096,11 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
       isFindingGame: _isFindingGame,
       peerIds: _peerIds(game, me),
       invites: ref.watch(gameInvitesProvider),
-      onRematch: () => unawaited(_rematch()),
-      onAccept: (id) => unawaited(_acceptRematch(id)),
-      onDecline: (id) => unawaited(_declineRematch(id)),
-      onCancelWait: () => unawaited(_cancelRematchWait()),
-      onFindGame: () => unawaited(_findGame()),
+      onRematch: _rematch,
+      onAccept: _acceptRematch,
+      onDecline: _declineRematch,
+      onCancelWait: _cancelRematchWait,
+      onFindGame: _findGame,
       compact: true,
       table: RematchTable(
         gameType: 'checkers',

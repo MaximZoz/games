@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Innsats: {stake}. Spillet gjelder så mange mynter.",
+  "rulesStake": "Innsats: {stake}.",
+  "lossReasonTimeout": "Tiden er ute",
+  "lossReasonSurrender": "Du ga opp",
+  "lossReasonCheckmate": "Sjakkmatt",
+  "lossReasonNoMoves": "Ingen trekk",
+  "lossReasonGiveaway": "Brikker igjen",
+  "lossReasonCorners": "Hjørner tomme",
+  "lossReasonOpponentOut": "Motstanderen gikk ut",
+  "lossReasonFool": "Du er dummen",
+  "lossReasonShips": "Skip senket",
+  "lossReasonLine": "Tre på rad",
+  "lossReasonNardy": "Motstanderen bar ut",
+  "lossReasonChips": "Ingen sjetonger igjen",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Innstillinger",
   "offlineModeOfferBody": "Ingen internett, eller forbindelsen er veldig treg. Du kan slå på offline-modus og spille mot en bot.",
   "offlineModeOfferAction": "Slå på offline",
+  "serverUnreachableTitle": "Ingen forbindelse til serveren",
+  "serverUnreachableBody": "Får ikke kontakt med serveren. Sjekk internett og prøv igjen, eller bytt til offline-modus.",
+  "serverUnreachableGoOffline": "Gå offline",
+  "serverUnreachableStillDown": "Fortsatt ingen forbindelse.",
+  "serverReachableAgain": "Forbindelsen til serveren er gjenopprettet.",
+  "offlineOnlineOnlyHint": "Tilgjengelig i online-modus",
   "offlineModePopupTitle": "Offline-modus",
   "offlinePlayAgain": "Igjen",
   "rulesAlternateStarts": "Hvem som trekker først veksler fra parti til parti.",

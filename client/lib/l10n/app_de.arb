@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Einsatz: {stake}. Um so viele Münzen geht das Spiel.",
+  "rulesStake": "Einsatz: {stake}.",
+  "lossReasonTimeout": "Zeit abgelaufen",
+  "lossReasonSurrender": "Sie haben aufgegeben",
+  "lossReasonCheckmate": "Matt",
+  "lossReasonNoMoves": "Keine Züge",
+  "lossReasonGiveaway": "Steine übrig",
+  "lossReasonCorners": "Ecken verpasst",
+  "lossReasonOpponentOut": "Gegner ist raus",
+  "lossReasonFool": "Sie sind der Dumme",
+  "lossReasonShips": "Schiffe versenkt",
+  "lossReasonLine": "Drei in einer Reihe",
+  "lossReasonNardy": "Gegner hat abgetragen",
+  "lossReasonChips": "Keine Chips mehr",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Einstellungen",
   "offlineModeOfferBody": "Kein Internet oder die Verbindung ist sehr langsam. Du kannst den Offline-Modus einschalten und gegen einen Bot spielen.",
   "offlineModeOfferAction": "Offline einschalten",
+  "serverUnreachableTitle": "Keine Verbindung zum Server",
+  "serverUnreachableBody": "Der Server ist nicht erreichbar. Prüfe das Internet und versuche es erneut oder wechsle in den Offline-Modus.",
+  "serverUnreachableGoOffline": "Offline gehen",
+  "serverUnreachableStillDown": "Noch immer keine Verbindung.",
+  "serverReachableAgain": "Verbindung zum Server wiederhergestellt.",
+  "offlineOnlineOnlyHint": "Im Online-Modus verfügbar",
   "offlineModePopupTitle": "Offline-Modus",
   "offlinePlayAgain": "Nochmal",
   "rulesAlternateStarts": "Wer zuerst zieht, wechselt von Partie zu Partie.",

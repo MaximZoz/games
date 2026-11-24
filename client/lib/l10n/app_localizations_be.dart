@@ -175,6 +175,24 @@ class AppLocalizationsBe extends AppLocalizations {
   String get offlineModeOfferAction => 'Уключыць афлайн';
 
   @override
+  String get serverUnreachableTitle => 'Няма сувязі з серверам';
+
+  @override
+  String get serverUnreachableBody => 'Не атрымліваецца звязацца з серверам. Праверце інтэрнэт і паўтарыце спробу або перайдзіце ў афлайн рэжым.';
+
+  @override
+  String get serverUnreachableGoOffline => 'Перайсці ў афлайн';
+
+  @override
+  String get serverUnreachableStillDown => 'Сувязі ўсё яшчэ няма.';
+
+  @override
+  String get serverReachableAgain => 'Сувязь з серверам адноўлена.';
+
+  @override
+  String get offlineOnlineOnlyHint => 'Даступна ў рэжыме анлайн';
+
+  @override
   String get gamesPlay => 'Гуляць';
 
   @override
@@ -2623,8 +2641,44 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String rulesStake(String stake) {
-    return 'Стаўка: $stake. На столькі манет ідзе гульня.';
+    return 'Стаўка: $stake.';
   }
+
+  @override
+  String get lossReasonTimeout => 'Час выйшаў';
+
+  @override
+  String get lossReasonSurrender => 'Вы здаліся';
+
+  @override
+  String get lossReasonCheckmate => 'Мат';
+
+  @override
+  String get lossReasonNoMoves => 'Няма хадоў';
+
+  @override
+  String get lossReasonGiveaway => 'Не аддалі шашкі';
+
+  @override
+  String get lossReasonCorners => 'Не занялі вуглы';
+
+  @override
+  String get lossReasonOpponentOut => 'Супернік выйшаў';
+
+  @override
+  String get lossReasonFool => 'Вы дурань';
+
+  @override
+  String get lossReasonShips => 'Караблі патоплены';
+
+  @override
+  String get lossReasonLine => 'Тры ў рад';
+
+  @override
+  String get lossReasonNardy => 'Супернік вывеў фішкі';
+
+  @override
+  String get lossReasonChips => 'Фішкі скончыліся';
 
   @override
   String get rulesSwap => 'Змена бакоў: O можа памяняцца месцамі з X пасля першага ходу X.';

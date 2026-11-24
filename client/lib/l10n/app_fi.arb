@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Panos: {stake}. Peli käydään näillä kolikoilla.",
+  "rulesStake": "Panos: {stake}.",
+  "lossReasonTimeout": "Aika loppui",
+  "lossReasonSurrender": "Luovutit",
+  "lossReasonCheckmate": "Matti",
+  "lossReasonNoMoves": "Ei siirtoja",
+  "lossReasonGiveaway": "Nappuloita jäljellä",
+  "lossReasonCorners": "Kulmat tyhjät",
+  "lossReasonOpponentOut": "Vastustaja pääsi ulos",
+  "lossReasonFool": "Olet tyhmä",
+  "lossReasonShips": "Laivat upotettu",
+  "lossReasonLine": "Kolme rivissä",
+  "lossReasonNardy": "Vastustaja vei nappulat",
+  "lossReasonChips": "Pelimerkit loppuivat",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Asetukset",
   "offlineModeOfferBody": "Ei internetiä tai yhteys on hyvin hidas. Voit ottaa offline-tilan käyttöön ja pelata bottia vastaan.",
   "offlineModeOfferAction": "Siirry offlineen",
+  "serverUnreachableTitle": "Ei yhteyttä palvelimeen",
+  "serverUnreachableBody": "Palvelimeen ei saada yhteyttä. Tarkista internetyhteys ja yritä uudelleen tai siirry offline-tilaan.",
+  "serverUnreachableGoOffline": "Siirry offlineen",
+  "serverUnreachableStillDown": "Yhteyttä ei vieläkään ole.",
+  "serverReachableAgain": "Yhteys palvelimeen on palautettu.",
+  "offlineOnlineOnlyHint": "Käytettävissä online-tilassa",
   "offlineModePopupTitle": "Offline-tila",
   "offlinePlayAgain": "Uudelleen",
   "rulesAlternateStarts": "Kuka aloittaa vuorottelee peleistä toiseen.",

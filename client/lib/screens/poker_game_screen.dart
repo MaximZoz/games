@@ -36,6 +36,7 @@ import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/poker/poker_seat_layout.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_ui/widgets/api_action_surface.dart';
 import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -353,10 +354,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         return l10n.gameYouWon;
       }
       if (place > 1) return l10n.gameYouPlaced(place);
-      if (game.isTimeout) return l10n.unoYouLostTimeout;
-      if (game.stakeBronze > 0) return l10n.gameYouLost;
-      if (game.winners.isNotEmpty) return _winnersStatus(game);
-      return l10n.pokerHandOver;
+      if (game.isTimeout) return l10n.lossReasonTimeout;
+      if (game.isForfeit) return l10n.lossReasonSurrender;
+      return l10n.lossReasonChips;
     }
     if (game.iAmEliminated) {
       if (place > 1) return l10n.gameYouPlaced(place);
@@ -1477,7 +1477,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         if (_isOffline)
           Center(
             child: FilledButton.icon(
-              onPressed: _isRematching ? null : () => unawaited(_rematch()),
+              onPressed: _isRematching ? null : _rematch,
               icon: const Icon(Icons.replay_rounded, size: 18),
               label: Text(context.l10n.offlinePlayAgain),
               style: FilledButton.styleFrom(
@@ -1497,11 +1497,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             isFindingGame: _isFindingGame,
             peerIds: _peerIds(game),
             invites: ref.watch(gameInvitesProvider),
-            onRematch: () => unawaited(_rematch()),
-            onAccept: (id) => unawaited(_acceptRematch(id)),
-            onDecline: (id) => unawaited(_declineRematch(id)),
-            onCancelWait: () => unawaited(_cancelRematchWait()),
-            onFindGame: () => unawaited(_findGame()),
+            onRematch: _rematch,
+            onAccept: _acceptRematch,
+            onDecline: _declineRematch,
+            onCancelWait: _cancelRematchWait,
+            onFindGame: _findGame,
             compact: true,
             table: RematchTable(
               gameType: 'poker',
@@ -3100,7 +3100,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             height: buttonHeight,
             onTap: (_busy || _turnAction.held)
                 ? null
-                : () => unawaited(_move(PokerActionType.fold)),
+                : () => _move(PokerActionType.fold),
           ),
         ),
       if (game.canDo(PokerActionType.check))
@@ -3112,7 +3112,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             color: GamePalette.goDeep,
             onTap: (_busy || _turnAction.held)
                 ? null
-                : () => unawaited(_move(PokerActionType.check)),
+                : () => _move(PokerActionType.check),
           ),
         ),
       if (game.canDo(PokerActionType.call))
@@ -3126,7 +3126,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             color: GamePalette.goDeep,
             onTap: (_busy || _turnAction.held)
                 ? null
-                : () => unawaited(_move(PokerActionType.call)),
+                : () => _move(PokerActionType.call),
           ),
         ),
       if (game.canDo(PokerActionType.raise))
@@ -3138,7 +3138,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             color: AppColors.accentStart,
             onTap: (_busy || _turnAction.held)
                 ? null
-                : () => unawaited(_openRaiseSheet(game)),
+                : () => _openRaiseSheet(game),
           ),
         ),
       if (game.canDo(PokerActionType.allIn))
@@ -3150,7 +3150,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             color: GamePalette.amberDeep,
             onTap: (_busy || _turnAction.held)
                 ? null
-                : () => unawaited(_move(PokerActionType.allIn)),
+                : () => _move(PokerActionType.allIn),
           ),
         ),
     ];
@@ -3172,27 +3172,42 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required VoidCallback? onTap,
     double height = 48,
   }) {
-    return SizedBox(
-      height: height,
-      child: FilledButton(
-        onPressed: onTap,
-        style: FilledButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-          minimumSize: Size(0, height),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+    return ApiActionSurface(
+      onPressed: onTap,
+      builder: (context, showLoading, press) => SizedBox(
+        height: height,
+        child: FilledButton(
+          onPressed: press,
+          style: FilledButton.styleFrom(
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+            minimumSize: Size(0, height),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
-        ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            label,
-            maxLines: 1,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-          ),
+          child: showLoading
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: DefaultTextStyle.of(context).style.color,
+                  ),
+                )
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
         ),
       ),
     );

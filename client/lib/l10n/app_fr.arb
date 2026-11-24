@@ -1228,7 +1228,19 @@
       }
     }
   },
-  "rulesStake": "Mise : {stake}. La partie se joue pour autant de pièces.",
+  "rulesStake": "Mise : {stake}.",
+  "lossReasonTimeout": "Temps écoulé",
+  "lossReasonSurrender": "Vous avez abandonné",
+  "lossReasonCheckmate": "Échec et mat",
+  "lossReasonNoMoves": "Aucun coup",
+  "lossReasonGiveaway": "Pions restants",
+  "lossReasonCorners": "Coins manqués",
+  "lossReasonOpponentOut": "L’adversaire est sorti",
+  "lossReasonFool": "Vous êtes le durak",
+  "lossReasonShips": "Navires coulés",
+  "lossReasonLine": "Trois d’affilée",
+  "lossReasonNardy": "L’adversaire a sorti ses pions",
+  "lossReasonChips": "Plus de jetons",
   "@rulesStake": {
     "placeholders": {
       "stake": {
@@ -1457,6 +1469,12 @@
   "offlineModePopupSettings": "Paramètres",
   "offlineModeOfferBody": "Pas d’internet ou connexion très lente. Vous pouvez activer le mode hors ligne et jouer contre un bot.",
   "offlineModeOfferAction": "Activer hors ligne",
+  "serverUnreachableTitle": "Pas de connexion au serveur",
+  "serverUnreachableBody": "Impossible de joindre le serveur. Vérifiez Internet et réessayez, ou passez en mode hors ligne.",
+  "serverUnreachableGoOffline": "Passer hors ligne",
+  "serverUnreachableStillDown": "Toujours pas de connexion.",
+  "serverReachableAgain": "Connexion au serveur rétablie.",
+  "offlineOnlineOnlyHint": "Disponible en mode en ligne",
   "offlineModePopupTitle": "Mode hors ligne",
   "offlinePlayAgain": "Encore",
   "rulesAlternateStarts": "Celui qui commence alterne d’une partie à l’autre.",

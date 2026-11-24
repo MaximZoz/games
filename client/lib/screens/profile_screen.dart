@@ -19,6 +19,7 @@ import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/screens/profile_about_line.dart';
 import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
@@ -305,6 +306,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Повторный тап по табу «Профиль» внизу — тоже выход из редактирования.
     ref.listen<int>(profileExitEditTickProvider, (_, __) {
       _exitEditingImmediate();
+    });
+    // Ушли в офлайн посреди правки — сохранить её уже некуда.
+    ref.listen<bool>(isOfflineProvider, (_, offline) {
+      if (offline) _exitEditingImmediate();
     });
 
     final phoneLandscape = isPhoneLandscape(context);
@@ -763,6 +768,8 @@ class _ProfileView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
+    // Офлайн: профиль только для просмотра — правки и фото идут через API.
+    final offline = ref.watch(isOfflineProvider);
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final gapAfterAvatar = shortScreen ? 12.0 : 16.0;
     final gapSection = shortScreen ? 12.0 : 14.0;
@@ -804,7 +811,7 @@ class _ProfileView extends ConsumerWidget {
     final identity = <Widget>[
       TappableProfileAvatar(
         userId: user.id,
-        canManage: true,
+        canManage: !offline,
         avatarKind: profileExtra.avatarKind.name,
         avatarValue: profileExtra.avatarValue,
         letter: _avatarLetter,
@@ -958,11 +965,13 @@ class _ProfileView extends ConsumerWidget {
                     child: collectionsBlock,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: editButton,
-                ),
+                if (!offline) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: editButton,
+                  ),
+                ],
               ],
             ),
           ),
@@ -979,8 +988,10 @@ class _ProfileView extends ConsumerWidget {
           aboutBlock,
         ],
         collectionsBlock,
-        SizedBox(height: shortScreen ? 16 : 20),
-        editButton,
+        if (!offline) ...[
+          SizedBox(height: shortScreen ? 16 : 20),
+          editButton,
+        ],
       ],
     );
   }
