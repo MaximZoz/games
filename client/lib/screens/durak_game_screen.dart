@@ -6953,6 +6953,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                     icon: Icons.forum_rounded,
                     badge: groupUnread,
                     tooltip: context.l10n.chatGroupTooltip,
+                    opponentTurn: !view.isMyTurn && !view.isOver,
                     onPressed: () => _openGroupChat(view),
                   ),
                 ),
@@ -7882,6 +7883,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             frameColor: frameColor,
             isBot: isBot,
             messageUnread: unread,
+            theirTurn: oppTurn,
             infoTooltip: context.l10n.userInfoTitle,
             messageTooltip: context.l10n.gameWriteMessage,
             compact: MediaQuery.sizeOf(context).width < 420 ||

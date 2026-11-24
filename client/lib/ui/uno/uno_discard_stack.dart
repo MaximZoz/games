@@ -42,6 +42,7 @@ class UnoDiscardStack extends StatelessWidget {
             children: [
               if (showUnder && underPose != null)
                 Transform.translate(
+                  key: ValueKey(under!.id),
                   offset: Offset(underPose.dx, underPose.dy),
                   child: Transform.rotate(
                     angle: underPose.angle,
@@ -49,6 +50,7 @@ class UnoDiscardStack extends StatelessWidget {
                   ),
                 ),
               Transform.translate(
+                key: ValueKey(top.id),
                 offset: Offset(topPose.dx, topPose.dy),
                 child: Transform.rotate(
                   angle: topPose.angle,

@@ -941,7 +941,7 @@ class _DominoTableState extends State<DominoTable>
   /// Моя рука: кости крупные, с зазором под палец; не влезают — листаются.
   Widget _hand(DominoGameView view, double width, bool short) {
     final hand = view.me?.hand ?? const <int>[];
-    const spacing = 10.0;
+    const spacing = 14.0;
     const padding = EdgeInsets.symmetric(horizontal: 14);
     // Семь костей раздачи должны помещаться без прокрутки.
     final fit = (width - padding.horizontal - spacing * 6) / 7;

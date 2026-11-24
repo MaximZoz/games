@@ -90,11 +90,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   String? _lastLocalPlayCardId;
   final Set<String> _localPlayedIds = {};
   final Set<String> _hiddenHandIds = {};
+
+  /// Карта ещё занимает слот веера, но уже не рисуется: её закрыла копия в полёте.
+  final Set<String> _departingHandIds = {};
   final Set<String> _pendingDrawnIds = {};
   final Map<int, int> _pendingOppDraw = {};
   UnoCard? _discardOverride;
   UnoCard? _discardUnder;
   UnoCard? _settledDiscard;
+
+  /// Карта, которая реально была на сбросе в прошлом кадре.
+  UnoCard? _paintedDiscard;
   UnoDiscardLand? _topLand;
   UnoDiscardLand? _underLand;
   int _seenEventSeq = 0;
@@ -123,7 +129,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     _underLand = null;
     _localPlayedIds.clear();
     _hiddenHandIds.clear();
+    _departingHandIds.clear();
     _pendingDrawnIds.clear();
+    _paintedDiscard = null;
     _pendingOppDraw.clear();
     _roundOverlayDismissed = false;
     setState(() {
@@ -251,6 +259,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           ? null
           : unoDiscardLandPose(game.topDiscard!.id);
       _hiddenHandIds.clear();
+      _departingHandIds.clear();
+      _paintedDiscard = null;
       _pendingDrawnIds.clear();
       _pendingOppDraw.clear();
       _localPlayedIds.clear();
@@ -300,6 +310,23 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                   meId != null &&
                   game.lastEventActor == meId));
       if (!skipOwnPlay) {
+        final holdRemotePlay = shouldAnimateRemoteUnoPlay(
+          lastEventType: game.lastEventType,
+          lastEventActor: game.lastEventActor,
+          viewerUserId: meId,
+          myIndex: game.myIndex,
+          players: game.players,
+          topCardId: topId,
+          localPlayCardId: _lastLocalPlayCardId ?? _optimisticTopId,
+          lastEventCardId: game.lastEventCard?.id,
+          localPlayedIds: _localPlayedIds,
+        );
+        _discardOverride = unoDiscardHeldDuringThrow(
+          override: _discardOverride,
+          painted: _paintedDiscard,
+          incomingTopId: topId,
+          hold: holdRemotePlay,
+        );
         if (game.lastDrawCount > 0 &&
             game.lastDrawUserId.isNotEmpty &&
             game.lastDrawUserId != _lastLocalDrawActor) {
@@ -362,6 +389,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           game.players.indexWhere((player) => player.id == game.lastEventActor);
       if (fromIndex >= 0 && fromIndex != game.myIndex) {
         await _animateOpponentPlay(game, fromIndex);
+      } else if (mounted &&
+          _discardOverride?.id == _paintedDiscard?.id &&
+          _discardOverride?.id != game.topDiscard?.id) {
+        setState(() => _discardOverride = null);
       }
     }
     if (game.lastEventType == 'wd4_reveal' && game.lastEventCard != null) {
@@ -491,9 +522,13 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     required UnoCard card,
     required Rect? from,
     required UnoCard? covered,
+    UnoCard? paintedTop,
     bool revealServerTop = false,
     bool flip = false,
     bool playSfx = false,
+    bool matchHand = false,
+    double beginAngle = 0,
+    VoidCallback? onVisible,
   }) async {
     final base =
         _topLand ?? (covered == null ? null : unoDiscardLandPose(covered.id));
@@ -516,24 +551,35 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return;
     }
     if (covered != null && covered.id != card.id) {
-      setState(() => _discardOverride = covered);
+      if (paintedTop?.id == covered.id) {
+        // Тот же верх уже нарисован — без лишнего кадра, иначе карта под
+        // броском мигает.
+        _discardOverride ??= covered;
+      } else {
+        setState(() => _discardOverride = covered);
+      }
     }
     final ticket = await playUnoCardFlyAnimation(
       context: context,
       card: card,
-      cardSize: _flyCardSize(context),
+      cardSize: matchHand ? from.size : _flyCardSize(context),
       from: from,
       to: pile.shift(Offset(land.dx, land.dy)),
-      beginAngle: land.tossAngle,
+      beginAngle: matchHand ? beginAngle : land.tossAngle,
       endAngle: land.angle,
-      beginScale: 1.12,
+      beginAlignment: matchHand ? Alignment.bottomCenter : Alignment.center,
+      endAlignment: Alignment.center,
+      matchRects: matchHand,
+      beginScale: matchHand ? 1 : 1.12,
       endScale: 1,
       arcLift: 68,
       duration: const Duration(milliseconds: 540),
+      curve: matchHand ? Curves.easeInOutCubic : kUnoFlyCurve,
       faceDown: flip,
       flipToFace: flip,
       keepAtEnd: true,
       playSfx: playSfx,
+      onVisible: onVisible,
     );
     if (!mounted) {
       ticket.dismiss();
@@ -555,14 +601,18 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final from = _rectOf(
       _opponentKeys.putIfAbsent(playerIndex, GlobalKey.new),
     );
-    if (cards.isEmpty || !mounted) return;
-    var covered = _settledDiscard;
+    if (cards.isEmpty || !mounted) {
+      if (mounted) setState(() => _discardOverride = null);
+      return;
+    }
+    var covered = _discardOverride ?? _settledDiscard;
     for (final card in cards) {
       if (!mounted) return;
       await _throwCardOntoDiscard(
         card: card,
         from: from,
         covered: covered,
+        paintedTop: covered,
         flip: true,
       );
       covered = card;
@@ -813,24 +863,44 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _lastLocalPlayCardId = thrown.last.id;
       _optimisticTopId = thrown.last.id;
       _localPlayedIds.addAll(thrown.map((item) => item.id));
-      if (mounted) {
-        setState(() {
-          _hiddenHandIds.addAll(thrown.map((item) => item.id));
-        });
-      }
+      final layoutHand = unoVisibleHand(
+        game.myHand,
+        {..._hiddenHandIds, ..._pendingDrawnIds},
+      );
+      final paintedTop = unoVisibleDiscard(
+        serverTop: game.topDiscard,
+        override: _discardOverride,
+      );
       var covered = _discardOverride ?? _settledDiscard ?? game.topDiscard;
       for (var i = 0; i < thrown.length; i++) {
         final flying = thrown[i];
         final fromRect = i == 0
             ? from
             : _rectOf(_cardKeys.putIfAbsent(flying.id, GlobalKey.new)) ?? from;
+        final index = layoutHand.indexWhere((item) => item.id == flying.id);
+        final fanAngle = index < 0
+            ? 0.0
+            : unoHandFanAngle(index: index, count: layoutHand.length);
         await _throwCardOntoDiscard(
           card: flying,
           from: fromRect,
           covered: covered,
+          paintedTop: i == 0 ? paintedTop : covered,
           playSfx: i > 0,
+          matchHand: fromRect != null,
+          beginAngle: fanAngle,
+          onVisible: () {
+            if (!mounted) return;
+            setState(() => _departingHandIds.add(flying.id));
+          },
         );
         covered = flying;
+      }
+      if (mounted) {
+        setState(() {
+          _departingHandIds.removeAll(thrown.map((item) => item.id));
+          _hiddenHandIds.addAll(thrown.map((item) => item.id));
+        });
       }
       await _move(
         UnoActionType.play,
@@ -866,7 +936,12 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       } catch (_) {}
     } finally {
       _turnAction.release();
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _departingHandIds.clear();
+        });
+      }
     }
   }
 
@@ -1437,6 +1512,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _topLand = null;
       _underLand = null;
       _hiddenHandIds.clear();
+      _departingHandIds.clear();
+      _paintedDiscard = null;
       _pendingDrawnIds.clear();
       _pendingOppDraw.clear();
       _seenEventSeq = 0;
@@ -1508,6 +1585,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                   icon: Icons.chat_bubble_outline_rounded,
                   tooltip: context.l10n.chatGroupTooltip,
                   badge: groupUnread,
+                  opponentTurn: !game.isMyTurn && !game.isOver,
                   onPressed: () => _openGroupChat(game),
                 )
               : null,
@@ -1985,6 +2063,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       serverTop: game.topDiscard,
       override: _discardOverride,
     );
+    _paintedDiscard = shownDiscard;
     final field = UnoDrawDiscardField(
       style: style,
       drawLabel: context.l10n.unoDrawPile,
@@ -2201,6 +2280,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final hand = _dealing
         ? game.myHand.take(_dealHeroShown).toList(growable: false)
         : unoVisibleHand(game.myHand, {..._hiddenHandIds, ..._pendingDrawnIds});
+    final shownCount = _dealing
+        ? _dealHeroShown
+        : hand.where((card) => !_departingHandIds.contains(card.id)).length;
     final spacing =
         hand.length > 10 ? (narrow ? 28.0 : 36.0) : (narrow ? 39.0 : 49.0);
     final width = hand.isEmpty
@@ -2214,14 +2296,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              context.l10n.unoCardsCount(
-                _dealing
-                    ? _dealHeroShown
-                    : unoVisibleHand(
-                        game.myHand,
-                        {..._hiddenHandIds, ..._pendingDrawnIds},
-                      ).length,
-              ),
+              context.l10n.unoCardsCount(shownCount),
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -2258,25 +2333,34 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                           ) +
                           i * spacing,
                       bottom: 0,
-                      child: Transform.rotate(
-                        angle: hand.length <= 1
-                            ? 0
-                            : (i - (hand.length - 1) / 2) * 0.025,
-                        alignment: Alignment.bottomCenter,
-                        child: GestureDetector(
-                          key: _cardKeys.putIfAbsent(
-                            hand[i].id,
-                            GlobalKey.new,
+                      child: KeyedSubtree(
+                        key: _cardKeys.putIfAbsent(
+                          hand[i].id,
+                          GlobalKey.new,
+                        ),
+                        child: Transform.rotate(
+                          angle: unoHandFanAngle(
+                            index: i,
+                            count: hand.length,
                           ),
-                          onTap: _canPlayCard(game, hand[i]) && !_busy
-                              ? () => _playCard(game, hand[i])
-                              : null,
-                          child: UnoCardWidget(
-                            card: hand[i],
-                            size: cardSize,
-                            highlighted: _canPlayCard(game, hand[i]) ||
-                                (GamepadService.instance.isRecentlyActive &&
-                                    i == _gamepadHandIndex),
+                          alignment: Alignment.bottomCenter,
+                          child: GestureDetector(
+                            onTap: _canPlayCard(game, hand[i]) && !_busy
+                                ? () => _playCard(game, hand[i])
+                                : null,
+                            child: Visibility(
+                              visible: !_departingHandIds.contains(hand[i].id),
+                              maintainSize: true,
+                              maintainState: true,
+                              maintainAnimation: true,
+                              child: UnoCardWidget(
+                                card: hand[i],
+                                size: cardSize,
+                                highlighted: _canPlayCard(game, hand[i]) ||
+                                    (GamepadService.instance.isRecentlyActive &&
+                                        i == _gamepadHandIndex),
+                              ),
+                            ),
                           ),
                         ),
                       ),
