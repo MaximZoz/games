@@ -1,11 +1,39 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/ui/widgets/screen_load_error.dart';
 
 import 'test_locale.dart';
+
+class _Offline extends OfflineModeNotifier {
+  _Offline() : super(autostart: false);
+}
+
+class _Guest extends AuthStateNotifier {
+  _Guest(super.ref) {
+    state = const AsyncValue<AuthUser?>.data(null);
+  }
+
+  @override
+  Future<void> ensureSessionFresh() async {}
+}
+
+/// Экран ошибки читает режим сети и сессию — в тесте без сети и таймеров.
+Widget _scoped(Widget child) {
+  return ProviderScope(
+    overrides: [
+      offlineModeProvider.overrideWith((ref) => _Offline()),
+      authStateProvider.overrideWith((ref) => _Guest(ref)),
+    ],
+    child: child,
+  );
+}
 
 void main() {
   setUp(setUpTestLocaleRu);
@@ -13,18 +41,20 @@ void main() {
   testWidgets('timeout explains the wait and retries', (tester) async {
     var retries = 0;
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ScreenLoadError(
-            title: 'Не удалось загрузить друзей',
-            error: TimeoutException(
-              'Future not completed',
-              const Duration(seconds: 12),
+      _scoped(
+        MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ScreenLoadError(
+              title: 'Не удалось загрузить друзей',
+              error: TimeoutException(
+                'Future not completed',
+                const Duration(seconds: 12),
+              ),
+              onRetry: () => retries++,
             ),
-            onRetry: () => retries++,
           ),
         ),
       ),
@@ -47,15 +77,17 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
-          body: ScreenLoadError(
-            title: 'Не удалось загрузить чаты',
-            error: 'socket exception',
-            onRetry: _noop,
+      _scoped(
+        MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: ScreenLoadError(
+              title: 'Не удалось загрузить чаты',
+              error: 'socket exception',
+              onRetry: _noop,
+            ),
           ),
         ),
       ),

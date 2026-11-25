@@ -40,6 +40,7 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/avatar_crop_dialog.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/go_offline_button.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -485,6 +486,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   key: const ValueKey('error'),
                   message:
                       err is AuthException ? err.message : formatUserError(err),
+                  error: err,
                   onRetry: () => ref.read(authStateProvider.notifier).refresh(),
                 ),
               ),
@@ -529,10 +531,12 @@ class _ProfileErrorState extends StatelessWidget {
   const _ProfileErrorState({
     super.key,
     required this.message,
+    required this.error,
     required this.onRetry,
   });
 
   final String message;
+  final Object error;
   final VoidCallback onRetry;
 
   @override
@@ -555,6 +559,7 @@ class _ProfileErrorState extends StatelessWidget {
             label: context.l10n.commonRetry,
             expanded: true,
           ),
+          GoOfflineButton(error: error, expanded: true),
         ],
       ),
     );
