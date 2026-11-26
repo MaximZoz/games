@@ -58,6 +58,14 @@ bool _cachedMember(String key) {
   return true;
 }
 
+/// Стол из [route] уже числится активной сессией пользователя: он его
+/// создал или вошёл в него. Спрашивать сервер о составе незачем.
+bool isOwnActiveLobby(ActiveGameItem? active, PushLobbyRoute route) {
+  if (active == null || active.type != 'lobby') return false;
+  final id = active.lobbyId?.trim() ?? '';
+  return id.isNotEmpty && id == route.lobbyId;
+}
+
 /// Гость по ссылке не входит в стол: «Игры» → «Лобби» и карточка приглашения.
 Future<String?> redirectGuestInviteIfNeeded(Ref ref, Uri uri) async {
   final userId = ref.read(authStateProvider).valueOrNull?.id;
@@ -66,6 +74,11 @@ Future<String?> redirectGuestInviteIfNeeded(Ref ref, Uri uri) async {
       userId.isEmpty ||
       route == null ||
       !uriOpensGuestInvite(uri)) {
+    return null;
+  }
+  // Хозяин после «Создать игру»: редирект не должен ждать сеть, иначе
+  // лобби открывается с задержкой в несколько запросов.
+  if (isOwnActiveLobby(ref.read(activeGameProvider).valueOrNull, route)) {
     return null;
   }
   final cacheKey = '$userId|${route.gameType}|${route.lobbyId}';
