@@ -26,6 +26,7 @@ import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/lobby_opening.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
@@ -602,6 +603,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         _isFinding = true;
       }
     });
+    final opening =
+        LobbyOpening.start(context, gameType: 'tictactoe', mode: mode);
     try {
       // Async: после конца партии пин/кэш могли ещё держать старый gameId.
       if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
@@ -630,7 +633,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
               ),
             );
         pinBlockingGame(ref, result.gameId);
-        context.push('/games/tictactoe/game/${result.gameId}');
+        await opening.push('/games/tictactoe/game/${result.gameId}');
       } else {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
@@ -639,9 +642,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
                 mode: mode,
               ),
             );
-        context.push(
-          lobbyScreenPath(result.lobbyId, mode: mode),
-        );
+        await opening.push(lobbyScreenPath(result.lobbyId, mode: mode));
       }
     } catch (e) {
       if (context.mounted) {
@@ -663,6 +664,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         }
       }
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _isCreating = false;

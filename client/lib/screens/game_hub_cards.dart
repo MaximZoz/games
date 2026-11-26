@@ -93,6 +93,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening = LobbyOpening.start(context, gameType: 'durak', mode: mode);
     try {
       if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
         return;
@@ -122,7 +123,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'durak');
-        context.push('/games/durak/game/$gameId');
+        await opening.push('/games/durak/game/$gameId');
       } else if (lobbyId.isEmpty) {
         // Сервер не вернул ни лобби, ни партию — не строим битый роут.
         showAppSnackBar(
@@ -139,7 +140,9 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
                 mode: mode,
               ),
             );
-        context.push(lobbyScreenPath(lobbyId, gameType: 'durak', mode: mode));
+        await opening.push(
+          lobbyScreenPath(lobbyId, gameType: 'durak', mode: mode),
+        );
       }
     } on GamesException catch (e) {
       if (!mounted) return;
@@ -163,6 +166,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       showAppSnackBar(context,
           message: formatUserError(e), kind: AppSnackKind.error);
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
@@ -441,6 +445,8 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening =
+        LobbyOpening.start(context, gameType: 'battleship', mode: mode);
     try {
       if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
         return;
@@ -467,7 +473,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'battleship');
-        context.push('/games/battleship/game/$gameId');
+        await opening.push('/games/battleship/game/$gameId');
       } else if (lobbyId.isEmpty) {
         showAppSnackBar(
           context,
@@ -483,7 +489,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
                 mode: mode,
               ),
             );
-        context.push(
+        await opening.push(
           lobbyScreenPath(lobbyId, gameType: 'battleship', mode: mode),
         );
       }
@@ -508,6 +514,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
       showAppSnackBar(context,
           message: formatUserError(e), kind: AppSnackKind.error);
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
@@ -729,6 +736,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening = LobbyOpening.start(context, gameType: 'poker', mode: mode);
     try {
       if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
         return;
@@ -756,7 +764,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'poker');
-        context.push('/games/poker/game/$gameId');
+        await opening.push('/games/poker/game/$gameId');
       } else if (lobbyId.isEmpty) {
         showAppSnackBar(
           context,
@@ -772,7 +780,9 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
                 mode: mode,
               ),
             );
-        context.push(lobbyScreenPath(lobbyId, gameType: 'poker', mode: mode));
+        await opening.push(
+          lobbyScreenPath(lobbyId, gameType: 'poker', mode: mode),
+        );
       }
     } on GamesException catch (e) {
       if (!mounted) return;
@@ -795,6 +805,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       showAppSnackBar(context,
           message: formatUserError(e), kind: AppSnackKind.error);
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
@@ -1049,6 +1060,7 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening = LobbyOpening.start(context, gameType: 'uno', mode: mode);
     try {
       if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
         return;
@@ -1073,7 +1085,7 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'uno');
-        context.push('/games/uno/game/$gameId');
+        await opening.push('/games/uno/game/$gameId');
       } else if (lobbyId.isNotEmpty) {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
@@ -1083,7 +1095,9 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
                 mode: mode,
               ),
             );
-        context.push(lobbyScreenPath(lobbyId, gameType: 'uno', mode: mode));
+        await opening.push(
+          lobbyScreenPath(lobbyId, gameType: 'uno', mode: mode),
+        );
       } else {
         throw GamesException(503, context.l10n.commonTryLater);
       }
@@ -1097,6 +1111,7 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
         kind: AppSnackKind.error,
       );
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
@@ -1836,6 +1851,7 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening = LobbyOpening.start(context, gameType: 'nardy', mode: mode);
     try {
       final result = await ref.read(nardyRepositoryProvider).createLobby(
             mode: mode,
@@ -1856,7 +1872,7 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'nardy');
-        context.push('/games/nardy/game/$gameId');
+        await opening.push('/games/nardy/game/$gameId');
       } else if (lobbyId.isNotEmpty) {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
@@ -1866,7 +1882,9 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
                 mode: mode,
               ),
             );
-        context.push(lobbyScreenPath(lobbyId, gameType: 'nardy', mode: mode));
+        await opening.push(
+          lobbyScreenPath(lobbyId, gameType: 'nardy', mode: mode),
+        );
       } else {
         throw GamesException(503, context.l10n.commonTryLater);
       }
@@ -1880,6 +1898,7 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
         kind: AppSnackKind.error,
       );
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
@@ -2093,6 +2112,8 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening =
+        LobbyOpening.start(context, gameType: 'checkers', mode: mode);
     try {
       final result = await ref.read(checkersRepositoryProvider).createLobby(
             mode: mode,
@@ -2113,7 +2134,7 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'checkers');
-        context.push('/games/checkers/game/$gameId');
+        await opening.push('/games/checkers/game/$gameId');
       } else if (lobbyId.isNotEmpty) {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
@@ -2122,7 +2143,7 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
                 gameType: 'checkers',
               ),
             );
-        context.push('/games/checkers/lobby/$lobbyId?mode=$mode');
+        await opening.push('/games/checkers/lobby/$lobbyId?mode=$mode');
       } else {
         throw GamesException(503, context.l10n.commonTryLater);
       }
@@ -2136,6 +2157,7 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
         kind: AppSnackKind.error,
       );
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
@@ -2344,6 +2366,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening = LobbyOpening.start(context, gameType: 'chess', mode: mode);
     try {
       final result = await ref.read(chessRepositoryProvider).createLobby(
             mode: mode,
@@ -2364,7 +2387,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'chess');
-        context.push('/games/chess/game/$gameId');
+        await opening.push('/games/chess/game/$gameId');
       } else if (lobbyId.isNotEmpty) {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
@@ -2373,7 +2396,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
                 gameType: 'chess',
               ),
             );
-        context.push('/games/chess/lobby/$lobbyId?mode=$mode');
+        await opening.push('/games/chess/lobby/$lobbyId?mode=$mode');
       } else {
         throw GamesException(503, context.l10n.commonTryLater);
       }
@@ -2387,6 +2410,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
         kind: AppSnackKind.error,
       );
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
@@ -2625,6 +2649,7 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
       _creating = mode == 'invite';
       _finding = mode == 'matchmake';
     });
+    final opening = LobbyOpening.start(context, gameType: 'domino', mode: mode);
     try {
       if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
         return;
@@ -2650,7 +2675,7 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
               ),
             );
         pinBlockingGame(ref, gameId, gameType: 'domino');
-        context.push('/games/domino/game/$gameId');
+        await opening.push('/games/domino/game/$gameId');
       } else if (lobbyId.isNotEmpty) {
         ref.read(activeGameProvider.notifier).setLocal(
               ActiveGameItem(
@@ -2660,7 +2685,9 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
                 mode: mode,
               ),
             );
-        context.push(lobbyScreenPath(lobbyId, gameType: 'domino', mode: mode));
+        await opening.push(
+          lobbyScreenPath(lobbyId, gameType: 'domino', mode: mode),
+        );
       } else {
         throw GamesException(503, context.l10n.commonTryLater);
       }
@@ -2674,6 +2701,7 @@ class _DominoGameCardState extends ConsumerState<_DominoGameCard> {
         kind: AppSnackKind.error,
       );
     } finally {
+      opening.close();
       if (mounted) {
         setState(() {
           _creating = false;
