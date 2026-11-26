@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/core/push_nav_paths.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link_entry.dart';
@@ -93,5 +94,49 @@ void main() {
       ),
       isNull,
     );
+  });
+
+  group('свой активный стол открывается без запроса состава', () {
+    const route = PushLobbyRoute(gameType: 'durak', lobbyId: 'L1');
+
+    test('только что созданное лобби — своё', () {
+      expect(
+        isOwnActiveLobby(
+          ActiveGameItem(
+            type: 'lobby',
+            lobbyId: 'L1',
+            gameType: 'durak',
+            mode: 'invite',
+          ),
+          route,
+        ),
+        isTrue,
+      );
+    });
+
+    test('чужая ссылка при другом активном лобби проверяется на сервере', () {
+      expect(
+        isOwnActiveLobby(
+          ActiveGameItem(type: 'lobby', lobbyId: 'L2', gameType: 'durak'),
+          route,
+        ),
+        isFalse,
+      );
+    });
+
+    test('нет активной сессии или идёт партия — проверка на сервере', () {
+      expect(isOwnActiveLobby(null, route), isFalse);
+      expect(
+        isOwnActiveLobby(
+          ActiveGameItem(type: 'game', gameId: 'G1', lobbyId: 'L1'),
+          route,
+        ),
+        isFalse,
+      );
+      expect(
+        isOwnActiveLobby(ActiveGameItem(type: 'lobby', lobbyId: ' '), route),
+        isFalse,
+      );
+    });
   });
 }
